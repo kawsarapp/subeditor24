@@ -109,9 +109,17 @@
                         </div>
                         
                         @if(auth()->user()->role === 'super_admin')
+                        @if(Route::has('admin.dashboard'))
                         <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 font-bold"><i class="fa-solid fa-chart-pie text-indigo-500 w-4"></i> Admin Dashboard</a>
+                        @endif
+
+                        @if(Route::has('admin.analytics.index'))
                         <a href="{{ route('admin.analytics.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 font-bold"><i class="fa-solid fa-chart-line text-emerald-500 w-4"></i> Analytics</a>
-                        <a href="{{ route('admin.scraper-monitor.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 font-bold"><i class="fa-solid fa-headset text-amber-500 w-4"></i> Scraper Monitor</a>
+                        @endif
+
+                        @if(Route::has('admin.scraper-monitor'))
+                        <a href="{{ route('admin.scraper-monitor') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 font-bold"><i class="fa-solid fa-headset text-amber-500 w-4"></i> Scraper Monitor</a>
+                        @endif
                         @endif
 
                         <a href="{{ route('settings.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 font-bold"><i class="fa-solid fa-sliders text-slate-500 w-4"></i> Settings & API</a>

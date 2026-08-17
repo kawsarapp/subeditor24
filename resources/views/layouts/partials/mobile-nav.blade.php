@@ -144,17 +144,23 @@
             <div class="border-t border-slate-100 my-2"></div>
             <p class="px-3 pt-1 pb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Admin Suite</p>
             
+            @if(Route::has('admin.dashboard'))
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-chart-pie text-indigo-500 w-5 text-center text-sm"></i> Admin Dashboard
             </a>
+            @endif
 
+            @if(Route::has('admin.analytics.index'))
             <a href="{{ route('admin.analytics.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.analytics.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-chart-line text-emerald-500 w-5 text-center text-sm"></i> Analytics Report
             </a>
+            @endif
 
-            <a href="{{ route('admin.scraper-monitor.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.scraper-monitor.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
+            @if(Route::has('admin.scraper-monitor'))
+            <a href="{{ route('admin.scraper-monitor') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.scraper-monitor') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-headset text-amber-500 w-5 text-center text-sm"></i> Scraper Monitor
             </a>
+            @endif
             @endif
 
             <div class="border-t border-slate-100 my-2"></div>
