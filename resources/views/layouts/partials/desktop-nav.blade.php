@@ -62,6 +62,13 @@
                         </a>
                         @endif
 
+                        {{-- 🔥 AI Viral Predictor --}}
+                        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_viral_predictor'))
+                        <a href="{{ route('trending.index') }}" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('trending.*') ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25 scale-[1.02]' : 'text-amber-600 hover:text-amber-700 hover:bg-amber-50/60' }}">
+                            <i class="fa-solid fa-fire text-amber-500"></i> Viral Predictor
+                        </a>
+                        @endif
+
                         {{-- 6. Card Templates --}}
                         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_templates'))
                         @if(Route::has('admin.templates.index'))

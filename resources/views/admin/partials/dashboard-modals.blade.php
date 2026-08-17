@@ -248,7 +248,7 @@
                     'can_settings_social'=> '📱 Social Media (FB, X, Telegram)',
                     'can_settings_category' => '📂 Category Mapping',
                     'can_analytics'      => '📊 View Analytics & ROI',
-                    
+                    'can_viral_predictor' => '🔥 AI Viral & Trending Predictor',
                 ];
                 @endphp
                 @foreach($perms as $key => $label)

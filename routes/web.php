@@ -63,6 +63,10 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         return back();
     })->name('notifications.read');
 
+    // 🔥 AI Viral & Trending Predictor Routes
+    Route::get('/trending', [\App\Http\Controllers\TrendingController::class, 'index'])->name('trending.index');
+    Route::post('/trending/generate-script', [\App\Http\Controllers\TrendingController::class, 'generateScript'])->name('trending.generate-script');
+
     // প্রোফাইল ও ক্রেডিট
     Route::get('/credits', [SettingsController::class, 'credits'])->name('credits.index');
     Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.update-profile');
