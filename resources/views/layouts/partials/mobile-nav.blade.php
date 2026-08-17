@@ -11,7 +11,7 @@
                 🪙 {{ auth()->user()->credits ?? 0 }}
             </div>
         @endif
-        <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-extrabold text-xs border border-indigo-200 uppercase shadow-sm">
+        <button onclick="toggleMobileDrawer(event)" class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-extrabold text-xs border border-indigo-200 uppercase shadow-sm cursor-pointer">
             {{ substr(auth()->user()->name, 0, 1) }}
         </button>
     </div>
@@ -33,7 +33,7 @@
             </a>
             <span class="absolute bottom-1 text-[10px] font-bold text-slate-600">পাঠান</span>
         </div>
-        <button onclick="toggleMobileDrawer()" class="flex flex-col items-center justify-center h-full gap-1 text-slate-500 hover:text-slate-700 transition-colors relative">
+        <button onclick="toggleMobileDrawer(event)" class="flex flex-col items-center justify-center h-full gap-1 text-slate-500 hover:text-slate-700 transition-colors relative cursor-pointer">
             <i class="fa-solid fa-bars-staggered text-xl"></i><span class="text-[10px] font-bold">মেনু</span>
         </button>
     </div>
@@ -53,7 +53,7 @@
             <i class="fa-solid fa-wand-magic-sparkles text-xl"></i><span class="text-[10px] font-bold">AI</span>
             @if(request()->routeIs('news.drafts')) <div class="w-1 h-1 bg-indigo-600 rounded-full absolute bottom-1"></div> @endif
         </a>
-        <button onclick="toggleMobileDrawer()" class="flex flex-col items-center justify-center h-full gap-1 text-slate-500 hover:text-slate-700 transition-colors relative">
+        <button onclick="toggleMobileDrawer(event)" class="flex flex-col items-center justify-center h-full gap-1 text-slate-500 hover:text-slate-700 transition-colors relative cursor-pointer">
             <i class="fa-solid fa-bars-staggered text-xl"></i><span class="text-[10px] font-bold">Menu</span>
         </button>
     </div>
@@ -61,9 +61,9 @@
 </div>
 
 {{-- MOBILE FULL SLIDE-OUT DRAWER MODAL --}}
-<div id="mobileDrawerBackdrop" onclick="toggleMobileDrawer()" class="hidden lg:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] transition-opacity"></div>
+<div id="mobileDrawerBackdrop" onclick="toggleMobileDrawer(event)" class="hidden lg:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[100] transition-opacity"></div>
 
-<div id="mobileDrawerModal" class="fixed top-0 right-0 w-[85%] max-w-[320px] h-full bg-white z-[101] translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col justify-between overflow-y-auto custom-scrollbar lg:hidden">
+<div id="mobileDrawerModal" class="hidden lg:hidden fixed top-0 right-0 w-[85%] max-w-[320px] h-full bg-white z-[101] shadow-2xl flex flex-col justify-between overflow-y-auto custom-scrollbar">
     <div>
         {{-- Drawer Header --}}
         <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
@@ -76,7 +76,7 @@
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ auth()->user()->role }}</p>
                 </div>
             </div>
-            <button onclick="toggleMobileDrawer()" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 flex items-center justify-center hover:bg-slate-100">
+            <button onclick="toggleMobileDrawer(event)" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 flex items-center justify-center hover:bg-slate-100">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
@@ -122,22 +122,28 @@
             @endif
 
             @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_templates'))
+            @if(Route::has('admin.templates.index'))
             <a href="{{ route('admin.templates.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.templates.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-layer-group text-purple-500 w-5 text-center text-sm"></i> Card Templates
             </a>
+            @endif
             @endif
 
             @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_reporters'))
             <div class="border-t border-slate-100 my-2"></div>
             <p class="px-3 pt-1 pb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Team Management</p>
             
+            @if(Route::has('manage.reporters.news'))
             <a href="{{ route('manage.reporters.news') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('manage.reporters.news') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-satellite-dish text-rose-500 w-5 text-center text-sm"></i> Reporter Feed (Team News)
             </a>
+            @endif
             
+            @if(Route::has('manage.reporters.index'))
             <a href="{{ route('manage.reporters.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('manage.reporters.index') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-users text-blue-500 w-5 text-center text-sm"></i> Team Members
             </a>
+            @endif
             @endif
 
             @if(auth()->user()->role === 'super_admin')
@@ -182,17 +188,20 @@
 </div>
 
 <script>
-    function toggleMobileDrawer() {
+    function toggleMobileDrawer(e) {
+        if (e) e.stopPropagation();
         const modal = document.getElementById('mobileDrawerModal');
         const backdrop = document.getElementById('mobileDrawerBackdrop');
         if (!modal || !backdrop) return;
         
-        if (modal.classList.contains('translate-x-full')) {
-            modal.classList.remove('translate-x-full');
+        if (modal.classList.contains('hidden')) {
+            modal.classList.remove('hidden');
             backdrop.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         } else {
-            modal.classList.add('translate-x-full');
+            modal.classList.add('hidden');
             backdrop.classList.add('hidden');
+            document.body.style.overflow = '';
         }
     }
 </script>

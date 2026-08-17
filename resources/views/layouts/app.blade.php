@@ -6,8 +6,9 @@
     <title>{{ config('app.name', 'Subeditor24') }}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    {{-- Tailwind & Icons --}}
+    {{-- Tailwind, Alpine.js & Icons --}}
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
