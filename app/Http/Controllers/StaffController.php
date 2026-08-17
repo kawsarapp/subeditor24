@@ -1,0 +1,480 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Models\UserSetting;
+use App\Models\Website;
+use App\Models\NewsItem;
+use App\Models\CreditHistory;
+use App\Models\Template;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+
+class StaffController extends Controller
+{
+    /**
+     * স্টাফ লিস্ট, ফিল্টারিং এবং অ্যাডমিনের ডাটা লোড করা
+     */
+    public function index(Request $request)
+    {
+        $admin = Auth::user();
+
+        // ১. সিকিউরিটি চেক: শুধু অ্যাডমিন বা সুপার অ্যাডমিন স্টাফ ম্যানেজ করতে পারবে
+        if (!in_array($admin->role, ['admin', 'super_admin'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // ২. পারমিশন চেক
+        $permissions = is_array($admin->permissions) ? $admin->permissions : json_decode($admin->permissions, true) ?? [];
+        if ($admin->role !== 'super_admin' && !in_array('can_manage_staff', $permissions)) {
+            return back()->with('error', 'আপনার স্টাফ তৈরি করার অনুমতি নেই।');
+        }
+
+        // 🔍 ফিল্টার প্যারামিটারগুলো নেওয়া
+        $search = $request->input('search');
+        $dateFilter = $request->input('date_filter', 'all');
+
+        // ৩. স্টাফদের ডাটা (শুধু role='staff' — reporter আলাদা পেজে থাকবে)
+        $staffQuery = User::where('parent_id', $admin->id)
+            ->where('role', 'staff')
+            ->with(['accessibleWebsites', 'settings', 'department', 'designation']);
+
+        // 🔍 সার্চ লজিক অ্যাপ্লাই
+        if (!empty($search)) {
+            $staffQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $staffs = $staffQuery->paginate(10)->through(function($staff) use ($dateFilter) {
+            
+            // বেইস কোয়েরি তৈরি (যাতে ফিল্টার করা সহজ হয়)
+            $newsQuery = NewsItem::withoutGlobalScopes()->where('staff_id', $staff->id);
+            $creditQuery = CreditHistory::where('staff_id', $staff->id);
+
+            // 📅 ডেট ফিল্টার অ্যাপ্লাই
+            if ($dateFilter === 'today') {
+                $newsQuery->where('created_at', '>=', now()->subHours(24));
+                $creditQuery->where('created_at', '>=', now()->subHours(24));
+            } elseif ($dateFilter === '7days') {
+                $newsQuery->where('created_at', '>=', now()->subDays(7));
+                $creditQuery->where('created_at', '>=', now()->subDays(7));
+            } elseif ($dateFilter === 'month') {
+                $newsQuery->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+                $creditQuery->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+            }
+
+            // ডাইনামিক ফিল্টার্ড ডাটা
+            $staff->total_published = (clone $newsQuery)->where('status', 'published')->count();
+            $staff->total_drafts    = (clone $newsQuery)->where('status', '!=', 'published')->count();
+            $staff->custom_news     = (clone $newsQuery)->whereNull('website_id')->count();
+            $staff->reporter_news   = (clone $newsQuery)->whereNotNull('reporter_id')->count();
+            
+            $staff->credits_used    = (clone $creditQuery)->where('credits_change', '<', 0)->sum('credits_change') * -1;
+            $staff->ai_rewrites     = (clone $creditQuery)->where('action_type', 'ai_rewrite')->count();
+
+            // ⏳ ২৪ ঘণ্টার ডাটা (এটি ফিল্টার ছাড়া সবসময় ফিক্সড ২৪ ঘণ্টার দেখাবে)
+            $staff->published_24h = NewsItem::withoutGlobalScopes()
+                                        ->where('staff_id', $staff->id)
+                                        ->where('status', 'published')
+                                        ->where('created_at', '>=', now()->subHours(24))
+                                        ->count();
+
+            // 📰 সাম্প্রতিক ৩টি নিউজ (Activity Feed)
+            $staff->recent_news = NewsItem::withoutGlobalScopes()
+                                        ->where('staff_id', $staff->id)
+                                        ->latest()
+                                        ->limit(3)
+                                        ->pluck('title')
+                                        ->toArray();
+
+            return $staff;
+        });
+                      
+        // ৪. অ্যাডমিনের নিজের তৈরি করা সোর্স এবং সুপার অ্যাডমিনের দেওয়া সোর্স একসাথে আনা
+        $adminWebsites = Website::withoutGlobalScopes()
+            ->where(function($query) use ($admin) {
+                $query->where('user_id', $admin->id)
+                      ->orWhereHas('users', function($q) use ($admin) {
+                          $q->where('users.id', $admin->id); 
+                      });
+            })->get();
+            
+        $adminTemplates = $admin->settings->allowed_templates ?? [];
+
+        // 🔥 Super admin: DB templates সবসময় grant করতে পারবে
+        // হার্ডকোডেড এর সাথে active DB templates জোড় করো
+        $dbTemplateKeys = Template::where('is_active', true)->pluck('name', 'id')
+            ->mapWithKeys(fn($name, $id) => ['custom_db_' . $id => '🖼 ' . $name])
+            ->toArray();
+
+        if ($admin->role === 'super_admin') {
+            // Super admin gets all hardcoded + all DB templates
+            $adminTemplates = array_merge(
+                array_keys(UserSetting::AVAILABLE_TEMPLATES),
+                array_keys($dbTemplateKeys)
+            );
+        }
+
+        $departments = \App\Models\Department::where('user_id', $admin->id)->with('designations')->get();
+
+        return view('client.staff.index', compact('staffs', 'admin', 'adminWebsites', 'adminTemplates', 'dbTemplateKeys', 'dbTemplateKeys', 'departments'));
+
+
+    }
+
+    /**
+     * নতুন স্টাফ তৈরি করা (With Transaction Security)
+     */
+    public function store(Request $request)
+    {
+        $admin = Auth::user();
+
+        // লিমিট চেক
+        $currentStaffCount = User::where('parent_id', $admin->id)->where('role', 'staff')->count();
+        if ($admin->role !== 'super_admin' && $currentStaffCount >= $admin->staff_limit) {
+            return back()->with('error', "❌ আপনার স্টাফ লিমিট শেষ!");
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
+            'department_id' => 'nullable|exists:departments,id',
+            'designation_id' => 'nullable|exists:designations,id',
+            'joining_date' => 'nullable|date',
+            'expire_date' => 'nullable|date|after_or_equal:joining_date',
+            'district' => 'nullable|string|max:255',
+            'upazila' => 'nullable|string|max:255',
+            'working_location' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'nid' => 'nullable|string|max:30',
+            'emergency_contact' => 'nullable|string|max:20',
+            'blood_group' => 'nullable|string|max:10',
+            'present_address' => 'nullable|string',
+            'permanent_address' => 'nullable|string',
+        ]);
+
+        // Security check: Verify department and designation belong to the logged-in admin
+        if ($request->filled('department_id')) {
+            \App\Models\Department::where('user_id', $admin->id)->findOrFail($request->department_id);
+        }
+        if ($request->filled('designation_id')) {
+            \App\Models\Designation::where('user_id', $admin->id)->findOrFail($request->designation_id);
+        }
+
+        $adminPermissions = is_array($admin->permissions) ? $admin->permissions : json_decode($admin->permissions, true) ?? [];
+        $adminTemplates = $admin->settings->allowed_templates ?? [];
+
+        try {
+            DB::beginTransaction(); // 🛡️ ডাটাবেস ট্রানজেকশন শুরু
+
+            $staff = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'staff',
+                'parent_id' => $admin->id,
+                'is_active' => true,
+                'permissions' => $adminPermissions, // ডিফল্টভাবে অ্যাডমিনের পারমিশন
+                'department_id' => $request->department_id,
+                'designation_id' => $request->designation_id,
+                'joining_date' => $request->joining_date,
+                'expire_date' => $request->expire_date,
+                'district' => $request->district,
+                'upazila' => $request->upazila,
+                'working_location' => $request->working_location,
+                'phone' => $request->phone,
+                'nid' => $request->nid,
+                'emergency_contact' => $request->emergency_contact,
+                'blood_group' => $request->blood_group,
+                'present_address' => $request->present_address,
+                'permanent_address' => $request->permanent_address,
+            ]);
+
+            // স্টাফের জন্য সেটিংস তৈরি (অ্যাডমিনের টেমপ্লেট দিয়ে)
+            UserSetting::create([
+                'user_id' => $staff->id,
+                'allowed_templates' => $adminTemplates,
+                'default_template' => $admin->settings->default_template ?? 'default'
+            ]);
+
+            // অ্যাডমিনের সব ওয়েবসাইট অটোমেটিক স্টাফকে এক্সেস দেওয়া
+            $adminWebsiteIds = Website::withoutGlobalScopes()
+                ->where('user_id', $admin->id)
+                ->pluck('id')->toArray();
+                
+            $staff->accessibleWebsites()->sync($adminWebsiteIds);
+
+            DB::commit(); // 🛡️ ডাটা সেভ সফল
+            return back()->with('success', 'নতুন স্টাফ অ্যাকাউন্ট তৈরি হয়েছে!');
+
+        } catch (\Exception $e) {
+            DB::rollBack(); // 🛡️ এরর হলে সব বাতিল
+            return back()->with('error', 'অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 📰 একজন স্টাফের সব নিউজ দেখা
+     */
+    public function showNews(Request $request, $id)
+    {
+        $admin = Auth::user();
+        $staff = User::where('parent_id', $admin->id)->with('accessibleWebsites')->findOrFail($id);
+
+        $query = NewsItem::withoutGlobalScopes()
+            ->where('staff_id', $staff->id)
+            ->with(['website', 'reporter'])
+            ->latest();
+
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Date filter
+        if ($request->filled('date_filter')) {
+            match($request->date_filter) {
+                'today'  => $query->where('created_at', '>=', now()->startOfDay()),
+                '7days'  => $query->where('created_at', '>=', now()->subDays(7)),
+                'month'  => $query->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year),
+                default  => null,
+            };
+        }
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', '%' . $search . '%')
+                  ->orWhereHas('website', function($w) use ($search) {
+                      $w->where('name', 'like', '%' . $search . '%');
+                  })
+                  ->orWhereHas('reporter', function($r) use ($search) {
+                      $r->where('name', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        $news = $query->paginate(20);
+
+        $todayQuery = NewsItem::withoutGlobalScopes()->where('staff_id', $staff->id)->where('created_at', '>=', now()->startOfDay());
+
+        $stats = [
+            'total'           => NewsItem::withoutGlobalScopes()->where('staff_id', $staff->id)->count(),
+            'published'       => NewsItem::withoutGlobalScopes()->where('staff_id', $staff->id)->where('status', 'published')->count(),
+            'draft'           => NewsItem::withoutGlobalScopes()->where('staff_id', $staff->id)->where('status', '!=', 'published')->count(),
+            
+            'today_total'     => (clone $todayQuery)->count(),
+            'today_published' => (clone $todayQuery)->where('status', 'published')->count(),
+            'today_rewritten' => (clone $todayQuery)->where('is_rewritten', true)->count(),
+            'today_custom'    => (clone $todayQuery)->whereNull('website_id')->count(),
+        ];
+
+        return view('client.staff.news', compact('staff', 'news', 'stats'));
+    }
+
+    /**
+     * ✏️ স্টাফের নাম/ইমেইল/পাসওয়ার্ড আপডেট
+     */
+    public function updateInfo(Request $request, $id)
+    {
+        $admin = Auth::user();
+        $staff = User::where('parent_id', $admin->id)->findOrFail($id);
+
+        $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email,' . $staff->id,
+            'password' => 'nullable|min:6',
+            'department_id' => 'nullable|exists:departments,id',
+            'designation_id' => 'nullable|exists:designations,id',
+            'joining_date' => 'nullable|date',
+            'expire_date' => 'nullable|date|after_or_equal:joining_date',
+            'district' => 'nullable|string|max:255',
+            'upazila' => 'nullable|string|max:255',
+            'working_location' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'nid' => 'nullable|string|max:30',
+            'emergency_contact' => 'nullable|string|max:20',
+            'blood_group' => 'nullable|string|max:10',
+            'present_address' => 'nullable|string',
+            'permanent_address' => 'nullable|string',
+        ]);
+
+        // Security check: Verify department and designation belong to the logged-in admin
+        if ($request->filled('department_id')) {
+            \App\Models\Department::where('user_id', $admin->id)->findOrFail($request->department_id);
+        }
+        if ($request->filled('designation_id')) {
+            \App\Models\Designation::where('user_id', $admin->id)->findOrFail($request->designation_id);
+        }
+
+        $staff->name  = $request->name;
+        $staff->email = $request->email;
+        $staff->department_id = $request->department_id;
+        $staff->designation_id = $request->designation_id;
+        $staff->joining_date = $request->joining_date;
+        $staff->expire_date = $request->expire_date;
+        $staff->district = $request->district;
+        $staff->upazila = $request->upazila;
+        $staff->working_location = $request->working_location;
+        $staff->phone = $request->phone;
+        $staff->nid = $request->nid;
+        $staff->emergency_contact = $request->emergency_contact;
+        $staff->blood_group = $request->blood_group;
+        $staff->present_address = $request->present_address;
+        $staff->permanent_address = $request->permanent_address;
+        if ($request->filled('password')) {
+            $staff->password = Hash::make($request->password);
+        }
+        $staff->save();
+
+        return back()->with('success', 'স্টাফের তথ্য আপডেট করা হয়েছে!');
+    }
+
+    /**
+     * 🔄 স্টাফের Active/Inactive স্ট্যাটাস টগল
+     */
+    public function toggleStatus($id)
+    {
+        $admin = Auth::user();
+        $staff = User::where('parent_id', $admin->id)->findOrFail($id);
+        $staff->is_active = !$staff->is_active;
+        $staff->save();
+
+        $status = $staff->is_active ? 'সক্রিয়' : 'নিষ্ক্রিয়';
+        return back()->with('success', "{$staff->name} কে {$status} করা হয়েছে।");
+    }
+
+    /**
+     * 🔑 স্টাফের পাসওয়ার্ড রিসেট (Quick Reset to random 8-char)
+     */
+    public function resetPassword($id)
+    {
+        $admin = Auth::user();
+        $staff = User::where('parent_id', $admin->id)->findOrFail($id);
+
+        $newPassword = \Illuminate\Support\Str::random(8);
+        $staff->password = Hash::make($newPassword);
+        $staff->save();
+
+        return back()->with('success', "পাসওয়ার্ড রিসেট হয়েছে! নতুন পাসওয়ার্ড: {$newPassword}");
+    }
+
+    /**
+     * স্টাফের পারমিশন আপডেট
+     */
+    public function updatePermissions(Request $request, $id)
+    {
+        $admin = Auth::user();
+        $staff = User::where('parent_id', $admin->id)->findOrFail($id); // সিকিউরিটি: শুধু নিজের স্টাফ
+
+        $requestedPermissions = $request->input('permissions', []);
+        
+        if ($admin->role !== 'super_admin') {
+            $adminPermissions = is_array($admin->permissions) ? $admin->permissions : json_decode($admin->permissions, true) ?? [];
+            $finalPermissions = array_intersect($requestedPermissions, $adminPermissions); // অ্যাডমিনের বাইরে দিতে পারবে না
+        } else {
+            $finalPermissions = $requestedPermissions;
+        }
+        
+        $staff->permissions = $finalPermissions;
+        $staff->save();
+
+        return back()->with('success', 'পারমিশন আপডেট করা হয়েছে!');
+    }
+
+    /**
+     * সোর্স (ওয়েবসাইট) এক্সেস আপডেট
+     */
+    public function updateWebsites(Request $request, $id)
+    {
+        $admin = Auth::user();
+        $staff = User::where('parent_id', $admin->id)->findOrFail($id);
+        
+        $requestedWebsites = $request->input('websites', []);
+        
+        $adminWebsiteIds = Website::withoutGlobalScopes()
+            ->where(function($query) use ($admin) {
+                $query->where('user_id', $admin->id)
+                      ->orWhereHas('users', function($q) use ($admin) {
+                          $q->where('users.id', $admin->id);
+                      });
+            })->pluck('id')->toArray();
+        
+        // ভ্যালিডেশন: শুধুমাত্র অ্যাডমিনের এক্সেসে থাকা ওয়েবসাইট দিতে পারবে
+        $validWebsites = array_intersect($requestedWebsites, $adminWebsiteIds);
+        $staff->accessibleWebsites()->sync($validWebsites);
+        
+        return back()->with('success', 'সোর্স এক্সেস আপডেট করা হয়েছে!');
+    }
+
+    /**
+     * টেমপ্লেট এক্সেস আপডেট
+     */
+    public function updateTemplates(Request $request, $id)
+    {
+        $admin = Auth::user();
+        $staff = User::where('parent_id', $admin->id)->findOrFail($id);
+        
+        $requestedTemplates = $request->input('templates', []);
+        $adminTemplates = $admin->settings->allowed_templates ?? [];
+
+        // 🔥 Super admin: সব hardcoded + সব active DB templates দিতে পারবে
+        if ($admin->role === 'super_admin') {
+            $dbKeys = Template::where('is_active', true)->pluck('id')
+                ->map(fn($id) => 'custom_db_' . $id)->toArray();
+            $adminTemplates = array_merge(array_keys(UserSetting::AVAILABLE_TEMPLATES), $dbKeys);
+        }
+        
+        $validTemplates = array_values(array_intersect($requestedTemplates, $adminTemplates));
+        
+        $settings = UserSetting::firstOrCreate(['user_id' => $staff->id]);
+        $settings->allowed_templates = $validTemplates;
+        
+        if (in_array($request->input('default_template'), $validTemplates)) {
+            $settings->default_template = $request->input('default_template');
+        }
+        
+        $settings->save();
+        
+        return back()->with('success', 'টেমপ্লেট এক্সেস আপডেট করা হয়েছে!');
+    }
+
+    /**
+     * স্টাফ ডিলিট
+     */
+    public function destroy($id)
+    {
+        $adminId = Auth::id();
+        $staff = User::where('parent_id', $adminId)->findOrFail($id); // সিকিউরিটি: শুধু নিজের স্টাফ ডিলিট করতে পারবে
+        
+        $staff->delete();
+        
+        return back()->with('success', 'স্টাফ অ্যাকাউন্ট মুছে ফেলা হয়েছে।');
+    }
+
+    /**
+     * ✍️ স্টাফের Author Signature আপডেট করা
+     */
+    public function updateSignature(Request $request, $id)
+    {
+        $request->validate([
+            'author_signature'    => 'nullable|string|max:100',
+            'signature_placement' => 'required|in:top,bottom',
+        ]);
+
+        $staff = User::where('parent_id', Auth::id())->findOrFail($id);
+
+        $staff->author_signature    = $request->author_signature ?: null; // খালি হলে null করো
+        $staff->signature_placement = $request->signature_placement;
+        $staff->save();
+
+        return back()->with('success', 'Author Signature আপডেট হয়েছে!');
+    }
+}

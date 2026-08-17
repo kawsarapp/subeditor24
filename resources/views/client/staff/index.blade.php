@@ -1,0 +1,906 @@
+@extends('layouts.app')
+
+@push('styles')
+<style>
+    .stat-card { transition: all 0.3s ease; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+</style>
+@endpush
+
+@section('content')
+<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    
+    {{-- Header Section --}}
+    <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">👥 Employee Analytics & Management</h1>
+            <p class="text-sm text-slate-500 mt-1">আপনার কর্মকর্তা ও কর্মচারীদের কাজের হিসাব ও পারফরম্যান্স</p>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <span class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm border border-indigo-200">
+                Employee Limit: {{ $staffs->count() }} / {{ $admin->staff_limit }}
+            </span>
+            @if($staffs->count() < $admin->staff_limit)
+                <button onclick="openAddStaffModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-bold text-sm shadow-md flex items-center gap-2 transition-colors w-full md:w-auto justify-center">
+                    <i class="fa-solid fa-user-plus"></i> Add New Employee
+                </button>
+            @else
+                <button disabled class="bg-gray-300 text-gray-500 px-5 py-2 rounded-xl font-bold text-sm shadow-md flex items-center gap-2 cursor-not-allowed w-full md:w-auto justify-center" title="Employee limit reached!">
+                    <i class="fa-solid fa-user-plus"></i> Limit Reached
+                </button>
+            @endif
+        </div>
+    </div>
+
+    {{-- Tabs Navigation --}}
+    <div class="border-b border-slate-200 mb-6 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+        <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+            <button onclick="switchTab('staff-list')" id="tab-staff-list" class="border-indigo-600 text-indigo-600 whitespace-nowrap py-3 px-4 border-b-2 font-bold text-sm flex items-center gap-2 outline-none">
+                👥 Employee Directory (কর্মচারী তালিকা)
+            </button>
+            <button onclick="switchTab('dept-desg')" id="tab-dept-desg" class="border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-3 px-4 border-b-2 font-bold text-sm flex items-center gap-2 outline-none">
+                🏢 Departments & Designations (বিভাগ ও পদবী)
+            </button>
+        </nav>
+    </div>
+
+    {{-- Tab: Staff List Section --}}
+    <div id="section-staff-list" class="tab-section">
+        {{-- 🔥 NEW: Advanced Filtering Section --}}
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
+        <form action="" method="GET" class="flex flex-col md:flex-row w-full gap-3">
+            <div class="flex-1">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="🔍 স্টাফের নাম বা ইমেইল খুঁজুন..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-indigo-500 outline-none">
+            </div>
+            <div class="w-full md:w-48">
+                <select name="date_filter" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-indigo-500 outline-none">
+                    <option value="all" {{ request('date_filter') == 'all' ? 'selected' : '' }}>সব সময়ের ডেটা</option>
+                    <option value="today" {{ request('date_filter') == 'today' ? 'selected' : '' }}>আজকের (24h)</option>
+                    <option value="7days" {{ request('date_filter') == '7days' ? 'selected' : '' }}>গত ৭ দিন</option>
+                    <option value="month" {{ request('date_filter') == 'month' ? 'selected' : '' }}>এই মাস</option>
+                </select>
+            </div>
+            <button type="submit" class="bg-slate-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-slate-900 transition">
+                ফিল্টার করুন
+            </button>
+            @if(request()->has('search') || request()->has('date_filter'))
+                <a href="{{ url()->current() }}" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-lg text-sm font-bold border border-red-200 hover:bg-red-100 text-center">ক্লিয়ার</a>
+            @endif
+        </form>
+    </div>
+
+    {{-- 📊 স্টাফদের পারফরম্যান্স গ্রিড --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        @forelse($staffs as $staff)
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden stat-card flex flex-col">
+            
+            {{-- Header Info --}}
+            <div class="p-5 border-b border-slate-100 flex items-start justify-between bg-gradient-to-r from-slate-50 to-white relative">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl uppercase border-2 border-white shadow-sm">
+                        {{ substr($staff->name, 0, 1) }}
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <h3 class="font-bold text-slate-800 text-lg leading-tight">{{ $staff->name }}</h3>
+                            @if($staff->blood_group)
+                                <span class="px-1.5 py-0.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-md text-[9px] font-black uppercase tracking-wider">🩸 {{ $staff->blood_group }}</span>
+                            @endif
+                        </div>
+                        <p class="text-xs text-slate-500">{{ $staff->email }}</p>
+                        @if($staff->phone)
+                            <p class="text-xs text-slate-600 mt-0.5"><i class="fa-solid fa-phone text-indigo-400 mr-1"></i>{{ $staff->phone }}</p>
+                        @endif
+                        @if($staff->department || $staff->designation)
+                            <p class="text-xs font-bold text-indigo-600 mt-0.5 bg-indigo-50/50 px-1.5 py-0.5 rounded border border-indigo-100/30 inline-block">
+                                {{ $staff->department->name ?? '' }} @if($staff->department && $staff->designation) • @endif {{ $staff->designation->name ?? '' }}
+                            </p>
+                        @else
+                            <span class="inline-block mt-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded text-[10px] font-bold uppercase tracking-wider">
+                                {{ $staff->role ?? 'Staff' }}
+                            </span>
+                        @endif
+
+                        @if($staff->working_location || $staff->district || $staff->upazila)
+                            <p class="text-[10px] text-slate-500 mt-1.5 flex items-center gap-1 font-semibold">
+                                <i class="fa-solid fa-location-dot text-indigo-500"></i>
+                                <span>
+                                    {{ $staff->working_location ?? '' }}
+                                    @if($staff->working_location && ($staff->district || $staff->upazila)) | @endif
+                                    {{ $staff->upazila ? $staff->upazila . ', ' : '' }}{{ $staff->district ?? '' }}
+                                </span>
+                            </p>
+                        @endif
+                    </div>
+                </div>
+                
+                {{-- 3-Dot Action Menu --}}
+                <div class="relative group">
+                    <button class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    <div class="absolute right-0 mt-1 w-52 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 origin-top-right">
+                        <a href="{{ route('client.staff.news', $staff->id) }}" class="w-full text-left block px-4 py-2 border-b border-slate-100 text-sm font-bold text-blue-600 hover:bg-blue-50">
+                            <i class="fa-solid fa-newspaper w-5"></i> View Detailed Report
+                        </a>
+
+                        <button type="button" 
+                            data-id="{{ $staff->id }}" 
+                            data-name="{{ $staff->name }}"
+                            data-email="{{ $staff->email }}"
+                            data-dept="{{ $staff->department_id }}"
+                            data-desg="{{ $staff->designation_id }}"
+                            data-joining="{{ $staff->joining_date ? $staff->joining_date->format('Y-m-d') : '' }}"
+                            data-expire="{{ $staff->expire_date ? $staff->expire_date->format('Y-m-d') : '' }}"
+                            data-district="{{ $staff->district }}"
+                            data-upazila="{{ $staff->upazila }}"
+                            data-location="{{ $staff->working_location }}"
+                            data-phone="{{ $staff->phone }}"
+                            data-nid="{{ $staff->nid }}"
+                            data-emergency="{{ $staff->emergency_contact }}"
+                            data-blood="{{ $staff->blood_group }}"
+                            data-present="{{ $staff->present_address }}"
+                            data-permanent="{{ $staff->permanent_address }}"
+                            onclick="openEditStaffModal(this)" 
+                            class="w-full text-left block px-4 py-2 text-sm text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 border-b border-slate-100 font-bold">
+                            <i class="fa-solid fa-user-gear w-5"></i> Edit Employee Info
+                        </button>
+
+                        <button type="button" onclick='openSourceModal("{{ $staff->id }}", "{{ $staff->name }}", @json($staff->accessibleWebsites->pluck("id")))' class="w-full text-left block px-4 py-2 text-sm text-slate-600 hover:bg-emerald-50 hover:text-emerald-600">
+                            <i class="fa-solid fa-earth-asia w-5"></i> Allowed Sites
+                        </button>
+                        
+                        <button type="button" onclick='openTemplateModal("{{ $staff->id }}", "{{ $staff->name }}", @json($staff->settings->allowed_templates ?? []), "{{ $staff->settings->default_template ?? "" }}")' class="w-full text-left block px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-800">
+                            <i class="fa-solid fa-palette w-5"></i> Templates
+                        </button>
+
+                        <button type="button" onclick='openPermissionModal("{{ $staff->id }}", "{{ $staff->name }}", @json($staff->permissions ?? []))' class="w-full text-left block px-4 py-2 text-sm text-slate-600 hover:bg-pink-50 hover:text-pink-600">
+                            <i class="fa-solid fa-shield-halved w-5"></i> Permissions
+                        </button>
+
+                        <button type="button" onclick='openSignatureModal("{{ $staff->id }}", "{{ $staff->name }}", "{{ addslashes($staff->author_signature ?? '') }}", "{{ $staff->signature_placement ?? 'bottom' }}")' class="w-full text-left block px-4 py-2 text-sm text-slate-600 hover:bg-orange-50 hover:text-orange-600">
+                            <i class="fa-solid fa-pen-nib w-5"></i> Author Signature
+                        </button>
+                        
+                        <div class="border-t border-slate-50 my-1"></div>
+                        <form action="{{ route('client.staff.destroy', $staff->id) }}" method="POST" onsubmit="return confirm('সত্যিই ডিলিট করতে চান?');">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 border-t border-slate-100 mt-1">
+                                <i class="fa-solid fa-trash-can w-5"></i> Delete Staff
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 📈 Analytics Grid --}}
+            <div class="p-5 flex-grow">
+                <div class="flex justify-between items-end mb-3">
+                    <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Performance Summary</h4>
+                    {{-- 🔥 NEW: 24h Badge --}}
+                    <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md font-bold border border-emerald-200">
+                        ⏳ গত ২৪ ঘণ্টায়: {{ $staff->published_24h ?? 0 }} টি
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    {{-- Published Total --}}
+                    <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100/50 relative overflow-hidden">
+                        <div class="flex justify-between items-start">
+                            <i class="fa-solid fa-check-circle text-emerald-500 mt-1"></i>
+                            <span class="text-2xl font-black text-emerald-600">{{ $staff->total_published ?? 0 }}</span>
+                        </div>
+                        <p class="text-[10px] font-bold text-emerald-600/70 uppercase mt-1">Total Published</p>
+                    </div>
+
+                    {{-- Drafts --}}
+                    <div class="bg-amber-50 rounded-xl p-3 border border-amber-100/50">
+                        <div class="flex justify-between items-start">
+                            <i class="fa-solid fa-file-pen text-amber-500 mt-1"></i>
+                            <span class="text-2xl font-black text-amber-600">{{ $staff->total_drafts ?? 0 }}</span>
+                        </div>
+                        <p class="text-[10px] font-bold text-amber-600/70 uppercase mt-1">Pending/Drafts</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    {{-- 🔥 NEW: Custom News --}}
+                    <div class="bg-purple-50 rounded-lg p-2 border border-purple-100 text-center">
+                        <span class="block text-lg font-black text-purple-600">{{ $staff->custom_news ?? 0 }}</span>
+                        <p class="text-[9px] font-bold text-purple-500 uppercase">Custom News</p>
+                    </div>
+
+                    {{-- 🔥 NEW: Reporter News --}}
+                    <div class="bg-sky-50 rounded-lg p-2 border border-sky-100 text-center">
+                        <span class="block text-lg font-black text-sky-600">{{ $staff->reporter_news ?? 0 }}</span>
+                        <p class="text-[9px] font-bold text-sky-500 uppercase">From Reporters</p>
+                    </div>
+
+                    {{-- AI Rewrites --}}
+                    <div class="bg-blue-50 rounded-lg p-2 border border-blue-100 text-center">
+                        <span class="block text-lg font-black text-blue-600">{{ $staff->ai_rewrites ?? 0 }}</span>
+                        <p class="text-[9px] font-bold text-blue-500 uppercase">AI Rewrites</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-5 pb-4">
+                <a href="{{ route('client.staff.news', $staff->id) }}" class="block w-full text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold text-sm py-2 rounded-lg border border-indigo-100 transition">
+                    <i class="fa-solid fa-newspaper mr-1"></i> View Work History & Daily Report
+                </a>
+            </div>
+            
+            {{-- Footer Status --}}
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 text-xs flex flex-col gap-1.5 text-slate-500">
+                <div class="flex justify-between items-center w-full">
+                    <span>Joined: {{ $staff->joining_date ? $staff->joining_date->format('M d, Y') : $staff->created_at->format('M d, Y') }}</span>
+                    <span class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> {{ $staff->credits_used ?? 0 }} Credits</span>
+                </div>
+                @if($staff->expire_date)
+                    <div class="flex justify-between items-center w-full border-t border-slate-200/50 pt-1.5">
+                        <span>Expires: {{ $staff->expire_date->format('M d, Y') }}</span>
+                        @if($staff->expire_date->isPast())
+                            <span class="px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-bold text-[9px] uppercase border border-red-200">Expired</span>
+                        @elseif($staff->expire_date->diffInDays(now()) <= 7)
+                            <span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-bold text-[9px] uppercase border border-amber-200">Expiring Soon</span>
+                        @else
+                            <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold text-[9px] uppercase border border-emerald-200">Active</span>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+        @empty
+        <div class="col-span-full bg-white rounded-2xl border border-slate-200 border-dashed p-10 text-center">
+            <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto text-indigo-300 mb-4">
+                <i class="fa-solid fa-users text-3xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-1">কোনো ডাটা পাওয়া যায়নি</h3>
+            <p class="text-sm text-slate-500">আপনার প্যানেলে এখনো কোনো স্টাফ যুক্ত করা হয়নি অথবা ফিল্টারের সাথে মিল নেই।</p>
+        </div>
+        @endforelse
+    </div>
+    </div> {{-- Close section-staff-list --}}
+
+    {{-- Tab: Departments & Designations Section --}}
+    <div id="section-dept-desg" class="tab-section hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            {{-- Department Management Card --}}
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">🏢 Manage Departments (বিভাগসমূহ)</h3>
+                
+                {{-- Add Department Form --}}
+                <form action="{{ route('client.departments.store') }}" method="POST" class="mb-6 flex gap-3">
+                    @csrf
+                    <input type="text" name="name" placeholder="যেমন: Mojo Reporting, Editorial, IT" class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-indigo-500 outline-none" required>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition">
+                        Add
+                    </button>
+                </form>
+
+                {{-- Departments List --}}
+                <div class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+                    @forelse($departments as $dept)
+                        <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200/60 rounded-xl hover:bg-slate-100/80 transition">
+                            <span class="font-bold text-sm text-slate-700">{{ $dept->name }}</span>
+                            <form action="{{ route('client.departments.destroy', $dept->id) }}" method="POST" onsubmit="return confirm('এই বিভাগটি মুছলে এর আওতাধীন সব পদবীও ডিলিট হয়ে যাবে। নিশ্চিত?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-rose-500 hover:text-rose-700 p-1">
+                                    <i class="fa-solid fa-trash-can text-sm"></i>
+                                </button>
+                            </form>
+                        </div>
+                    @empty
+                        <p class="text-slate-400 text-sm text-center py-8 border border-dashed rounded-xl">কোনো বিভাগ যুক্ত করা হয়নি।</p>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Designation Management Card --}}
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">🎖 Manage Designations (পদবীসমূহ)</h3>
+                
+                {{-- Add Designation Form --}}
+                <form action="{{ route('client.designations.store') }}" method="POST" class="mb-6 space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-200/50">
+                    @csrf
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">Select Department</label>
+                        <select name="department_id" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-indigo-500 outline-none bg-white" required>
+                            <option value="">-- Select Department --</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">Designation Name</label>
+                        <div class="flex gap-3">
+                            <input type="text" name="name" placeholder="যেমন: Mojo Reporter, Editor, Video Editor" class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-indigo-500 outline-none bg-white" required>
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition">
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                {{-- Designations List --}}
+                <div class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+                    @php $hasDesignations = false; @endphp
+                    @foreach($departments as $dept)
+                        @if($dept->designations->isNotEmpty())
+                            @php $hasDesignations = true; @endphp
+                            <div class="border-b border-slate-100 pb-3 mb-3 last:border-0 last:pb-0 last:mb-0">
+                                <h4 class="text-[10px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 rounded px-2.5 py-1 inline-block uppercase tracking-wider mb-2">{{ $dept->name }}</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    @foreach($dept->designations as $desg)
+                                        <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200/50 rounded-lg hover:bg-slate-100 transition">
+                                            <span class="text-xs font-bold text-slate-700">{{ $desg->name }}</span>
+                                            <form action="{{ route('client.designations.destroy', $desg->id) }}" method="POST" onsubmit="return confirm('পদবীটি মুছে ফেলতে চান?');">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="text-rose-500 hover:text-rose-700 p-0.5">
+                                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    @endforeach
+                    @if(!$hasDesignations)
+                        <p class="text-slate-400 text-sm text-center py-8 border border-dashed rounded-xl">কোনো পদবী যুক্ত করা হয়নি।</p>
+                    @endif
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div> {{-- Close max-w-7xl --}}
+
+{{-- ================= MODALS ================= --}}
+
+{{-- 1. Add Employee Modal --}}
+<div id="addStaffModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]">
+        <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
+            <h3 class="font-bold text-gray-800">Add New Employee</h3>
+            <button onclick="closeAddStaffModal()" class="text-gray-400 hover:text-red-500 text-2xl">&times;</button>
+        </div>
+        <form action="{{ route('client.staff.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
+            @csrf
+            <div class="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Employee Name</label>
+                    <input type="text" name="name" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Email (Login ID)</label>
+                    <input type="email" name="email" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Password</label>
+                    <input type="password" name="password" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500" required minlength="6">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Department</label>
+                        <select name="department_id" id="add_department_id" onchange="loadDesignations('add')" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm outline-none bg-white">
+                            <option value="">-- Select --</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Designation</label>
+                        <select name="designation_id" id="add_designation_id" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm outline-none bg-white">
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">District (জেলা)</label>
+                        <input type="text" name="district" placeholder="যেমন: ঢাকা, বগুড়া" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Upazila (উপজেলা)</label>
+                        <input type="text" name="upazila" placeholder="যেমন: মিরপুর, শিবগঞ্জ" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Working Location (কাজের স্থান)</label>
+                    <input type="text" name="working_location" placeholder="যেমন: ঢাকা অফিস, ব্যুরো অফিস" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Phone Number (মোবাইল নম্বর)</label>
+                        <input type="text" name="phone" placeholder="যেমন: 017xxxxxxxx" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Emergency Contact (জরুরী নম্বর)</label>
+                        <input type="text" name="emergency_contact" placeholder="যেমন: 018xxxxxxxx" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">NID Number (জাতীয় পরিচয়পত্র)</label>
+                        <input type="text" name="nid" placeholder="NID নম্বর" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Blood Group (রক্তের গ্রুপ)</label>
+                        <select name="blood_group" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none">
+                            <option value="">-- Select --</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Present Address (বর্তমান ঠিকানা)</label>
+                        <textarea name="present_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none" placeholder="বর্তমান ঠিকানা"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Permanent Address (স্থায়ী ঠিকানা)</label>
+                        <textarea name="permanent_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none" placeholder="স্থায়ী ঠিকানা"></textarea>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Joining Date</label>
+                        <input type="date" name="joining_date" value="{{ date('Y-m-d') }}" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Expire Date</label>
+                        <input type="date" name="expire_date" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 border-t flex justify-end flex-shrink-0">
+                <button type="submit" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold w-full hover:bg-indigo-700 transition">Create Employee</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- 1.5 Edit Staff Info Modal --}}
+<div id="editStaffModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]">
+        <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
+            <h3 class="font-bold text-gray-800">Edit Employee Info</h3>
+            <button onclick="closeEditStaffModal()" class="text-gray-400 hover:text-red-500 text-2xl">&times;</button>
+        </div>
+        <form id="editStaffForm" method="POST" class="flex flex-col flex-1 overflow-hidden">
+            @csrf @method('PUT')
+            <div class="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Employee Name</label>
+                    <input type="text" name="name" id="edit_name" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Email</label>
+                    <input type="email" name="email" id="edit_email" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">New Password (Leave blank to keep current)</label>
+                    <input type="password" name="password" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500" minlength="6">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Department</label>
+                        <select name="department_id" id="edit_department_id" onchange="loadDesignations('edit')" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm outline-none bg-white">
+                            <option value="">-- Select --</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Designation</label>
+                        <select name="designation_id" id="edit_designation_id" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm outline-none bg-white">
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">District (জেলা)</label>
+                        <input type="text" name="district" id="edit_district" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Upazila (উপজেলা)</label>
+                        <input type="text" name="upazila" id="edit_upazila" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Working Location (কাজের স্থান)</label>
+                    <input type="text" name="working_location" id="edit_working_location" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Phone Number (মোবাইল নম্বর)</label>
+                        <input type="text" name="phone" id="edit_phone" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Emergency Contact (জরুরী নম্বর)</label>
+                        <input type="text" name="emergency_contact" id="edit_emergency_contact" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">NID Number (জাতীয় পরিচয়পত্র)</label>
+                        <input type="text" name="nid" id="edit_nid" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Blood Group (রক্তের গ্রুপ)</label>
+                        <select name="blood_group" id="edit_blood_group" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none">
+                            <option value="">-- Select --</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Present Address (বর্তমান ঠিকানা)</label>
+                        <textarea name="present_address" id="edit_present_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Permanent Address (স্থায়ী ঠিকানা)</label>
+                        <textarea name="permanent_address" id="edit_permanent_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none"></textarea>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Joining Date</label>
+                        <input type="date" name="joining_date" id="edit_joining_date" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Expire Date</label>
+                        <input type="date" name="expire_date" id="edit_expire_date" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 border-t flex justify-end flex-shrink-0">
+                <button type="submit" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold w-full hover:bg-indigo-700 transition">Update Employee Info</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- 2. Permissions Modal --}}
+<div id="permissionModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Permissions: <span id="staffName" class="text-pink-600"></span></h3>
+            <button onclick="closePermissionModal()" class="text-gray-400 hover:text-red-500 text-2xl">&times;</button>
+        </div>
+        <form id="permissionForm" method="POST" class="p-6">
+            @csrf @method('PUT')
+            <p class="text-xs text-gray-500 mb-3 bg-yellow-50 p-2 rounded">⚠️ You can only assign permissions that you currently have.</p>
+            <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-2">
+                @php
+                    $adminPerms = is_array($admin->permissions) ? $admin->permissions : json_decode($admin->permissions, true) ?? [];
+                    $allFeatures = [
+                    'can_settings'       => '⚙️ Settings Page Access',
+                    'can_settings_branding' => '🎨 Branding Settings',
+                    'can_settings_proxy' => '🌐 Proxy & Scraper Settings',
+                    'can_settings_ai'    => '🤖 AI API Settings',
+                    'can_settings_wp_laravel' => '🔗 WordPress & Laravel API',
+                    'can_settings_social'=> '📱 Social Media (FB, X, Telegram)',
+                    'can_settings_category' => '📂 Category Mapping',
+                    'can_scrape'         => '🌐 News Scraper Access',
+                    'can_direct_publish' => '📝 Direct Create (News Feed)',
+                    'can_ai'             => '🤖 AI Content Rewriter',
+                    'can_studio'         => '🎨 Studio Design Access',
+                    'can_auto_post'      => '🚀 Automation & Auto Post',
+                    'can_manage_staff'   => '👥 Client can create Sub-Users/Staff',
+                    'can_fact_check'     => '🔍 Fact Check & Plagiarism Finder',
+                    'manage_reporters'   => '👥 Reporter Management',
+                    'reporter_direct'    => '✍️ Reporter Direct Publish',
+                    ];
+                @endphp
+                
+                @foreach($allFeatures as $key => $label)
+                    @if(in_array($key, $adminPerms))
+                        <label class="flex items-center space-x-3 p-2 bg-gray-50 rounded border cursor-pointer hover:bg-pink-50 transition">
+                            <input type="checkbox" name="permissions[]" value="{{ $key }}" class="form-checkbox text-pink-600 rounded p-check">
+                            <span class="text-sm font-bold text-gray-700">{{ $label }}</span>
+                        </label>
+                    @endif
+                @endforeach
+            </div>
+            <div class="flex justify-end pt-4 mt-2 border-t">
+                <button type="submit" class="bg-pink-600 text-white px-6 py-2 rounded-lg font-bold w-full hover:bg-pink-700">Save Permissions</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- 3. Sources Modal --}}
+<div id="sourceModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Sources: <span id="sourceStaffName" class="text-emerald-600"></span></h3>
+            <button onclick="closeSourceModal()" class="text-gray-400 hover:text-red-500 text-2xl">&times;</button>
+        </div>
+        <form id="sourceForm" method="POST" class="p-6">
+            @csrf @method('PUT')
+            <p class="text-xs text-gray-500 mb-3 bg-yellow-50 p-2 rounded">⚠️ Assign websites your staff can scrape news from.</p>
+            <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-2">
+                @foreach($adminWebsites as $site)
+                    <label class="flex items-center space-x-3 p-2 bg-gray-50 rounded border cursor-pointer hover:bg-emerald-50 transition">
+                        <input type="checkbox" name="websites[]" value="{{ $site->id }}" class="form-checkbox text-emerald-600 rounded s-check">
+                        <span class="text-sm font-bold text-gray-700">{{ $site->name }}</span>
+                    </label>
+                @endforeach
+                @if($adminWebsites->isEmpty())
+                    <p class="text-sm text-red-500 font-bold text-center">You don't have any sources assigned.</p>
+                @endif
+            </div>
+            <div class="flex justify-end pt-4 mt-2 border-t">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-bold w-full transition">Save Sources</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- 4. Templates Modal --}}
+<div id="templateModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+        <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">Templates: <span id="templateStaffName" class="text-slate-600"></span></h3>
+            <button onclick="closeTemplateModal()" class="text-gray-400 hover:text-red-500 text-2xl">&times;</button>
+        </div>
+        <form id="templateForm" method="POST" class="p-6">
+            @csrf @method('PUT')
+            <p class="text-xs text-gray-500 mb-4 bg-yellow-50 p-2 rounded">⚠️ শুধু আপনার access আছে এমন templates এখানে দেখাচ্ছে।</p>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-bold text-gray-700 mb-2">Default Template</label>
+                <select name="default_template" id="defaultTemplateSelect" class="w-full border rounded-lg p-2.5 focus:ring-slate-500 text-sm outline-none">
+                    @foreach(\App\Models\UserSetting::AVAILABLE_TEMPLATES as $key => $name)
+                        @if(in_array($key, $adminTemplates))
+                            <option value="{{ $key }}">{{ $name }}</option>
+                        @endif
+                    @endforeach
+                    @foreach($dbTemplateKeys ?? [] as $key => $name)
+                        @if(in_array($key, $adminTemplates))
+                            <option value="{{ $key }}">{{ $name }}</option>
+                        @endif
+                    @endforeach
+                </select>
+            </div>
+
+            <label class="block text-sm font-bold text-gray-700 mb-2">Allowed Templates</label>
+            <div class="space-y-1 max-h-64 overflow-y-auto custom-scrollbar pr-2">
+
+                {{-- Hardcoded templates --}}
+                @php $hasHardcoded = collect(\App\Models\UserSetting::AVAILABLE_TEMPLATES)->keys()->filter(fn($k) => in_array($k, $adminTemplates))->count(); @endphp
+                @if($hasHardcoded > 0)
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider pt-1 pb-1">📋 Built-in Templates</p>
+                <div class="grid grid-cols-2 gap-1.5 mb-3">
+                    @foreach(\App\Models\UserSetting::AVAILABLE_TEMPLATES as $key => $name)
+                        @if(in_array($key, $adminTemplates))
+                            <label class="flex items-center space-x-2 p-2 bg-gray-50 rounded border cursor-pointer hover:bg-slate-100 transition">
+                                <input type="checkbox" name="templates[]" value="{{ $key }}" class="form-checkbox text-slate-600 rounded t-check">
+                                <span class="text-xs font-bold text-gray-700 truncate" title="{{ $name }}">{{ $name }}</span>
+                            </label>
+                        @endif
+                    @endforeach
+                </div>
+                @endif
+
+                {{-- DB templates --}}
+                @if(!empty($dbTemplateKeys))
+                <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider pt-1 pb-1">🎨 Custom DB Templates</p>
+                <div class="grid grid-cols-2 gap-1.5">
+                    @foreach($dbTemplateKeys as $key => $name)
+                        @if(in_array($key, $adminTemplates))
+                            <label class="flex items-center space-x-2 p-2 bg-indigo-50 rounded border border-indigo-100 cursor-pointer hover:bg-indigo-100 transition">
+                                <input type="checkbox" name="templates[]" value="{{ $key }}" class="form-checkbox text-indigo-600 rounded t-check">
+                                <span class="text-xs font-bold text-indigo-700 truncate" title="{{ $name }}">{{ $name }}</span>
+                            </label>
+                        @endif
+                    @endforeach
+                </div>
+                @endif
+
+                @if(empty($adminTemplates))
+                    <p class="text-sm text-red-500 font-bold text-center py-4">আপনার কোনো template access নেই।</p>
+                @endif
+            </div>
+            
+            <div class="flex justify-end pt-4 mt-2 border-t">
+                <button type="submit" class="bg-slate-700 hover:bg-slate-800 text-white px-6 py-2 rounded-lg font-bold w-full transition">Save Templates</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- 5. Author Signature Modal --}}
+<div id="signatureModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+        <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+            <h3 class="font-bold text-gray-800">✍️ Author Signature: <span id="signatureStaffName" class="text-orange-600"></span></h3>
+            <button onclick="closeSignatureModal()" class="text-gray-400 hover:text-red-500 text-2xl">&times;</button>
+        </div>
+        <form id="signatureForm" method="POST" class="p-6 space-y-4">
+            @csrf @method('PUT')
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Author Signature Text</label>
+                <input type="text" name="author_signature" id="authorSignatureInput"
+                    placeholder="যেমন: আরটিভি/এসকে বা Daily Star/K.H"
+                    class="w-full border rounded-lg p-2.5 focus:ring-orange-500 outline-none text-sm">
+                <p class="text-[10px] text-gray-400 mt-1">খালি রাখলে নিউজে কোনো সিগনেচার যোগ হবে না।</p>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Placement</label>
+                <select name="signature_placement" id="signaturePlacementSelect" class="w-full border rounded-lg p-2.5 focus:ring-orange-500 outline-none text-sm">
+                    <option value="bottom">📌 নিউজের শেষে (Bottom)</option>
+                    <option value="top">📌 নিউজের শুরুতে (Top)</option>
+                </select>
+            </div>
+            <div class="flex justify-end pt-2">
+                <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-bold w-full transition">Save Signature</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // --- Tabs Navigation ---
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-section').forEach(sec => sec.classList.add('hidden'));
+        document.getElementById('section-' + tabId).classList.remove('hidden');
+        
+        // Active button styles
+        const tabs = ['staff-list', 'dept-desg'];
+        tabs.forEach(id => {
+            const btn = document.getElementById('tab-' + id);
+            if (id === tabId) {
+                btn.classList.add('border-indigo-600', 'text-indigo-600');
+                btn.classList.remove('border-transparent', 'text-slate-500');
+            } else {
+                btn.classList.remove('border-indigo-600', 'text-indigo-600');
+                btn.classList.add('border-transparent', 'text-slate-500');
+            }
+        });
+    }
+
+    // --- Dynamic AJAX Designation loader ---
+    function loadDesignations(type, selectedDesignationId = null) {
+        const deptSelect = document.getElementById(type + '_department_id');
+        const desgSelect = document.getElementById(type + '_designation_id');
+        
+        desgSelect.innerHTML = '<option value="">-- Select --</option>';
+        const deptId = deptSelect.value;
+        if (!deptId) return;
+        
+        fetch(`/client/departments/${deptId}/designations-ajax`)
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(desg => {
+                    const opt = document.createElement('option');
+                    opt.value = desg.id;
+                    opt.innerText = desg.name;
+                    if (selectedDesignationId && desg.id == selectedDesignationId) {
+                        opt.selected = true;
+                    }
+                    desgSelect.appendChild(opt);
+                });
+            })
+            .catch(err => console.error('Error fetching designations:', err));
+    }
+
+    // --- Add Staff ---
+    function openAddStaffModal() { document.getElementById('addStaffModal').classList.remove('hidden'); document.getElementById('addStaffModal').classList.add('flex'); }
+    function closeAddStaffModal() { document.getElementById('addStaffModal').classList.add('hidden'); document.getElementById('addStaffModal').classList.remove('flex'); }
+
+    // --- Edit Staff Info ---
+    function openEditStaffModal(btn) {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        const email = btn.getAttribute('data-email');
+        const departmentId = btn.getAttribute('data-dept');
+        const designationId = btn.getAttribute('data-desg');
+        const joiningDate = btn.getAttribute('data-joining');
+        const expireDate = btn.getAttribute('data-expire');
+        const district = btn.getAttribute('data-district');
+        const upazila = btn.getAttribute('data-upazila');
+        const workingLocation = btn.getAttribute('data-location');
+        const phone = btn.getAttribute('data-phone');
+        const nid = btn.getAttribute('data-nid');
+        const emergencyContact = btn.getAttribute('data-emergency');
+        const bloodGroup = btn.getAttribute('data-blood');
+        const presentAddress = btn.getAttribute('data-present');
+        const permanentAddress = btn.getAttribute('data-permanent');
+
+        document.getElementById('editStaffForm').action = `/client/staff/${id}/info`;
+        document.getElementById('edit_name').value = name || '';
+        document.getElementById('edit_email').value = email || '';
+        document.getElementById('edit_joining_date').value = joiningDate || '';
+        document.getElementById('edit_expire_date').value = expireDate || '';
+        document.getElementById('edit_district').value = district || '';
+        document.getElementById('edit_upazila').value = upazila || '';
+        document.getElementById('edit_working_location').value = workingLocation || '';
+        document.getElementById('edit_phone').value = phone || '';
+        document.getElementById('edit_nid').value = nid || '';
+        document.getElementById('edit_emergency_contact').value = emergencyContact || '';
+        document.getElementById('edit_blood_group').value = bloodGroup || '';
+        document.getElementById('edit_present_address').value = presentAddress || '';
+        document.getElementById('edit_permanent_address').value = permanentAddress || '';
+        
+        const deptSelect = document.getElementById('edit_department_id');
+        deptSelect.value = departmentId || '';
+        
+        loadDesignations('edit', designationId);
+        
+        document.getElementById('editStaffModal').classList.remove('hidden');
+        document.getElementById('editStaffModal').classList.add('flex');
+    }
+    function closeEditStaffModal() {
+        document.getElementById('editStaffModal').classList.add('hidden');
+        document.getElementById('editStaffModal').classList.remove('flex');
+    }
+
+    // --- Permissions ---
+    function openPermissionModal(id, name, perms) {
+        document.getElementById('staffName').innerText = name;
+        document.getElementById('permissionForm').action = `/client/staff/${id}/permissions`;
+        document.querySelectorAll('.p-check').forEach(cb => { cb.checked = Array.isArray(perms) && perms.includes(cb.value); });
+        document.getElementById('permissionModal').classList.remove('hidden'); document.getElementById('permissionModal').classList.add('flex');
+    }
+    function closePermissionModal() { document.getElementById('permissionModal').classList.add('hidden'); document.getElementById('permissionModal').classList.remove('flex'); }
+
+    // --- Sources ---
+    function openSourceModal(id, name, websites) {
+        document.getElementById('sourceStaffName').innerText = name;
+        document.getElementById('sourceForm').action = `/client/staff/${id}/websites`;
+        document.querySelectorAll('.s-check').forEach(cb => { cb.checked = Array.isArray(websites) && websites.includes(parseInt(cb.value)); });
+        document.getElementById('sourceModal').classList.remove('hidden'); document.getElementById('sourceModal').classList.add('flex');
+    }
+    function closeSourceModal() { document.getElementById('sourceModal').classList.add('hidden'); document.getElementById('sourceModal').classList.remove('flex'); }
+
+    // --- Templates ---
+    function openTemplateModal(id, name, templates, defaultTemplate) {
+        document.getElementById('templateStaffName').innerText = name;
+        document.getElementById('templateForm').action = `/client/staff/${id}/templates`;
+        document.querySelectorAll('.t-check').forEach(cb => { cb.checked = Array.isArray(templates) && templates.includes(cb.value); });
+        const select = document.getElementById('defaultTemplateSelect');
+        if(select && defaultTemplate) select.value = defaultTemplate;
+        document.getElementById('templateModal').classList.remove('hidden'); document.getElementById('templateModal').classList.add('flex');
+    }
+    function closeTemplateModal() { document.getElementById('templateModal').classList.add('hidden'); document.getElementById('templateModal').classList.remove('flex'); }
+
+    // --- Author Signature ---
+    function openSignatureModal(id, name, signature, placement) {
+        document.getElementById('signatureStaffName').innerText = name;
+        document.getElementById('signatureForm').action = `/client/staff/${id}/signature`;
+        document.getElementById('authorSignatureInput').value = signature || '';
+        document.getElementById('signaturePlacementSelect').value = placement || 'bottom';
+        document.getElementById('signatureModal').classList.remove('hidden');
+        document.getElementById('signatureModal').classList.add('flex');
+    }
+    function closeSignatureModal() { document.getElementById('signatureModal').classList.add('hidden'); document.getElementById('signatureModal').classList.remove('flex'); }
+</script>
+@endsection

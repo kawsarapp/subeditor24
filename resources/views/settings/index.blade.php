@@ -1,0 +1,1027 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">⚙️ প্রোফাইল ও সেটিংস</h1>
+            <p class="text-gray-500 mt-1">আপনার নিউজ কার্ড এবং অটোমেশন কনফিগারেশন</p>
+        </div>
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl shadow-lg text-center">
+            <p class="text-xs opacity-80 uppercase tracking-wider">বর্তমান ব্যালেন্স</p>
+            <p class="text-2xl font-bold">{{ auth()->user()->credits }} <span class="text-sm font-normal">Credits</span></p>
+        </div>
+    </div>
+
+    @if(session('success'))
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded shadow-sm flex items-center gap-2" role="alert">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm">
+            <ul class="list-disc pl-5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    
+    {{-- ১. প্রোফাইল আপডেট সেকশন --}}
+    <form action="{{ route('settings.update-profile') }}" method="POST" class="mb-8">
+        @csrf
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h2 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2">
+                👤 আমার প্রোফাইল
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">আপনার নাম</label>
+                    <input type="text" name="name" value="{{ old('name', auth()->user()->name) }}" 
+                           class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">ইমেইল (লগিন ইউজারনেম)</label>
+                    <input type="email" name="email" value="{{ old('email', auth()->user()->email) }}" 
+                           class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">নতুন পাসওয়ার্ড</label>
+                    <input type="password" name="password" placeholder="পরিবর্তন করতে চাইলে লিখুন..." 
+                           class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">পাসওয়ার্ড নিশ্চিত করুন</label>
+                    <input type="password" name="password_confirmation" placeholder="একই পাসওয়ার্ড আবার লিখুন" 
+                           class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+            </div>
+            <div class="mt-4 text-right">
+                <button type="submit" class="bg-gray-800 text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-900 transition shadow">
+                    প্রোফাইল আপডেট করুন
+                </button>
+            </div>
+        </div>
+    </form>
+
+    {{-- ২. মূল সেটিংস ফর্ম শুরু --}}
+    <form action="{{ route('settings.update') }}" method="POST" class="space-y-8">
+        @csrf
+
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_proxy'))
+        {{-- 🔥 প্রক্সি সেটিংস কার্ড --}}
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h2 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2">
+                🌐 Proxy Settings (Premium Scraping)
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="mb-3">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Proxy Host (IP/Domain)</label>
+                    <input type="text" name="proxy_host" class="w-full border-gray-300 rounded-lg shadow-sm" 
+                           value="{{ $settings->proxy_host ?? '' }}" placeholder="e.g. as.smartproxy.net">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Proxy Port</label>
+                    <input type="text" name="proxy_port" class="w-full border-gray-300 rounded-lg shadow-sm" 
+                           value="{{ $settings->proxy_port ?? '' }}" placeholder="e.g. 3120">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Proxy Username</label>
+                    <input type="text" name="proxy_username" class="w-full border-gray-300 rounded-lg shadow-sm" 
+                           value="{{ $settings->proxy_username ?? '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Proxy Password</label>
+                    <input type="password" name="proxy_password" class="w-full border-gray-300 rounded-lg shadow-sm" 
+                           value="{{ $settings->proxy_password ?? '' }}">
+                </div>
+            </div>
+
+            {{-- Auto Clean Section --}}
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <label class="block text-sm font-bold text-gray-700 mb-1">
+                    🧹 Auto Clean Pending News After (Days)
+                </label>
+                <div class="flex items-center gap-3">
+                    <input type="number" name="auto_clean_days"
+                           min="1" max="90"
+                           value="{{ $settings->auto_clean_days ?? 7 }}"
+                           class="w-32 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-center font-bold text-lg">
+                    <p class="text-xs text-gray-500">দিন পরে যে নিউজ পোস্ট করা হয়নি সেগুলো অটোমেটিক ডিলিট হবে। (Default: 7 দিন)</p>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if(auth()->user()->role === 'super_admin')
+        {{-- ROI Config Section --}}
+        @php
+            $roiConfig = isset($settings->roi_config) ? (is_string($settings->roi_config) ? json_decode($settings->roi_config, true) : $settings->roi_config) : [];
+        @endphp
+        <div class="bg-green-50 p-6 rounded-xl shadow-sm border border-green-200 mt-6 mb-6 relative overflow-hidden text-sm">
+            <h2 class="text-xl font-bold text-green-800 mb-2 border-b border-green-200 pb-2 flex items-center gap-2">
+                💰 ROI Calculator Config (সুপার অ্যাডমিন)
+            </h2>
+            <p class="text-[11px] text-green-700 mb-4 font-medium">কাজের মান অনুযায়ী কত টাকা সাশ্রয় হচ্ছে তা কনফিগার করুন।</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">কর্মী খরচ (প্রতি ঘণ্টা BDT)</label>
+                    <input type="number" name="roi_hourly_rate" value="{{ $roiConfig['hourly_rate'] ?? 100 }}" class="w-full border-gray-300 rounded shadow-sm focus:border-green-500 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">১টি নিউজ করতে সময় (মিনিট)</label>
+                    <input type="number" name="roi_news_minutes" value="{{ $roiConfig['news_minutes'] ?? 20 }}" class="w-full border-gray-300 rounded shadow-sm focus:border-green-500 focus:ring-green-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">১টি কার্ড বানাতে সময় (মিনিট)</label>
+                    <input type="number" name="roi_card_minutes" value="{{ $roiConfig['card_minutes'] ?? 15 }}" class="w-full border-gray-300 rounded shadow-sm focus:border-green-500 focus:ring-green-500">
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if(auth()->user()->role === 'super_admin')
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            {{-- 🎨 Template Manager Link --}}
+            <div class="bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-700 relative overflow-hidden flex flex-col justify-between">
+                <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm uppercase tracking-widest">Super Admin</div>
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">🎨 Studio Template Manager</h2>
+                    <p class="text-xs text-slate-400 mt-1 mb-4">Dashboard থেকে নতুন template যোগ করুন — frame URL, position সব এক জায়গায় কনফিগার করুন।</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ route('admin.templates.index') }}" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 rounded-lg transition shadow-md text-center">🎨 Templates</a>
+                    <a href="{{ route('admin.templates.create') }}" class="flex-1 bg-slate-600 hover:bg-slate-500 text-white font-bold text-xs py-2 rounded-lg transition text-center">+ Add New</a>
+                </div>
+            </div>
+
+            {{-- 📁 Media Manager Link --}}
+            <div class="bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-700 relative overflow-hidden flex flex-col justify-between">
+                <div class="absolute top-0 right-0 bg-purple-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm uppercase tracking-widest">Super Admin</div>
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">📁 Media & Assets Manager</h2>
+                    <p class="text-xs text-slate-400 mt-1 mb-4">Template এর Frame PNG এবং Custom Font (.ttf, .woff) আপলোড, রিনেইম, ও URL কপি করুন।</p>
+                </div>
+                <div>
+                    <a href="{{ route('admin.media.index') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2 rounded-lg transition shadow-md text-center">📁 Open Media Manager</a>
+                </div>
+            </div>
+        </div>
+        @endif
+
+
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_branding'))
+        {{-- ৩. ব্র্যান্ডিং সেকশন --}}
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h2 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2">
+                🎨 ব্র্যান্ডিং <span class="text-xs font-normal text-gray-400">(নিউজ কার্ডের জন্য)</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">ব্র্যান্ড নাম (e.g. Dhaka Post)</label>
+                    <input type="text" name="brand_name" value="{{ old('brand_name', $settings->brand_name ?? 'My News') }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">ডিফল্ট কালার থিম</label>
+                    <select name="default_theme_color" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        <option value="red" {{ ($settings->default_theme_color ?? '') == 'red' ? 'selected' : '' }}>Red (Breaking)</option>
+                        <option value="blue" {{ ($settings->default_theme_color ?? '') == 'blue' ? 'selected' : '' }}>Blue (Standard)</option>
+                        <option value="green" {{ ($settings->default_theme_color ?? '') == 'green' ? 'selected' : '' }}>Green (Sports/Islamic)</option>
+                        <option value="purple" {{ ($settings->default_theme_color ?? '') == 'purple' ? 'selected' : '' }}>Purple (Lifestyle)</option>
+                        <option value="black" {{ ($settings->default_theme_color ?? '') == 'black' ? 'selected' : '' }}>Black (Dark)</option>
+                    </select>
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">লোগো URL (অপশনাল)</label>
+                    <input type="url" name="logo_url" value="{{ old('logo_url', $settings->logo_url ?? '') }}" placeholder="https://example.com/logo.png" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    <p class="text-xs text-gray-500 mt-1">আপনি স্টুডিও থেকেও লোগো আপলোড করতে পারেন।</p>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_proxy'))
+        {{-- 🔥 SCRAPER PROXY SETTINGS --}}
+        <div class="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200 mt-6 relative overflow-hidden text-sm">
+            <h2 class="text-xl font-bold text-gray-800 mb-2 border-b border-gray-200 pb-2 flex items-center gap-2">
+                🌐 Scraper & Proxy Settings
+            </h2>
+            <p class="text-[11px] text-gray-600 mb-6 font-medium">নিউজ স্ক্র্যাপ করার জন্য নিজস্ব প্রক্সি এবং অ্যাডভান্স স্পেশাল API কনফিগারেশন। এগুলো খালি রাখলে গ্লোবাল সিস্টেমের (Super Admin) বা .env এর মান ব্যবহার করা হবে।</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Standard Proxy -->
+                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <h3 class="font-bold text-gray-700 mb-3 border-b pb-1">Standard Proxy (Puppeteer & Python)</h3>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Proxy Host</label>
+                            <input type="text" name="proxy_host" value="{{ old('proxy_host', $settings->proxy_host ?? '') }}" placeholder="proxy.example.com" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Proxy Port</label>
+                            <input type="number" name="proxy_port" value="{{ old('proxy_port', $settings->proxy_port ?? '') }}" placeholder="10000" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Username (Optional)</label>
+                            <input type="text" name="proxy_username" value="{{ old('proxy_username', $settings->proxy_username ?? '') }}" placeholder="username" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Password (Optional)</label>
+                            <input type="password" name="proxy_password" value="{{ old('proxy_password', $settings->proxy_password ?? '') }}" placeholder="••••••••" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Universal Scraping API -->
+                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <h3 class="font-bold text-blue-700 mb-3 border-b pb-1">🚀 SmartProxy Universal API</h3>
+                    <p class="text-xs mb-3 text-gray-500">কঠিন সাইট (যমুনা টিভি, Datadome-যুক্ত সাইট) স্ক্র্যাপ করার সবচেয়ে শক্তিশালী API টোকেন।</p>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Universal Scraping API Token (Basic Auth Token)</label>
+                        <input type="password" name="smartproxy_api_token" value="{{ old('smartproxy_api_token', $settings->smartproxy_api_token ?? '') }}" placeholder="Basic c21hc..." class="w-full border-gray-300 rounded shadow-sm focus:border-blue-500 focus:ring-blue-500 font-mono text-xs">
+                        <p class="text-[10px] text-gray-400 mt-1">কমান্ড <code>Basic Base64(User:Pass)</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        </div>
+        
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_target_language'))
+        {{-- 🔥 TARGET LANGUAGE SETTINGS --}}
+        <div class="bg-teal-50 p-6 rounded-xl shadow-sm border border-teal-200 relative overflow-hidden mt-6 text-sm">
+            <div class="absolute top-0 right-0 bg-teal-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm">Language</div>
+            <h2 class="text-xl font-bold text-teal-900 mb-2 border-b border-teal-200 pb-2 flex items-center gap-2">
+                🌍 Target Language (ডিফল্ট নিউজ ভাষা)
+            </h2>
+            <div class="bg-white p-4 rounded-lg border border-teal-300 shadow-sm">
+                <select name="target_language" class="w-full border-gray-300 rounded shadow-sm focus:border-teal-500 focus:ring-teal-500 font-semibold">
+                    <option value="" {{ empty($settings->target_language) ? 'selected' : '' }}>Website Default (ওয়েবসাইটের সেটিং অনুযায়ী)</option>
+                    <option value="bn" {{ ($settings->target_language ?? '') == 'bn' ? 'selected' : '' }}>Always Bengali (বাংলা)</option>
+                    <option value="en" {{ ($settings->target_language ?? '') == 'en' ? 'selected' : '' }}>Always English (ইংরেজি)</option>
+                </select>
+                <p class="text-[11px] text-gray-500 mt-2">আপনি যখন কোনো নিউজ স্ক্র্যাপ করবেন, তখন এই ভাষা অনুযায়ী প্রসেস হবে। (তবে ওয়েবসাইটের সেটিংসে আলাদা ভাষা দেওয়া থাকলে সেটি প্রাধান্য পাবে)।</p>
+            </div>
+        </div>
+        @endif
+
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_ai'))
+        {{-- 🔥 AI CONFIGURATION (NEW) --}}
+        <div class="bg-indigo-50 p-6 rounded-xl shadow-sm border border-indigo-200 relative overflow-hidden mt-6 text-sm">
+            <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm">AI Configuration</div>
+            <h2 class="text-xl font-bold text-indigo-900 mb-2 border-b border-indigo-200 pb-2 flex items-center gap-2">
+                🤖 AI অপটিমাইজেশন সেটিংস
+            </h2>
+            <p class="text-xs text-indigo-700 mb-6 font-medium">প্রতিটি প্রোভাইডারের জন্য API Key এবং Model সেট করতে পারবেন। (খালি রাখলে সিস্টেমের ডিফল্ট .env এরগুলো ব্যবহার হবে)</p>
+
+            <div class="mb-6 bg-white p-4 rounded-lg border border-indigo-300 shadow-sm">
+                <label class="block text-sm font-bold text-gray-800 mb-2">⭐ Primary AI Provider</label>
+                <select name="primary_ai" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-semibold text-indigo-900">
+                    <option value="deepseek" {{ ($settings->primary_ai ?? 'deepseek') == 'deepseek' ? 'selected' : '' }}>DeepSeek</option>
+                    <option value="qwen" {{ ($settings->primary_ai ?? '') == 'qwen' ? 'selected' : '' }}>Qwen (Alibaba / DashScope)</option>
+                    <option value="groq" {{ ($settings->primary_ai ?? '') == 'groq' ? 'selected' : '' }}>Groq (Llama / Mixtral)</option>
+                    <option value="huggingface" {{ ($settings->primary_ai ?? '') == 'huggingface' ? 'selected' : '' }}>Hugging Face (Inference API)</option>
+                    <option value="openai" {{ ($settings->primary_ai ?? '') == 'openai' ? 'selected' : '' }}>OpenAI (ChatGPT)</option>
+                    <option value="gemini" {{ ($settings->primary_ai ?? '') == 'gemini' ? 'selected' : '' }}>Gemini (Google)</option>
+                </select>
+                <p class="text-[11px] text-gray-500 mt-2">উপরের লিস্ট থেকে যে AI টি সিলেক্ট করবেন, নিউজ লেখার সময় সিস্টেম সবার আগে সেটি ব্যবহার করার চেষ্টা করবে। সেটি ফেইল করলে বাকিগুলো অটোমেটিক চেষ্টা করবে।</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Gemini -->
+                <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
+                    <h3 class="font-bold text-gray-700 mb-2">Gemini (Google)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">API Key</label>
+                            <input type="password" name="gemini_api_key" value="{{ old('gemini_api_key', $settings->gemini_api_key ?? '') }}" placeholder="AIzaSy... (খালি রাখলে .env ব্যবহার হবে)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Model Selection</label>
+                            <select name="gemini_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">Default (gemini-1.5-flash)</option>
+                                <option value="gemini-2.5-flash" {{ ($settings->gemini_model ?? '') == 'gemini-2.5-flash' ? 'selected' : '' }}>Gemini 2.5 Flash (Fast + Balance)</option>
+                                <option value="gemini-2.5-pro" {{ ($settings->gemini_model ?? '') == 'gemini-2.5-pro' ? 'selected' : '' }}>Gemini 2.5 Pro (Complex Reasoning)</option>
+                                <option value="gemini-2.5-flash-lite" {{ ($settings->gemini_model ?? '') == 'gemini-2.5-flash-lite' ? 'selected' : '' }}>Gemini 2.5 Flash-Lite (High Volume)</option>
+                                <option value="gemini-3.1-pro-preview" {{ ($settings->gemini_model ?? '') == 'gemini-3.1-pro-preview' ? 'selected' : '' }}>Gemini 3.1 Pro Preview (Latest Reasoning)</option>
+                                <option value="gemini-3.1-flash-lite-preview" {{ ($settings->gemini_model ?? '') == 'gemini-3.1-flash-lite-preview' ? 'selected' : '' }}>Gemini 3.1 Flash Lite Preview (Efficient)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DeepSeek -->
+                <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
+                    <h3 class="font-bold text-gray-700 mb-2">DeepSeek</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">API Key</label>
+                            <input type="password" name="deepseek_api_key" value="{{ old('deepseek_api_key', $settings->deepseek_api_key ?? '') }}" placeholder="sk-... (খালি রাখলে .env ব্যবহার হবে)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Model Selection</label>
+                            <select name="deepseek_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">Default (deepseek-chat)</option>
+                                <option value="deepseek-chat" {{ ($settings->deepseek_model ?? '') == 'deepseek-chat' ? 'selected' : '' }}>DeepSeek V3 (deepseek-chat)</option>
+                                <option value="deepseek-reasoner" {{ ($settings->deepseek_model ?? '') == 'deepseek-reasoner' ? 'selected' : '' }}>DeepSeek R1 (deepseek-reasoner)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Qwen (DashScope) -->
+                <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
+                    <h3 class="font-bold text-gray-700 mb-2">Qwen (DashScope API)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">API Key</label>
+                            <input type="password" name="qwen_api_key" value="{{ old('qwen_api_key', $settings->qwen_api_key ?? '') }}" placeholder="sk-... (DashScope Key)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Model Selection</label>
+                            <select name="qwen_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">Default (qwen-plus)</option>
+                                <option value="qwen-plus" {{ ($settings->qwen_model ?? '') == 'qwen-plus' ? 'selected' : '' }}>Qwen Plus (Balanced & Fast)</option>
+                                <option value="qwen-max" {{ ($settings->qwen_model ?? '') == 'qwen-max' ? 'selected' : '' }}>Qwen Max (Best Quality)</option>
+                                <option value="qwen2.5-72b-instruct" {{ ($settings->qwen_model ?? '') == 'qwen2.5-72b-instruct' ? 'selected' : '' }}>Qwen 2.5 72B (Open Source King)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Groq (Llama) -->
+                <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
+                    <h3 class="font-bold text-gray-700 mb-2">Groq (Llama / Mixtral)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">API Key</label>
+                            <input type="password" name="groq_api_key" value="{{ old('groq_api_key', $settings->groq_api_key ?? '') }}" placeholder="gsk_..." class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Model Selection</label>
+                            <select name="groq_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">Default (llama-3.3-70b-versatile)</option>
+                                <option value="llama-3.3-70b-versatile" {{ ($settings->groq_model ?? '') == 'llama-3.3-70b-versatile' ? 'selected' : '' }}>Llama 3.3 70B (Best Logic)</option>
+                                <option value="llama3-8b-8192" {{ ($settings->groq_model ?? '') == 'llama3-8b-8192' ? 'selected' : '' }}>Llama 3 8B (Super Fast)</option>
+                                <option value="mixtral-8x7b-32768" {{ ($settings->groq_model ?? '') == 'mixtral-8x7b-32768' ? 'selected' : '' }}>Mixtral 8x7B (Great Context)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hugging Face (Inference API) -->
+                <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
+                    <h3 class="font-bold text-gray-700 mb-2">Hugging Face (Inference API)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">API Key</label>
+                            <input type="password" name="huggingface_api_key" value="{{ old('huggingface_api_key', $settings->huggingface_api_key ?? '') }}" placeholder="hf_..." class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Model Selection</label>
+                            <select name="huggingface_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="Qwen/Qwen2.5-72B-Instruct" {{ ($settings->huggingface_model ?? 'Qwen/Qwen2.5-72B-Instruct') == 'Qwen/Qwen2.5-72B-Instruct' ? 'selected' : '' }}>Qwen 2.5 72B (Best Bengali)</option>
+                                <option value="meta-llama/Llama-3.3-70B-Instruct" {{ ($settings->huggingface_model ?? '') == 'meta-llama/Llama-3.3-70B-Instruct' ? 'selected' : '' }}>Llama 3.3 70B (Great Logic)</option>
+                                <option value="meta-llama/Meta-Llama-3-8B-Instruct" {{ ($settings->huggingface_model ?? '') == 'meta-llama/Meta-Llama-3-8B-Instruct' ? 'selected' : '' }}>Llama 3 8B (Fast)</option>
+                                <option value="mistralai/Mistral-Nemo-Instruct-2407" {{ ($settings->huggingface_model ?? '') == 'mistralai/Mistral-Nemo-Instruct-2407' ? 'selected' : '' }}>Mistral Nemo (Smart)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OpenAI -->
+                <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
+                    <h3 class="font-bold text-gray-700 mb-2">OpenAI (ChatGPT)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">API Key</label>
+                            <input type="password" name="openai_api_key" value="{{ old('openai_api_key', $settings->openai_api_key ?? '') }}" placeholder="sk-proj-... (খালি রাখলে .env ব্যবহার হবে)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Model Selection</label>
+                            <select name="openai_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">Default (gpt-4o-mini)</option>
+                                <option value="gpt-4o-mini" {{ ($settings->openai_model ?? '') == 'gpt-4o-mini' ? 'selected' : '' }}>GPT-4o Mini (Fast & Cheap)</option>
+                                <option value="gpt-4o" {{ ($settings->openai_model ?? '') == 'gpt-4o' ? 'selected' : '' }}>GPT-4o (Smartest)</option>
+                                <option value="o1-mini" {{ ($settings->openai_model ?? '') == 'o1-mini' ? 'selected' : '' }}>o1-mini (Reasoning)</option>
+                                <option value="o3-mini" {{ ($settings->openai_model ?? '') == 'o3-mini' ? 'selected' : '' }}>o3-mini (Advanced Reasoning)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_wp_laravel'))
+        {{-- 🔥 WordPress কানেকশন --}}
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 relative overflow-hidden">
+            <div class="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm">Required</div>
+            
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold text-gray-700 flex items-center gap-2">
+                    🔗 WordPress কানেকশন
+                </h2>
+                <button type="button" onclick="testWordPress()" class="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition font-bold border border-gray-300">
+                    ⚡ Test Connection
+                </button>
+            </div>
+            
+            <p id="wp_status_msg" class="text-xs font-bold mb-4"></p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">ওয়েবসাইট লিংক (URL)</label>
+                    <input type="url" id="wp_url" name="wp_url" value="{{ old('wp_url', $settings->wp_url ?? '') }}" placeholder="https://mywebsite.com" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">ইউজারনেম (Username)</label>
+                    <input type="text" id="wp_username" name="wp_username" value="{{ old('wp_username', $settings->wp_username ?? '') }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">App Password</label>
+                    <input type="password" id="wp_app_password" name="wp_app_password" value="{{ old('wp_app_password', $settings->wp_app_password ?? '') }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="abcd efgh ijkl mnop">
+                    <p class="text-xs text-gray-500 mt-1">WP Admin > Users > Profile > Application Passwords এ গিয়ে তৈরি করুন।</p>
+                </div>
+            </div>
+        </div>
+        
+        {{-- 🔥 LARAVEL CONNECTION SECTION --}}
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mt-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm">Laravel API</div>
+            <h2 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2">
+                🚀 Laravel Website কানেকশন
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">ওয়েবসাইট লিংক (Base URL)</label>
+                    <input type="url" name="laravel_site_url" value="{{ old('laravel_site_url', $settings->laravel_site_url ?? '') }}" 
+                           placeholder="https://mylaravelnews.com" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    <p class="text-xs text-gray-500 mt-1">শুধুমাত্র ডোমেইন লিংক দিন। ইউনিভার্সাল রিসিভারের ক্ষেত্রে আমরা অটোমেটিক <code>/api/external-news-post</code> এ হিট করব।</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">API Token (Secret Key)</label>
+                    <input type="text" name="laravel_api_token" value="{{ old('laravel_api_token', $settings->laravel_api_token ?? '') }}" 
+                           class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="যেকোনো গোপন পাসওয়ার্ড দিন">
+                </div>
+                
+                <div class="flex items-end">
+                    <label class="flex items-center gap-2 cursor-pointer bg-gray-50 px-4 py-2 rounded border border-gray-200 w-full">
+                        <input type="hidden" name="post_to_laravel" value="0">
+                        <input type="checkbox" name="post_to_laravel" value="1" {{ ($settings->post_to_laravel ?? false) ? 'checked' : '' }} class="toggle-checkbox w-5 h-5 text-indigo-600 rounded">
+                        <span class="font-bold text-gray-700">Enable Posting to Laravel</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                 <div>
+                      <label class="block text-sm font-bold text-gray-700 mb-1">নিউজ লিংক প্রিফিক্স (Route Prefix)</label>
+                      <div class="flex items-center">
+                          <span class="bg-gray-100 border border-r-0 border-gray-300 px-3 py-2 rounded-l text-gray-500 text-sm">/</span>
+                          <input type="text" name="laravel_route_prefix" value="{{ old('laravel_route_prefix', $settings->laravel_route_prefix ?? 'news') }}" 
+                                 class="w-full border-gray-300 rounded-r shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" 
+                                 placeholder="news, post, article">
+                      </div>
+                      <p class="text-xs text-gray-500 mt-1">উদাহরণ: আপনার সাইট যদি <code>site.com/post/123</code> হয়, তবে এখানে <b>post</b> লিখুন।</p>
+                 </div>
+            </div>
+        </div>
+
+        {{-- 🔥 NEW: ADVANCED CUSTOM API MAPPING (For Islamic TV etc.) --}}
+        <div class="bg-slate-50 p-6 rounded-xl shadow-sm border border-slate-300 mt-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 bg-slate-700 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm uppercase tracking-widest">Advanced Webhook</div>
+            
+            <div class="flex justify-between items-start mb-2 border-b border-slate-200 pb-2">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 cursor-pointer" onclick="toggleCustomApi()">
+                    ⚙️ Custom API Mapping (Optional) <span class="text-xs font-normal text-blue-600 hover:underline">(Click to Expand)</span>
+                </h2>
+                <a href="{{ route('docs.api-guide') }}" target="_blank" class="flex-shrink-0 flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition">
+                    📖 Full Guide
+                </a>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">যদি ক্লায়েন্ট আমাদের <code>UniversalNewsReceiverController</code> ব্যবহার না করে তাদের নিজস্ব API দেয়, তবে এই অংশটি পূরণ করুন।</p>
+            
+            <div id="custom-api-section" class="grid grid-cols-1 md:grid-cols-2 gap-6" style="display: {{ empty($settings->custom_api_url) ? 'none' : 'grid' }};">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Custom News Post API URL</label>
+                    <input type="url" name="custom_api_url" value="{{ old('custom_api_url', $settings->custom_api_url ?? '') }}" 
+                           placeholder="https://client-site.com/api/news-upload" class="w-full border-slate-300 rounded-lg shadow-sm text-sm focus:ring-slate-500 focus:border-slate-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Custom Category Fetch URL (Optional)</label>
+                    <input type="url" name="custom_category_url" value="{{ old('custom_category_url', $settings->custom_category_url ?? '') }}" 
+                           placeholder="https://client-site.com/api/news-categories" class="w-full border-slate-300 rounded-lg shadow-sm text-sm focus:ring-slate-500 focus:border-slate-500">
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Payload JSON Mapping</label>
+                    <textarea name="custom_api_mapping" rows="6" class="w-full border-slate-300 rounded-lg shadow-sm text-sm font-mono focus:ring-slate-500 focus:border-slate-500" placeholder='{"title":"news_title", "content":"description", "category":"news_category", "token":"api_key", "extra":{"priority":"1"}}'>{{ old('custom_api_mapping', $settings->custom_api_mapping ?? '') }}</textarea>
+                    <p class="text-[11px] text-slate-500 mt-1">Available Keys: <code>title</code>, <code>content</code>, <code>image</code>, <code>category</code>, <code>tags</code>, <code>token</code>, <code>extra</code> (for static fields).</p>
+                </div>
+            </div>
+        </div>
+        @endif
+        
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_social'))
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            {{-- Facebook --}}
+            <div class="bg-white p-5 rounded-lg shadow border border-blue-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-lg text-blue-700 flex items-center gap-2">
+                        <i class="fab fa-facebook"></i> Facebook Pages Connection
+                    </h3>
+                </div>
+                
+                <div class="mb-4 bg-blue-50 p-3 rounded border border-blue-100">
+                    <label class="block text-sm font-bold text-blue-800 mb-2">Connect New Page</label>
+                    <div class="space-y-2">
+                        <input type="text" id="new_fb_page_id" class="w-full border p-2 rounded text-sm bg-white" placeholder="Page ID (e.g., 100089...)">
+                        <input type="text" id="new_fb_page_name" class="w-full border p-2 rounded text-sm bg-white" placeholder="Page Name (e.g., Daily News)">
+                        <textarea id="new_fb_access_token" rows="2" class="w-full border p-2 rounded text-sm bg-white" placeholder="Page Access Token..."></textarea>
+                        <label class="flex items-center gap-2 cursor-pointer text-[12px] font-bold text-gray-700">
+                            <input type="checkbox" id="new_fb_comment_link" class="w-4 h-4 text-blue-600 rounded">
+                            Share Post Link in Comment (Instead of Caption)
+                        </label>
+                        <button type="button" onclick="saveNewFbPage(this)" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition shadow-sm">
+                            + Add Page
+                        </button>
+                    </div>
+                </div>
+
+                <div class="">
+                    <label class="block text-sm font-bold text-gray-700 mb-2 border-b pb-1">Connected Pages</label>
+                    <div id="fb_pages_list" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                        @forelse($fbPages as $fbPage)
+                            <div class="fb-page-row flex items-center justify-between p-2 border rounded {{ $fbPage->is_active ? 'bg-white border-gray-200' : 'bg-red-50 border-red-200' }}" data-id="{{ $fbPage->id }}">
+                                <div class="flex-1 min-w-0 pr-2">
+                                    <p class="font-bold text-gray-800 text-sm truncate flex items-center gap-2">
+                                        {{ $fbPage->page_name }}
+                                        @if($fbPage->is_studio_default)
+                                            <span class="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded border border-blue-200" title="Studio Modal এ ডিফল্ট হিসেবে সিলেক্ট থাকবে">Default</span>
+                                        @endif
+                                    </p>
+                                    <p class="text-[11px] text-gray-500 font-mono">ID: {{ $fbPage->page_id }}</p>
+                                    <div class="mt-1 flex items-center gap-2">
+                                        <button type="button" onclick="editPage({{ $fbPage->id }}, '{{ addslashes($fbPage->page_name) }}')" class="text-[11px] bg-gray-50 text-gray-700 px-2 py-0.5 rounded hover:bg-gray-100 font-bold border border-gray-200">
+                                            ✏️ Edit
+                                        </button>
+                                        <button type="button" onclick="testSavedPage({{ $fbPage->id }}, this)" class="text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded hover:bg-blue-100 font-bold border border-blue-200">
+                                            ⚡ Test
+                                        </button>
+                                        <button type="button" onclick="toggleCommentLink({{ $fbPage->id }}, this)" class="text-[11px] px-2 py-0.5 rounded font-bold border {{ $fbPage->comment_link ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-gray-50 text-gray-600 border-gray-200' }}">
+                                            {{ $fbPage->comment_link ? '💬 Comment Link (On)' : '💬 Comment Link (Off)' }}
+                                        </button>
+                                        <button type="button" onclick="togglePage({{ $fbPage->id }}, this)" class="text-[11px] px-2 py-0.5 rounded font-bold border {{ $fbPage->is_active ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-green-50 text-green-700 border-green-200' }}">
+                                            {{ $fbPage->is_active ? '⏸ Pause' : '▶️ Resume' }}
+                                        </button>
+                                        <button type="button" onclick="toggleDefaultPage({{ $fbPage->id }}, this)" class="text-[11px] px-2 py-0.5 rounded font-bold border hover:bg-gray-100 transition {{ $fbPage->is_studio_default ? 'text-gray-400 border-gray-200 bg-gray-50 cursor-not-allowed' : 'text-blue-600 border-blue-200 bg-white shadow-sm' }}" {{ $fbPage->is_studio_default ? 'disabled' : '' }}>
+                                            {{ $fbPage->is_studio_default ? '✅ Default' : '⭐ Set Default' }}
+                                        </button>
+                                        <span class="status-msg ml-auto"></span>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="deletePage({{ $fbPage->id }}, this)" class="text-xs text-red-400 hover:text-red-700 px-2 py-2 rounded hover:bg-red-50 transition" title="Delete Page">
+                                    🗑️
+                                </button>
+                            </div>
+                        @empty
+                            <p class="text-xs text-gray-400 text-center py-4 bg-gray-50 rounded border border-dashed">No pages connected yet.</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <script>
+            function saveNewFbPage(btn) {
+                const id = document.getElementById('new_fb_page_id').value.trim();
+                const name = document.getElementById('new_fb_page_name').value.trim();
+                const token = document.getElementById('new_fb_access_token').value.trim();
+                const commentLink = document.getElementById('new_fb_comment_link').checked;
+                if(!id || !token || !name) { alert("Page ID, Name, and Token are required"); return; }
+                
+                btn.innerText = 'Saving...'; btn.disabled = true;
+                fetch('{{ route("fb-pages.store") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                    body: JSON.stringify({ page_id: id, page_name: name, access_token: token, comment_link: commentLink })
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) { location.reload(); } else { alert(d.message || "Failed to add page"); btn.innerText = '+ Add Page'; btn.disabled = false; }
+                }).catch(() => { alert("Error connecting to server"); btn.innerText = '+ Add Page'; btn.disabled = false; });
+            }
+
+            function testSavedPage(id, btn) {
+                const orig = btn.innerText; btn.innerText = 'Testing...'; btn.disabled = true;
+                const statusSpan = btn.parentElement.querySelector('.status-msg');
+                statusSpan.innerHTML = '<span class="text-[10px] text-gray-500">Wait...</span>';
+                
+                fetch(`/facebook-pages/${id}/test`, { method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }})
+                .then(r => r.json())
+                .then(d => {
+                    statusSpan.innerHTML = `<span class="text-[10px] font-bold ${d.success ? 'text-green-600' : 'text-red-600'}">${d.message}</span>`;
+                }).catch(e => { statusSpan.innerHTML = '<span class="text-[10px] text-red-600">Error</span>'; }).finally(() => { btn.innerText = orig; btn.disabled = false; });
+            }
+
+            function togglePage(id, btn) {
+                btn.disabled = true;
+                fetch(`/facebook-pages/${id}/toggle`, { method: 'PATCH', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }})
+                .then(r => r.json())
+                .then(d => { if (d.success) location.reload(); else alert(d.message || "Failed."); })
+                .catch(e => { alert("Error"); btn.disabled = false; });
+            }
+
+            function toggleCommentLink(id, btn) {
+                btn.disabled = true;
+                fetch(`/facebook-pages/${id}/toggle-comment`, { method: 'PATCH', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }})
+                .then(r => r.json())
+                .then(d => { if (d.success) location.reload(); else alert(d.message || "Failed."); })
+                .catch(e => { alert("Error"); btn.disabled = false; });
+            }
+            
+            function toggleDefaultPage(id, btn) {
+                btn.disabled = true;
+                fetch(`/facebook-pages/${id}/toggle-default`, { method: 'PATCH', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }})
+                .then(r => r.json())
+                .then(d => { if (d.success) location.reload(); else alert(d.message || "Failed."); })
+                .catch(e => { alert("Error"); btn.disabled = false; });
+            }
+
+            function deletePage(id, btn) {
+                if(!confirm('Are you sure you want to delete this page?')) return;
+                fetch(`/facebook-pages/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }})
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) btn.closest('.fb-page-row').remove();
+                    else alert(d.message || "Failed to delete.");
+                })
+                .catch(e => { alert("Network Error or Unauthorized"); });
+            }
+
+            function editPage(id, currentName) {
+                const newName = prompt("Update Page Name:", currentName);
+                if (newName === null) return;
+                const newToken = prompt("Update Access Token (required):");
+                if (!newToken) {
+                    alert('Token is required to update.');
+                    return;
+                }
+                
+                fetch(`/facebook-pages/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                    body: JSON.stringify({ page_name: newName, access_token: newToken })
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) { alert(d.message); location.reload(); }
+                    else { alert(d.message || "Failed to update page"); }
+                }).catch(e => alert("Error updating page."));
+            }
+
+            function testTwitter() {
+                const apiKey = document.getElementById('twitter_api_key').value.trim();
+                const apiSecret = document.getElementById('twitter_api_secret').value.trim();
+                const accessToken = document.getElementById('twitter_access_token').value.trim();
+                const accessSecret = document.getElementById('twitter_access_secret').value.trim();
+                const msg = document.getElementById('twitter_status_msg');
+
+                if(!apiKey || !apiSecret || !accessToken || !accessSecret) {
+                    msg.innerHTML = '<span class="text-red-500">সবগুলো Keys এবং Tokens দিন।</span>';
+                    return;
+                }
+
+                msg.innerHTML = '<span class="text-blue-500">টেস্টিং চলছে...</span>';
+                
+                fetch('{{ route("settings.test-twitter") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                    body: JSON.stringify({ 
+                        twitter_api_key: apiKey, 
+                        twitter_api_secret: apiSecret, 
+                        twitter_access_token: accessToken, 
+                        twitter_access_secret: accessSecret 
+                    })
+                })
+                .then(r => r.json())
+                .then(d => {
+                    msg.innerHTML = `<span class="${d.success ? 'text-green-600' : 'text-red-600'}">${d.message.replace(/\n/g, '<br>')}</span>`;
+                }).catch(() => msg.innerHTML = '<span class="text-red-500">Network Error!</span>');
+            }
+            </script>
+            
+            {{-- Telegram --}}
+            <div class="bg-white p-5 rounded-lg shadow border border-sky-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-lg text-sky-600 flex items-center gap-2">
+                        <i class="fab fa-telegram"></i> Telegram Channel
+                    </h3>
+                    <button type="button" onclick="testTelegram()" class="text-xs bg-sky-100 text-sky-700 px-3 py-1 rounded hover:bg-sky-200 transition font-bold border border-sky-200">
+                        ⚡ Test Connection
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm font-bold text-gray-700">Bot Token</label>
+                    <input type="text" id="telegram_bot_token" name="telegram_bot_token" value="{{ $settings->telegram_bot_token ?? '' }}" 
+                           class="w-full border p-2 rounded text-sm" placeholder="Ex: 123456:ABC-DEF...">
+                    <p class="text-[10px] text-gray-400">BotFather থেকে পাওয়া টোকেন দিন।</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm font-bold text-gray-700">Channel ID</label>
+                    <input type="text" id="telegram_channel_id" name="telegram_channel_id" value="{{ $settings->telegram_channel_id ?? '' }}" 
+                           class="w-full border p-2 rounded text-sm" placeholder="Ex: -100123456789">
+                    
+                    <p id="tg_status_msg" class="text-xs mt-2 font-bold"></p>
+                    
+                    <p class="text-[10px] text-gray-400 mt-1">বটকে চ্যানেলের অ্যাডমিন করতে ভুলবেন না।</p>
+                </div>
+            </div>
+
+            {{-- Twitter / X --}}
+            <div class="bg-white p-5 rounded-lg shadow border border-slate-200">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                        🐦 Twitter / X
+                    </h3>
+                    <button type="button" onclick="testTwitter()" class="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded hover:bg-slate-200 transition font-bold border border-slate-200">
+                        ⚡ Test Connection
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">API Key</label>
+                        <input type="text" id="twitter_api_key" name="twitter_api_key" value="{{ $settings->twitter_api_key ?? '' }}" 
+                               class="w-full border p-2 rounded text-sm placeholder-gray-300" placeholder="ex: abc123def...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">API Key Secret</label>
+                        <input type="text" id="twitter_api_secret" name="twitter_api_secret" value="{{ $settings->twitter_api_secret ?? '' }}" 
+                               class="w-full border p-2 rounded text-sm placeholder-gray-300" placeholder="ex: abc123def...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Access Token</label>
+                        <input type="text" id="twitter_access_token" name="twitter_access_token" value="{{ $settings->twitter_access_token ?? '' }}" 
+                               class="w-full border p-2 rounded text-sm placeholder-gray-300" placeholder="ex: 12345-abc...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Access Token Secret</label>
+                        <input type="text" id="twitter_access_secret" name="twitter_access_secret" value="{{ $settings->twitter_access_secret ?? '' }}" 
+                               class="w-full border p-2 rounded text-sm placeholder-gray-300" placeholder="ex: abc123def...">
+                    </div>
+                </div>
+                <p id="twitter_status_msg" class="text-xs mt-3 font-bold"></p>
+                <p class="text-[10px] text-gray-400 mt-1">Twitter Developer Portal থেকে প্রাপ্ত Keys এবং Tokens (OAuth 1.0a User Context) দিন।</p>
+            </div>
+        </div>
+        
+        <div class="mt-4 bg-white p-4 rounded shadow">
+            <h3 class="font-bold mb-3">Auto Post Preferences</h3>
+            <div class="flex gap-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="hidden" name="post_to_fb" value="0">
+                    <input type="checkbox" name="post_to_fb" value="1" {{ $settings->post_to_fb ? 'checked' : '' }} class="toggle-checkbox">
+                    <span>Facebook</span>
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="hidden" name="post_to_telegram" value="0">
+                    <input type="checkbox" name="post_to_telegram" value="1" {{ $settings->post_to_telegram ? 'checked' : '' }} class="toggle-checkbox">
+                    <span>Telegram</span>
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="hidden" name="post_to_twitter" value="0">
+                    <input type="checkbox" name="post_to_twitter" value="1" {{ $settings->post_to_twitter ? 'checked' : '' }} class="toggle-checkbox">
+                    <span>Twitter/X</span>
+                </label>
+            </div>
+        </div>
+        @endif
+                
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_category'))
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold text-gray-700 flex items-center gap-2">
+                    📂 ক্যাটাগরি ম্যাপিং
+                </h2>
+                <button type="button" id="refresh-cat-btn" onclick="fetchWPCategories(true)" class="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-indigo-100 border border-indigo-200 transition flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Refresh Categories
+                </button>
+            </div>
+
+            <p class="text-sm text-gray-500 mb-6 bg-blue-50 p-3 rounded border border-blue-100">
+                💡 বাম পাশে আমাদের ক্যাটাগরি এবং ডান পাশে আপনার ওয়েবসাইটের ক্যাটাগরি সিলেক্ট করুন। যাতে নিউজ সঠিক জায়গায় পোস্ট হয়।
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                @php
+                    $aiCategories = [
+                        'Politics', 'International', 'Sports', 'Cricket', 'Football', 
+                        'Entertainment', 'Technology', 'Economy', 'Business', 
+                        'Bangladesh', 'National', 'Crime', 'Education', 'Health', 
+                        'Lifestyle', 'Religion', 'Travel', 'Jobs', 'Opinion', 
+                        'Feature', 'Others', 'Science', 'Environment', 'Weather', 
+                        'Agriculture', 'Startup', 'Finance', 'Stock Market', 'Banking', 
+                        'Law & Justice', 'Defense', 'Cyber Security', 'AI & Robotics', 
+                        'Gadgets', 'Mobile', 'Automobile', 'Real Estate', 'Energy', 
+                        'Tourism', 'Food & Recipe', 'Fashion', 'Art & Culture', 
+                        'History', 'Women', 'Youth', 'Editorial', 'Breaking News', 
+                        'Exclusive', 'Investigation', 'Human Rights', 'Social Issues', 
+                        'Public Health', 'Mental Health', 'Child Care', 'Parenting', 
+                        'Senior Citizens', 'Immigration', 'Expat Life', 'Remittance', 
+                        'Development', 'Infrastructure', 'Rural Life', 'Urban Life', 
+                        'Local News', 'City News', 'Media & Press', 'Telecom', 
+                        'Internet', 'E-Commerce', 'Digital Lifestyle', 'Gaming', 
+                        'E-Sports', 'Movies', 'Music', 'TV & OTT', 'Books & Literature' 
+                    ];
+                    $savedMapping = $settings->category_mapping ?? [];
+                @endphp
+
+                @foreach($aiCategories as $cat)
+                    <div class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded transition">
+                        <span class="w-1/3 text-sm font-bold text-gray-700">{{ $cat }}</span>
+                        <div class="w-2/3 relative">
+                            <select name="category_mapping[{{ $cat }}]" class="wp-cat-selector w-full border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Select WP Category</option>
+                            </select>
+                            <input type="hidden" class="saved-val" value="{{ $savedMapping[$cat] ?? '' }}">
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h2 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2">
+                ✈️ টেলিগ্রাম নোটিফিকেশন
+            </h2>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">চ্যানেল আইডি (Channel ID)</label>
+                <input type="text" name="telegram_channel_id" value="{{ old('telegram_channel_id', $settings->telegram_channel_id ?? '') }}" placeholder="-100xxxxxxxxxx" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                <p class="text-xs text-gray-500 mt-1">আপনার বটকে চ্যানেলে এডমিন করুন এবং চ্যানেল আইডি দিন।</p>
+            </div>
+        </div>
+
+        <div class="flex justify-end pt-4">
+            <button type="submit" class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-3 rounded-xl font-bold text-lg hover:shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2">
+                💾 সেটিংস সেভ করুন
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Toggle Custom API Section
+    function toggleCustomApi() {
+        const section = document.getElementById('custom-api-section');
+        if (section.style.display === 'none') {
+            section.style.display = 'grid';
+        } else {
+            section.style.display = 'none';
+        }
+    }
+
+    // 🔥 Apply JSON from API Guide page (sessionStorage)
+    document.addEventListener('DOMContentLoaded', function () {
+        const pending = sessionStorage.getItem('pendingApiMapping');
+        if (pending) {
+            const textarea = document.querySelector('textarea[name="custom_api_mapping"]');
+            if (textarea) {
+                textarea.value = pending;
+                sessionStorage.removeItem('pendingApiMapping');
+                // Auto-expand the custom API section
+                const section = document.getElementById('custom-api-section');
+                if (section) section.style.display = 'grid';
+                // Scroll to it
+                setTimeout(() => {
+                    section?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            }
+        }
+    });
+
+    // ১. ক্যাটাগরি ফেচ করা (Cache logic সহ)
+    function fetchWPCategories(forceRefresh = false) {
+        const btn = document.getElementById('refresh-cat-btn');
+        const originalText = btn.innerHTML;
+        
+        btn.innerHTML = '⏳ Loading...';
+        btn.disabled = true;
+
+        // যদি forceRefresh true হয়, তবে URL-এ refresh=1 যোগ হবে
+        let url = "{{ route('settings.fetch-categories') }}";
+        if (forceRefresh) {
+            url += "?refresh=1";
+        }
+        
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if(data.error) {
+                    alert(data.error);
+                } else {
+                    populateDropdowns(data);
+                    if(forceRefresh) alert('✅ ক্যাটাগরি লিস্ট আপডেট করা হয়েছে!');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Connection Failed! Please check Settings.');
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+    }
+
+    // ২. ড্রপডাউন পপুলেট করা
+    function populateDropdowns(categories) {
+        const selectors = document.querySelectorAll('.wp-cat-selector');
+        selectors.forEach(select => {
+            const savedVal = select.nextElementSibling.value;
+            let options = '<option value="">Select Category</option>';
+            
+            if (Array.isArray(categories)) {
+                categories.forEach(cat => {
+                    const isSelected = (cat.id == savedVal) ? 'selected' : '';
+                    options += `<option value="${cat.id}" ${isSelected}>${cat.name} (ID: ${cat.id})</option>`;
+                });
+            }
+            select.innerHTML = options;
+        });
+    }
+
+    // ৩. কানেকশন টেস্ট ফাংশনগুলো (WordPress, FB, Telegram)
+    function genericTest(type, data, statusId, btn) {
+        const statusMsg = document.getElementById(statusId);
+        const originalBtnText = btn.innerHTML;
+
+        btn.innerHTML = "Checking...";
+        btn.disabled = true;
+        statusMsg.innerHTML = "⏳ Connecting...";
+
+        fetch(`/settings/test/${type}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => {
+            statusMsg.innerText = data.message;
+            statusMsg.className = data.success ? "text-xs font-bold mt-2 text-green-600" : "text-xs font-bold mt-2 text-red-600";
+        })
+        .finally(() => {
+            btn.innerHTML = originalBtnText;
+            btn.disabled = false;
+        });
+    }
+
+    // বাটন ক্লিক ইভেন্টগুলো
+    function testWordPress() {
+        genericTest('wordpress', {
+            wp_url: document.getElementById('wp_url').value,
+            wp_username: document.getElementById('wp_username').value,
+            wp_app_password: document.getElementById('wp_app_password').value
+        }, 'wp_status_msg', document.activeElement);
+    }
+
+    function testFacebook() {
+        genericTest('facebook', {
+            fb_page_id: document.getElementById('fb_page_id').value,
+            fb_access_token: document.getElementById('fb_access_token').value
+        }, 'fb_status_msg', document.activeElement);
+    }
+
+    function testTelegram() {
+        genericTest('telegram', {
+            telegram_bot_token: document.getElementById('telegram_bot_token').value,
+            telegram_channel_id: document.getElementById('telegram_channel_id').value
+        }, 'tg_status_msg', document.activeElement);
+    }
+
+    // ৪. পেজ লোড হলে অটোমেটিক ক্যাটাগরি লোড (ক্যাশ থেকে আসবে)
+    document.addEventListener('DOMContentLoaded', () => {
+        @if(($settings->wp_url && $settings->wp_username) || ($settings->laravel_site_url && $settings->laravel_api_token) || $settings->custom_category_url)
+            fetchWPCategories(false); 
+        @endif
+    });
+</script>
+
+@endsection

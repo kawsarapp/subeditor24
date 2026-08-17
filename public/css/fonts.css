@@ -1,0 +1,42 @@
+@font-face {
+  font-family: 'NotoSerif-WatchBangladesh';
+  src: url('/fonts/NotoSerifBengali_Condensed-SemiBold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'NotoSerif-TodayEvents';
+  src: url('/fonts/NotoSerifBengali_Condensed-SemiBold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'NotoSerif-EditorA';
+  src: url('/fonts/NotoSerifBengali_Condensed-SemiBold.ttf') format('truetype');
+}
+
+
+@font-face {
+  font-family: 'Noto Serif Bengali SemiBold';
+  src: url('/fonts/NotoSerifBengali_Condensed-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+}
+
+
+
+@font-face {
+  font-family: 'NotoSerifBengali-Regular';
+  src: url('/fonts/NotoSerifBengali-Regular.ttf') format('truetype');
+  font-weight: 700;
+}
+
+
+
+
+
+@font-face {
+  font-family: 'SutonnyMJBold';
+  src: url('/fonts/SutonnyMJBold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+
+
