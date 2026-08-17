@@ -3,42 +3,42 @@
         
         <div class="flex items-center gap-6 xl:gap-8">
             <a href="{{ auth()->user()->role === 'reporter' ? route('reporter.news.index') : route('news.index') }}" class="flex items-center gap-2.5 group">
-                <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform"><i class="fa-solid fa-bolt"></i></div>
-                <span class="font-bold text-xl tracking-tight text-slate-900 group-hover:text-indigo-700 transition-colors">Newsmanage<span class="text-indigo-600">24</span></span>
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center text-slate-950 shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform"><i class="fa-solid fa-feather-pointed font-black text-base"></i></div>
+                <span class="font-extrabold text-xl tracking-tight text-white group-hover:text-emerald-400 transition-colors">Subeditor<span class="text-emerald-400">24</span></span>
             </a>
 
             @auth
             @if(auth()->user()->role === 'reporter')
-                <div class="flex items-center bg-slate-100/50 p-1.5 rounded-xl border border-slate-200/50 gap-1">
-                    <a href="{{ route('reporter.news.create') }}" class="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all duration-300 {{ request()->routeIs('reporter.news.create') ? 'bg-indigo-600 text-white shadow-md transform scale-[1.02]' : 'text-slate-600 hover:text-indigo-600 hover:bg-white' }}">
+                <div class="flex items-center bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800/80 gap-1">
+                    <a href="{{ route('reporter.news.create') }}" class="flex items-center gap-2 px-4 py-1.5 rounded-xl text-sm font-bold transition-all duration-300 {{ request()->routeIs('reporter.news.create') ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-md transform scale-[1.02]' : 'text-slate-300 hover:text-emerald-400 hover:bg-slate-800/60' }}">
                         <i class="fa-solid fa-plus"></i> খবর পাঠান
                     </a>
-                    <a href="{{ route('reporter.news.index') }}" class="flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all duration-300 {{ request()->routeIs('reporter.news.index') ? 'bg-white text-indigo-600 shadow-sm transform scale-[1.02]' : 'text-slate-600 hover:text-indigo-600 hover:bg-white' }}">
+                    <a href="{{ route('reporter.news.index') }}" class="flex items-center gap-2 px-4 py-1.5 rounded-xl text-sm font-bold transition-all duration-300 {{ request()->routeIs('reporter.news.index') ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-md transform scale-[1.02]' : 'text-slate-300 hover:text-emerald-400 hover:bg-slate-800/60' }}">
                         <i class="fa-solid fa-list-ul"></i> আমার খবরসমূহ
                     </a>
                 </div>
             @else
-                <div class="flex items-center bg-slate-100/50 p-1.5 rounded-xl border border-slate-200/50 gap-1">
-                    <a href="{{ route('news.index') }}" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 {{ request()->routeIs('news.index') ? 'bg-white shadow-sm text-indigo-600 scale-[1.02]' : 'text-slate-500 hover:text-indigo-600 hover:bg-white' }}">Feed</a>
-                    <a href="{{ route('news.published') }}" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 {{ request()->routeIs('news.published') ? 'bg-white shadow-sm text-indigo-600 scale-[1.02]' : 'text-slate-500 hover:text-indigo-600 hover:bg-white' }}">Published</a>
+                <div class="flex items-center bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800/80 gap-1">
+                    <a href="{{ route('news.index') }}" class="px-4 py-1.5 rounded-xl text-sm font-bold transition-all duration-200 {{ request()->routeIs('news.index') ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-300 hover:text-emerald-400 hover:bg-slate-800/60' }}">Feed</a>
+                    <a href="{{ route('news.published') }}" class="px-4 py-1.5 rounded-xl text-sm font-bold transition-all duration-200 {{ request()->routeIs('news.published') ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-300 hover:text-emerald-400 hover:bg-slate-800/60' }}">Published</a>
                     
                     @if(auth()->user()->hasPermission('can_direct_publish'))
-                    <a href="{{ route('news.create') }}" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 {{ request()->routeIs('news.create') ? 'bg-white shadow-sm text-indigo-600 scale-[1.02]' : 'text-slate-500 hover:text-indigo-600 hover:bg-white' }}">Create</a>
+                    <a href="{{ route('news.create') }}" class="px-4 py-1.5 rounded-xl text-sm font-bold transition-all duration-200 {{ request()->routeIs('news.create') ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-300 hover:text-emerald-400 hover:bg-slate-800/60' }}">Create</a>
                     @endif
                     
                     @if(auth()->user()->hasPermission('can_ai'))
-                    <a href="{{ route('news.drafts') }}" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 {{ request()->routeIs('news.drafts') ? 'bg-white shadow-sm text-indigo-600 scale-[1.02]' : 'text-slate-500 hover:text-indigo-600 hover:bg-white' }}">Drafts</a>
+                    <a href="{{ route('news.drafts') }}" class="px-4 py-1.5 rounded-xl text-sm font-bold transition-all duration-200 {{ request()->routeIs('news.drafts') ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-300 hover:text-emerald-400 hover:bg-slate-800/60' }}">Drafts</a>
                     @endif
 
                     @if(auth()->user()->hasPermission('can_scrape'))
-                    <a href="{{ route('websites.index') }}" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 {{ request()->routeIs('websites.*') ? 'bg-white shadow-sm text-indigo-600 scale-[1.02]' : 'text-slate-500 hover:text-indigo-600 hover:bg-white' }}">Observe</a>
+                    <a href="{{ route('websites.index') }}" class="px-4 py-1.5 rounded-xl text-sm font-bold transition-all duration-200 {{ request()->routeIs('websites.*') ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-300 hover:text-emerald-400 hover:bg-slate-800/60' }}">Observe</a>
                     @endif
 
                     {{-- 🔥 NEW: Reporter News directly in Top Nav --}}
                     @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_reporters'))
-                    <div class="w-[1px] h-5 bg-slate-300 mx-1"></div>
-                    <a href="{{ route('manage.reporters.news') }}" class="px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 transition-all duration-200 {{ request()->routeIs('manage.reporters.news') ? 'bg-indigo-50 shadow-sm text-indigo-700 scale-[1.02]' : 'text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/50' }}">
-                        <i class="fa-solid fa-satellite-dish text-indigo-400"></i> Team News
+                    <div class="w-[1px] h-5 bg-slate-800 mx-1"></div>
+                    <a href="{{ route('manage.reporters.news') }}" class="px-4 py-1.5 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all duration-200 {{ request()->routeIs('manage.reporters.news') ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 scale-[1.02]' : 'text-slate-400 hover:text-emerald-400 hover:bg-slate-800/60' }}">
+                        <i class="fa-solid fa-satellite-dish text-emerald-400"></i> Team News
                     </a>
                     @endif
                 </div>

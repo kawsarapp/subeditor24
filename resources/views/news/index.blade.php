@@ -41,40 +41,40 @@
 </style>
 
 {{-- Header --}}
-<div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-    <h2 class="text-2xl font-bold text-gray-800 font-bangla flex items-center gap-2">
+<div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+    <h2 class="text-2xl font-extrabold text-white font-bangla flex items-center gap-3 tracking-tight">
         📰 আজকের তাজা খবর (Raw News)
-        <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded-full border border-indigo-200 shadow-sm">{{ $newsItems->total() }}</span>
+        <span class="bg-emerald-950/90 text-emerald-400 text-xs px-3 py-1 rounded-full border border-emerald-800/80 font-bold shadow-inner">{{ $newsItems->total() }}টি খবর</span>
     </h2>
     <div class="flex items-center gap-3">
-        <div id="loadingIndicator" class="hidden items-center gap-2 text-indigo-600 text-sm font-bold bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100 animate-pulse">
+        <div id="loadingIndicator" class="hidden items-center gap-2 text-emerald-400 text-sm font-bold bg-emerald-950/80 px-4 py-2 rounded-xl border border-emerald-800/80 animate-pulse">
             <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             Scraping...
         </div>
-        <button onclick="window.location.reload()" class="bg-white border border-gray-300 text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-1 shadow-sm">
+        <button onclick="window.location.reload()" class="bg-slate-900 border border-slate-800 text-slate-300 hover:text-emerald-400 hover:border-emerald-500/50 px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg transition-all">
             🔄 Refresh
         </button>
     </div>
 </div>
 
 @if(session('success'))
-    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded shadow-sm">{{ session('success') }}</div>
+    <div class="bg-emerald-950/80 border-l-4 border-emerald-500 text-emerald-300 p-4 mb-6 rounded-xl shadow-sm">{{ session('success') }}</div>
 @endif
 
 {{-- Main Grid --}}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-2" id="mainNewsGrid">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="mainNewsGrid">
     @foreach($newsItems as $item)
-    <div id="news-card-{{ $item->id }}" class="group relative bg-white rounded-2xl transition-all duration-500 hover:-translate-y-2 flex flex-col h-full overflow-hidden border border-slate-100 hover:border-indigo-300/50 shadow-sm hover:shadow-xl">
+    <div id="news-card-{{ $item->id }}" class="group relative glass-card rounded-2xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col h-full overflow-hidden border border-slate-800/80 hover:border-emerald-500/50 shadow-xl hover:shadow-emerald-500/10">
         
         {{-- Status Badge --}}
         <div class="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
             @if($item->status == 'processing')
-                <div class="bg-amber-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 animate-pulse">
+                <div class="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-3 py-1.5 rounded-lg flex items-center gap-1.5 animate-pulse shadow-md">
                     <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     AI WRITING...
                 </div>
             @else
-                <div class="bg-slate-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-white/20">
+                <div class="bg-slate-900/90 text-emerald-400 text-[10px] font-extrabold px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-emerald-800/60 shadow-md">
                     RAW NEWS
                 </div>
             @endif

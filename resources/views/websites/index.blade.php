@@ -1,28 +1,28 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     
     <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2">
-            🌐 নিউজ <span class="text-sm bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full">{{ $websites->count() }}</span>
+        <h1 class="text-3xl font-extrabold text-white flex items-center gap-3 tracking-tight">
+            🌐 নিউজ সোর্স <span class="text-xs bg-emerald-950/90 text-emerald-400 border border-emerald-800/80 px-3.5 py-1 rounded-full font-bold shadow-inner">{{ $websites->count() }}টি সক্রিয়</span>
         </h1>
     </div>
 
     @if(session('success'))
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded shadow-sm">
+        <div class="bg-emerald-900/20 border-l-4 border-emerald-500 text-emerald-300 p-4 mb-6 rounded-lg shadow-sm">
             {{ session('success') }}
         </div>
     @endif
     
     @if(session('error'))
-        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm">
+        <div class="bg-red-900/20 border-l-4 border-red-500 text-red-300 p-4 mb-6 rounded-lg shadow-sm">
             {{ session('error') }}
         </div>
     @endif
 
     @if($errors->any())
-        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm">
+        <div class="bg-red-900/20 border-l-4 border-red-500 text-red-300 p-4 mb-6 rounded-lg shadow-sm">
             <ul class="list-disc pl-5 text-sm font-bold">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -33,29 +33,32 @@
 
     {{-- 🔥 SUPER ADMIN ONLY: ADD NEW WEBSITE FORM --}}
     @if(auth()->user()->role === 'super_admin')
-    <div class="bg-white p-6 rounded-xl shadow-lg border border-indigo-100 mb-10">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">➕ নতুন সোর্স যুক্ত করুন</h2>
+    <div class="glass-card p-6 md:p-8 rounded-2xl border border-slate-800/80 shadow-2xl mb-10">
+        <h2 class="text-xl font-extrabold text-white mb-6 border-b border-slate-800 pb-3 flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm border border-emerald-500/20">➕</span> 
+            নতুন সোর্স যুক্ত করুন
+        </h2>
         <form action="{{ route('websites.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             @csrf
             
             <div class="lg:col-span-2">
-                <label class="block text-sm font-bold text-gray-700 mb-1">Website Name</label>
-                <input type="text" name="name" class="w-full border-gray-300 rounded-lg focus:ring-indigo-500" required>
+                <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Website Name</label>
+                <input type="text" name="name" class="w-full bg-slate-950/80 border-slate-800 text-slate-100 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 p-2.5 text-sm" required placeholder="Ex: Prothom Alo">
             </div>
             <div class="lg:col-span-2">
                 <div class="flex justify-between items-center mb-1">
-                    <label class="block text-sm font-bold text-gray-700">URL (List Page)</label>
-                    <button type="button" onclick="autoDiscoverSelectors()" id="discoverBtn" class="text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-md font-bold transition flex items-center gap-1">
+                    <label class="block text-xs font-bold text-slate-300 uppercase">URL (List Page)</label>
+                    <button type="button" onclick="autoDiscoverSelectors()" id="discoverBtn" class="text-xs bg-emerald-950/90 text-emerald-400 hover:bg-emerald-900/90 border border-emerald-700/60 px-3 py-1 rounded-lg font-bold transition flex items-center gap-1 shadow-sm">
                         ⚡ Auto-Detect Selectors & RSS
                     </button>
                 </div>
-                <input type="url" id="targetUrlInput" name="url" class="w-full border-gray-300 rounded-lg focus:ring-indigo-500" required placeholder="https://prothomalo.com">
-                <div id="discoverNotice" class="hidden text-xs mt-1 font-bold"></div>
+                <input type="url" id="targetUrlInput" name="url" class="w-full bg-slate-950/80 border-slate-800 text-slate-100 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 p-2.5 text-sm" required placeholder="https://prothomalo.com">
+                <div id="discoverNotice" class="hidden text-xs mt-1.5 font-bold"></div>
             </div>
 
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Scraper Method</label>
-                <select name="scraper_method" class="w-full border-gray-300 rounded-lg focus:ring-indigo-500">
+                <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Scraper Method</label>
+                <select name="scraper_method" class="w-full bg-slate-950/80 border-slate-800 text-slate-100 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 p-2.5 text-sm">
                     <option value="">System Default</option>
                     <option value="node">Node.js (Puppeteer)</option>
                     <option value="python">Python (Playwright)</option>
@@ -63,43 +66,43 @@
             </div>
 
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Target Language</label>
-                <select name="target_language" class="w-full border-gray-300 rounded-lg focus:ring-indigo-500">
+                <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Target Language</label>
+                <select name="target_language" class="w-full bg-slate-950/80 border-slate-800 text-slate-100 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 p-2.5 text-sm">
                     <option value="bn">Bengali (Default)</option>
                     <option value="en">English</option>
                 </select>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Container</label>
-                <input type="text" name="selector_container" class="w-full border-gray-300 rounded-lg text-sm font-mono bg-slate-50" required placeholder="Ex: .desktopSectionLead">
+                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Container</label>
+                <input type="text" name="selector_container" class="w-full bg-slate-950/80 border-slate-800 text-slate-300 rounded-xl text-xs font-mono p-2.5" placeholder="Ex: .news-card">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Title</label>
-                <input type="text" name="selector_title" class="w-full border-gray-300 rounded-lg text-sm font-mono bg-slate-50" required placeholder="Ex: h1">
-            </div>
-            
-            <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Content (Body)</label>
-                <input type="text" name="selector_content" class="w-full border-gray-300 rounded-lg text-sm font-mono bg-slate-50" placeholder="Ex: .description">
+                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Title</label>
+                <input type="text" name="selector_title" class="w-full bg-slate-950/80 border-slate-800 text-slate-300 rounded-xl text-xs font-mono p-2.5" placeholder="Ex: h1, h2">
             </div>
             
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Image (Optional)</label>
-                <input type="text" name="selector_image" class="w-full border-gray-300 rounded-lg text-sm font-mono bg-slate-50">
+                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Content (Body)</label>
+                <input type="text" name="selector_content" class="w-full bg-slate-950/80 border-slate-800 text-slate-300 rounded-xl text-xs font-mono p-2.5" placeholder="Ex: .description">
+            </div>
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Image (Optional)</label>
+                <input type="text" name="selector_image" class="w-full bg-slate-950/80 border-slate-800 text-slate-300 rounded-xl text-xs font-mono p-2.5">
             </div>
 
             <div class="col-span-1 md:col-span-2 lg:col-span-4 mt-2">
                 <label class="inline-flex items-center cursor-pointer">
-                    <input type="checkbox" name="use_scraping_api" value="1" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 w-5 h-5">
-                    <span class="ml-2 font-bold text-gray-700">Use Universal Scraping API (Bypass Proxy)</span>
+                    <input type="checkbox" name="use_scraping_api" value="1" class="rounded border-slate-700 bg-slate-950 text-emerald-500 shadow-sm focus:border-emerald-400 focus:ring focus:ring-emerald-500/20 w-5 h-5">
+                    <span class="ml-2.5 font-bold text-slate-200 text-sm">Use Universal Scraping API (Bypass Proxy)</span>
                 </label>
-                <p class="text-xs text-gray-500 mt-1">Check this if the default proxy gets blocked by the site (e.g. jamuna.tv).</p>
+                <p class="text-xs text-slate-400 mt-1 pl-7">Check this if the default proxy gets blocked by the site (e.g. jamuna.tv).</p>
             </div>
 
-            <div class="col-span-1 md:col-span-2 lg:col-span-4 flex justify-end mt-2">
-                <button type="submit" class="bg-indigo-600 text-white px-8 py-2.5 rounded-lg font-bold hover:bg-indigo-700 shadow-md">
-                    Save Website
+            <div class="col-span-1 md:col-span-2 lg:col-span-4 flex justify-end mt-4">
+                <button type="submit" class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 px-8 py-3 rounded-xl font-extrabold shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-0.5">
+                    💾 Save Website
                 </button>
             </div>
         </form>
@@ -107,13 +110,11 @@
     @endif
 
     {{-- WEBSITE LIST TABLE --}}
-    {{-- WEBSITE LIST TABLE --}}
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-    {{-- এখানে overflow-x-auto যোগ করা হয়েছে যাতে মোবাইল ভিউতে স্ক্রল করা যায় --}}
+<div class="glass-card rounded-2xl border border-slate-800/80 shadow-2xl overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse min-w-[600px] md:min-w-full">
             <thead>
-                <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                <tr class="bg-slate-900/90 text-emerald-400 text-xs uppercase tracking-wider border-b border-slate-800">
                     @if(auth()->user()->role === 'super_admin')
                         <th class="px-4 md:px-6 py-4 font-bold">Name & URL</th>
                         <th class="px-4 md:px-6 py-4 font-bold">Engine</th>
@@ -126,7 +127,7 @@
                     @endif
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-slate-800/60 text-slate-200 text-sm">
                 @foreach($websites as $site)
                 
                 @php

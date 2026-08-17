@@ -1,17 +1,17 @@
 {{-- MOBILE TOP HEADER --}}
-<div class="lg:hidden fixed top-0 w-full z-40 glass-nav h-14 flex items-center justify-between px-4 shadow-sm transition-all">
+<div class="lg:hidden fixed top-0 w-full z-40 glass-nav h-14 flex items-center justify-between px-4 shadow-lg border-b border-slate-800/80 transition-all">
     <a href="{{ auth()->user()->role === 'reporter' ? route('reporter.news.index') : route('news.index') }}" class="flex items-center gap-2 group">
-        <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform"><i class="fa-solid fa-bolt text-xs"></i></div>
-        <span class="font-bold text-lg text-slate-900 tracking-tight">News<span class="text-indigo-600">24</span></span>
+        <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center text-slate-950 shadow-sm font-black group-hover:scale-105 transition-transform"><i class="fa-solid fa-feather-pointed text-xs"></i></div>
+        <span class="font-extrabold text-lg text-white tracking-tight">Subeditor<span class="text-emerald-400">24</span></span>
     </a>
     @auth
     <div class="flex items-center gap-2">
         @if(auth()->user()->role !== 'reporter')
-            <div class="bg-amber-50 text-amber-600 px-2 py-1 rounded-full text-xs font-bold border border-amber-100 shadow-sm">
+            <div class="bg-amber-950/80 text-amber-300 px-2 py-1 rounded-full text-xs font-bold border border-amber-800/60 shadow-sm">
                 🪙 {{ auth()->user()->credits ?? 0 }}
             </div>
         @endif
-        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-indigo-700 font-bold text-xs border border-indigo-200 uppercase shadow-sm">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-slate-950 font-black text-xs border border-emerald-400 uppercase shadow-sm">
             {{ substr(auth()->user()->name, 0, 1) }}
         </div>
     </div>
@@ -22,38 +22,38 @@
 @auth
 <div class="lg:hidden fixed bottom-0 left-0 w-full z-[90] pb-safe">
     @if(auth()->user()->role === 'reporter')
-    <div class="glass-nav grid grid-cols-3 items-center h-16 border-t border-indigo-50/50 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] px-2">
-        <a href="{{ route('reporter.news.index') }}" class="flex flex-col items-center justify-center h-full gap-1 transition-all {{ request()->routeIs('reporter.news.index') ? 'text-indigo-600 transform -translate-y-1' : 'text-slate-400 hover:text-slate-600' }}">
+    <div class="glass-sheet grid grid-cols-3 items-center h-16 border-t border-slate-800/80 shadow-2xl px-2">
+        <a href="{{ route('reporter.news.index') }}" class="flex flex-col items-center justify-center h-full gap-1 transition-all {{ request()->routeIs('reporter.news.index') ? 'text-emerald-400 transform -translate-y-1 font-bold' : 'text-slate-400 hover:text-slate-200' }}">
             <i class="fa-solid fa-list-ul text-xl"></i><span class="text-[10px] font-bold">আমার খবর</span>
-            @if(request()->routeIs('reporter.news.index')) <div class="w-1 h-1 bg-indigo-600 rounded-full absolute bottom-1"></div> @endif
+            @if(request()->routeIs('reporter.news.index')) <div class="w-1 h-1 bg-emerald-400 rounded-full absolute bottom-1"></div> @endif
         </a>
         <div class="relative flex justify-center h-full items-center">
-            <a href="{{ route('reporter.news.create') }}" class="absolute -top-7 bg-gradient-to-b from-indigo-500 to-indigo-700 text-white w-[3.5rem] h-[3.5rem] rounded-full flex items-center justify-center shadow-[0_8px_20px_rgba(79,70,229,0.3)] border-4 border-slate-50 active:scale-95 transition-all">
+            <a href="{{ route('reporter.news.create') }}" class="absolute -top-7 bg-gradient-to-tr from-emerald-400 to-teal-500 text-slate-950 w-[3.5rem] h-[3.5rem] rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(16,185,129,0.4)] border-4 border-slate-900 active:scale-95 transition-all font-black">
                 <i class="fa-solid fa-plus text-2xl"></i>
             </a>
-            <span class="absolute bottom-1.5 text-[10px] font-bold text-slate-500">পাঠান</span>
+            <span class="absolute bottom-1.5 text-[10px] font-bold text-slate-400">পাঠান</span>
         </div>
-        <button id="mobileMenuBtn" class="flex flex-col items-center justify-center h-full gap-1 text-slate-400 hover:text-slate-600 transition-colors relative">
+        <button id="mobileMenuBtn" class="flex flex-col items-center justify-center h-full gap-1 text-slate-400 hover:text-slate-200 transition-colors relative">
             <i class="fa-solid fa-bars text-xl"></i><span class="text-[10px] font-bold">মেনু</span>
         </button>
     </div>
     @else
-    <div class="glass-nav grid grid-cols-4 items-center h-16 border-t border-indigo-50/50 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] px-2">
-        <a href="{{ route('news.index') }}" class="flex flex-col items-center justify-center h-full gap-1 transition-all relative {{ request()->routeIs('news.index') ? 'text-indigo-600 transform -translate-y-1' : 'text-slate-400 hover:text-slate-600' }}">
+    <div class="glass-sheet grid grid-cols-4 items-center h-16 border-t border-slate-800/80 shadow-2xl px-2">
+        <a href="{{ route('news.index') }}" class="flex flex-col items-center justify-center h-full gap-1 transition-all relative {{ request()->routeIs('news.index') ? 'text-emerald-400 transform -translate-y-1 font-bold' : 'text-slate-400 hover:text-slate-200' }}">
             <i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[10px] font-bold">Feed</span>
-            @if(request()->routeIs('news.index')) <div class="w-1 h-1 bg-indigo-600 rounded-full absolute bottom-1"></div> @endif
+            @if(request()->routeIs('news.index')) <div class="w-1 h-1 bg-emerald-400 rounded-full absolute bottom-1"></div> @endif
         </a>
         <div class="relative flex justify-center h-full items-center">
-            <a href="{{ route('news.create') }}" class="absolute -top-7 bg-gradient-to-b from-slate-700 to-slate-900 text-white w-[3.5rem] h-[3.5rem] rounded-full flex items-center justify-center shadow-[0_8px_20px_rgba(0,0,0,0.2)] border-4 border-slate-50 active:scale-95 transition-transform">
+            <a href="{{ route('news.create') }}" class="absolute -top-7 bg-gradient-to-tr from-emerald-400 to-teal-500 text-slate-950 w-[3.5rem] h-[3.5rem] rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(16,185,129,0.4)] border-4 border-slate-900 active:scale-95 transition-transform font-black">
                 <i class="fa-solid fa-plus text-2xl"></i>
             </a>
-            <span class="absolute bottom-1.5 text-[10px] font-bold text-slate-500">Create</span>
+            <span class="absolute bottom-1.5 text-[10px] font-bold text-slate-400">Create</span>
         </div>
-        <a href="{{ route('news.drafts') }}" class="flex flex-col items-center justify-center h-full gap-1 transition-all relative {{ request()->routeIs('news.drafts') ? 'text-indigo-600 transform -translate-y-1' : 'text-slate-400 hover:text-slate-600' }}">
+        <a href="{{ route('news.drafts') }}" class="flex flex-col items-center justify-center h-full gap-1 transition-all relative {{ request()->routeIs('news.drafts') ? 'text-emerald-400 transform -translate-y-1 font-bold' : 'text-slate-400 hover:text-slate-200' }}">
             <i class="fa-solid fa-wand-magic-sparkles text-xl"></i><span class="text-[10px] font-bold">AI</span>
-            @if(request()->routeIs('news.drafts')) <div class="w-1 h-1 bg-indigo-600 rounded-full absolute bottom-1"></div> @endif
+            @if(request()->routeIs('news.drafts')) <div class="w-1 h-1 bg-emerald-400 rounded-full absolute bottom-1"></div> @endif
         </a>
-        <button id="mobileMenuBtn" class="flex flex-col items-center justify-center h-full gap-1 text-slate-400 hover:text-slate-600 transition-colors relative">
+        <button id="mobileMenuBtn" class="flex flex-col items-center justify-center h-full gap-1 text-slate-400 hover:text-slate-200 transition-colors relative">
             <i class="fa-solid fa-bars-staggered text-xl"></i><span class="text-[10px] font-bold">Menu</span>
         </button>
     </div>
