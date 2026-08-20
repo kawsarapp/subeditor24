@@ -23,7 +23,7 @@
             {{-- Title --}}
             <div class="mb-5">
                 <label class="block text-sm font-bold text-gray-700 mb-2">খবরের শিরোনাম (Title)</label>
-                <input type="text" name="title" required 
+                <input type="text" name="title" required value="{{ old('title', request('title')) }}"
                     class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 font-bangla text-lg"
                     placeholder="এখানে শিরোনাম লিখুন...">
             </div>

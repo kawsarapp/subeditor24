@@ -221,13 +221,20 @@
         </div>
 
         {{-- Modal Footer --}}
-        <div class="p-4 border-t border-slate-100 bg-slate-50 rounded-b-3xl flex justify-between items-center">
-            <button onclick="closeViralModal()" class="px-5 py-2 rounded-xl text-xs font-extrabold text-slate-600 hover:bg-slate-200 transition">
+        <div class="p-4 border-t border-slate-100 bg-slate-50 rounded-b-3xl flex flex-wrap gap-2 justify-between items-center">
+            <button onclick="closeViralModal()" class="px-4 py-2 rounded-xl text-xs font-extrabold text-slate-600 hover:bg-slate-200 transition">
                 বন্ধ করুন
             </button>
-            <a id="createPostModalBtn" href="{{ route('news.create') }}" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-indigo-500/20">
-                🚀 ১-ক্লিকে পোস্ট বা কার্ড তৈরি করুন
-            </a>
+            <div class="flex items-center gap-2">
+                @if(Route::has('admin.templates.index'))
+                <a id="cardStudioModalBtn" href="{{ route('admin.templates.index') }}" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20">
+                    🎨 ১-ক্লিকে ফটোকার্ড মেকার
+                </a>
+                @endif
+                <a id="createPostModalBtn" href="{{ route('news.create') }}" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-indigo-500/20">
+                    ✍️ ১-ক্লিকে নিউজ তৈরি করুন
+                </a>
+            </div>
         </div>
 
     </div>
@@ -411,6 +418,16 @@ function generateViralScript(newsId, title, content) {
                 </div>
             </div>
         `;
+
+        const cardBtn = document.getElementById('cardStudioModalBtn');
+        const postBtn = document.getElementById('createPostModalBtn');
+
+        if (cardBtn) {
+            cardBtn.href = '{{ route("admin.templates.index") }}?title=' + encodeURIComponent(data.photocard_punchline || title);
+        }
+        if (postBtn) {
+            postBtn.href = '{{ route("news.create") }}?title=' + encodeURIComponent(title);
+        }
     })
     .catch(() => {
         body.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-2xl text-xs font-bold">Failed to connect to AI server.</div>`;
