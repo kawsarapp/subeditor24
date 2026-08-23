@@ -11,6 +11,7 @@
         "intervention/image": "^3.11",
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.40",
+        "laravel/socialite": "^5.30",
         "laravel/tinker": "^2.10.1",
         "mews/purifier": "^3.4",
         "predis/predis": "^3.3",

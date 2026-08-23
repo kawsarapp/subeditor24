@@ -249,6 +249,13 @@
                     'can_settings_category' => '📂 Category Mapping',
                     'can_analytics'      => '📊 View Analytics & ROI',
                     'can_viral_predictor' => '🔥 AI Viral & Trending Predictor',
+                    'can_seo_intelligence' => '🔍 SEO & Website Intelligence (Full Suite)',
+                    'can_seo_audit'        => '🔍 SEO: Technical Audit Access',
+                    'can_seo_gsc'          => '🏆 SEO: Google Top 1-3 & Quick Win Keywords',
+                    'can_seo_ga4'          => '📊 SEO: GA4 Traffic Trends & Decay Alert',
+                    'can_seo_cwv'          => '⚡ SEO: Core Web Vitals Performance',
+                    'can_seo_links'        => '🔗 SEO: Orphan News & Broken Links Detector',
+                    'can_seo_ai'           => '🤖 SEO: AI Meta Auto-Fixer & Generator',
                 ];
                 @endphp
                 @foreach($perms as $key => $label)

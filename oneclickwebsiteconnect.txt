@@ -1,0 +1,578 @@
+1. One-Click Website Connect
+
+এটাই মূল feature।
+
+Add Website
+     ↓
+TXT Verification
+     ↓
+Connect Google
+     ↓
+Auto Detect
+ ├── Search Console
+ ├── GA4
+ ├── Sitemap
+ ├── Robots.txt
+ ├── CMS
+ └── Website Technology
+     ↓
+FULL AUDIT
+
+User-কে manually GSC Property ID বা GA4 Measurement ID দিতে হবে না।
+
+🔴 2. Technical SEO Audit
+
+Website crawl করে automatically detect:
+
+Missing <title>
+Duplicate title
+Long/short title
+Missing meta description
+Duplicate meta description
+Missing H1
+Multiple H1
+Broken links
+404 pages
+301/302 redirects
+Redirect chains
+Canonical সমস্যা
+Noindex pages
+Robots.txt সমস্যা
+XML Sitemap সমস্যা
+Sitemap বনাম indexed URL mismatch
+HTTPS সমস্যা
+HTTP → HTTPS redirect
+WWW/non-WWW consistency
+Pagination সমস্যা
+Orphan pages
+Internal linking সমস্যা
+🔎 3. Google Search Console Intelligence
+
+শুধু GSC data দেখাবে না—data analyse করবে।
+
+যেমন:
+
+“এই keyword-এর impression বাড়ছে কিন্তু CTR কম।”
+
+Automatically identify:
+
+Losing keywords
+Winning keywords
+New keywords
+Declining pages
+Rising pages
+CTR opportunities
+Position 4–10 keywords
+High impression + low CTR
+High CTR + low impression
+Cannibalization
+Pages losing clicks
+Pages gaining clicks
+Indexing changes
+বিশেষ feature
+
+“Quick Win Keywords”
+
+যেসব keyword বর্তমানে position:
+
+4–15
+
+সেগুলো identify করে বলবে:
+
+এই 18টি keyword সামান্য optimization করলে Top 3-এ যাওয়ার সম্ভাবনা আছে।
+
+📊 4. GA4 Intelligence
+
+GA4 থেকে:
+
+Users
+Sessions
+Engagement
+Organic traffic
+Direct traffic
+Referral
+Landing pages
+Countries
+Devices
+Browser
+Traffic source
+Events
+Conversions
+
+এগুলো দেখাবে।
+
+তারপর AI analysis:
+
+Organic traffic গত 7 দিনে 18% কমেছে।
+
+তারপর সম্ভাব্য কারণ:
+
+Search Console data অনুযায়ী 3টি গুরুত্বপূর্ণ page-এর click কমেছে।
+
+এটাই তোমাদের tool-কে সাধারণ dashboard থেকে আলাদা করবে।
+
+⚡ 5. Core Web Vitals
+
+প্রতি URL-এর জন্য:
+
+LCP
+INP
+CLS
+FCP
+TTFB
+
+এবং:
+
+Good / Needs Improvement / Poor
+
+দেখাবে।
+
+🕷️ 6. Website Crawler
+
+এটা তোমাদের সবচেয়ে গুরুত্বপূর্ণ engine-এর একটি।
+
+Crawler:
+
+Homepage
+ ↓
+Category
+ ↓
+Article
+ ↓
+Internal links
+ ↓
+Images
+ ↓
+Assets
+
+প্রতিটি page-এর data collect করবে।
+
+যেমন:
+
+URL
+Status Code
+Title
+Description
+H1
+Canonical
+Word Count
+Images
+Internal Links
+External Links
+Load Time
+Indexability
+Schema
+🧠 7. AI SEO Recommendations
+
+এটা অবশ্যই রাখবে।
+
+শুধু:
+
+❌ Missing Meta Description
+
+বলবে না।
+
+বরং:
+
+Problem: Meta description missing
+Impact: Search CTR কমতে পারে
+Recommended: 150–160 character description তৈরি করুন।
+
+তারপর:
+
+Generate with AI
+
+চাপলে AI description তৈরি করবে।
+
+একইভাবে:
+
+Title generate
+Meta description
+H1 suggestion
+FAQ
+Internal link suggestion
+Content improvement
+Schema suggestion
+📝 8. Content Audit
+
+প্রতিটি article/page analyse করবে:
+
+Thin content
+Duplicate content
+Content freshness
+Word count
+Heading structure
+Keyword usage
+Keyword stuffing
+Readability
+Missing entities/topics
+Outdated content
+Content Decay
+
+এটা দারুণ feature হবে।
+
+যেমন:
+
+এই article ৬ মাস আগে 8,500 organic clicks পেয়েছিল।
+
+এখন:
+
+গত 30 দিনে মাত্র 1,200 clicks।
+
+System বলবে:
+
+⚠️ Content Decay Detected
+
+🔗 9. Internal Link Intelligence
+
+System automatically বলবে:
+
+এই page-এ মাত্র 1টি internal link আছে।
+
+অথবা:
+
+এই গুরুত্বপূর্ণ page-এ অন্য কোনো page থেকে link নেই।
+
+তারপর:
+
+AI Internal Link Suggestions
+
+🖼️ 10. Image SEO
+
+Detect:
+
+Missing ALT
+Duplicate ALT
+Huge images
+WebP missing
+Lazy loading missing
+Width/height missing
+Image size সমস্যা
+🧩 11. Schema / Structured Data
+
+Automatically detect:
+
+Article
+NewsArticle
+Product
+Breadcrumb
+Organization
+LocalBusiness
+FAQ
+Person
+WebSite
+
+এবং:
+
+Schema Validator
+
+কোন field missing সেটাও দেখাবে।
+
+🗺️ 12. Sitemap Intelligence
+
+Sitemap submit করার পরে:
+
+Sitemap URLs       12,540
+Indexed             9,821
+Not Indexed         2,719
+
+তারপর কারণ analyse করবে।
+
+🤖 13. Robots.txt Analyzer
+
+এক ক্লিক:
+
+Analyze Robots.txt
+
+দেখাবে:
+
+Blocked URLs
+Potential SEO Issues
+Googlebot rules
+Sitemap declaration
+🔔 14. Automatic Alerts
+
+এটা SaaS-এর জন্য খুব গুরুত্বপূর্ণ।
+
+যেমন:
+
+🔴 Organic Traffic dropped 30%
+
+🔴 500 pages became non-indexed
+
+🔴 Sitemap error detected
+
+🔴 Website is down
+
+🟠 20 new 404 pages found
+
+Email / dashboard / Telegram / Slack notification দেওয়া যায়।
+
+📈 15. SEO Score History
+
+আজ:
+
+82
+
+গত সপ্তাহ:
+
+78
+
+গত মাস:
+
+71
+
+Graph:
+
+60 ─────╮
+70      ╰──╮
+80         ╰────╮
+90              ╰──
+
+User দেখতে পারবে website-এর SEO health improve করছে নাকি খারাপ হচ্ছে।
+
+🆚 16. Competitor Tracking
+
+এটা Phase 2/3-তে যোগ করা যায়।
+
+User competitor domain add করবে।
+
+তারপর:
+
+Your Website
+vs
+Competitor A
+vs
+Competitor B
+
+Compare:
+
+Keywords
+Ranking
+Traffic estimates
+Content
+Backlinks
+Pages
+Top topics
+🔗 17. Backlink Monitoring
+
+যদি reliable backlink data provider/API integrate করো:
+
+New backlinks
+Lost backlinks
+Referring domains
+Anchor text
+Toxic/spam signals
+Competitor backlinks
+
+দেখানো যাবে।
+
+নিজে Google Search Console দিয়ে full backlink database বানানো যাবে না, তাই এখানে third-party data provider লাগতে পারে।
+
+🌐 18. Uptime Monitoring
+
+SEO tool-এর সঙ্গে এটা খুব ভালো যাবে।
+
+প্রতি:
+
+1 minute / 5 minutes
+
+check করবে:
+
+Website
+🟢 Online
+
+
+Response: 184ms
+HTTP: 200
+SSL: Valid
+
+Down হলে:
+
+🔴 Website is DOWN
+
+🔐 19. Security Monitoring
+
+Basic monitoring:
+
+SSL expiry
+HTTPS
+Security headers
+Mixed content
+suspicious changes
+robots.txt changes
+sitemap changes
+📱 20. Mobile Audit
+
+Detect:
+
+Mobile viewport
+Responsive সমস্যা
+Text too small
+Content overflow
+Mobile performance
+Mobile CWV
+📑 21. Automated SEO Report
+
+এটা SaaS-এর premium feature করতে পারো।
+
+User:
+
+Generate Report
+
+চাপবে।
+
+PDF:
+
+Website SEO Report
+
+
+Overall Score: 84
+
+
+Executive Summary
+
+
+Critical Issues: 4
+Warnings: 18
+Passed: 72
+
+
+GSC Performance
+
+
+GA4 Performance
+
+
+Technical SEO
+
+
+Content SEO
+
+
+Recommendations
+
+
+Next 30 Days Action Plan
+🤖 22. AI SEO Agent
+
+এটা সবচেয়ে advanced feature হতে পারে।
+
+User লিখবে:
+
+“আমার website-এর organic traffic কেন কমেছে?”
+
+AI নিজে:
+
+GSC check
+↓
+GA4 check
+↓
+Indexing check
+↓
+Technical audit
+↓
+Traffic comparison
+↓
+Affected pages
+↓
+Analysis
+↓
+Answer
+
+দেবে।
+
+অর্থাৎ user শুধু dashboard দেখবে না—AI-কে প্রশ্ন করতে পারবে।
+
+🧑‍💼 23. Agency Mode
+
+এটা SaaS-এর জন্য খুব valuable।
+
+একজন agency user:
+
+Agency
+│
+├── Client A
+│   └── 5 websites
+│
+├── Client B
+│   └── 3 websites
+│
+└── Client C
+    └── 8 websites
+
+প্রতিটি client-এর আলাদা dashboard।
+
+🏷️ 24. White Label
+
+Agency নিজের:
+
+Logo
+Brand name
+Domain
+Email
+PDF report
+
+দিয়ে report পাঠাতে পারবে।
+
+যেমন:
+
+Powered by YourSEO
+
+না দেখিয়ে:
+
+Powered by ABC Digital Agency
+
+🔌 25. Integrations
+
+পরে এগুলো যোগ করা যাবে:
+
+Google Search Console
+GA4
+Google Business Profile
+Google Tag Manager
+Google Ads
+Bing Webmaster Tools
+PageSpeed Insights
+Slack
+Telegram
+Email
+WordPress
+Shopify
+⭐ আমার মতে তোমাদের MVP
+
+শুরুতেই সব বানাতে যেও না।
+
+Version 1
+
+One-click Connect
+
+Website Verification
+Google OAuth
+GSC
+GA4
+Website Crawler
+Technical SEO Audit
+Sitemap
+Robots.txt
+Core Web Vitals
+SEO Score
+Issue Dashboard
+Email Alerts
+Version 2
+AI Recommendations
+Content Audit
+Internal Link Intelligence
+Content Decay
+Automated PDF Report
+Competitor Tracking
+Version 3
+Backlink Intelligence
+AI SEO Agent
+Agency Mode
+White Label
+WordPress integration
+Shopify integration
+API
+
+সবচেয়ে গুরুত্বপূর্ণ: শুরু থেকেই architecture এমন করতে হবে যাতে পরে এই featureগুলো plugin/module হিসেবে যোগ করা যায়। তাহলে MVP বানানোর পর পুরো system আবার নতুন করে লিখতে হবে না।

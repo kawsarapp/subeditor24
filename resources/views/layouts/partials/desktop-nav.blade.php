@@ -82,6 +82,16 @@
                                 </a>
                                 @endif
 
+                                {{-- SEO Intelligence --}}
+                                @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_seo_intelligence'))
+                                @if(Route::has('seo.index'))
+                                <a href="{{ route('seo.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
+                                    <i class="fa-solid fa-magnifying-glass-chart text-indigo-500 w-4 text-center"></i>
+                                    <span>SEO & Web Intelligence</span>
+                                </a>
+                                @endif
+                                @endif
+
                                 {{-- 2. Photocard Templates --}}
                                 @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_templates'))
                                 @if(Route::has('admin.templates.index'))
