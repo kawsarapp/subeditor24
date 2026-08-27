@@ -11,11 +11,19 @@ class CanonicalDuplicateService
      */
     public function auditCanonicalTags(SeoWebsite $website): array
     {
+        $totalChecked = $website->pageAudits->count();
+        $validCanonical = $website->pageAudits->whereNotNull('canonical_url')->count();
+        $missingCanonical = $totalChecked - $validCanonical;
+
+        $riskLabel = $missingCanonical === 0 
+            ? 'Low Risk (0 Duplicate Syndication Penalty)' 
+            : ($missingCanonical > 5 ? 'High Risk (' . $missingCanonical . ' Pages Missing Canonical Tag)' : 'Moderate Risk (' . $missingCanonical . ' Missing Canonical)');
+
         return [
-            'total_checked' => $website->pageAudits()->count(),
-            'valid_canonical' => $website->pageAudits()->whereNotNull('canonical_url')->count(),
-            'missing_canonical' => $website->pageAudits()->whereNull('canonical_url')->count(),
-            'duplicate_risk' => 'Low Risk (0 Duplicate Syndication Penalty)',
+            'total_checked' => $totalChecked,
+            'valid_canonical' => $validCanonical,
+            'missing_canonical' => $missingCanonical,
+            'duplicate_risk' => $riskLabel,
         ];
     }
 }

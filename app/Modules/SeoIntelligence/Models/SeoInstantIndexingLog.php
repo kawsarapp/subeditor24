@@ -26,6 +26,6 @@ class SeoInstantIndexingLog extends Model
 
     public function website(): BelongsTo
     {
-        return $table->belongsTo(SeoWebsite::class, 'seo_website_id');
+        return $this->belongsTo(SeoWebsite::class, 'seo_website_id');
     }
 }

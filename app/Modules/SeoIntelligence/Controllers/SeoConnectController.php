@@ -8,6 +8,7 @@ use App\Modules\SeoIntelligence\Services\WebsiteCrawlerEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
 
 class SeoConnectController extends Controller
 {
@@ -91,7 +92,7 @@ class SeoConnectController extends Controller
         }
 
         try {
-            return \Laravel\Socialite\Facades\Socialite::driver('google')
+            return Socialite::driver('google')
                 ->scopes([
                     'https://www.googleapis.com/auth/webmasters.readonly',
                     'https://www.googleapis.com/auth/analytics.readonly',
@@ -112,7 +113,7 @@ class SeoConnectController extends Controller
     {
         $user = Auth::user();
         try {
-            $googleUser = \Laravel\Socialite\Facades\Socialite::driver('google')->user();
+            $googleUser = Socialite::driver('google')->user();
             
             $websiteId = session('connecting_website_id');
             $activeWeb = $websiteId ? SeoWebsite::where('user_id', $user->id)->find($websiteId) : null;

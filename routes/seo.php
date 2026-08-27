@@ -13,6 +13,9 @@ use App\Modules\SeoIntelligence\Controllers\SeoConnectController;
 Route::middleware(['web', 'auth', 'nocache'])->prefix('seo')->name('seo.')->group(function () {
     Route::get('/', [SeoDashboardController::class, 'index'])->name('index');
     Route::get('/guide', [SeoDashboardController::class, 'guide'])->name('guide');
+    Route::get('/uptime-check-ajax/{id}', [SeoDashboardController::class, 'uptimeCheckAjax'])->name('uptime_check_ajax');
+    Route::get('/indexing-health-ajax/{id}', [SeoDashboardController::class, 'indexingHealthAjax'])->name('indexing_health_ajax');
+    Route::get('/page-audits-ajax/{id}', [SeoDashboardController::class, 'pageAuditsAjax'])->name('page_audits_ajax');
     Route::post('/connect', [SeoConnectController::class, 'store'])->name('connect.store');
     Route::delete('/connect/{id}', [SeoConnectController::class, 'destroy'])->name('connect.destroy');
     Route::post('/crawl/{id}', [SeoDashboardController::class, 'crawl'])->name('crawl');

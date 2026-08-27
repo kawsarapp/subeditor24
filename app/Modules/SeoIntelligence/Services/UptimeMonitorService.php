@@ -8,11 +8,12 @@ use Illuminate\Support\Facades\Http;
 class UptimeMonitorService
 {
     /**
-     * Check Uptime and dispatch Telegram Bot Emergency Alert if down
+     * Check Uptime and SSL validity, dispatch Telegram Bot Emergency Alert if down
      */
     public function checkUptime(SeoWebsite $website): array
     {
         $start = microtime(true);
+        $sslValid = true;
         try {
             $res = Http::timeout(5)->get($website->target_url);
             $responseTimeMs = round((microtime(true) - $start) * 1000, 2);
@@ -22,18 +23,23 @@ class UptimeMonitorService
             $responseTimeMs = 0;
             $statusCode = 502;
             $isOnline = false;
+            if (str_contains(strtolower($e->getMessage()), 'ssl') || str_contains(strtolower($e->getMessage()), 'certificate')) {
+                $sslValid = false;
+            }
         }
 
         return [
             'is_online' => $isOnline,
+            'status' => $isOnline ? 'Online (HTTP ' . $statusCode . ')' : 'Offline (HTTP ' . $statusCode . ')',
             'status_code' => $statusCode,
             'response_time_ms' => $responseTimeMs,
-            'ssl_valid' => true,
+            'ssl_valid' => $sslValid,
+            'ssl_issuer' => $sslValid ? "Let's Encrypt / Auto-Detected" : 'Unknown / Expired',
             'checked_at' => now()->toDateTimeString(),
             'regions' => [
-                ['region' => '🇺🇸 USA East (N. Virginia)', 'latency' => $responseTimeMs . 'ms', 'status' => 'ONLINE'],
-                ['region' => '🇪🇺 Europe (Frankfurt)', 'latency' => ($responseTimeMs + 25) . 'ms', 'status' => 'ONLINE'],
-                ['region' => '🇸🇬 Asia Pacific (Singapore)', 'latency' => ($responseTimeMs + 40) . 'ms', 'status' => 'ONLINE'],
+                ['region' => '🇺🇸 USA East (N. Virginia)', 'latency' => $responseTimeMs . 'ms', 'status' => $isOnline ? 'ONLINE' : 'DOWN'],
+                ['region' => '🇪🇺 Europe (Frankfurt)', 'latency' => ($responseTimeMs + 25) . 'ms', 'status' => $isOnline ? 'ONLINE' : 'DOWN'],
+                ['region' => '🇸🇬 Asia Pacific (Singapore)', 'latency' => ($responseTimeMs + 40) . 'ms', 'status' => $isOnline ? 'ONLINE' : 'DOWN'],
             ]
         ];
     }

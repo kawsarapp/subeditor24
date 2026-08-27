@@ -42,7 +42,7 @@ class WebsiteCrawlerEngine
             $homepageAudit = $this->parseHtmlContent($targetUrl, $body, $statusCode, $loadTimeMs);
             $this->savePageAudit($website->id, $targetUrl, $statusCode, $homepageAudit, $loadTimeMs);
 
-            // Audit Discovered News Articles (Sampled Batch Audit to prevent memory overflow)
+            // Audit Discovered News Articles (Sampled Batch Audit + Fast Status Verification)
             $scannedPagesCount = 1;
             $allIssues = $homepageAudit['issues'];
             $sampleUrls = array_slice($discoveredUrls, 0, 30); // Deep audit top sample pages
@@ -66,15 +66,36 @@ class WebsiteCrawlerEngine
                 }
             }
 
-            // Save estimated un-scanned news URLs as indexed articles in database
-            foreach (array_slice($discoveredUrls, 30) as $extraUrl) {
+            // Verify real HTTP status for remaining discovered news URLs (Detect 404 News Articles)
+            $remainingUrls = array_slice($discoveredUrls, 30);
+            foreach ($remainingUrls as $extraUrl) {
+                try {
+                    $headRes = Http::timeout(3)->withHeaders([
+                        'User-Agent' => 'Subeditor24-SeoBot/1.0'
+                    ])->head($extraUrl);
+                    $statusCode = $headRes->status();
+                } catch (\Exception $e) {
+                    $statusCode = 404; // Mark connection failure/dead link as 404
+                }
+
+                $issues = [];
+                if ($statusCode >= 400) {
+                    $issues[] = [
+                        'code' => '404_news_article',
+                        'severity' => 'critical',
+                        'label' => "News Article 404 Not Found: {$extraUrl}"
+                    ];
+                    $allIssues = array_merge($allIssues, $issues);
+                }
+
                 SeoPageAudit::updateOrCreate(
                     ['seo_website_id' => $website->id, 'url_hash' => md5($extraUrl)],
                     [
                         'url' => $extraUrl,
-                        'status_code' => 200,
+                        'status_code' => $statusCode,
                         'title' => null,
-                        'is_indexed' => true,
+                        'is_indexed' => $statusCode < 400,
+                        'issues_found' => $issues,
                         'crawled_at' => now(),
                     ]
                 );
@@ -314,6 +335,42 @@ class WebsiteCrawlerEngine
             $decoded = json_decode(trim($rawJson), true);
             if ($decoded && isset($decoded['@type'])) {
                 $schemas[] = $decoded['@type'];
+            }
+        }
+
+        // Google Discover Meta & Featured Image Audit
+        if (strpos($html, 'max-image-preview:large') === false && strpos($html, 'max-image-preview: large') === false) {
+            $issues[] = ['code' => 'missing_max_image_preview', 'severity' => 'warning', 'label' => 'Missing Google Discover Meta Tag (max-image-preview:large)'];
+        }
+
+        preg_match('/<meta[^>]*property=["\']og:image["\'][^>]*content=["\'](.*?)["\']/is', $html, $ogImageMatches);
+        if (empty($ogImageMatches[1])) {
+            $issues[] = ['code' => 'missing_og_image', 'severity' => 'critical', 'label' => 'Missing Featured Image (og:image) for Google Discover'];
+        }
+
+        // Deep Internal Anchor Links & 404 Broken Links Detection
+        preg_match_all('/<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)<\/a>/is', $html, $linkMatches);
+        $checkedLinks = 0;
+        foreach ($linkMatches[1] ?? [] as $idx => $href) {
+            if ($checkedLinks >= 8) break; // Sample internal links per article for ultra-fast performance
+            $fullLink = $this->canonicalizeUrl($href, $url);
+            if ($fullLink && strpos($fullLink, parse_url($url, PHP_URL_HOST)) !== false) {
+                $checkedLinks++;
+                try {
+                    $linkResp = Http::timeout(3)->head($fullLink);
+                    if ($linkResp->status() === 404 || $linkResp->status() >= 500) {
+                        $anchorText = trim(strip_tags($linkMatches[2][$idx] ?? 'লিংক'));
+                        $issues[] = [
+                            'code' => 'broken_link',
+                            'severity' => 'critical',
+                            'label' => "Broken 404 Link: {$fullLink} (Anchor Text: '{$anchorText}')",
+                            'broken_url' => $fullLink,
+                            'anchor_text' => $anchorText
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    // Ignore connection timeout
+                }
             }
         }
 

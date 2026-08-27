@@ -11,11 +11,10 @@ class ContentDecayService
      */
     public function detectContentDecay(SeoWebsite $website): array
     {
-        $decayPages = $website->pageAudits()
+        $decayPages = $website->pageAudits
             ->whereNotNull('title')
             ->where('word_count', '<', 250)
-            ->take(5)
-            ->get();
+            ->take(5);
 
         $decayArticles = [];
         foreach ($decayPages as $audit) {

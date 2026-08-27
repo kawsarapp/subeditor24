@@ -14,11 +14,11 @@ class GscSyncService
      */
     public function syncSearchConsoleData(SeoWebsite $website): array
     {
-        if (empty($website->google_access_token)) {
-            return ['success' => false, 'message' => 'Google Account is not authenticated.'];
+        $token = $this->getValidGoogleToken($website);
+        if (empty($token)) {
+            return ['success' => false, 'message' => 'Google Account permission expired or not authenticated. Reconnect Google Account.'];
         }
 
-        $token = $website->google_access_token;
         $siteUrlsToTry = [
             'sc-domain:' . $website->domain,
             rtrim($website->target_url, '/') . '/',
@@ -74,8 +74,6 @@ class GscSyncService
             }
         }
 
-        // If site is newly added to GSC and has 0 search analytics rows yet:
-        // Update scanned page audits with verified GSC status
         $audits = $website->pageAudits;
         $totalNewsScanned = $audits->count();
         $indexedNewsCount = $audits->where('is_indexed', true)->count();
@@ -90,5 +88,32 @@ class GscSyncService
             'indexed_news_count' => $indexedNewsCount,
             'non_indexed_news_count' => $nonIndexedNewsCount
         ];
+    }
+
+    /**
+     * Get valid Google Access Token, refreshing via Refresh Token if needed
+     */
+    protected function getValidGoogleToken(SeoWebsite $website): ?string
+    {
+        if (!empty($website->google_access_token) && !empty($website->google_refresh_token)) {
+            try {
+                $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+                    'client_id' => env('GOOGLE_CLIENT_ID'),
+                    'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+                    'refresh_token' => $website->google_refresh_token,
+                    'grant_type' => 'refresh_token',
+                ]);
+                if ($response->successful() && isset($response->json()['access_token'])) {
+                    $newToken = $response->json()['access_token'];
+                    $website->google_access_token = $newToken;
+                    $website->save();
+                    return $newToken;
+                }
+            } catch (\Exception $e) {
+                Log::warning("GSC Sync Token Refresh Notice: " . $e->getMessage());
+            }
+        }
+
+        return $website->google_access_token;
     }
 }
