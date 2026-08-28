@@ -17,7 +17,7 @@ trait ScraperHtmlParserTrait
 
         $data = [
             'title'      => $this->extractTitle($crawler, $customSelectors),
-            'image'      => $this->extractImage($crawler, $url, $customSelectors),
+            'image'      => $this->extractImage($crawler, $url, $customSelectors, $html),
             'body'       => null,
             'source_url' => $url
         ];
@@ -139,7 +139,7 @@ trait ScraperHtmlParserTrait
         return "Untitled News";
     }
 
-    private function extractImage(Crawler $crawler, $url, $customSelectors)
+    private function extractImage(Crawler $crawler, $url, $customSelectors, $rawHtml = null)
     {
         $imageUrl = null;
 
@@ -187,7 +187,37 @@ trait ScraperHtmlParserTrait
             }
         }
 
-        // 3. Try High-Priority DOM Selectors (Jagonews, BBC, Generic featured images)
+        // 4. Try Quintype (Bold CMS) Embedded JSON Hero Image
+        if (!$imageUrl && $rawHtml && str_contains($rawHtml, '{"qt":{')) {
+            $start = strpos($rawHtml, '{"qt":{');
+            $end = strpos($rawHtml, '</script>', $start);
+            if ($start !== false && $end !== false) {
+                $qtData = json_decode(substr($rawHtml, $start, $end - $start), true);
+                if (!empty($qtData['qt'])) {
+                    $cdn = $qtData['qt']['config']['cdn-image'] ?? 'media.prothomalo.com';
+                    if (!str_starts_with($cdn, 'http')) $cdn = 'https://' . $cdn;
+                    $heroKey = null;
+                    $walk = function($obj) use (&$walk, &$heroKey) {
+                        if (is_array($obj)) {
+                            if (!empty($obj['hero-image-s3-key'])) {
+                                $heroKey = $obj['hero-image-s3-key'];
+                                return;
+                            }
+                            foreach ($obj as $v) {
+                                if (is_array($v)) $walk($v);
+                                if (!empty($heroKey)) return;
+                            }
+                        }
+                    };
+                    $walk($qtData['qt']);
+                    if ($heroKey) {
+                        $imageUrl = rtrim($cdn, '/') . '/' . ltrim($heroKey, '/');
+                    }
+                }
+            }
+        }
+
+        // 5. Try High-Priority DOM Selectors (Jagonews, BBC, Generic featured images)
         if (!$imageUrl) {
             $highPrioritySelectors = [
                 '.featured-image img', '.featured-img img', '.photo-feature img',

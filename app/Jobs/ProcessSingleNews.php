@@ -61,6 +61,7 @@ class ProcessSingleNews implements ShouldQueue
 
             if (!$scrapedData || empty($scrapedData['body'])) {
                 Log::warning("⚠️ Skipped (Empty Content): {$this->link}");
+                $this->logScraperRun($this->websiteId, $this->link, 'article', 'failed', null, null, 'Empty content returned after attempting all scraper engines.');
                 return;
             }
 
@@ -77,6 +78,7 @@ class ProcessSingleNews implements ShouldQueue
 
         } catch (\Exception $e) {
             Log::error("🔥 Job Error ({$this->link}): " . $e->getMessage());
+            $this->logScraperRun($this->websiteId, $this->link, 'article', 'failed', null, null, 'Exception during article process: ' . $e->getMessage());
         }
     }
 
@@ -218,11 +220,30 @@ class ProcessSingleNews implements ShouldQueue
 
         } catch (QueryException $e) {
             // Duplicate Entry Error Code: 1062
-            if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
+            if ($e->errorInfo[1] == 1062) {
                 // সাইলেন্টলি ইগনোর করুন (লগ ফ্লাড না করার জন্য)
                 return;
             }
             Log::error("🔥 DB Error: " . $e->getMessage());
+        }
+    }
+
+    private function logScraperRun($websiteId, $url, $jobType, $status, $strategy = null, $httpStatus = null, $errorMessage = null, $retryCount = 0)
+    {
+        try {
+            \App\Models\ScraperLog::create([
+                'website_id'    => $websiteId,
+                'url'           => $url,
+                'job_type'      => $jobType,
+                'status'        => $status,
+                'strategy'      => $strategy,
+                'http_status'   => $httpStatus,
+                'error_message' => $errorMessage,
+                'retry_count'   => $retryCount,
+                'created_at'    => now(),
+            ]);
+        } catch (\Exception $e) {
+            Log::warning("⚠️ Failed to write scraper log to DB: " . $e->getMessage());
         }
     }
 }

@@ -41,7 +41,11 @@ class ScrapeWebsite implements ShouldQueue
             $realId = is_array($this->websiteId) ? ($this->websiteId['id'] ?? null) : $this->websiteId;
             $website = Website::withoutGlobalScopes()->find($realId);
 
-            if (!$website) return;
+            if (!$website) {
+                Log::error("❌ Website not found for ID: " . var_export($realId, true));
+                $this->logScraperRun($realId, null, 'list', 'failed', 'None', 404, 'Website record not found in database.');
+                return;
+            }
 
             Log::info("🚀 JOB STARTED: {$website->name} | URL: {$website->url}");
 
@@ -55,6 +59,7 @@ class ScrapeWebsite implements ShouldQueue
                     Log::warning("⚠️ Running on LOCALHOST without Proxy/API. Proceeding directly (DEV MODE).");
                 } else {
                     Log::error("❌ Security Block [List]: No Proxy configured AND API disabled. Aborting to protect Hosting Server IP.");
+                    $this->logScraperRun($website->id, $website->url, 'list', 'failed', 'None', 403, 'Security Block: No Proxy configured AND Scraping API disabled.');
                     return;
                 }
             }
@@ -71,13 +76,17 @@ class ScrapeWebsite implements ShouldQueue
                 if (!$listPageHtml || strlen($listPageHtml) < 500) {
                     if (!$proxy) {
                         Log::error("❌ Security Block: Universal API failed and no Proxy available. Aborting.");
+                        $this->logScraperRun($website->id, $website->url, 'list', 'failed', 'Universal API', 502, 'Universal API failed and no fallback Proxy available.');
                         return;
                     }
                     Log::info("🔄 Universal API failed or unconfigured — falling back to Python/Puppeteer.");
                     $listPageHtml = $scraper->fetchHtmlWithPython($website->url, $this->userId);
                 }
                 if (!$listPageHtml || strlen($listPageHtml) < 500) {
-                    if (!$proxy) return; // Prevent fallback
+                    if (!$proxy) {
+                        $this->logScraperRun($website->id, $website->url, 'list', 'failed', 'None', 500, 'Universal API returned empty/short HTML and no fallback proxy is configured.');
+                        return; // Prevent fallback
+                    }
                     $listPageHtml = $scraper->runPuppeteer($website->url, $this->userId);
                 }
             } else {
@@ -178,6 +187,7 @@ class ScrapeWebsite implements ShouldQueue
             $activeContainer = null;
             $activeTitleSelector = null;
             $foundItems = null;
+            $limit = 5;
 
             // ==========================================
             // 🔥 SPECIAL: Next.js __NEXT_DATA__ JSON Parser
@@ -201,6 +211,40 @@ class ScrapeWebsite implements ShouldQueue
                     if ($count > 0) {
                         Log::info("🏁 MAIN JOB FINISHED. Queued: {$count} jobs.");
                         \Illuminate\Support\Facades\Cache::forget('scraping_user_' . $this->userId);
+                        $website->update(['last_scraped_at' => now()]);
+                        $this->logScraperRun($website->id, $website->url, 'list', 'success', 'Next.js Parser', 200, "Successfully scanned list page and queued {$count} news items via Next.js Parser.");
+                        return;
+                    }
+                }
+            }
+
+            // ==========================================
+            // 🔥 SPECIAL: Quintype / Bold CMS Parser (Prothom Alo & similar)
+            // ==========================================
+            $isQuintypeSite = str_contains($website->url, 'prothomalo.com') || str_contains($listPageHtml, '"qt":{');
+            if ($isQuintypeSite && $listPageHtml) {
+                $qtLinks = $this->extractQuintypeLinks($listPageHtml, $website->url);
+                if (!empty($qtLinks)) {
+                    Log::info("✅ Quintype CMS Parser: Found " . count($qtLinks) . " items for {$website->url}");
+                    $count = 0;
+                    foreach (array_slice($qtLinks, 0, $limit ?? 5) as $item) {
+                        if (!empty($item['link']) && !empty($item['title']) && strlen($item['title']) > 5) {
+                            Log::info("⚡ Dispatching Job for: " . \Illuminate\Support\Str::limit($item['title'], 30));
+                            \App\Jobs\ProcessSingleNews::dispatch(
+                                $item['link'],
+                                $item['title'],
+                                $this->userId,
+                                $website->id,
+                                $item['image'] ?? null
+                            );
+                            $count++;
+                        }
+                    }
+                    if ($count > 0) {
+                        Log::info("🏁 MAIN JOB FINISHED. Queued: {$count} jobs via Quintype Parser.");
+                        \Illuminate\Support\Facades\Cache::forget('scraping_user_' . $this->userId);
+                        $website->update(['last_scraped_at' => now()]);
+                        $this->logScraperRun($website->id, $website->url, 'list', 'success', 'Quintype Parser', 200, "Successfully scanned list page and queued {$count} news items via Quintype Parser.");
                         return;
                     }
                 }
@@ -559,6 +603,72 @@ class ScrapeWebsite implements ShouldQueue
                 }
                 if (count($links) >= 15) break;
             }
+        }
+
+        return $links;
+    }
+
+    /**
+     * 🔥 Extract article links from Quintype (Bold CMS) JSON
+     * For sites like prothomalo.com that store articles in {"qt": ...} script tag
+     */
+    private function extractQuintypeLinks($html, $baseUrl): array
+    {
+        $links = [];
+        $startPos = strpos($html, '{"qt":{');
+        if ($startPos === false) return [];
+
+        $endPos = strpos($html, '</script>', $startPos);
+        if ($endPos === false) return [];
+
+        $jsonStr = trim(substr($html, $startPos, $endPos - $startPos));
+        $data = json_decode($jsonStr, true);
+        if (!$data || empty($data['qt'])) return [];
+
+        $cdnHost = $data['qt']['config']['cdn-image'] ?? 'media.prothomalo.com';
+        if (!str_starts_with($cdnHost, 'http')) {
+            $cdnHost = 'https://' . $cdnHost;
+        }
+
+        $allStories = [];
+        $walk = function ($obj) use (&$walk, &$allStories) {
+            if (is_array($obj)) {
+                if (isset($obj['headline']) && (isset($obj['url']) || isset($obj['slug']))) {
+                    $allStories[] = $obj;
+                }
+                foreach ($obj as $val) {
+                    if (is_array($val)) $walk($val);
+                }
+            }
+        };
+        $walk($data['qt']);
+
+        $seen = [];
+        foreach ($allStories as $story) {
+            $title = trim($story['headline'] ?? '');
+            if (empty($title) || strlen($title) < 5 || isset($seen[$title])) continue;
+            $seen[$title] = true;
+
+            $link = $story['url'] ?? null;
+            if (!$link && !empty($story['slug'])) {
+                $link = 'https://www.prothomalo.com/' . ltrim($story['slug'], '/');
+            }
+            if (!$link) continue;
+
+            $image = null;
+            if (!empty($story['hero-image-s3-key'])) {
+                $image = rtrim($cdnHost, '/') . '/' . ltrim($story['hero-image-s3-key'], '/');
+            } elseif (!empty($story['hero-image-url'])) {
+                $image = $story['hero-image-url'];
+            }
+
+            $links[] = [
+                'link'  => $link,
+                'title' => $title,
+                'image' => $image,
+            ];
+
+            if (count($links) >= 15) break;
         }
 
         return $links;

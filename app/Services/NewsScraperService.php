@@ -192,7 +192,6 @@ class NewsScraperService
 
     private function logScraperRun($websiteId, $url, $jobType, $status, $strategy = null, $httpStatus = null, $errorMessage = null, $retryCount = 0)
     {
-        if (!$websiteId) return;
         try {
             \App\Models\ScraperLog::create([
                 'website_id'    => $websiteId,
