@@ -106,9 +106,14 @@ class ProcessSingleNews implements ShouldQueue
             $imageUrl = 'https:' . $imageUrl;
         }
 
-        // B. Clean OG Path
+        // B. Clean OG Path & Strip Overlay/Branding
         if (strpos($imageUrl, '/og/') !== false) {
             $imageUrl = str_replace('/og/', '/', $imageUrl);
+        }
+
+        if (str_contains($imageUrl, 'overlay=') || str_contains($imageUrl, 'watermark=') || str_contains($imageUrl, 'branding') || str_contains($imageUrl, 'prothomalo.com')) {
+            $imageUrl = strtok($imageUrl, '?');
+            $imageUrl = urldecode($imageUrl);
         }
 
         // C. 🔥 SITES REQUIRING LOCAL IMAGE DOWNLOAD (Anti-Hotlinking)
@@ -120,7 +125,8 @@ class ProcessSingleNews implements ShouldQueue
             str_contains($imageUrl, 'jugantor.com') ||
             str_contains($imageUrl, 'bartabazar.com') ||
             str_contains($imageUrl, 'somoynews.tv') ||
-            str_contains($imageUrl, 'prothomalo.com')) {
+            str_contains($imageUrl, 'prothomalo.com') ||
+            str_contains($imageUrl, 'dawn.com')) {
             return $this->downloadImage($imageUrl, false); // Download only, no crop
         }
 

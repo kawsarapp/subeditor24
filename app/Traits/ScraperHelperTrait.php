@@ -127,8 +127,15 @@ trait ScraperHelperTrait
             }
         }
 
-        if (str_contains($imageUrl, 'rtvonline.com') || str_contains($imageUrl, 'kalerkantho.com') || str_contains($imageUrl, 'jamuna.tv') || str_contains($imageUrl, 'samakal.com')) {
+        if (str_contains($imageUrl, 'rtvonline.com') || str_contains($imageUrl, 'kalerkantho.com') || str_contains($imageUrl, 'jamuna.tv') || str_contains($imageUrl, 'samakal.com') || str_contains($imageUrl, 'prothomalo.com')) {
             $imageUrl = strtok($imageUrl, '?');
+            $imageUrl = urldecode($imageUrl);
+        }
+
+        // 🔥 Generic overlay / watermark / branding remover for ALL portals
+        if (str_contains($imageUrl, 'overlay=') || str_contains($imageUrl, 'watermark=') || str_contains($imageUrl, 'branding')) {
+            $imageUrl = strtok($imageUrl, '?');
+            $imageUrl = urldecode($imageUrl);
         }
 
         // 🔥 NEW: Generic resolution limiter remover for ALL sites (e.g. ?w=300, &height=150)
