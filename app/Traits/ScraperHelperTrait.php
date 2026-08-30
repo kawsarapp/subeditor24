@@ -88,6 +88,12 @@ trait ScraperHelperTrait
     {
         if (!$imageUrl) return null;
 
+        if (is_array($imageUrl)) {
+            $imageUrl = $imageUrl['url'] ?? $imageUrl['src'] ?? $imageUrl[0] ?? null;
+        }
+
+        if (!is_string($imageUrl) || empty($imageUrl)) return null;
+
         if (str_contains($imageUrl, 'jugantor.com') && str_contains($imageUrl, '/social-thumbnail/')) {
             $imageUrl = str_replace('/social-thumbnail/', '/', $imageUrl);
         }
@@ -125,6 +131,13 @@ trait ScraperHelperTrait
             if (str_contains($imageUrl, '/branded_bengali/')) {
                 $imageUrl = preg_replace('/news\/\d+\/branded_bengali/', 'ace/ws/800/cpsprodpb', $imageUrl);
             }
+            if (str_contains($imageUrl, '/branded_news/')) {
+                $imageUrl = str_replace('/branded_news/', '/cpsprodpb/', $imageUrl);
+            }
+        }
+
+        if (str_contains($imageUrl, 'dims.apnews.com') && preg_match('/[?&]url=([^&]+)/i', $imageUrl, $m)) {
+            $imageUrl = urldecode($m[1]);
         }
 
         if (str_contains($imageUrl, 'rtvonline.com') || str_contains($imageUrl, 'kalerkantho.com') || str_contains($imageUrl, 'jamuna.tv') || str_contains($imageUrl, 'samakal.com') || str_contains($imageUrl, 'prothomalo.com')) {

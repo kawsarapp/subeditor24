@@ -91,6 +91,12 @@ class ProcessSingleNews implements ShouldQueue
     {
         if (!$imageUrl) return null;
 
+        if (is_array($imageUrl)) {
+            $imageUrl = $imageUrl['url'] ?? $imageUrl['src'] ?? $imageUrl[0] ?? null;
+        }
+
+        if (!is_string($imageUrl) || empty($imageUrl)) return null;
+
         // A. Relative URL Fix
         // Note: filter_var(FILTER_VALIDATE_URL) fails on URLs with unicode/Bengali characters,
         // so we use str_starts_with instead to detect already-absolute URLs.
@@ -126,7 +132,13 @@ class ProcessSingleNews implements ShouldQueue
             str_contains($imageUrl, 'bartabazar.com') ||
             str_contains($imageUrl, 'somoynews.tv') ||
             str_contains($imageUrl, 'prothomalo.com') ||
-            str_contains($imageUrl, 'dawn.com')) {
+            str_contains($imageUrl, 'dawn.com') ||
+            str_contains($imageUrl, 'aljazeera.com') ||
+            str_contains($imageUrl, 'bbc.com') ||
+            str_contains($imageUrl, 'bbci.co.uk') ||
+            str_contains($imageUrl, 'cnn.com') ||
+            str_contains($imageUrl, 'apnews.com') ||
+            str_contains($imageUrl, 'voanews.com')) {
             return $this->downloadImage($imageUrl, false); // Download only, no crop
         }
 

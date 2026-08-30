@@ -43,6 +43,10 @@ return [
         'key' => env('GEMINI_API_KEY'),
     ],
 
+    'photoroom' => [
+        'api_key' => env('PHOTOROOM_API_KEY', 'sk_pr_default_a91d0124ce87d1d539d31255baa867e66adf5884'),
+    ],
+
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
     ],

@@ -49,7 +49,7 @@
            </div>
 
            <div id="canvas-wrapper" class="shadow-2xl transition-transform duration-200 ease-out origin-center ring-4 md:ring-8 ring-white">
-               <canvas id="newsCanvas" width="1080" height="1080" style="max-width: 100%; max-height: 100%;"></canvas>
+               <canvas id="newsCanvas" width="1080" height="1080"></canvas>
            </div>
         </div>
 

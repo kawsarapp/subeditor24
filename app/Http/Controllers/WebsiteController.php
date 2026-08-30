@@ -83,9 +83,9 @@ class WebsiteController extends Controller
         $cooldownMinutes = (int) \App\Models\UserSetting::getSettingWithFallback($adminUser->id, 'scrape_cooldown_minutes') ?: 5;
         $concurrentLimit = (int) \App\Models\UserSetting::getSettingWithFallback($adminUser->id, 'scrape_concurrent_limit') ?: 3;
 
-        // রেট লিমিট চেক: এক ইউজার নির্ধারিত কুলডাউন সময়ের মধ্যে সর্বোচ্চ $concurrentLimit টি সাইট স্ক্র্যাপ করতে পারবে
+        // রেট লিমিট চেক: সাধারণ ইউজার নির্ধারিত কুলডাউন সময়ের মধ্যে সর্বোচ্চ $concurrentLimit টি সাইট স্ক্র্যাপ করতে পারবে
         $rateLimitKey = 'scrape_limit_' . $user->id;
-        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($rateLimitKey, $concurrentLimit)) {
+        if ($user->role !== 'super_admin' && \Illuminate\Support\Facades\RateLimiter::tooManyAttempts($rateLimitKey, $concurrentLimit)) {
             $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($rateLimitKey);
             $minutes = floor($seconds / 60);
             $remainingSeconds = $seconds % 60;

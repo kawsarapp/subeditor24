@@ -234,6 +234,7 @@
                     'can_direct_publish' => '📝 Direct Create (News Feed)',
                     'can_ai'             => '🤖 AI Content Rewriter',
                     'can_studio'         => '🎨 Studio Design Access',
+                    'can_custom_photo_card' => '🪄 Custom Photo Card & AI BG Remove',
                     'can_auto_post'      => '🚀 Automation & Auto Post',
                     'can_manage_staff'   => '👥 Client can create Sub-Users/Staff',
                     'can_fact_check'     => '🔍 Fact Check & Plagiarism Finder',

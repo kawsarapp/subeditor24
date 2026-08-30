@@ -136,6 +136,11 @@
             @endif
             @endif
 
+            {{-- 🎨 Custom Photo Card & AI BG Remover --}}
+            <a href="{{ route('custom-photo-card.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('custom-photo-card.*') ? 'bg-indigo-600 text-white' : 'text-violet-700 bg-violet-50 hover:bg-violet-100' }}">
+                <i class="fa-solid fa-wand-magic-sparkles text-violet-500 w-5 text-center text-sm"></i> Custom Photo Card (AI)
+            </a>
+
             @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_reporters'))
             <div class="border-t border-slate-100 my-2"></div>
             <p class="px-3 pt-1 pb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Team Management</p>

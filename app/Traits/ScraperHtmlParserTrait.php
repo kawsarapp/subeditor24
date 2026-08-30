@@ -59,6 +59,7 @@ trait ScraperHtmlParserTrait
             '.newsDetailBody', '.news-detail-body', '.news-body-content',
             '.detailsBody', '.somoyNewsBody', '.article-detail-body', // somoynews.tv (Nuxt SSR via Universal API)
             // Generic fallbacks
+            '.RichTextStoryBody', '.StoryBody', '[data-key="article-body"]', '.body-content', '.wsw',
             '.article-details-body', '.content-details', '.news-article-text',
             '#news-content', '.details-text', '.article-content',
             'div[itemprop="articleBody"]', '.article-details', '#details',

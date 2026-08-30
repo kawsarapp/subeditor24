@@ -129,14 +129,16 @@
                         canvas.remove(existingQr);
                     }
 
-                    let left = 1080 - size - 35;
-                    let top = 1080 - size - 35;
+                    let canvasW = canvas.width || 1080;
+                    let canvasH = canvas.height || 1080;
+                    let left = canvasW - size - 35;
+                    let top = canvasH - size - 35;
 
                     if (position === 'bottom-left') {
                         left = 35;
-                        top = 1080 - size - 35;
+                        top = canvasH - size - 35;
                     } else if (position === 'top-right') {
-                        left = 1080 - size - 35;
+                        left = canvasW - size - 35;
                         top = 35;
                     } else if (position === 'top-left') {
                         left = 35;
@@ -191,9 +193,12 @@
     function fitToScreen() {
         const container = document.getElementById('workspace-container');
         const wrapper = document.getElementById('canvas-wrapper');
-        if (!container || !wrapper) return;
-        const scale = Math.min((container.clientWidth - 60) / 1080, (container.clientHeight - 60) / 1080);
-        currentZoom = scale; updateZoomDisplay();
+        if (!container || !wrapper || !canvas) return;
+        const canvasW = canvas.getWidth() || 1080;
+        const canvasH = canvas.getHeight() || 1080;
+        const scale = Math.min((container.clientWidth - 40) / canvasW, (container.clientHeight - 40) / canvasH);
+        currentZoom = Math.min(scale, 1); 
+        updateZoomDisplay();
     }
 	
 	function changeZoom(delta) {
@@ -254,6 +259,18 @@
         }
 
         fabric.Image.fromURL(imageUrl, function(img) {
+            if (!img) return;
+
+            const naturalW = img.naturalWidth || img.width;
+            const naturalH = img.naturalHeight || img.height;
+
+            // 🔥 DYNAMIC NATURAL FRAME SIZING (NO 1:1 FORCING)
+            if (naturalW && naturalH && (canvas.width !== naturalW || canvas.height !== naturalH)) {
+                canvas.setWidth(naturalW);
+                canvas.setHeight(naturalH);
+                fitToScreen();
+            }
+
             img.set({ left: 0, top: 0, scaleX: canvas.width / img.width, scaleY: canvas.height / img.height, selectable: false, evented: false, isFrame: true });
             window.frameObj = img; canvas.add(img);
 
@@ -283,6 +300,10 @@
                 const imgConfig = targetLayout.image;
                 let finalScale = Math.max(imgConfig.width / mainImgObj.width, imgConfig.height / mainImgObj.height) * (imgConfig.zoom !== undefined ? imgConfig.zoom : 1.0);
                 mainImgObj.set({ scaleX: finalScale, scaleY: finalScale, left: imgConfig.left + (imgConfig.width / 2), top: imgConfig.top + (imgConfig.height / 2), originX: 'center', originY: 'center', clipPath: null });
+                mainImgObj.setCoords();
+            } else if (mainImgObj) {
+                const scale = Math.max(canvas.width / mainImgObj.width, canvas.height / mainImgObj.height);
+                mainImgObj.set({ scaleX: scale, scaleY: scale, left: canvas.width / 2, top: canvas.height / 2, originX: 'center', originY: 'center', clipPath: null });
                 mainImgObj.setCoords();
             }
 

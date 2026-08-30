@@ -180,7 +180,7 @@ class ScrapeWebsite implements ShouldQueue
             // ३. জেনেরিক স্মার্ট সিলেক্টর
             $strategies[] = [
                 'source'    => 'GENERIC (SMART)',
-                'container' => 'article a, .post a, .news a, h2 a, h3 a', 
+                'container' => 'article a, .post a, .news a, .card a, .news-item a, .post-item a, .media a, h1 a, h2 a, h3 a, h4 a, h5 a, .title a, a.card-link, a[href*="/news-"]', 
                 'title'     => null
             ];
 
@@ -247,6 +247,42 @@ class ScrapeWebsite implements ShouldQueue
                         $this->logScraperRun($website->id, $website->url, 'list', 'success', 'Quintype Parser', 200, "Successfully scanned list page and queued {$count} news items via Quintype Parser.");
                         return;
                     }
+                }
+            }
+
+            // ==========================================
+            // 🔥 SPECIAL: Jugantor AJAX News Parser
+            // ==========================================
+            if (str_contains($website->url, 'jugantor.com')) {
+                $jugantorAjaxUrl = 'https://www.jugantor.com/ajax/load/latestnews/tab/10/0/0';
+                try {
+                    $jugantorJson = $scraper->fetchWithUniversalScrapingApi($jugantorAjaxUrl, $this->userId);
+                    $jugantorData = json_decode($jugantorJson, true);
+                    if (!empty($jugantorData) && is_array($jugantorData)) {
+                        Log::info("✅ Jugantor AJAX Parser: Found " . count($jugantorData) . " items.");
+                        $count = 0;
+                        foreach (array_slice($jugantorData, 0, $limit ?? 5) as $item) {
+                            $link = $item['url'] ?? null;
+                            $title = $item['fullheadline'] ?? $item['headline'] ?? null;
+                            $image = $item['thumbMedium'] ?? $item['thumbSmall'] ?? null;
+                            if (!empty($link) && !empty($title) && strlen($title) > 5) {
+                                if (!NewsItem::where('original_link', $link)->where('user_id', $this->userId)->exists()) {
+                                    Log::info("⚡ Dispatching Job for: " . \Illuminate\Support\Str::limit($title, 30));
+                                    \App\Jobs\ProcessSingleNews::dispatch($link, $title, $this->userId, $website->id, $image);
+                                    $count++;
+                                }
+                            }
+                        }
+                        if ($count > 0) {
+                            Log::info("🏁 MAIN JOB FINISHED. Queued: {$count} jobs via Jugantor AJAX Parser.");
+                            \Illuminate\Support\Facades\Cache::forget('scraping_user_' . $this->userId);
+                            $website->update(['last_scraped_at' => now()]);
+                            $this->logScraperRun($website->id, $website->url, 'list', 'success', 'Jugantor AJAX Parser', 200, "Successfully scanned list page and queued {$count} news items via Jugantor AJAX Parser.");
+                            return;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning("⚠️ Jugantor AJAX Parser Error: " . $e->getMessage());
                 }
             }
 
@@ -455,8 +491,17 @@ class ScrapeWebsite implements ShouldQueue
      */
     private function getDomainConfig($url)
     {
+        if (str_contains($url, 'ntvbd.com')) {
+            return [
+                'container' => 'a[href*="/news-"], a[href*="/bangladesh/"], a[href*="/sports/"], a[href*="/entertainment/"], a[href*="/economy/"], a[href*="/international/"], a[href*="/politics/"], .card a, .media a, article a',
+                'title' => null
+            ];
+        }
         if (str_contains($url, 'jugantor.com')) {
-            return ['container' => '#loadMoreContent .col-12, #loadMoreContent .row', 'title' => 'a.text-decoration-none'];
+            return [
+                'container' => 'a[href*="jugantor.com/"], a[href*="/national/"], a[href*="/politics/"], a[href*="/sports/"], a[href*="/international/"], a[href*="/country-news/"], a[href*="/campus/"], a[href*="/economics/"], .media a, .card a, article a',
+                'title' => null
+            ];
         }
         if (str_contains($url, 'kalerkantho.com')) {
             return ['container' => 'div.card h5.card-title a, .col-md-3 a, .col-sm-6 a, .col-xs-12 a, h5 a, h4 a, h3 a, h2 a, .card a', 'title' => null];
@@ -542,6 +587,10 @@ class ScrapeWebsite implements ShouldQueue
             // BBC Bengali: article URLs follow /bengali/articles/<alphanumeric-id> or /bengali/live/<id>
             return ['container' => 'a[href*="/bengali/articles/"], a[href*="/bengali/live/"]', 'title' => null];
         }
+        if (str_contains($url, 'bbc.com')) {
+            // BBC English News (World, Asia, UK, US, etc.)
+            return ['container' => 'a[href*="/news/articles/"], a[href*="/articles/"], a[data-testid="internal-link"][href*="/articles/"]', 'title' => null];
+        }
         if (str_contains($url, 'dawn.com')) {
             // Dawn News: article links are wrapped in article.story
             return ['container' => 'article.story', 'title' => 'h2.story__title'];
@@ -549,6 +598,22 @@ class ScrapeWebsite implements ShouldQueue
         if (str_contains($url, 'aninews.in')) {
             // ANI News: article links are wrapped in div.card
             return ['container' => 'div.card', 'title' => 'h1.title'];
+        }
+        if (str_contains($url, 'aljazeera.com')) {
+            // Al Jazeera: article links
+            return ['container' => 'article a.u-clickable-card__link, a.u-clickable-card__link, article h3 a, article h2 a', 'title' => null];
+        }
+        if (str_contains($url, 'cnn.com')) {
+            // CNN News (World, Asia, Europe, China, Middle East, etc.)
+            return ['container' => 'a[data-link-type="article"], a[href*="/2026/"], a[href*="/2025/"]', 'title' => '.container__headline-text, span.container__headline-text, .headline__text, span'];
+        }
+        if (str_contains($url, 'voanews.com')) {
+            // Voice of America News
+            return ['container' => 'a[href*="/a/"]', 'title' => 'h1, .title, .page-header, .media-block__title'];
+        }
+        if (str_contains($url, 'apnews.com')) {
+            // Associated Press News
+            return ['container' => 'a[href*="/article/"]', 'title' => 'h1, h2, h3, .Page-headline'];
         }
         return null;
     }

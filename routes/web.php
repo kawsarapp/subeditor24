@@ -174,6 +174,17 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // Admin / Analytics (Protected by controller logic)
     Route::get('/admin/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('admin.analytics.index');
+
+    // 🎨 Custom Photo Card Studio & AI Background Remover
+    Route::controller(\App\Http\Controllers\CustomPhotoCardController::class)->prefix('studio/custom-photo-card')->name('custom-photo-card.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/remove-bg', 'removeBackground')->name('remove-bg');
+        Route::get('/media-frames', 'getMediaFrames')->name('media-frames');
+        Route::post('/upload-frame', 'uploadFrame')->name('upload-frame');
+        Route::post('/save', 'saveCard')->name('save');
+        Route::post('/save-template', 'saveTemplate')->name('save-template');
+        Route::delete('/delete-template/{id}', 'deleteTemplate')->name('delete-template');
+    });
 });
 
 

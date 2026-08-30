@@ -19,6 +19,7 @@ class User extends Authenticatable
         'credits', 
         'total_credits_limit', 
         'daily_post_limit',
+        'daily_bg_remove_limit',
         'daily_crawl_limit',
         'daily_ai_limit',
         'is_active',
@@ -104,6 +105,31 @@ class User extends Authenticatable
     // ==========================================
     // 🔥 HELPER FUNCTIONS
     // ==========================================
+
+    public function bgRemoveLogs()
+    {
+        return $this->hasMany(BgRemoveLog::class)->latest();
+    }
+
+    public function hasDailyBgRemoveLimitRemaining()
+    {
+        if ($this->role === 'super_admin') return true;
+
+        $todayRemovals = $this->bgRemoveLogs()
+            ->where('status', 'success')
+            ->whereDate('created_at', now())
+            ->count();
+
+        return $todayRemovals < ($this->daily_bg_remove_limit ?? 20);
+    }
+
+    public function getTodaysBgRemoveCountAttribute()
+    {
+        return $this->bgRemoveLogs()
+            ->where('status', 'success')
+            ->whereDate('created_at', now())
+            ->count();
+    }
 
     public function hasDailyLimitRemaining()
     {

@@ -102,6 +102,12 @@
                                 @endif
                                 @endif
 
+                                {{-- 🎨 Custom Photo Card & AI BG Remover --}}
+                                <a href="{{ route('custom-photo-card.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-violet-50 hover:text-violet-700 transition-colors">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-violet-500 w-4 text-center"></i>
+                                    <span>Custom Photo Card (AI)</span>
+                                </a>
+
                                 {{-- 3. Analytics & ROI --}}
                                 @if(Route::has('admin.analytics.index') && (auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_analytics')))
                                 <a href="{{ route('admin.analytics.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
