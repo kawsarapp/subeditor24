@@ -350,6 +350,190 @@ class SettingsController extends Controller
     }
 
     /**
+     * ⚡ কাস্টম এপিআই / লারাভেল / Next.js কানেকশন টেস্ট
+     */
+    public function testCustomApiConnection(Request $request)
+    {
+        $customApiUrl = $request->input('custom_api_url');
+        $baseUrl      = $request->input('laravel_site_url');
+        $token        = $request->input('laravel_api_token');
+        $mappingInput = $request->input('custom_api_mapping');
+
+        $mapping = [];
+        if (!empty($mappingInput)) {
+            $mapping = is_array($mappingInput) ? $mappingInput : (json_decode($mappingInput, true) ?? []);
+        }
+
+        // ১. যদি কাস্টম এপিআই URL থাকে
+        if (!empty($customApiUrl)) {
+            $apiUrl       = $customApiUrl;
+            $authType     = $mapping['auth_type'] ?? ($mapping['header_auth'] ?? 'Bearer');
+            $authHeader   = $mapping['auth_header_name'] ?? 'Authorization';
+            $imageFormat  = $mapping['image_format'] ?? 'url';
+            $categoryType = $mapping['category_type'] ?? 'id';
+
+            $headers = [
+                'Accept'     => 'application/json',
+                'User-Agent' => 'Newsmanage24-Publisher/2.0 (+https://newsmanage24.com)',
+            ];
+
+            if (!empty($token)) {
+                if ($authType === 'Bearer') {
+                    $headers['Authorization'] = 'Bearer ' . $token;
+                } elseif ($authType === 'header' || $authType === 'custom_header') {
+                    $headers[$authHeader] = $token;
+                } elseif ($authType === 'basic') {
+                    $headers['Authorization'] = 'Basic ' . base64_encode($token);
+                }
+            }
+
+            $testTitle   = 'টেস্ট নিউজ — Newsmanage24 Connection Verification';
+            $testContent = '<p>এটি Newsmanage24 থেকে একটি স্বয়ংক্রিয় টেস্ট পোস্ট ভেরিফিকেশন।</p>';
+            $testSlug    = 'test-newsmanage24-' . time();
+            $testCat     = ($categoryType === 'name') ? 'টেস্ট' : [1];
+            $testImage   = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800';
+
+            $payload = [];
+            if (isset($mapping['title'])) $payload[$mapping['title']] = $testTitle;
+            if (isset($mapping['content'])) $payload[$mapping['content']] = $testContent;
+            if (isset($mapping['tags'])) $payload[$mapping['tags']] = '#Test #Verification';
+            if (isset($mapping['date'])) $payload[$mapping['date']] = now()->format('Y-m-d H:i:s');
+            if (isset($mapping['slug'])) $payload[$mapping['slug']] = $testSlug;
+            if (isset($mapping['category'])) $payload[$mapping['category']] = $testCat;
+            if (isset($mapping['image'])) $payload[$mapping['image']] = $testImage;
+
+            if ($authType === 'body' && !empty($token)) {
+                $tokenKey = $mapping['token'] ?? 'token';
+                $payload[$tokenKey] = $token;
+            }
+
+            if (isset($mapping['extra']) && is_array($mapping['extra'])) {
+                foreach ($mapping['extra'] as $k => $v) {
+                    $payload[$k] = $v;
+                }
+            }
+
+            // যদি কোনো ফিল্ড ম্যাপিং না থাকে, তবে স্ট্যান্ডার্ড পেলোড পাঠাই
+            if (empty($payload)) {
+                $payload = [
+                    'token'   => $token,
+                    'title'   => $testTitle,
+                    'content' => $testContent,
+                    'slug'    => $testSlug,
+                    'image'   => $testImage,
+                ];
+            }
+
+            try {
+                $response = Http::timeout(20)
+                    ->withOptions(['verify' => false])
+                    ->withHeaders($headers)
+                    ->post($apiUrl, $payload);
+
+                $statusCode   = $response->status();
+                $responseBody = $response->body();
+                $respData     = $response->json();
+
+                if ($response->successful()) {
+                    $idKey = $mapping['response_id_key'] ?? 'post_id';
+                    $postId = $respData[$idKey] ?? ($respData['data'][$idKey] ?? ($respData['id'] ?? 'OK'));
+                    
+                    return response()->json([
+                        'success' => true,
+                        'message' => "✅ কাস্টম API কানেকশন সফল! (HTTP {$statusCode})\nসার্ভার রেসপন্স ID: {$postId}",
+                        'data'    => $respData
+                    ]);
+                } elseif ($statusCode === 401 || $statusCode === 403) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "❌ অথেনটিকেশন ফেইল্ড! (HTTP {$statusCode})\nআপনার Secret Token বা Auth Headers চেক করুন।\nসার্ভার রেসপন্স: " . \Illuminate\Support\Str::limit($responseBody, 150)
+                    ]);
+                } elseif ($statusCode === 404) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "❌ এন্ডপয়েন্ট পাওয়া যায়নি! (HTTP 404)\nAPI URL ঠিক আছে কিনা এবং সার্ভারে রাউট রেজিস্টার্ড কিনা চেক করুন।"
+                    ]);
+                } elseif ($statusCode === 422) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "❌ ডাটা ভ্যালিডেশন এরর! (HTTP 422)\nম্যাপিং ফিল্ডের নামগুলো ক্লায়েন্ট সাইটের রিকোয়ার্ড ফিল্ডের সাথে মিলছে না।\nসার্ভার এরর: " . \Illuminate\Support\Str::limit($responseBody, 150)
+                    ]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "❌ রেসপন্স এরর! (HTTP {$statusCode})\nসার্ভার রেসপন্স: " . \Illuminate\Support\Str::limit($responseBody, 200)
+                    ]);
+                }
+
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ নেটওয়ার্ক বা কানেকশন এরর: ' . $e->getMessage()
+                ]);
+            }
+        }
+
+        // ২. যদি ডিফল্ট লারাভেল / Webhook URL থাকে
+        if (!empty($baseUrl)) {
+            $apiUrl = rtrim($baseUrl, '/') . '/api/external-news-post';
+            $payload = [
+                'token'         => $token,
+                'title'         => 'টেস্ট নিউজ — Newsmanage24 Verification',
+                'content'       => '<p>Newsmanage24 কানেকশন টেস্ট পোস্ট।</p>',
+                'image_url'     => 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800',
+                'category_ids'  => [1],
+                'category_name' => 'General',
+                'hashtags'      => '#Test',
+                'slug'          => 'test-newsmanage24-' . time(),
+                'published_at'  => now()->format('Y-m-d H:i:s'),
+            ];
+
+            try {
+                $response = Http::timeout(20)
+                    ->withOptions(['verify' => false])
+                    ->withHeaders([
+                        'Accept'     => 'application/json',
+                        'User-Agent' => 'Newsmanage24-Publisher/2.0'
+                    ])
+                    ->post($apiUrl, $payload);
+
+                $statusCode = $response->status();
+                $respData   = $response->json();
+
+                if ($response->successful()) {
+                    $postId = $respData['post_id'] ?? ($respData['id'] ?? 'OK');
+                    return response()->json([
+                        'success' => true,
+                        'message' => "✅ লারাভেল API কানেকশন সফল! (HTTP {$statusCode})\nপোস্ট আইডি: {$postId}",
+                        'data'    => $respData
+                    ]);
+                } elseif ($statusCode === 401) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "❌ অথেনটিকেশন ফেইল্ড (HTTP 401)! API Token অমিল।"
+                    ]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "❌ কানেকশন ফেইল্ড! HTTP {$statusCode}: " . \Illuminate\Support\Str::limit($response->body(), 150)
+                    ]);
+                }
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ কানেকশন এরর: ' . $e->getMessage()
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'দয়া করে ওয়েবসাইট Base URL অথবা Custom API URL প্রদান করুন।'
+        ]);
+    }
+
+
+    /**
      * ৬. ক্যাটাগরি ফেচ করা
      */
     public function fetchCategories(WordPressService $wpService)

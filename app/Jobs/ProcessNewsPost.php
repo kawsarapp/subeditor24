@@ -117,7 +117,7 @@ class ProcessNewsPost implements ShouldQueue
             }
 
             // --- 2. API Posting ---
-            if (!$socialOnly && $settings && ($settings->post_to_laravel || !empty($settings->custom_api_url)) && $settings->laravel_site_url) {
+            if (!$socialOnly && $settings && (($settings->post_to_laravel && !empty($settings->laravel_site_url)) || !empty($settings->custom_api_url))) {
                 $apiResult = $this->executeApiPost($news, $settings, $finalTitle, $finalContent, $categories, $websiteImage, $hashtags, $remotePostId, $publishedUrl);
                 $laravelSuccess = $apiResult['success'];
                 $remotePostId = $apiResult['remote_id'];

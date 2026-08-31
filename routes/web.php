@@ -83,6 +83,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/telegram', [SettingsController::class, 'testTelegramConnection'])->name('test-telegram');
             Route::post('/twitter', [SettingsController::class, 'testTwitterConnection'])->name('test-twitter');
             Route::post('/wordpress', [SettingsController::class, 'testWordPressConnection'])->name('test-wordpress');
+            Route::post('/custom-api', [SettingsController::class, 'testCustomApiConnection'])->name('test-custom-api');
         });
 
         // 🔥 Multi-Facebook Page Routes

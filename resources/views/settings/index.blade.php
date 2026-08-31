@@ -455,77 +455,518 @@
         </div>
         
         {{-- 🔥 LARAVEL CONNECTION SECTION --}}
+        {{-- UNIVERSAL & CUSTOM WEBSITE CONNECTION SECTION (Laravel / Next.js / Node.js / Custom CMS) --}}
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mt-6 relative overflow-hidden">
-            <div class="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm">Laravel API</div>
-            <h2 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2 flex items-center gap-2">
-                🚀 Laravel Website কানেকশন
-            </h2>
+            <div class="absolute top-0 right-0 bg-slate-800 text-slate-200 text-[11px] font-semibold px-3 py-1 rounded-bl-lg shadow-sm tracking-wide border-b border-l border-slate-700">REST API / Webhook</div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="col-span-1 md:col-span-2">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">ওয়েবসাইট লিংক (Base URL)</label>
-                    <input type="url" name="laravel_site_url" value="{{ old('laravel_site_url', $settings->laravel_site_url ?? '') }}" 
-                           placeholder="https://mylaravelnews.com" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
-                    <p class="text-xs text-gray-500 mt-1">শুধুমাত্র ডোমেইন লিংক দিন। ইউনিভার্সাল রিসিভারের ক্ষেত্রে আমরা অটোমেটিক <code>/api/external-news-post</code> এ হিট করব।</p>
-                </div>
+            <div class="flex flex-wrap justify-between items-center mb-4 border-b pb-3 gap-2">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">API Token (Secret Key)</label>
-                    <input type="text" name="laravel_api_token" value="{{ old('laravel_api_token', $settings->laravel_api_token ?? '') }}" 
-                           class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="যেকোনো গোপন পাসওয়ার্ড দিন">
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-plug text-indigo-600 text-lg"></i> Website API Integration <span class="text-xs font-normal text-gray-500">(Laravel / Next.js / Node.js / Custom CMS)</span>
+                    </h2>
+                    <p class="text-xs text-gray-500 mt-0.5">আপনার ওয়েবসাইটের সাথে স্বয়ংক্রিয় সংবাদ প্রকাশের সংযোগ কনফিগারেশন।</p>
                 </div>
                 
-                <div class="flex items-end">
-                    <label class="flex items-center gap-2 cursor-pointer bg-gray-50 px-4 py-2 rounded border border-gray-200 w-full">
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="openCodeGeneratorModal()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3.5 py-2 rounded-lg hover:bg-indigo-100 transition shadow-sm">
+                        <i class="fas fa-code"></i> Code Generator
+                    </button>
+                    <a href="{{ route('docs.api-guide') }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-300 px-3.5 py-2 rounded-lg hover:bg-slate-200 transition">
+                        <i class="fas fa-book-open text-slate-500"></i> Documentation
+                    </a>
+                </div>
+            </div>
+
+            <!-- Connection Status Message Box -->
+            <div id="custom_api_status_box" class="hidden mb-4 p-3 rounded-lg text-xs font-bold"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Base / Website URL -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Website Base URL</label>
+                    <input type="url" id="laravel_site_url" name="laravel_site_url" value="{{ old('laravel_site_url', $settings->laravel_site_url ?? '') }}" 
+                           placeholder="https://mywebsite.com" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-sm">
+                    <p class="text-[11px] text-gray-500 mt-1">আপনার ওয়েবসাইটের মূল ডোমেইন লিংক (যেমন: <code>https://mywebsite.com</code>)।</p>
+                </div>
+
+                <!-- API Secret Token -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">API Secret Token</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="laravel_api_token" name="laravel_api_token" value="{{ old('laravel_api_token', $settings->laravel_api_token ?? '') }}" 
+                                class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition font-mono text-sm" placeholder="e.g. sec_token_2026_xyz">
+                        <button type="button" onclick="generateRandomToken()" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg border border-gray-300 flex-shrink-0 flex items-center gap-1" title="নতুন সিকিউর টোকেন জেনারেট করুন">
+                            <i class="fas fa-sync-alt text-[10px]"></i> Generate
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-1">সার্ভার হ্যান্ডশেক ও সিকিউরিটি ভেরিফিকেশনে ব্যবহৃত গোপন চাবি।</p>
+                </div>
+
+                <!-- Route Prefix -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">News Link Prefix</label>
+                    <div class="flex items-center">
+                        <span class="bg-gray-100 border border-r-0 border-gray-300 px-3 py-2 rounded-l text-gray-500 text-sm">/</span>
+                        <input type="text" name="laravel_route_prefix" value="{{ old('laravel_route_prefix', $settings->laravel_route_prefix ?? 'news') }}" 
+                               class="w-full border-gray-300 rounded-r shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-sm" 
+                               placeholder="news, post, article">
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-1">পোস্টের লিংক ফরম্যাট: <code>site.com/<b>news</b>/123</code></p>
+                </div>
+
+                <!-- Enable Auto Post Checkbox -->
+                <div class="flex items-center">
+                    <label class="flex items-center gap-3 cursor-pointer bg-slate-50 hover:bg-slate-100 p-3.5 rounded-lg border border-slate-200 w-full transition">
                         <input type="hidden" name="post_to_laravel" value="0">
                         <input type="checkbox" name="post_to_laravel" value="1" {{ ($settings->post_to_laravel ?? false) ? 'checked' : '' }} class="toggle-checkbox w-5 h-5 text-indigo-600 rounded">
-                        <span class="font-bold text-gray-700">Enable Posting to Laravel</span>
+                        <div>
+                            <span class="font-bold text-gray-800 text-sm block">Enable Auto-Publish to Website</span>
+                            <span class="text-xs text-gray-500 block">চালু থাকলে সংবাদ অনুমোদনের পর সরাসরি আপনার ওয়েবসাইটে প্রকাশ হবে।</span>
+                        </div>
                     </label>
                 </div>
             </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                 <div>
-                      <label class="block text-sm font-bold text-gray-700 mb-1">নিউজ লিংক প্রিফিক্স (Route Prefix)</label>
-                      <div class="flex items-center">
-                          <span class="bg-gray-100 border border-r-0 border-gray-300 px-3 py-2 rounded-l text-gray-500 text-sm">/</span>
-                          <input type="text" name="laravel_route_prefix" value="{{ old('laravel_route_prefix', $settings->laravel_route_prefix ?? 'news') }}" 
-                                 class="w-full border-gray-300 rounded-r shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" 
-                                 placeholder="news, post, article">
-                      </div>
-                      <p class="text-xs text-gray-500 mt-1">উদাহরণ: আপনার সাইট যদি <code>site.com/post/123</code> হয়, তবে এখানে <b>post</b> লিখুন।</p>
-                 </div>
+
+            <!-- Test Connection Button -->
+            <div class="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
+                <span class="text-xs text-slate-500">সেটিংস সেভ করার আগে এন্ডপয়েন্ট কানেকশন যাচাই করুন:</span>
+                <button type="button" onclick="testCustomApiConnection()" id="btn_test_custom_api" class="inline-flex items-center gap-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg transition shadow-sm">
+                    <i class="fas fa-plug"></i> Test Connection
+                </button>
+            </div>
+
+            {{-- ADVANCED CUSTOM FIELD MAPPER --}}
+            <div class="mt-6 border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
+                <div class="bg-slate-100 p-4 border-b border-slate-200 flex justify-between items-center cursor-pointer select-none" onclick="toggleCustomApiVisual()">
+                    <div class="flex items-center gap-2">
+                        <i id="mapper_chevron" class="fas fa-chevron-down text-slate-500 text-xs transition-transform"></i>
+                        <span class="font-bold text-slate-800 text-sm">Advanced Field Mapping & Custom Endpoints</span>
+                        <span class="text-[10px] bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded">Optional</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-indigo-600 font-semibold hover:underline flex items-center gap-1">
+                            <i class="fas fa-sliders-h"></i> Configure Fields
+                        </span>
+                        <button type="button" onclick="event.stopPropagation(); openAssistantHelpModal();" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 px-3 py-1 rounded-lg transition shadow-sm">
+                            <i class="fas fa-info-circle text-indigo-600"></i> Guide & FAQ
+                        </button>
+                    </div>
+                </div>
+
+                <div id="custom-api-visual-section" class="p-5 space-y-6">
+                    <div class="flex flex-wrap justify-between items-center bg-slate-100 border border-slate-200 p-3 rounded-lg text-xs text-slate-700 gap-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-info-circle text-slate-500 text-sm"></i>
+                            <span>ডিফল্ট <code>/api/external-news-post</code> এর বাইরে কাস্টম পাথ বা ভিন্ন ফিল্ডের নাম থাকলে নিচে নির্ধারণ করুন।</span>
+                        </div>
+                        <button type="button" onclick="openAssistantHelpModal()" class="text-indigo-600 font-semibold hover:underline flex items-center gap-1 text-[11px]">
+                            ইনটিগ্রেশন গাইড দেখুন <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+
+                    <!-- Custom URLs -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Custom News Post Endpoint URL (Optional)</label>
+                            <input type="url" id="custom_api_url" name="custom_api_url" value="{{ old('custom_api_url', $settings->custom_api_url ?? '') }}" 
+                                   placeholder="https://mywebsite.com/api/v1/articles/create" class="w-full border-slate-300 rounded-lg shadow-sm text-xs focus:ring-indigo-500 focus:border-indigo-500">
+                            <p class="text-[10px] text-slate-400 mt-1">খালি রাখলে <code>Base_URL/api/external-news-post</code> ব্যবহার হবে।</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Custom Category Fetch URL (Optional)</label>
+                            <input type="url" id="custom_category_url" name="custom_category_url" value="{{ old('custom_category_url', $settings->custom_category_url ?? '') }}" 
+                                   placeholder="https://mywebsite.com/api/v1/categories" class="w-full border-slate-300 rounded-lg shadow-sm text-xs focus:ring-indigo-500 focus:border-indigo-500">
+                            <p class="text-[10px] text-slate-400 mt-1">আপনার সাইটের ক্যাটাগরি ফেচ করার API URL।</p>
+                        </div>
+                    </div>
+
+                    <!-- Auth & Format Options -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-lg border border-slate-200">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Authentication Method</label>
+                            <select id="v_auth_type" onchange="syncVisualToMappingJson()" class="w-full border-slate-300 rounded shadow-sm text-xs focus:ring-indigo-500">
+                                <option value="Bearer">Bearer Token (Authorization: Bearer ...)</option>
+                                <option value="custom_header">Custom Header (e.g. X-API-KEY)</option>
+                                <option value="basic">Basic Auth (Authorization: Basic ...)</option>
+                                <option value="body">Inside Body / Payload (token: ...)</option>
+                            </select>
+                        </div>
+                        <div id="v_auth_header_wrapper" style="display: none;">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Custom Header Name</label>
+                            <input type="text" id="v_auth_header_name" oninput="syncVisualToMappingJson()" placeholder="X-API-KEY" class="w-full border-slate-300 rounded shadow-sm text-xs font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Image Format</label>
+                            <select id="v_image_format" onchange="syncVisualToMappingJson()" class="w-full border-slate-300 rounded shadow-sm text-xs focus:ring-indigo-500">
+                                <option value="url">Image URL String (https://...)</option>
+                                <option value="file">Direct Binary File Upload (Multipart)</option>
+                                <option value="base64">Base64 Encoded Image Data</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Category Format</label>
+                            <select id="v_category_type" onchange="syncVisualToMappingJson()" class="w-full border-slate-300 rounded shadow-sm text-xs focus:ring-indigo-500">
+                                <option value="id">Numeric Category ID (e.g. [1, 2])</option>
+                                <option value="name">Text Category Name (e.g. "জাতীয়")</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Visual Field Name Mapper -->
+                    <div class="bg-white p-4 rounded-lg border border-slate-200">
+                        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Field Name Mappings (Default Payload ➔ Your API Parameter)</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Title (শিরোনাম)</label>
+                                <input type="text" id="v_field_title" oninput="syncVisualToMappingJson()" placeholder="title / headline" class="w-full border-slate-300 rounded p-1.5 font-mono text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Content (বিস্তারিত)</label>
+                                <input type="text" id="v_field_content" oninput="syncVisualToMappingJson()" placeholder="content / body / desc" class="w-full border-slate-300 rounded p-1.5 font-mono text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Image (ছবি)</label>
+                                <input type="text" id="v_field_image" oninput="syncVisualToMappingJson()" placeholder="image / thumbnail_url" class="w-full border-slate-300 rounded p-1.5 font-mono text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Category (ক্যাটাগরি)</label>
+                                <input type="text" id="v_field_category" oninput="syncVisualToMappingJson()" placeholder="category / category_id" class="w-full border-slate-300 rounded p-1.5 font-mono text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Tags / Hashtags</label>
+                                <input type="text" id="v_field_tags" oninput="syncVisualToMappingJson()" placeholder="tags / hashtags" class="w-full border-slate-300 rounded p-1.5 font-mono text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Slug (URL Slug)</label>
+                                <input type="text" id="v_field_slug" oninput="syncVisualToMappingJson()" placeholder="slug / alias" class="w-full border-slate-300 rounded p-1.5 font-mono text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Response ID Key</label>
+                                <input type="text" id="v_field_response_id_key" oninput="syncVisualToMappingJson()" placeholder="post_id / id" class="w-full border-slate-300 rounded p-1.5 font-mono text-xs">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Response URL Key</label>
+                                <input type="text" id="v_field_response_url_key" oninput="syncVisualToMappingJson()" placeholder="live_url / link / url" class="w-full border-slate-300 rounded p-1.5 font-mono text-xs">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Extra Static Key-Value Fields -->
+                    <div class="bg-white p-4 rounded-lg border border-slate-200">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Additional Static Parameters (ঐচ্ছিক ফিল্ড)</h4>
+                            <button type="button" onclick="addExtraFieldRow()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1 rounded border border-slate-300">
+                                + Add Parameter
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mb-3">যেমন: আপনার ডাটাবেজে যদি <code>author_id = 1</code> বা <code>status = published</code> বাধ্যতামূলক থাকে, তবে এখানে যোগ করুন।</p>
+                        
+                        <div id="extra_fields_container" class="space-y-2">
+                            <!-- Dynamic rows appended via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Raw JSON Mapping (Hidden sync & toggle) -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[11px] font-bold text-slate-500">Raw JSON Mapping (Synchronized)</label>
+                            <button type="button" onclick="toggleRawJson()" class="text-[11px] text-indigo-600 hover:underline">View / Edit JSON</button>
+                        </div>
+                        <textarea id="custom_api_mapping" name="custom_api_mapping" rows="3" 
+                                  class="w-full border-slate-300 rounded-lg shadow-sm text-xs font-mono focus:ring-indigo-500 focus:border-indigo-500 bg-slate-100 hidden" 
+                                  placeholder='{"title":"title","content":"content"}'>{{ old('custom_api_mapping', is_array($settings->custom_api_mapping) ? json_encode($settings->custom_api_mapping) : ($settings->custom_api_mapping ?? '')) }}</textarea>
+                    </div>
+                </div>
             </div>
         </div>
 
-        {{-- 🔥 NEW: ADVANCED CUSTOM API MAPPING (For Islamic TV etc.) --}}
-        <div class="bg-slate-50 p-6 rounded-xl shadow-sm border border-slate-300 mt-6 relative overflow-hidden">
-            <div class="absolute top-0 right-0 bg-slate-700 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm uppercase tracking-widest">Advanced Webhook</div>
-            
-            <div class="flex justify-between items-start mb-2 border-b border-slate-200 pb-2">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 cursor-pointer" onclick="toggleCustomApi()">
-                    ⚙️ Custom API Mapping (Optional) <span class="text-xs font-normal text-blue-600 hover:underline">(Click to Expand)</span>
-                </h2>
-                <a href="{{ route('docs.api-guide') }}" target="_blank" class="flex-shrink-0 flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition">
-                    📖 Full Guide
-                </a>
+        {{-- INTERACTIVE ASSISTANT HELP & FAQ MODAL --}}
+        <div id="assistantHelpModal" class="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+            <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden text-slate-100">
+                <!-- Modal Header -->
+                <div class="p-5 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-lg">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg text-white">
+                                Website Integration Guide & FAQ
+                            </h3>
+                            <p class="text-xs text-slate-400">যেকোনো ফ্রেমওয়ার্ক ও CMS ওয়েবসাইটের সাথে নিরাপদ ও নির্ভুল কানেকশনের পুঙ্খানুপুঙ্খ নির্দেশিকা।</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeAssistantHelpModal()" class="text-slate-400 hover:text-white text-xl p-2 rounded-lg hover:bg-slate-700">
+                        &times;
+                    </button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex border-b border-slate-800 bg-slate-950 px-5 gap-2 text-xs font-bold">
+                    <button type="button" onclick="switchHelpTab('walkthrough')" class="help-tab-btn px-4 py-3 border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2" id="htab_walkthrough">
+                        <i class="fas fa-list-ol"></i> Step-by-Step Guide
+                    </button>
+                    <button type="button" onclick="switchHelpTab('faq')" class="help-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2" id="htab_faq">
+                        <i class="fas fa-question-circle"></i> Frequently Asked Questions
+                    </button>
+                    <button type="button" onclick="switchHelpTab('diagnostics')" class="help-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2" id="htab_diagnostics">
+                        <i class="fas fa-wrench"></i> Diagnostics & Troubleshooting
+                    </button>
+                </div>
+
+                <!-- Tab Contents -->
+                <div class="p-6 overflow-y-auto flex-1 bg-slate-900 space-y-6 text-sm text-slate-300">
+                    
+                    <!-- 1. WALKTHROUGH CONTENT -->
+                    <div id="help_content_walkthrough" class="space-y-6">
+                        <!-- Step 1 -->
+                        <div class="bg-slate-800/80 p-5 rounded-xl border border-slate-700">
+                            <h4 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+                                প্রাথমিক সংযোগ (Base URL ও Secret Token)
+                            </h4>
+                            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+                                আপনার ওয়েবসাইটের মূল ডোমেইন দিন (যেমন: <code class="text-indigo-300 bg-slate-950 px-1.5 py-0.5 rounded">https://mywebsite.com</code>)। 
+                                এরপর <strong>Generate</strong> বাটনে চাপ দিয়ে একটি স্ট্রং <strong>API Secret Token</strong> তৈরি করুন। এই টোকেনটি আপনার সার্ভার ও Newsmanage24 এর মধ্যে সিকিউরিটি হ্যান্ডশেক করতে ব্যবহৃত হবে।
+                            </p>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="bg-slate-800/80 p-5 rounded-xl border border-slate-700">
+                            <h4 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">2</span>
+                                কোড জেনারেটর ব্যবহার করে এন্ডপয়েন্ট তৈরি
+                            </h4>
+                            <p class="text-xs text-slate-300 leading-relaxed mb-2">
+                                উপরের <strong>Code Generator</strong> বাটনে চাপুন। আপনার ফ্রেমওয়ার্ক সিলেক্ট করে রেডিমেড কোড কপি করে আপনার প্রজেক্টের নির্দিষ্ট ফাইলে পেস্ট করুন:
+                            </p>
+                            <ul class="list-disc list-inside text-xs text-slate-400 space-y-1 ml-2">
+                                <li><strong>Next.js (App Router):</strong> <code class="text-indigo-300 font-mono">app/api/external-news-post/route.ts</code></li>
+                                <li><strong>Next.js (Pages Router):</strong> <code class="text-indigo-300 font-mono">pages/api/external-news-post.ts</code></li>
+                                <li><strong>Node.js (Express):</strong> <code class="text-indigo-300 font-mono">routes/newsReceiver.js</code></li>
+                                <li><strong>Laravel:</strong> <code class="text-indigo-300 font-mono">routes/api.php</code></li>
+                                <li><strong>Raw PHP:</strong> <code class="text-indigo-300 font-mono">public/news-receiver.php</code> (সিঙ্গেল ড্রপ-ইন ফাইল)</li>
+                                <li><strong>Python (FastAPI/Django):</strong> <code class="text-indigo-300 font-mono">main.py</code></li>
+                            </ul>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="bg-slate-800/80 p-5 rounded-xl border border-slate-700">
+                            <h4 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">3</span>
+                                ভিজ্যুয়াল ফিল্ড ম্যাপিং (Field Mapping)
+                            </h4>
+                            <p class="text-xs text-slate-300 leading-relaxed mb-3">
+                                আপনার সাইটের এপিআই ফিল্ডের নাম যদি আমাদের স্ট্যান্ডার্ড নামের চেয়ে আলাদা হয়, তবে ম্যাপিং বক্সে প্যারামিটার নাম লিখে দিন:
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                                    <span class="text-indigo-400 font-semibold block mb-1">Title (শিরোনাম):</span>
+                                    <span class="text-slate-400">আপনার সাইটের ফিল্ডের নাম <code class="text-slate-200">headline</code> বা <code class="text-slate-200">news_title</code> হলে তা লিখে দিন।</span>
+                                </div>
+                                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                                    <span class="text-indigo-400 font-semibold block mb-1">Content (সংবাদ বিস্তারিত):</span>
+                                    <span class="text-slate-400">আপনার সাইটের ফিল্ডের নাম <code class="text-slate-200">body</code>, <code class="text-slate-200">description</code> বা <code class="text-slate-200">details</code> হলে তা লিখুন।</span>
+                                </div>
+                                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                                    <span class="text-indigo-400 font-semibold block mb-1">Image Format (ছবির ফরম্যাট):</span>
+                                    <span class="text-slate-400">Image URL String, Direct Multipart File Upload, অথবা Base64 Data URI সিলেক্ট করুন।</span>
+                                </div>
+                                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                                    <span class="text-indigo-400 font-semibold block mb-1">Category (ক্যাটাগরি ফরম্যাট):</span>
+                                    <span class="text-slate-400">Numeric Category ID (যেমন <code class="text-slate-200">[1, 5]</code>) নাকি Text Category Name (যেমন <code class="text-slate-200">"জাতীয়"</code>) তা বেছে নিন।</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="bg-slate-800/80 p-5 rounded-xl border border-slate-700">
+                            <h4 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">4</span>
+                                অতিরিক্ত ফিক্সড প্যারামিটার যোগ করা
+                            </h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                আপনার সাইটের ডাটাবেজে যদি অতিরিক্ত কিছু বাধ্যতামূলক ফিল্ড থাকে (যেমন: <code class="text-indigo-300 font-mono">author_id = 1</code>, <code class="text-indigo-300 font-mono">status = published</code>, <code class="text-indigo-300 font-mono">language = bn</code>), 
+                                তবে <strong>+ Add Parameter</strong> বাটনে ক্লিক করে Key ও Value বসিয়ে দিন। সিস্টেম প্রতিবার পোস্ট পাঠানোর সময় স্বয়ংক্রিয়ভাবে এগুলো যুক্ত করে পাঠাবে।
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 2. FAQ CONTENT -->
+                    <div id="help_content_faq" class="space-y-3 hidden">
+                        <!-- FAQ 1 -->
+                        <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                            <button type="button" onclick="toggleFaqAccordion(1)" class="w-full p-4 text-left font-bold text-sm text-white flex justify-between items-center hover:bg-slate-750">
+                                <span>১. আমাদের ফিল্ডের চেয়ে ক্লায়েন্টের ফিল্ড কম বা বেশি হলে কীভাবে হ্যান্ডেল হবে?</span>
+                                <i id="faq_icon_1" class="fas fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+                            </button>
+                            <div id="faq_body_1" class="p-4 pt-0 text-xs text-slate-300 leading-relaxed border-t border-slate-700/50 hidden bg-slate-850">
+                                যদি ক্লায়েন্টের ফিল্ড <strong>কম</strong> হয়, তবে ম্যাপিং বক্সে অপ্রয়োজনীয় ফিল্ডগুলো খালি রেখে দিন। আর যদি ক্লায়েন্টের ফিল্ড <strong>অতিরিক্ত</strong> হয়, তবে <strong>+ Add Parameter</strong> বাটনে চাপ দিয়ে অতিরিক্ত ফিল্ডগুলো (যেমন: author_id, post_type ইত্যাদি) যুক্ত করে নিতে পারবেন।
+                            </div>
+                        </div>
+
+                        <!-- FAQ 2 -->
+                        <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                            <button type="button" onclick="toggleFaqAccordion(2)" class="w-full p-4 text-left font-bold text-sm text-white flex justify-between items-center hover:bg-slate-750">
+                                <span>২. ক্লায়েন্টের সাইটে ক্যাটাগরি গ্রুপ বা সাব-ক্যাটাগরি (Parent > Child) আকারে থাকলে কীভাবে কাজ করবে?</span>
+                                <i id="faq_icon_2" class="fas fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+                            </button>
+                            <div id="faq_body_2" class="p-4 pt-0 text-xs text-slate-300 leading-relaxed border-t border-slate-700/50 hidden bg-slate-850">
+                                ক্যাটাগরি ফেচ করার সময় আমাদের সিস্টেম ক্লায়েন্টের সাইট থেকে সব প্যারেন্ট ও সাব-ক্যাটাগরি লোড করে নেয় (যেমন: <code class="text-indigo-300">খেলাধুলা > ক্রিকেট (ID: 12)</code>)। ক্যাটাগরি ম্যাপিং সেকশনের ড্রপডাউন থেকে নির্দিষ্ট সাব-ক্যাটাগরিটি সিলেক্ট করে দিলে সরাসরি সঠিক আইডিতে পোস্ট চলে যাবে।
+                            </div>
+                        </div>
+
+                        <!-- FAQ 3 -->
+                        <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                            <button type="button" onclick="toggleFaqAccordion(3)" class="w-full p-4 text-left font-bold text-sm text-white flex justify-between items-center hover:bg-slate-750">
+                                <span>৩. ক্লায়েন্টের API কি ইমেজ লিঙ্ক চায় নাকি সরাসরি ফাইল আপলোড?</span>
+                                <i id="faq_icon_3" class="fas fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+                            </button>
+                            <div id="faq_body_3" class="p-4 pt-0 text-xs text-slate-300 leading-relaxed border-t border-slate-700/50 hidden bg-slate-850">
+                                আমাদের সিস্টেম দুটিই সাপোর্ট করে। Visual Mapper-এর <strong>Image Format</strong> ড্রপডাউন থেকে:
+                                <ul class="list-disc list-inside mt-2 space-y-1">
+                                    <li><strong>Image URL String:</strong> ক্লায়েন্ট সার্ভার যদি ছবির URL রিসিভ করে নিজে ডাউনলোড করে নেয়।</li>
+                                    <li><strong>Direct Binary File Upload:</strong> ক্লায়েন্ট সার্ভার যদি Multipart ফাইলে ইমেজ আপলোড হিসেবে চায়।</li>
+                                    <li><strong>Base64 Data:</strong> ক্লায়েন্ট যদি Base64 এনকোডেড স্ট্রিং চায়।</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 4 -->
+                        <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                            <button type="button" onclick="toggleFaqAccordion(4)" class="w-full p-4 text-left font-bold text-sm text-white flex justify-between items-center hover:bg-slate-750">
+                                <span>৪. Cloudflare বা WAF 403 Forbidden এরর দিলে কী করণীয়?</span>
+                                <i id="faq_icon_4" class="fas fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+                            </button>
+                            <div id="faq_body_4" class="p-4 pt-0 text-xs text-slate-300 leading-relaxed border-t border-slate-700/50 hidden bg-slate-850">
+                                আমাদের রিকোয়েস্টে স্ট্যান্ডার্ড <code class="text-indigo-300">User-Agent: Newsmanage24-Publisher/2.0</code> পাঠানো হয়। এরপরও যদি ক্লায়েন্টের Cloudflare 'Under Attack Mode' এ থাকে, তবে ক্লায়েন্টকে তাদের Cloudflare WAF Security Rules-এ গিয়ে আমাদের সার্ভার আইপি (Server IP) বা <code class="text-indigo-300">/api/external-news-post</code> পাথটিকে Whitelist / Skip WAF করে দিতে বলুন।
+                            </div>
+                        </div>
+
+                        <!-- FAQ 5 -->
+                        <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                            <button type="button" onclick="toggleFaqAccordion(5)" class="w-full p-4 text-left font-bold text-sm text-white flex justify-between items-center hover:bg-slate-750">
+                                <span>৫. একই সংবাদ কি ক্লায়েন্টের সাইটে ডুপ্লিকেট পোস্ট হতে পারে?</span>
+                                <i id="faq_icon_5" class="fas fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+                            </button>
+                            <div id="faq_body_5" class="p-4 pt-0 text-xs text-slate-300 leading-relaxed border-t border-slate-700/50 hidden bg-slate-850">
+                                না। একবার পোস্ট সফল হলে ক্লায়েন্ট সাইট থেকে রিটার্ন করা <code class="text-indigo-300">post_id</code> আমাদের ডাটাবেজে সংরক্ষিত থাকে। পরবর্তীতে সংবাদটি ড্রাফট থেকে আপডেট করা হলে বা পুনরায় পাবলিশ করা হলে সিস্টেম নতুন পোস্ট তৈরি না করে ক্লায়েন্টের সাইটে <code class="text-indigo-300">remote_id</code> সহ আপডেট মোডে ডাটা পাঠায়।
+                            </div>
+                        </div>
+
+                        <!-- FAQ 6 -->
+                        <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                            <button type="button" onclick="toggleFaqAccordion(6)" class="w-full p-4 text-left font-bold text-sm text-white flex justify-between items-center hover:bg-slate-750">
+                                <span>৬. Bearer Token বনাম Custom Header—কোনটি ব্যবহার করব?</span>
+                                <i id="faq_icon_6" class="fas fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+                            </button>
+                            <div id="faq_body_6" class="p-4 pt-0 text-xs text-slate-300 leading-relaxed border-t border-slate-700/50 hidden bg-slate-850">
+                                যদি আপনার ক্লায়েন্ট ফ্রেমওয়ার্ক স্ট্যান্ডার্ড JWT বা Bearer অথেন্টিকেশন ব্যবহার করে, তবে <strong>Bearer Token</strong> বেছে নিন। আর যদি তারা নিজস্ব হেডার চায় (যেমন: <code class="text-indigo-300">X-API-KEY: secret</code> বা <code class="text-indigo-300">X-Auth-Token</code>), তবে <strong>Custom Header</strong> সিলেক্ট করে হেডার নামটি লিখে দিন।
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. DIAGNOSTICS & TROUBLESHOOTING -->
+                    <div id="help_content_diagnostics" class="space-y-4 hidden">
+                        <p class="text-xs text-slate-400">Test Connection চালানোর পর যদি কোনো এরর কোড আসে, তবে নিচের সমাধানগুলো অনুসরণ করুন:</p>
+
+                        <div class="space-y-3 text-xs">
+                            <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="bg-rose-900/60 text-rose-300 font-mono font-bold px-2 py-0.5 rounded text-[11px]">401 Unauthorized</span>
+                                    <span class="font-semibold text-slate-200">টোকেন অমিল বা অনুমোদন ব্যর্থ</span>
+                                </div>
+                                <p class="text-slate-300"><strong>কারণ:</strong> API Secret Token অমিল বা ভুল।</p>
+                                <p class="text-slate-400 mt-1"><strong>সমাধান:</strong> আমাদের প্যানেলের <code>API Secret Token</code> এবং আপনার সাইটের কোডে বসানো টোকেন হুবহু এক কিনা যাচাই করুন।</p>
+                            </div>
+
+                            <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="bg-amber-900/60 text-amber-300 font-mono font-bold px-2 py-0.5 rounded text-[11px]">404 Not Found</span>
+                                    <span class="font-semibold text-slate-200">এন্ডপয়েন্ট বা রাউট খুঁজে পাওয়া যায়নি</span>
+                                </div>
+                                <p class="text-slate-300"><strong>কারণ:</strong> এপিআই এন্ডপয়েন্ট বা রাউট ইউআরএল ভুল।</p>
+                                <p class="text-slate-400 mt-1"><strong>সমাধান:</strong> Base URL সঠিক কিনা এবং আপনার সাইটের রাউটে <code>/api/external-news-post</code> রেজিস্টার্ড আছে কিনা চেক করুন।</p>
+                            </div>
+
+                            <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="bg-purple-900/60 text-purple-300 font-mono font-bold px-2 py-0.5 rounded text-[11px]">422 Validation Error</span>
+                                    <span class="font-semibold text-slate-200">ডাটা ভ্যালিডেশন ব্যর্থ</span>
+                                </div>
+                                <p class="text-slate-300"><strong>কারণ:</strong> ক্লায়েন্ট সার্ভারের রিকোয়ার্ড ফিল্ডের সাথে আমাদের পাঠানো ফিল্ডের নাম মিলছে না।</p>
+                                <p class="text-slate-400 mt-1"><strong>সমাধান:</strong> Field Mapping সেকশনে Title, Content, Category ইত্যাদির ফিল্ডের নামগুলো ক্লায়েন্টের সাইটের মডেল বা ডাটাবেজ কলাম অনুযায়ী সঠিক করুন।</p>
+                            </div>
+
+                            <div class="p-4 rounded-xl bg-slate-800/90 border border-slate-700">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="bg-red-900/60 text-red-300 font-mono font-bold px-2 py-0.5 rounded text-[11px]">500 Internal Server Error</span>
+                                    <span class="font-semibold text-slate-200">রিমোট সার্ভার ক্র্যাশ</span>
+                                </div>
+                                <p class="text-slate-300"><strong>কারণ:</strong> ক্লায়েন্টের সাইটে ডাটাবেজ ইনসার্ট বা কোড এক্সিকিউশনে ইন্টারনাল ক্র্যাশ হয়েছে।</p>
+                                <p class="text-slate-400 mt-1"><strong>সমাধান:</strong> ক্লায়েন্ট সাইটের সার্ভার এরর লগ (<code class="text-slate-200">storage/logs/laravel.log</code> বা <code class="text-slate-200">error_log</code>) চেক করুন।</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="p-4 bg-slate-800 border-t border-slate-700 flex justify-between items-center text-xs text-slate-400">
+                    <span>প্রয়োজনে আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করতে পারেন।</span>
+                    <button type="button" onclick="closeAssistantHelpModal()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition">
+                        বন্ধ করুন (Close)
+                    </button>
+                </div>
             </div>
-            <p class="text-xs text-slate-500 mb-4">যদি ক্লায়েন্ট আমাদের <code>UniversalNewsReceiverController</code> ব্যবহার না করে তাদের নিজস্ব API দেয়, তবে এই অংশটি পূরণ করুন।</p>
-            
-            <div id="custom-api-section" class="grid grid-cols-1 md:grid-cols-2 gap-6" style="display: {{ empty($settings->custom_api_url) ? 'none' : 'grid' }};">
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1">Custom News Post API URL</label>
-                    <input type="url" name="custom_api_url" value="{{ old('custom_api_url', $settings->custom_api_url ?? '') }}" 
-                           placeholder="https://client-site.com/api/news-upload" class="w-full border-slate-300 rounded-lg shadow-sm text-sm focus:ring-slate-500 focus:border-slate-500">
+        </div>
+
+        {{-- QUICK CODE GENERATOR MODAL --}}
+        <div id="codeGeneratorModal" class="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+            <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden text-slate-100">
+                <!-- Modal Header -->
+                <div class="p-5 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-lg">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg text-white">Endpoint Code Generator</h3>
+                            <p class="text-xs text-slate-400">আপনার ফ্রেমওয়ার্ক সিলেক্ট করে রেডিমেড কোড কপি করে প্রজেক্টে যুক্ত করুন।</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeCodeGeneratorModal()" class="text-slate-400 hover:text-white text-xl p-2 rounded-lg hover:bg-slate-700">
+                        &times;
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1">Custom Category Fetch URL (Optional)</label>
-                    <input type="url" name="custom_category_url" value="{{ old('custom_category_url', $settings->custom_category_url ?? '') }}" 
-                           placeholder="https://client-site.com/api/news-categories" class="w-full border-slate-300 rounded-lg shadow-sm text-sm focus:ring-slate-500 focus:border-slate-500">
+
+                <!-- Tabs -->
+                <div class="flex border-b border-slate-800 bg-slate-950 px-5 gap-2 overflow-x-auto text-xs font-bold">
+                    <button type="button" onclick="switchCodeGenTab('nextjs_app')" class="code-tab-btn px-4 py-3 border-b-2 border-indigo-500 text-indigo-400" id="tab_nextjs_app">Next.js (App Router)</button>
+                    <button type="button" onclick="switchCodeGenTab('nextjs_pages')" class="code-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200" id="tab_nextjs_pages">Next.js (Pages)</button>
+                    <button type="button" onclick="switchCodeGenTab('nodejs_express')" class="code-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200" id="tab_nodejs_express">Node.js (Express)</button>
+                    <button type="button" onclick="switchCodeGenTab('laravel')" class="code-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200" id="tab_laravel">Laravel API</button>
+                    <button type="button" onclick="switchCodeGenTab('raw_php')" class="code-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200" id="tab_raw_php">Raw PHP (1-File)</button>
+                    <button type="button" onclick="switchCodeGenTab('python')" class="code-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200" id="tab_python">Python (FastAPI)</button>
                 </div>
-                <div class="col-span-1 md:col-span-2">
-                    <label class="block text-sm font-bold text-slate-700 mb-1">Payload JSON Mapping</label>
-                    <textarea name="custom_api_mapping" rows="6" class="w-full border-slate-300 rounded-lg shadow-sm text-sm font-mono focus:ring-slate-500 focus:border-slate-500" placeholder='{"title":"news_title", "content":"description", "category":"news_category", "token":"api_key", "extra":{"priority":"1"}}'>{{ old('custom_api_mapping', $settings->custom_api_mapping ?? '') }}</textarea>
-                    <p class="text-[11px] text-slate-500 mt-1">Available Keys: <code>title</code>, <code>content</code>, <code>image</code>, <code>category</code>, <code>tags</code>, <code>token</code>, <code>extra</code> (for static fields).</p>
+
+                <!-- Code Container -->
+                <div class="p-6 overflow-y-auto flex-1 bg-slate-900 space-y-3">
+                    <div class="flex justify-between items-center text-xs">
+                        <span id="code_file_path" class="font-mono text-indigo-300 font-semibold bg-slate-800 px-3 py-1 rounded-md border border-slate-700">app/api/external-news-post/route.ts</span>
+                        <button type="button" onclick="copyGeneratedCode()" id="btn_copy_code" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow">
+                            <i class="far fa-copy"></i> Copy Code
+                        </button>
+                    </div>
+
+                    <pre class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs font-mono text-slate-200 overflow-x-auto"><code id="code_snippet_box"></code></pre>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="p-4 bg-slate-800 border-t border-slate-700 flex justify-between items-center text-xs text-slate-400">
+                    <span>Secret Token স্বয়ংক্রিয়ভাবে কোডে যুক্ত করা হয়েছে।</span>
+                    <button type="button" onclick="closeCodeGeneratorModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition">
+                        Close
+                    </button>
                 </div>
             </div>
         </div>
@@ -1016,8 +1457,455 @@
         }, 'tg_status_msg', document.activeElement);
     }
 
+    // ==========================================================
+    // 1. Custom API Visual Field Mapper Synchronization
+    // ==========================================================
+    function toggleCustomApiVisual() {
+        const sec = document.getElementById('custom-api-visual-section');
+        const chev = document.getElementById('mapper_chevron');
+        if (sec.classList.contains('hidden')) {
+            sec.classList.remove('hidden');
+            if (chev) chev.classList.add('rotate-180');
+        } else {
+            sec.classList.add('hidden');
+            if (chev) chev.classList.remove('rotate-180');
+        }
+    }
+
+    function toggleRawJson() {
+        const rawJsonBox = document.getElementById('custom_api_mapping');
+        rawJsonBox.classList.toggle('hidden');
+    }
+
+    function initVisualMappingFromStoredJson() {
+        const rawJson = document.getElementById('custom_api_mapping').value;
+        if (!rawJson || rawJson.trim() === '') return;
+
+        try {
+            const data = JSON.parse(rawJson);
+            if (data.auth_type) document.getElementById('v_auth_type').value = data.auth_type;
+            if (data.auth_header_name) document.getElementById('v_auth_header_name').value = data.auth_header_name;
+            if (data.image_format) document.getElementById('v_image_format').value = data.image_format;
+            if (data.category_type) document.getElementById('v_category_type').value = data.category_type;
+
+            if (data.title) document.getElementById('v_field_title').value = data.title;
+            if (data.content) document.getElementById('v_field_content').value = data.content;
+            if (data.image) document.getElementById('v_field_image').value = data.image;
+            if (data.category) document.getElementById('v_field_category').value = data.category;
+            if (data.tags) document.getElementById('v_field_tags').value = data.tags;
+            if (data.slug) document.getElementById('v_field_slug').value = data.slug;
+            if (data.response_id_key) document.getElementById('v_field_response_id_key').value = data.response_id_key;
+            if (data.response_url_key) document.getElementById('v_field_response_url_key').value = data.response_url_key;
+
+            const extraContainer = document.getElementById('extra_fields_container');
+            extraContainer.innerHTML = '';
+            if (data.extra && typeof data.extra === 'object') {
+                for (const [key, val] of Object.entries(data.extra)) {
+                    addExtraFieldRow(key, val);
+                }
+            }
+
+            if (data.auth_type === 'custom_header') {
+                document.getElementById('v_auth_header_wrapper').style.display = 'block';
+            }
+        } catch (e) {
+            console.warn('Mapping JSON parse error:', e);
+        }
+    }
+
+    function syncVisualToMappingJson() {
+        const authType = document.getElementById('v_auth_type').value;
+        const authHeaderName = document.getElementById('v_auth_header_name').value.trim();
+        const imageFormat = document.getElementById('v_image_format').value;
+        const categoryType = document.getElementById('v_category_type').value;
+
+        const authHeaderWrap = document.getElementById('v_auth_header_wrapper');
+        if (authType === 'custom_header') {
+            authHeaderWrap.style.display = 'block';
+        } else {
+            authHeaderWrap.style.display = 'none';
+        }
+
+        const mapping = {};
+        if (authType !== 'Bearer') mapping.auth_type = authType;
+        if (authType === 'custom_header' && authHeaderName) mapping.auth_header_name = authHeaderName;
+        if (imageFormat !== 'url') mapping.image_format = imageFormat;
+        if (categoryType !== 'id') mapping.category_type = categoryType;
+
+        const titleVal = document.getElementById('v_field_title').value.trim();
+        const contentVal = document.getElementById('v_field_content').value.trim();
+        const imageVal = document.getElementById('v_field_image').value.trim();
+        const categoryVal = document.getElementById('v_field_category').value.trim();
+        const tagsVal = document.getElementById('v_field_tags').value.trim();
+        const slugVal = document.getElementById('v_field_slug').value.trim();
+        const respIdVal = document.getElementById('v_field_response_id_key').value.trim();
+        const respUrlVal = document.getElementById('v_field_response_url_key').value.trim();
+
+        if (titleVal) mapping.title = titleVal;
+        if (contentVal) mapping.content = contentVal;
+        if (imageVal) mapping.image = imageVal;
+        if (categoryVal) mapping.category = categoryVal;
+        if (tagsVal) mapping.tags = tagsVal;
+        if (slugVal) mapping.slug = slugVal;
+        if (respIdVal) mapping.response_id_key = respIdVal;
+        if (respUrlVal) mapping.response_url_key = respUrlVal;
+
+        const extraKeys = document.querySelectorAll('.extra-field-key');
+        const extraVals = document.querySelectorAll('.extra-field-val');
+        const extraObj = {};
+        extraKeys.forEach((keyInput, i) => {
+            const k = keyInput.value.trim();
+            const v = extraVals[i] ? extraVals[i].value.trim() : '';
+            if (k) extraObj[k] = v;
+        });
+
+        if (Object.keys(extraObj).length > 0) {
+            mapping.extra = extraObj;
+        }
+
+        document.getElementById('custom_api_mapping').value = Object.keys(mapping).length > 0 ? JSON.stringify(mapping) : '';
+    }
+
+    function addExtraFieldRow(key = '', val = '') {
+        const container = document.getElementById('extra_fields_container');
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 extra-field-row';
+        row.innerHTML = `
+            <input type="text" class="extra-field-key border-slate-300 rounded p-1.5 text-xs font-mono w-1/3" placeholder="key (e.g. author_id)" value="${key}" oninput="syncVisualToMappingJson()">
+            <span class="text-slate-400 text-xs">=</span>
+            <input type="text" class="extra-field-val border-slate-300 rounded p-1.5 text-xs font-mono flex-1" placeholder="value (e.g. 1)" value="${val}" oninput="syncVisualToMappingJson()">
+            <button type="button" onclick="removeExtraFieldRow(this)" class="text-rose-500 hover:text-rose-700 p-1 text-sm"><i class="fas fa-times"></i></button>
+        `;
+        container.appendChild(row);
+        syncVisualToMappingJson();
+    }
+
+    function removeExtraFieldRow(btn) {
+        btn.closest('.extra-field-row').remove();
+        syncVisualToMappingJson();
+    }
+
+    function generateRandomToken() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let res = 'sec_';
+        for (let i = 0; i < 28; i++) {
+            res += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        document.getElementById('laravel_api_token').value = res;
+    }
+
+    // ==========================================================
+    // 2. Quick Code Generator Modal Logic
+    // ==========================================================
+    let currentCodeGenTab = 'nextjs_app';
+
+    function openCodeGeneratorModal() {
+        renderCodeSnippet();
+        document.getElementById('codeGeneratorModal').classList.remove('hidden');
+    }
+
+    function closeCodeGeneratorModal() {
+        document.getElementById('codeGeneratorModal').classList.add('hidden');
+    }
+
+    function switchCodeGenTab(tab) {
+        currentCodeGenTab = tab;
+        document.querySelectorAll('.code-tab-btn').forEach(btn => {
+            btn.classList.remove('border-indigo-500', 'text-indigo-400');
+            btn.classList.add('border-transparent', 'text-slate-400');
+        });
+        const activeBtn = document.getElementById('tab_' + tab);
+        if (activeBtn) {
+            activeBtn.classList.add('border-indigo-500', 'text-indigo-400');
+            activeBtn.classList.remove('border-transparent', 'text-slate-400');
+        }
+        renderCodeSnippet();
+    }
+
+    function renderCodeSnippet() {
+        const token = document.getElementById('laravel_api_token').value || 'YOUR_SECRET_TOKEN_HERE';
+        const codeBox = document.getElementById('code_snippet_box');
+        const pathBox = document.getElementById('code_file_path');
+
+        if (currentCodeGenTab === 'nextjs_app') {
+            pathBox.innerText = 'app/api/external-news-post/route.ts (Next.js App Router)';
+            codeBox.innerText = `import { NextRequest, NextResponse } from 'next/server';
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { token, title, content, image_url, category_name, slug } = body;
+
+    // 1. Verify Secret Token
+    if (token !== '${token}') {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 2. Save to Database (e.g. Prisma / Drizzle / Mongoose)
+    // const post = await prisma.post.create({ data: { title, content, image: image_url, slug } });
+    const postId = Date.now();
+
+    return NextResponse.json({
+      success: true,
+      post_id: postId,
+      live_url: \`https://yourwebsite.com/news/\${slug || postId}\`
+    });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}`;
+        } else if (currentCodeGenTab === 'nextjs_pages') {
+            pathBox.innerText = 'pages/api/external-news-post.ts (Next.js Pages Router)';
+            codeBox.innerText = `import type { NextApiRequest, NextApiResponse } from 'next';
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+  const { token, title, content, image_url, slug } = req.body;
+
+  if (token !== '${token}') {
+    return res.status(401).json({ success: false, error: 'Unauthorized Token' });
+  }
+
+  try {
+    // Insert into your database
+    const postId = Date.now();
+    return res.status(200).json({
+      success: true,
+      post_id: postId,
+      live_url: \`https://yourwebsite.com/news/\${slug || postId}\`
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+}`;
+        } else if (currentCodeGenTab === 'nodejs_express') {
+            pathBox.innerText = 'routes/newsReceiver.js (Express)';
+            codeBox.innerText = `const express = require('express');
+const router = express.Router();
+
+router.post('/api/external-news-post', async (req, res) => {
+  const { token, title, content, image_url, hashtags, category_name, slug } = req.body;
+
+  // Verify Secret Token
+  if (token !== '${token}') {
+    return res.status(401).json({ success: false, error: 'Unauthorized Token' });
+  }
+
+  try {
+    // Insert into your DB (MongoDB / MySQL / PostgreSQL)
+    // const newPost = await Post.create({ title, content, image: image_url, slug });
+    const postId = 101; 
+
+    return res.json({
+      success: true,
+      post_id: postId,
+      live_url: \`https://yourwebsite.com/news/\${slug || postId}\`
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+module.exports = router;`;
+        } else if (currentCodeGenTab === 'laravel') {
+            pathBox.innerText = 'routes/api.php (Laravel)';
+            codeBox.innerText = `use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Route;
+
+Route::post('/external-news-post', function (Request $request) {
+    // 1. Verify Secret Token
+    $secretToken = '${token}';
+    if ($request->input('token') !== $secretToken) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    try {
+        // 2. Save Post
+        $post = new \\App\\Models\\Post();
+        $post->title = $request->input('title');
+        $post->content = $request->input('content');
+        $post->image = $request->input('image_url');
+        $post->status = 'published';
+        $post->save();
+
+        return response()->json([
+            'success' => true,
+            'post_id' => $post->id,
+            'live_url' => url('/news/' . $post->id)
+        ]);
+    } catch (\\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+});`;
+        } else if (currentCodeGenTab === 'raw_php') {
+            pathBox.innerText = 'public/news-receiver.php (Drop-in Single File)';
+            codeBox.innerText = '<' + '?php\n' +
+`header('Content-Type: application/json');
+
+$token = '${token}';
+$input = json_decode(file_get_contents('php://input'), true);
+
+if (!$input || ($input['token'] ?? '') !== $token) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized: Token Mismatch']);
+    exit;
+}
+
+$title   = $input['title'] ?? '';
+$content = $input['content'] ?? '';
+$image   = $input['image_url'] ?? '';
+$slug    = $input['slug'] ?? ('news-' . time());
+
+// DB Insert Example (PDO)
+// $pdo = new PDO("mysql:host=localhost;dbname=news_db", "user", "pass");
+// $stmt = $pdo->prepare("INSERT INTO posts (title, content, image) VALUES (?, ?, ?)");
+// $stmt->execute([$title, $content, $image]);
+// $postId = $pdo->lastInsertId();
+
+$postId = time();
+
+echo json_encode([
+    'success' => true,
+    'post_id' => $postId,
+    'live_url' => "https://yourwebsite.com/news/" . $postId
+]);`;
+        } else if (currentCodeGenTab === 'python') {
+            pathBox.innerText = 'main.py (FastAPI / Python)';
+            codeBox.innerText = `from fastapi import FastAPI, HTTPException, Header
+from pydantic import BaseModel
+from typing import Optional, List
+
+app = FastAPI()
+
+class NewsPayload(BaseModel):
+    token: str
+    title: str
+    content: str
+    image_url: Optional[str] = None
+    category_id: Optional[int] = 1
+    slug: Optional[str] = None
+
+@app.post("/api/external-news-post")
+async def receive_news(payload: NewsPayload):
+    if payload.token != "${token}":
+        raise HTTPException(status_code=401, detail="Unauthorized Token")
+    
+    # Save to your SQL / MongoDB Database
+    post_id = 999
+    
+    return {
+        "success": True,
+        "post_id": post_id,
+        "live_url": f"https://yourwebsite.com/news/{payload.slug or post_id}"
+    }`;
+        }
+    }
+
+    function copyGeneratedCode() {
+        const code = document.getElementById('code_snippet_box').innerText;
+        navigator.clipboard.writeText(code).then(() => {
+            const btn = document.getElementById('btn_copy_code');
+            btn.innerHTML = '<i class="fas fa-check text-green-400"></i> Copied!';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="far fa-copy"></i> Copy Code';
+            }, 2000);
+        });
+    }
+
+    // ==========================================================
+    // 3. Test Custom API Connection Logic
+    // ==========================================================
+    function testCustomApiConnection() {
+        const btn = document.getElementById('btn_test_custom_api');
+        const statusBox = document.getElementById('custom_api_status_box');
+        const originalText = btn.innerHTML;
+
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+        btn.disabled = true;
+
+        statusBox.className = 'mb-4 p-3 rounded-lg text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-800';
+        statusBox.innerHTML = '⏳ এন্ডপয়েন্টে সংযোগ পরীক্ষা করা হচ্ছে...';
+        statusBox.classList.remove('hidden');
+
+        fetch('/settings/test/custom-api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                laravel_site_url: document.getElementById('laravel_site_url').value,
+                laravel_api_token: document.getElementById('laravel_api_token').value,
+                custom_api_url: document.getElementById('custom_api_url').value,
+                custom_api_mapping: document.getElementById('custom_api_mapping').value
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                statusBox.className = 'mb-4 p-3 rounded-lg text-xs font-bold bg-green-50 border border-green-200 text-green-800';
+                statusBox.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> ${data.message}`;
+            } else {
+                statusBox.className = 'mb-4 p-3 rounded-lg text-xs font-bold bg-rose-50 border border-rose-200 text-rose-800';
+                statusBox.innerHTML = `<i class="fas fa-exclamation-triangle text-rose-600"></i> ${data.message}`;
+            }
+        })
+        .catch(err => {
+            statusBox.className = 'mb-4 p-3 rounded-lg text-xs font-bold bg-rose-50 border border-rose-200 text-rose-800';
+            statusBox.innerHTML = `<i class="fas fa-times-circle text-rose-600"></i> Connection Request Failed: ${err.message}`;
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+
+    // ==========================================================
+    // 4. Assistant Help Modal & FAQ Logic
+    // ==========================================================
+    function openAssistantHelpModal() {
+        document.getElementById('assistantHelpModal').classList.remove('hidden');
+    }
+
+    function closeAssistantHelpModal() {
+        document.getElementById('assistantHelpModal').classList.add('hidden');
+    }
+
+    function switchHelpTab(tab) {
+        document.querySelectorAll('.help-tab-btn').forEach(btn => {
+            btn.classList.remove('border-indigo-500', 'text-indigo-400');
+            btn.classList.add('border-transparent', 'text-slate-400');
+        });
+        const activeBtn = document.getElementById('htab_' + tab);
+        if (activeBtn) {
+            activeBtn.classList.add('border-indigo-500', 'text-indigo-400');
+            activeBtn.classList.remove('border-transparent', 'text-slate-400');
+        }
+
+        document.getElementById('help_content_walkthrough').classList.add('hidden');
+        document.getElementById('help_content_faq').classList.add('hidden');
+        document.getElementById('help_content_diagnostics').classList.add('hidden');
+
+        const activeContent = document.getElementById('help_content_' + tab);
+        if (activeContent) activeContent.classList.remove('hidden');
+    }
+
+    function toggleFaqAccordion(id) {
+        const body = document.getElementById('faq_body_' + id);
+        const icon = document.getElementById('faq_icon_' + id);
+        if (body.classList.contains('hidden')) {
+            body.classList.remove('hidden');
+            icon.classList.add('rotate-180');
+        } else {
+            body.classList.add('hidden');
+            icon.classList.remove('rotate-180');
+        }
+    }
+
     // ৪. পেজ লোড হলে অটোমেটিক ক্যাটাগরি লোড (ক্যাশ থেকে আসবে)
     document.addEventListener('DOMContentLoaded', () => {
+        initVisualMappingFromStoredJson();
         @if(($settings->wp_url && $settings->wp_username) || ($settings->laravel_site_url && $settings->laravel_api_token) || $settings->custom_category_url)
             fetchWPCategories(false); 
         @endif
