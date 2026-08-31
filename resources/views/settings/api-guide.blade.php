@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom API Integration Guide — Newsmanage24</title>
-    <meta name="description" content="Complete guide to connect your website via Custom API Mapping in Newsmanage24. Learn all payload fields, authentication methods, and real-world examples.">
+    <title>Custom API Integration Guide — Subeditor24</title>
+    <meta name="description" content="Complete guide to connect your website via Custom API Mapping in Subeditor24. Learn all payload fields, authentication methods, and real-world examples.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
@@ -105,7 +105,7 @@
                     <i class="fa-solid fa-bolt text-white text-sm"></i>
                 </div>
                 <div>
-                    <span class="font-bold text-lg text-white">Newsmanage<span class="text-indigo-400">24</span></span>
+                    <span class="font-bold text-lg text-white">Subeditor<span class="text-indigo-400">24</span></span>
                     <span class="hidden sm:inline text-slate-500 mx-2">·</span>
                     <span class="hidden sm:inline text-slate-400 text-sm font-medium">API Integration Guide</span>
                 </div>
@@ -182,7 +182,7 @@
                 <span class="gradient-text">Mapping Guide</span>
             </h1>
             <p class="text-lg text-slate-400 max-w-2xl leading-relaxed mb-8">
-                Connect <strong class="text-slate-300">any website</strong> to Newsmanage24 — your own Laravel app, custom CMS, TV portal, or any backend — using a simple JSON configuration called <strong class="text-indigo-400">Custom API Mapping</strong>.
+                Connect <strong class="text-slate-300">any website</strong> to Subeditor24 — your own Laravel app, custom CMS, TV portal, or any backend — using a simple JSON configuration called <strong class="text-indigo-400">Custom API Mapping</strong>.
             </p>
 
             <!-- Feature Pills -->
@@ -208,7 +208,7 @@
                         <i class="fas fa-plug text-indigo-400"></i>
                     </div>
                     <p class="font-bold text-white text-sm mb-1">Any API Endpoint</p>
-                    <p class="text-xs text-slate-500 leading-relaxed">Point to your own custom endpoint — no changes needed in Newsmanage24's core system.</p>
+                    <p class="text-xs text-slate-500 leading-relaxed">Point to your own custom endpoint — no changes needed in Subeditor24's core system.</p>
                 </div>
                 <div class="glass-card rounded-2xl p-5">
                     <div class="w-10 h-10 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-center justify-center mb-3">
@@ -287,7 +287,7 @@
                         <span class="text-2xl font-black gradient-text">01</span>
                         <div class="flex-1">
                             <p class="font-bold text-white mb-2">Go to Settings → Custom API Mapping section</p>
-                            <p class="text-sm text-slate-400">In your Newsmanage24 dashboard, navigate to <strong class="text-slate-300">Settings</strong> and scroll to the <strong class="text-indigo-400">⚙️ Custom API Mapping</strong> section (click to expand).</p>
+                            <p class="text-sm text-slate-400">In your Subeditor24 dashboard, navigate to <strong class="text-slate-300">Settings</strong> and scroll to the <strong class="text-indigo-400">⚙️ Custom API Mapping</strong> section (click to expand).</p>
                         </div>
                     </div>
                 </div>
@@ -809,7 +809,7 @@
   <span class="json-key">"category"</span><span class="text-white">:    </span><span class="json-str">"cat_id"</span><span class="text-white">,</span>
   <span class="json-key">"header_auth"</span><span class="text-white">: </span><span class="json-str">"Bearer"</span><span class="text-white">,</span>           <span class="json-comment">// sends: Authorization: Bearer {your token}</span>
   <span class="json-key">"extra"</span><span class="text-white">: </span><span class="text-slate-500">{</span>
-    <span class="json-key">"source"</span><span class="text-white">: </span><span class="json-str">"newsmanage24"</span><span class="text-white">,</span>
+    <span class="json-key">"source"</span><span class="text-white">: </span><span class="json-str">"subeditor24"</span><span class="text-white">,</span>
     <span class="json-key">"auto"</span><span class="text-white">:   </span><span class="json-str">"1"</span>
   <span class="text-slate-500">}</span>
 <span class="text-slate-500">}</span></code></pre>
@@ -1072,8 +1072,8 @@
 
         <!-- ===== FOOTER ===== -->
         <div class="border-t border-slate-800 pt-8 text-center">
-            <p class="text-slate-600 text-sm">Newsmanage24 API Integration Guide · Built for client developers</p>
-            <p class="text-slate-700 text-xs mt-1">© {{ date('Y') }} Newsmanage24. Questions? Contact your admin.</p>
+            <p class="text-slate-600 text-sm">Subeditor24 API Integration Guide · Built for client developers</p>
+            <p class="text-slate-700 text-xs mt-1">© {{ date('Y') }} Subeditor24. Questions? Contact your admin.</p>
         </div>
 
     </main>

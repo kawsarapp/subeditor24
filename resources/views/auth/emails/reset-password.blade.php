@@ -17,7 +17,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔐 Newsmanage24</h1>
+            <h1>🔐 Subeditor24</h1>
         </div>
         <div class="body">
             <p>হ্যালো <strong>{{ $user->name ?? 'User' }}</strong>,</p>
@@ -36,7 +36,7 @@
             </p>
         </div>
         <div class="footer">
-            © {{ date('Y') }} Newsmanage24 | info@newsmanage24.net
+            © {{ date('Y') }} Subeditor24 | info@subeditor24.net
         </div>
     </div>
 </body>

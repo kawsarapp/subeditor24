@@ -47,7 +47,7 @@ trait ApiPostingTrait
 
                 $headers = [
                     'Accept'     => 'application/json',
-                    'User-Agent' => 'Newsmanage24-Publisher/2.0 (+https://newsmanage24.com)',
+                    'User-Agent' => 'Subeditor24-Publisher/2.0 (+https://subeditor24.com)',
                 ];
 
                 // Configure Authentication Header
@@ -245,7 +245,7 @@ trait ApiPostingTrait
                     ->withOptions(['verify' => false])
                     ->withHeaders([
                         'Accept'     => 'application/json',
-                        'User-Agent' => 'Newsmanage24-Publisher/2.0 (+https://newsmanage24.com)'
+                        'User-Agent' => 'Subeditor24-Publisher/2.0 (+https://subeditor24.com)'
                     ])
                     ->post($apiUrl, $payload);
 

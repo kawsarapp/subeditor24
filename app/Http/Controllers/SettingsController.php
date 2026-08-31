@@ -374,7 +374,7 @@ class SettingsController extends Controller
 
             $headers = [
                 'Accept'     => 'application/json',
-                'User-Agent' => 'Newsmanage24-Publisher/2.0 (+https://newsmanage24.com)',
+                'User-Agent' => 'Subeditor24-Publisher/2.0 (+https://subeditor24.com)',
             ];
 
             if (!empty($token)) {
@@ -387,9 +387,9 @@ class SettingsController extends Controller
                 }
             }
 
-            $testTitle   = 'টেস্ট নিউজ — Newsmanage24 Connection Verification';
-            $testContent = '<p>এটি Newsmanage24 থেকে একটি স্বয়ংক্রিয় টেস্ট পোস্ট ভেরিফিকেশন।</p>';
-            $testSlug    = 'test-newsmanage24-' . time();
+            $testTitle   = 'টেস্ট নিউজ — Subeditor24 Connection Verification';
+            $testContent = '<p>এটি Subeditor24 থেকে একটি স্বয়ংক্রিয় টেস্ট পোস্ট ভেরিফিকেশন।</p>';
+            $testSlug    = 'test-subeditor24-' . time();
             $testCat     = ($categoryType === 'name') ? 'টেস্ট' : [1];
             $testImage   = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800';
 
@@ -478,13 +478,13 @@ class SettingsController extends Controller
             $apiUrl = rtrim($baseUrl, '/') . '/api/external-news-post';
             $payload = [
                 'token'         => $token,
-                'title'         => 'টেস্ট নিউজ — Newsmanage24 Verification',
-                'content'       => '<p>Newsmanage24 কানেকশন টেস্ট পোস্ট।</p>',
+                'title'         => 'টেস্ট নিউজ — Subeditor24 Verification',
+                'content'       => '<p>Subeditor24 কানেকশন টেস্ট পোস্ট।</p>',
                 'image_url'     => 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800',
                 'category_ids'  => [1],
                 'category_name' => 'General',
                 'hashtags'      => '#Test',
-                'slug'          => 'test-newsmanage24-' . time(),
+                'slug'          => 'test-subeditor24-' . time(),
                 'published_at'  => now()->format('Y-m-d H:i:s'),
             ];
 
@@ -493,7 +493,7 @@ class SettingsController extends Controller
                     ->withOptions(['verify' => false])
                     ->withHeaders([
                         'Accept'     => 'application/json',
-                        'User-Agent' => 'Newsmanage24-Publisher/2.0'
+                        'User-Agent' => 'Subeditor24-Publisher/2.0'
                     ])
                     ->post($apiUrl, $payload);
 

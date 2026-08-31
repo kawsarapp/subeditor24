@@ -24,7 +24,7 @@ class WebsiteCrawlerEngine
         try {
             $startTime = microtime(true);
             $response = Http::timeout(10)->withHeaders([
-                'User-Agent' => 'Subeditor24-SeoBot/1.0 (+https://newsmanage24.ddev.site)'
+                'User-Agent' => 'Subeditor24-SeoBot/1.0 (+https://subeditor24.ddev.site)'
             ])->get($targetUrl);
 
             $loadTimeMs = round((microtime(true) - $startTime) * 1000, 2);

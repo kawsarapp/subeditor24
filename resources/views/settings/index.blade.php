@@ -727,7 +727,7 @@
                             </h4>
                             <p class="text-xs text-slate-300 leading-relaxed mb-3">
                                 আপনার ওয়েবসাইটের মূল ডোমেইন দিন (যেমন: <code class="text-indigo-300 bg-slate-950 px-1.5 py-0.5 rounded">https://mywebsite.com</code>)। 
-                                এরপর <strong>Generate</strong> বাটনে চাপ দিয়ে একটি স্ট্রং <strong>API Secret Token</strong> তৈরি করুন। এই টোকেনটি আপনার সার্ভার ও Newsmanage24 এর মধ্যে সিকিউরিটি হ্যান্ডশেক করতে ব্যবহৃত হবে।
+                                এরপর <strong>Generate</strong> বাটনে চাপ দিয়ে একটি স্ট্রং <strong>API Secret Token</strong> তৈরি করুন। এই টোকেনটি আপনার সার্ভার ও Subeditor24 এর মধ্যে সিকিউরিটি হ্যান্ডশেক করতে ব্যবহৃত হবে।
                             </p>
                         </div>
 
@@ -839,7 +839,7 @@
                                 <i id="faq_icon_4" class="fas fa-chevron-down text-slate-400 text-xs transition-transform"></i>
                             </button>
                             <div id="faq_body_4" class="p-4 pt-0 text-xs text-slate-300 leading-relaxed border-t border-slate-700/50 hidden bg-slate-850">
-                                আমাদের রিকোয়েস্টে স্ট্যান্ডার্ড <code class="text-indigo-300">User-Agent: Newsmanage24-Publisher/2.0</code> পাঠানো হয়। এরপরও যদি ক্লায়েন্টের Cloudflare 'Under Attack Mode' এ থাকে, তবে ক্লায়েন্টকে তাদের Cloudflare WAF Security Rules-এ গিয়ে আমাদের সার্ভার আইপি (Server IP) বা <code class="text-indigo-300">/api/external-news-post</code> পাথটিকে Whitelist / Skip WAF করে দিতে বলুন।
+                                আমাদের রিকোয়েস্টে স্ট্যান্ডার্ড <code class="text-indigo-300">User-Agent: Subeditor24-Publisher/2.0</code> পাঠানো হয়। এরপরও যদি ক্লায়েন্টের Cloudflare 'Under Attack Mode' এ থাকে, তবে ক্লায়েন্টকে তাদের Cloudflare WAF Security Rules-এ গিয়ে আমাদের সার্ভার আইপি (Server IP) বা <code class="text-indigo-300">/api/external-news-post</code> পাথটিকে Whitelist / Skip WAF করে দিতে বলুন।
                             </div>
                         </div>
 

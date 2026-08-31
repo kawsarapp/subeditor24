@@ -9,7 +9,7 @@
                         <i class="fa-solid fa-bolt text-lg"></i>
                     </div>
                     <div class="flex flex-col">
-                        <span class="font-black text-xl tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors leading-none">Newsmanage<span class="text-indigo-600">24</span></span>
+                        <span class="font-black text-xl tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors leading-none">Subeditor<span class="text-indigo-600">24</span></span>
                         <span class="text-[9px] font-extrabold text-slate-400 tracking-wider uppercase mt-1 flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Automation Suite
                         </span>

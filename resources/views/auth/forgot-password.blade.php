@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password - Newsmanage24</title>
+    <title>Forgot Password - Subeditor24</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
     <header class="fixed top-0 w-full bg-white shadow-sm py-4 px-6 z-50 text-center">
-        <h1 class="text-xl md:text-2xl font-bold text-indigo-600">Newsmanage24</h1>
+        <h1 class="text-xl md:text-2xl font-bold text-indigo-600">Subeditor24</h1>
     </header>
 
     <main class="flex-grow flex items-center justify-center p-4 mt-20">

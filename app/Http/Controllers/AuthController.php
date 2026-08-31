@@ -111,7 +111,7 @@ class AuthController extends Controller
                 'user'      => User::where('email', $request->email)->first(),
             ], function ($m) use ($request) {
                 $m->to($request->email)
-                  ->subject('🔐 Password Reset — Newsmanage24');
+                  ->subject('🔐 Password Reset — Subeditor24');
             });
         } catch (\Exception $e) {
             return back()->withErrors(['email' => 'ইমেইল পাঠাতে সমস্যা হয়েছে: ' . $e->getMessage()]);
