@@ -72,7 +72,27 @@ class CustomPhotoCardController extends Controller
             $newsItem = NewsItem::withoutGlobalScopes()->find($request->input('news_id'));
         }
 
-        // 4. User credit and limit info
+        // 4. Fetch dynamic uploaded fonts from uploads/studio
+        $dynamicMediaFonts = [];
+        if (File::exists($this->mediaPath)) {
+            $fontExts = ['ttf', 'otf', 'woff', 'woff2'];
+            foreach (File::files($this->mediaPath) as $f) {
+                $ext = strtolower($f->getExtension());
+                if (in_array($ext, $fontExts)) {
+                    $rawName = pathinfo($f->getFilename(), PATHINFO_FILENAME);
+                    $cleanName = preg_replace('/^\d+_/', '', $rawName);
+                    $cleanName = trim(str_replace(['_', '-'], ' ', $cleanName));
+                    $fmt = $ext === 'ttf' ? 'truetype' : ($ext === 'otf' ? 'opentype' : $ext);
+                    $dynamicMediaFonts[] = [
+                        'family' => $cleanName,
+                        'url'    => asset('uploads/studio/' . $f->getFilename()),
+                        'format' => $fmt,
+                    ];
+                }
+            }
+        }
+
+        // 5. User credit and limit info
         $creditCost = (int) (UserSetting::getSettingWithFallback($user->id, 'bg_remove_credit_cost') ?: 1);
         $dailyUsed = $user->todays_bg_remove_count ?? 0;
         $dailyLimit = $user->daily_bg_remove_limit ?? 20;
@@ -81,6 +101,7 @@ class CustomPhotoCardController extends Controller
             'frames',
             'dbTemplates',
             'newsItem',
+            'dynamicMediaFonts',
             'creditCost',
             'dailyUsed',
             'dailyLimit'

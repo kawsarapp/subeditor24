@@ -3,23 +3,31 @@
     
     {{-- NAVIGATION TABS --}}
     <div class="flex border-b border-slate-200 bg-slate-50/80 p-1.5 gap-1 shrink-0 overflow-x-auto no-scrollbar">
-        <button type="button" onclick="switchStudioTab('frames')" id="tab-btn-frames" class="studio-tab-btn active flex-1 py-2 px-2 rounded-xl text-xs font-black transition-all flex flex-col items-center gap-1 text-indigo-600 bg-white shadow-sm">
+        <button type="button" onclick="switchStudioTab('frames')" id="tab-btn-frames" class="studio-tab-btn active flex-1 py-2 px-1.5 rounded-xl text-[11px] font-black transition-all flex flex-col items-center gap-1 text-indigo-600 bg-white shadow-sm">
             <span class="text-base">🖼️</span>
             <span>ফ্রেম</span>
         </button>
-        <button type="button" onclick="switchStudioTab('image')" id="tab-btn-image" class="studio-tab-btn flex-1 py-2 px-2 rounded-xl text-xs font-black transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-indigo-600 hover:bg-white/60">
+        <button type="button" onclick="switchStudioTab('quote')" id="tab-btn-quote" class="studio-tab-btn flex-1 py-2 px-1.5 rounded-xl text-[11px] font-black transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-indigo-600 hover:bg-white/60">
+            <span class="text-base">🎙️</span>
+            <span>উক্তি কার্ড</span>
+        </button>
+        <button type="button" onclick="switchStudioTab('templates')" id="tab-btn-templates" class="studio-tab-btn flex-1 py-2 px-1.5 rounded-xl text-[11px] font-black transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-indigo-600 hover:bg-white/60">
+            <span class="text-base">💾</span>
+            <span>টেমপ্লেট</span>
+        </button>
+        <button type="button" onclick="switchStudioTab('image')" id="tab-btn-image" class="studio-tab-btn flex-1 py-2 px-1.5 rounded-xl text-[11px] font-black transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-indigo-600 hover:bg-white/60">
             <span class="text-base">🪄</span>
             <span>ইমেজ / BG</span>
         </button>
-        <button type="button" onclick="switchStudioTab('text')" id="tab-btn-text" class="studio-tab-btn flex-1 py-2 px-2 rounded-xl text-xs font-black transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-indigo-600 hover:bg-white/60">
+        <button type="button" onclick="switchStudioTab('text')" id="tab-btn-text" class="studio-tab-btn flex-1 py-2 px-1.5 rounded-xl text-[11px] font-black transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-indigo-600 hover:bg-white/60">
             <span class="text-base">🅰️</span>
             <span>টেক্সট</span>
         </button>
-        <button type="button" onclick="switchStudioTab('elements')" id="tab-btn-elements" class="studio-tab-btn flex-1 py-2 px-2 rounded-xl text-xs font-black transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-indigo-600 hover:bg-white/60">
+        <button type="button" onclick="switchStudioTab('elements')" id="tab-btn-elements" class="studio-tab-btn flex-1 py-2 px-1.5 rounded-xl text-[11px] font-black transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-indigo-600 hover:bg-white/60">
             <span class="text-base">🏷️</span>
             <span>শেপ/ব্যাজ</span>
         </button>
-        <button type="button" onclick="switchStudioTab('layers')" id="tab-btn-layers" class="studio-tab-btn flex-1 py-2 px-2 rounded-xl text-xs font-black transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-indigo-600 hover:bg-white/60">
+        <button type="button" onclick="switchStudioTab('layers')" id="tab-btn-layers" class="studio-tab-btn flex-1 py-2 px-1.5 rounded-xl text-[11px] font-black transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-indigo-600 hover:bg-white/60">
             <span class="text-base">🗂️</span>
             <span>লেয়ার</span>
         </button>
@@ -28,6 +36,110 @@
     {{-- TAB CONTENT AREA --}}
     <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
         
+        {{-- ========================================================= --}}
+        {{-- 🎙️ SMART STATEMENT / QUOTE CARD TAB --}}
+        {{-- ========================================================= --}}
+        <div id="panel-quote" class="studio-panel space-y-4 hidden">
+            <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-4 rounded-2xl text-white shadow-lg space-y-1.5">
+                <h3 class="text-xs font-black flex items-center gap-1.5">
+                    <i class="fa-solid fa-quote-left"></i> ১-ক্লিক উক্তি ও বিবৃতি কার্ড জেনারেটর
+                </h3>
+                <p class="text-[10px] text-white/80 leading-relaxed">
+                    বক্তার নাম, উক্তি ও ছবি দিন—সিস্টেম স্বয়ংক্রিয়ভাবে ব্যাকগ্রাউন্ড রিমুভ করে পারফেক্ট লেআউটে কার্ড বানিয়ে দেবে।
+                </p>
+            </div>
+
+            {{-- Quote Textarea --}}
+            <div>
+                <label class="text-xs font-black text-slate-700 block mb-1">💬 মূল বক্তব্য বা উক্তি *</label>
+                <textarea id="quote-card-text" rows="3" oninput="onQuoteFieldChange('text', this.value)" placeholder="যেমন: সংবিধান সংশোধন করেই আমরা জুলাই সনদ বাস্তবায়ন করব।" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 bg-slate-50 focus:bg-white"></textarea>
+            </div>
+
+            {{-- Speaker Name & Designation --}}
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 block mb-1">বক্তার নাম *</label>
+                    <input type="text" id="quote-card-name" oninput="onQuoteFieldChange('name', this.value)" placeholder="যেমন: নূরুল ইসলাম মনি" class="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 bg-slate-50 focus:bg-white">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 block mb-1">পদবী</label>
+                    <input type="text" id="quote-card-desig" oninput="onQuoteFieldChange('designation', this.value)" placeholder="যেমন: চিফ হুইপ" class="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 bg-slate-50 focus:bg-white">
+                </div>
+            </div>
+
+            {{-- Speaker Photo Upload --}}
+            <div>
+                <label class="text-[10px] font-bold text-slate-500 block mb-1">বক্তার ছবি (Photo)</label>
+                <label class="cursor-pointer border-2 border-dashed border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 hover:border-indigo-400 p-3 rounded-2xl text-center font-bold text-xs text-indigo-700 transition flex items-center justify-center gap-2 group">
+                    <input type="file" id="quote-card-photo" accept="image/*" class="hidden" onchange="previewQuotePhoto(this)">
+                    <i class="fa-solid fa-camera text-base text-indigo-600 group-hover:scale-110 transition-transform"></i>
+                    <span id="quote-photo-label">ছবি নির্বাচন করুন</span>
+                </label>
+            </div>
+
+            {{-- Quote Font Family Selector --}}
+            <div>
+                <label class="text-[10px] font-bold text-slate-500 block mb-1">🔤 উক্তির ফন্ট (Font Family)</label>
+                <select id="quote-card-font" onchange="onQuoteFieldChange('font', this.value)" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none bg-slate-50 focus:bg-white focus:border-indigo-500">
+                    <option value="'SolaimanLipi'" selected>SolaimanLipi (সোলাইমানলিপি)</option>
+                    <option value="'Hind Siliguri', sans-serif">Hind Siliguri (হিন্দ শিলিগুড়ি)</option>
+                    <option value="'Noto Sans Bengali', sans-serif">Noto Sans Bengali</option>
+                    <option value="'Baloo Da 2', cursive">Baloo Da 2</option>
+                    <option value="'Anek Bangla', sans-serif">Anek Bangla</option>
+                    <option value="'Li Alinur Banglaborno'">Li Alinur Banglaborno</option>
+                    <option value="'Tiro Bangla', serif">Tiro Bangla</option>
+                    <option value="'Galada', cursive">Galada</option>
+                    @if(isset($dynamicMediaFonts) && count($dynamicMediaFonts) > 0)
+                        <optgroup label="📂 Media Library (আপলোড করা ফন্ট)">
+                            @foreach($dynamicMediaFonts as $dmf)
+                                <option value="'{{ $dmf['family'] }}'">{{ $dmf['family'] }}</option>
+                            @endforeach
+                        </optgroup>
+                    @endif
+                </select>
+            </div>
+
+            {{-- Theme Selector & Layout Options --}}
+            <div>
+                <label class="text-[10px] font-bold text-slate-500 block mb-1">🎨 কার্ড থিম ও কালার স্টাইল</label>
+                <select id="quote-card-theme" onchange="onQuoteFieldChange('theme', this.value)" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none bg-slate-50 focus:bg-white focus:border-indigo-500">
+                    <option value="soft-blue" selected>🔵 সফট ব্লু গ্রেডিয়েন্ট (স্টার নিউজ স্টাইল)</option>
+                    <option value="clean-white">⚪ ক্লিন হোয়াইট (প্রথম আলো স্টাইল)</option>
+                    <option value="dark-elegant">⚫ ডার্ক এলিগ্যান্ট মোড (যমুনা/ইন্টারন্যাশনাল)</option>
+                    <option value="breaking-red">🔴 ব্রেকিং স্টেটমেন্ট (গাঢ় লাল থিম)</option>
+                </select>
+            </div>
+
+            {{-- Position & AI Options --}}
+            <div class="grid grid-cols-2 gap-2 pt-1">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 block mb-1">ছবির পজিশন</label>
+                    <select id="quote-card-pos" onchange="onQuoteFieldChange('position', this.value)" class="w-full border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none bg-slate-50">
+                        <option value="left" selected>ছবি বামে + উক্তি ডানে</option>
+                        <option value="right">ছবি ডানে + উক্তি বামে</option>
+                    </select>
+                </div>
+                <div class="space-y-1.5 pt-2">
+                    <label class="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer">
+                        <input type="checkbox" id="quote-card-bg-check" checked class="rounded accent-indigo-600">
+                        <span>AI BG Remove</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer">
+                        <input type="checkbox" id="quote-card-flip-check" class="rounded accent-indigo-600">
+                        <span>↔️ মুখ ঘোরান (Flip)</span>
+                    </label>
+                </div>
+            </div>
+
+            {{-- Submit Action Button --}}
+            <div class="pt-2">
+                <button type="button" onclick="submitQuoteCardForm()" class="w-full py-3 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-black text-xs rounded-xl shadow-lg shadow-indigo-500/25 transition transform active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>✨ ১-ক্লিকে উক্তি কার্ড তৈরি করুন</span>
+                </button>
+            </div>
+        </div>
+
         {{-- ========================================================= --}}
         {{-- 1. FRAMES & TEMPLATES TAB --}}
         {{-- ========================================================= --}}
@@ -167,6 +279,38 @@
         </div>
 
         {{-- ========================================================= --}}
+        {{-- 💾 SAVED CUSTOM TEMPLATES / PRESETS TAB --}}
+        {{-- ========================================================= --}}
+        <div id="panel-templates" class="studio-panel space-y-4 hidden">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-2xl text-white shadow-lg space-y-2">
+                <h3 class="text-xs font-black flex items-center gap-1.5">
+                    <i class="fa-solid fa-floppy-disk"></i> আমার সেভ করা টেমপ্লেট ও প্রিসেট
+                </h3>
+                <p class="text-[10px] text-white/85 leading-relaxed">
+                    আপনার তৈরি করা কার্ড ডিজাইন ১-ক্লিকে টেমপ্লেট হিসেবে সেভ করে রাখুন এবং পরবর্তীতে যখন খুশি রি-ইউজ করুন।
+                </p>
+                <button type="button" onclick="openSaveTemplateModal()" class="w-full mt-1 py-2 bg-white text-emerald-800 rounded-xl font-black text-xs hover:bg-emerald-50 transition shadow-sm flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>বর্তমান ডিজাইনটি সেভ করুন</span>
+                </button>
+            </div>
+
+            {{-- Saved Templates List Container --}}
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-black text-slate-700">⭐ সংরক্ষিত টেমপ্লেটসমূহ</label>
+                    <button type="button" onclick="window.customStudio.renderCustomTemplatesList()" class="text-[10px] font-bold text-indigo-600 hover:underline">
+                        🔄 রিফ্রেশ
+                    </button>
+                </div>
+
+                <div id="custom-templates-list" class="space-y-3">
+                    {{-- Dynamically populated by engine --}}
+                </div>
+            </div>
+        </div>
+
+        {{-- ========================================================= --}}
         {{-- 2. IMAGE & BACKGROUND REMOVER TAB --}}
         {{-- ========================================================= --}}
         <div id="panel-image" class="studio-panel space-y-5 hidden">
@@ -225,6 +369,38 @@
             <div class="border-t border-slate-100 pt-3 space-y-3">
                 <label class="text-xs font-black text-slate-700 block">🖼️ সিলেক্টেড ইমেজ কন্ট্রোল</label>
                 
+                {{-- Image Zoom Drag Slider & Percentage Input --}}
+                <div class="bg-slate-50 border border-slate-200/80 p-3 rounded-2xl space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[10px] font-black text-slate-700 flex items-center gap-1">
+                            <i class="fa-solid fa-magnifying-glass-plus text-indigo-500"></i>
+                            <span>ছবির সাইজ / জুম (Zoom Scale)</span>
+                        </label>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="image-zoom-num" value="100" min="10" max="400" step="1"
+                                oninput="changeActiveImageZoom(this.value)"
+                                class="w-14 text-center border border-slate-300 rounded-lg text-xs font-bold py-0.5 px-1 bg-white text-indigo-700 outline-none focus:border-indigo-500">
+                            <span class="text-xs font-bold text-slate-500">%</span>
+                        </div>
+                    </div>
+                    
+                    <input type="range" id="image-zoom-slider" min="10" max="300" step="1" value="100" 
+                        oninput="changeActiveImageZoom(this.value)" 
+                        class="w-full accent-indigo-600 cursor-pointer">
+
+                    <div class="flex items-center justify-between pt-1 gap-1.5">
+                        <button type="button" onclick="window.customStudio.zoomActiveImage(-0.05)" class="flex-1 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition text-center shadow-xs">
+                            ➖ ছোট
+                        </button>
+                        <button type="button" onclick="window.customStudio.zoomActiveImage(0.05)" class="flex-1 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition text-center shadow-xs">
+                            ➕ বড়
+                        </button>
+                        <button type="button" onclick="changeActiveImageZoom(100)" class="flex-1 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-indigo-600 hover:bg-slate-100 transition text-center shadow-xs">
+                            ↺ ১০০%
+                        </button>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-2 gap-2">
                     <button type="button" onclick="flipActiveImage('X')" class="py-2 px-3 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-arrows-left-right"></i> Flip H
@@ -285,6 +461,13 @@
                         <option value="'Anek Bangla', sans-serif">অনেক বাংলা (Anek Bangla)</option>
                         <option value="'Kalpurush', sans-serif">কালপুরুষ (Kalpurush)</option>
                     </optgroup>
+                    @if(isset($dynamicMediaFonts) && count($dynamicMediaFonts) > 0)
+                        <optgroup label="📂 Media Library (আপলোড করা ফন্ট)">
+                            @foreach($dynamicMediaFonts as $dmf)
+                                <option value="'{{ $dmf['family'] }}'">{{ $dmf['family'] }}</option>
+                            @endforeach
+                        </optgroup>
+                    @endif
                 </select>
             </div>
 
@@ -304,6 +487,17 @@
                             <button type="button" onclick="window.customStudio.removeTextBackground()" class="text-[9px] text-red-500 font-bold hover:underline">❌ No BG</button>
                         </div>
                         <input type="color" id="text-bg-color-picker" value="#ffffff" oninput="changeActiveTextBgColor(this.value)" class="w-full h-9 rounded-xl border border-slate-200 cursor-pointer p-0.5">
+                    </div>
+                </div>
+
+                {{-- Quick Background Pill Presets --}}
+                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200/80 space-y-1.5">
+                    <label class="text-[9px] font-black text-slate-500 block uppercase tracking-wider">🏷️ ১-ক্লিক ব্যাকগ্রাউন্ড পিল (TV News Style)</label>
+                    <div class="grid grid-cols-4 gap-1">
+                        <button type="button" onclick="window.customStudio.applyTextBackgroundPill('#dc2626')" class="py-1 px-1.5 bg-red-600 text-white rounded-lg text-[10px] font-bold hover:bg-red-700 transition text-center shadow-xs">🔴 লাল</button>
+                        <button type="button" onclick="window.customStudio.applyTextBackgroundPill('#0f172a')" class="py-1 px-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-bold hover:bg-black transition text-center shadow-xs">⚫ কালো</button>
+                        <button type="button" onclick="window.customStudio.applyTextBackgroundPill('#ffffff')" class="py-1 px-1.5 bg-white text-slate-900 border border-slate-300 rounded-lg text-[10px] font-bold hover:bg-slate-100 transition text-center shadow-xs">⚪ সাদা</button>
+                        <button type="button" onclick="window.customStudio.applyTextBackgroundPill('none')" class="py-1 px-1.5 bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold hover:bg-slate-300 transition text-center shadow-xs">❌ No BG</button>
                     </div>
                 </div>
 
@@ -355,7 +549,20 @@
                 <div class="border-t border-slate-100 pt-3 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <label class="text-xs font-black text-slate-700">🌑 টেক্সট শ্যাডো (Advanced Shadow)</label>
-                        <button type="button" onclick="window.customStudio.removeTextShadow()" class="text-[10px] text-red-500 font-bold hover:underline">শ্যাডো রিমুভ</button>
+                        <button type="button" onclick="window.customStudio.removeTextShadow()" class="text-[10px] text-red-500 font-bold hover:underline">❌ শ্যাডো রিমুভ</button>
+                    </div>
+
+                    {{-- 1-Click Smart Contrast Shadow Presets --}}
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button type="button" onclick="window.customStudio.applySmartContrastShadow('dark')" class="py-1 px-1.5 bg-slate-800 text-white rounded-lg text-[10px] font-bold hover:bg-black transition text-center shadow-xs flex items-center justify-center gap-1">
+                            <span>🌑 ডার্ক শ্যাডো</span>
+                        </button>
+                        <button type="button" onclick="window.customStudio.applySmartContrastShadow('glow')" class="py-1 px-1.5 bg-amber-500 text-slate-900 rounded-lg text-[10px] font-bold hover:bg-amber-600 transition text-center shadow-xs flex items-center justify-center gap-1">
+                            <span>✨ সফট গ্লো</span>
+                        </button>
+                        <button type="button" onclick="window.customStudio.applySmartContrastShadow('none')" class="py-1 px-1.5 bg-slate-100 text-red-600 border border-slate-200 rounded-lg text-[10px] font-bold hover:bg-slate-200 transition text-center shadow-xs flex items-center justify-center gap-1">
+                            <span>❌ নো শ্যাডো</span>
+                        </button>
                     </div>
 
                     <div class="grid grid-cols-2 gap-2">

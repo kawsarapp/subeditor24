@@ -63,6 +63,38 @@
     @font-face { font-family: 'Li Shadhinata'; src: url('/fonts/Li Shadhinata2 2.0 Unicode.ttf') format('truetype'); font-weight: normal; font-display: swap; }
     @font-face { font-family: 'Li Shadhinata'; src: url('/fonts/Li Shadhinata2 2.0 Unicode Italic.ttf') format('truetype'); font-style: italic; font-display: swap; }
 
+    /* Dynamic Fonts from Admin Media Library (uploads/studio) */
+    @php
+        $dynamicMediaFonts = [];
+        $mediaUploadPath = public_path('uploads/studio');
+        if (\Illuminate\Support\Facades\File::exists($mediaUploadPath)) {
+            $fontExts = ['ttf', 'otf', 'woff', 'woff2'];
+            foreach (\Illuminate\Support\Facades\File::files($mediaUploadPath) as $f) {
+                $ext = strtolower($f->getExtension());
+                if (in_array($ext, $fontExts)) {
+                    $rawName = pathinfo($f->getFilename(), PATHINFO_FILENAME);
+                    $cleanName = preg_replace('/^\d+_/', '', $rawName);
+                    $cleanName = trim(str_replace(['_', '-'], ' ', $cleanName));
+                    $fmt = $ext === 'ttf' ? 'truetype' : ($ext === 'otf' ? 'opentype' : $ext);
+                    $dynamicMediaFonts[] = [
+                        'family' => $cleanName,
+                        'url'    => asset('uploads/studio/' . $f->getFilename()),
+                        'format' => $fmt,
+                    ];
+                }
+            }
+        }
+    @endphp
+
+    @foreach($dynamicMediaFonts as $dmf)
+    @font-face {
+        font-family: '{{ $dmf['family'] }}';
+        src: url('{{ $dmf['url'] }}') format('{{ $dmf['format'] }}');
+        font-weight: normal;
+        font-display: swap;
+    }
+    @endforeach
+
     /* =========================================
        2. UI & PERFORMANCE STYLES
        ========================================= */

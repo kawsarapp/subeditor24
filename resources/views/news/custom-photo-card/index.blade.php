@@ -3,7 +3,9 @@
 @section('content')
 
 {{-- Import Bengali Fonts & Studio Styles --}}
+<script>
 @include('partials.studio_fonts')
+</script>
 @include('partials.studio_styles')
 
 {{-- External Libraries (Fabric.js & Sortable.js) --}}
@@ -62,6 +64,12 @@
             </button>
 
             <div class="w-[1px] h-5 bg-slate-200 mx-1"></div>
+
+            {{-- 1-Click Save Template --}}
+            <button type="button" onclick="openSaveTemplateModal()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-xs border border-emerald-300/80" title="বর্তমান ডিজাইনটি ভবিষ্যতে ব্যবহারের জন্য টেমপ্লেট হিসেবে সেভ রাখুন">
+                <i class="fa-solid fa-floppy-disk"></i>
+                <span class="hidden sm:inline">সেভ টেমপ্লেট</span>
+            </button>
 
             {{-- 1-Click Copy Image --}}
             <button type="button" onclick="window.customStudio.copyToClipboard()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-xs border border-slate-200">
@@ -122,8 +130,16 @@
             </div>
 
             {{-- Floating Dynamic Context Toolbar --}}
-            <div id="floating-context-toolbar" class="absolute z-30 bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl rounded-2xl p-1.5 flex items-center gap-1.5 hidden transition-all">
+            <div id="floating-context-toolbar" class="absolute z-30 bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl rounded-2xl p-1.5 flex items-center gap-1.5 hidden select-none">
                 
+                {{-- Drag & Move Handle Button --}}
+                <div id="floating-drag-handle" class="cursor-move py-1 px-2.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition flex items-center gap-1.5 font-bold text-[11px] select-none border border-indigo-200/70 shadow-xs" title="চেপে ধরে ড্র্যাগ করে যেকোনো জায়গায় সরান (Move Element)">
+                    <i class="fa-solid fa-up-down-left-right text-xs"></i>
+                    <span>মুভ</span>
+                </div>
+
+                <div class="w-[1px] h-4 bg-slate-200"></div>
+
                 {{-- White-label Background Remove Button --}}
                 <button type="button" id="floating-bg-remove-btn" onclick="window.customStudio.removeBackgroundActive()" 
                     class="px-2.5 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl text-xs font-black hover:from-violet-700 hover:to-indigo-700 transition flex items-center gap-1 shadow-sm">
@@ -152,18 +168,49 @@
                 </button>
             </div>
 
-            {{-- Right-Click Context Menu --}}
-            <div id="canvas-context-menu" class="hidden fixed z-50 bg-white border border-slate-200 shadow-2xl rounded-2xl py-2 w-48 text-xs font-bold text-slate-700">
-                <button type="button" onclick="window.customStudio.duplicateActive()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2">
-                    <i class="fa-regular fa-copy w-4 text-center"></i> <span>ডুপ্লিকেট (Ctrl+D)</span>
-                </button>
-                <button type="button" onclick="window.customStudio.removeBackgroundActive()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2">
-                    <i class="fa-solid fa-scissors w-4 text-center text-indigo-500"></i> <span>Background Remove</span>
-                </button>
-                <div class="border-t border-slate-100 my-1"></div>
-                <button type="button" onclick="window.customStudio.deleteActive()" class="w-full px-3 py-1.5 text-left hover:bg-red-50 text-red-600 flex items-center gap-2">
-                    <i class="fa-regular fa-trash-can w-4 text-center"></i> <span>ডিলিট (Delete)</span>
-                </button>
+            {{-- Right-Click Context Menu (Canva / Photoshop Grade) --}}
+            <div id="canvas-context-menu" class="hidden fixed z-50 bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-2xl rounded-2xl py-1.5 w-56 text-xs font-bold text-slate-700 divide-y divide-slate-100 select-none">
+                {{-- Layer Ordering --}}
+                <div class="py-1">
+                    <button type="button" onclick="window.customStudio.bringActiveToFront()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-between transition">
+                        <span class="flex items-center gap-2"><span>🔝</span> <span>একদম উপরে আনুন</span></span>
+                        <span class="text-[10px] text-slate-400 font-normal">Ctrl+]</span>
+                    </button>
+                    <button type="button" onclick="window.customStudio.bringActiveForward()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-between transition">
+                        <span class="flex items-center gap-2"><span>⬆️</span> <span>এক স্তর উপরে</span></span>
+                        <span class="text-[10px] text-slate-400 font-normal">]</span>
+                    </button>
+                    <button type="button" onclick="window.customStudio.sendActiveBackward()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-between transition">
+                        <span class="flex items-center gap-2"><span>⬇️</span> <span>এক স্তর নিচে</span></span>
+                        <span class="text-[10px] text-slate-400 font-normal">[</span>
+                    </button>
+                    <button type="button" onclick="window.customStudio.sendActiveToBack()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-between transition">
+                        <span class="flex items-center gap-2"><span>🔻</span> <span>একদম নিচে পাঠান</span></span>
+                        <span class="text-[10px] text-slate-400 font-normal">Ctrl+[</span>
+                    </button>
+                </div>
+
+                {{-- Action Tools --}}
+                <div class="py-1">
+                    <button type="button" onclick="window.customStudio.toggleLockActive()" class="w-full px-3 py-1.5 text-left hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2 transition">
+                        <i class="fa-solid fa-lock w-4 text-center text-amber-500"></i> <span>লক / আনলক</span>
+                    </button>
+                    <button type="button" onclick="window.customStudio.duplicateActive()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-between transition">
+                        <span class="flex items-center gap-2"><i class="fa-regular fa-copy w-4 text-center"></i> <span>ডুপ্লিকেট</span></span>
+                        <span class="text-[10px] text-slate-400 font-normal">Ctrl+D</span>
+                    </button>
+                    <button type="button" id="context-bg-remove-btn" onclick="window.customStudio.removeBackgroundActive()" class="w-full px-3 py-1.5 text-left hover:bg-violet-50 hover:text-violet-600 flex items-center gap-2 transition">
+                        <i class="fa-solid fa-scissors w-4 text-center text-violet-500"></i> <span>Background Remove</span>
+                    </button>
+                </div>
+
+                {{-- Delete --}}
+                <div class="py-1">
+                    <button type="button" onclick="window.customStudio.deleteActive()" class="w-full px-3 py-1.5 text-left hover:bg-red-50 text-red-600 flex items-center justify-between transition">
+                        <span class="flex items-center gap-2"><i class="fa-regular fa-trash-can w-4 text-center"></i> <span>মুছে ফেলুন</span></span>
+                        <span class="text-[10px] text-red-400 font-normal">Delete</span>
+                    </button>
+                </div>
             </div>
 
             {{-- Zoom Controls Bar --}}
@@ -261,6 +308,9 @@
 
         if (tabKey === 'layers' && window.customStudio) {
             window.customStudio.renderLayersList();
+        }
+        if (tabKey === 'templates' && window.customStudio) {
+            window.customStudio.renderCustomTemplatesList();
         }
     }
 
@@ -459,7 +509,78 @@
             return;
         }
         if (window.customStudio) {
-            window.customStudio.saveCustomTemplate(name);
+            window.customStudio.saveCurrentAsTemplate(name);
+            switchStudioTab('templates');
+        }
+    }
+
+    // Instant Live Preview for Quote Card
+    function onQuoteFieldChange(field, value) {
+        if (window.customStudio) {
+            window.customStudio.updateQuoteLiveField(field, value);
+        }
+    }
+
+    function previewQuotePhoto(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const lbl = document.getElementById('quote-photo-label');
+            if (lbl) lbl.innerText = file.name.substring(0, 20) + '...';
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (window.customStudio) {
+                    window.customStudio.previewQuoteImage(e.target.result);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function changeActiveImageZoom(percent) {
+        if (window.customStudio) {
+            window.customStudio.setActiveImageScale(percent);
+        }
+    }
+
+    async function submitQuoteCardForm() {
+        const quote = document.getElementById('quote-card-text')?.value;
+        const name = document.getElementById('quote-card-name')?.value;
+        const designation = document.getElementById('quote-card-desig')?.value;
+        const pos = document.getElementById('quote-card-pos')?.value || 'left';
+        const theme = document.getElementById('quote-card-theme')?.value || 'soft-blue';
+        const font = document.getElementById('quote-card-font')?.value || "'SolaimanLipi'";
+        const flipPhoto = document.getElementById('quote-card-flip-check')?.checked === true;
+        const removeBg = document.getElementById('quote-card-bg-check')?.checked !== false;
+        const photoInput = document.getElementById('quote-card-photo');
+
+        if (!quote || !quote.trim()) {
+            alert('দয়া করে মূল বক্তব্য বা উক্তি লিখুন।');
+            return;
+        }
+
+        let imageSource = null;
+        if (photoInput && photoInput.files && photoInput.files[0]) {
+            const file = photoInput.files[0];
+            imageSource = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        if (window.customStudio) {
+            window.customStudio.generateQuoteCard({
+                quote: quote,
+                name: name,
+                designation: designation,
+                position: pos,
+                theme: theme,
+                fontFamily: font,
+                flipPhoto: flipPhoto,
+                removeBg: removeBg,
+                imageSource: imageSource
+            });
         }
     }
 
