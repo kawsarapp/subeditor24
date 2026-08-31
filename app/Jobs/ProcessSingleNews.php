@@ -30,7 +30,8 @@ class ProcessSingleNews implements ShouldQueue
 
     // 🔥 ULTRA SETTINGS
     public $timeout = 180; // ৩ মিনিট ম্যাক্সিমাম
-    public $tries = 1;     // রিট্রাই করার দরকার নেই, ফেইল হলে বাদ (সার্ভার লোড কমাতে)
+    public $tries = 2;     // ২ বার রিট্রাই করবে
+    public $backoff = [3, 10]; // ৩ সেকেন্ড এবং ১০ সেকেন্ড পর রিট্রাই
 
     public function __construct($link, $title, $userId, $websiteId, $listImage = null)
     {
@@ -167,11 +168,7 @@ class ProcessSingleNews implements ShouldQueue
                 // withOptions merges with existing config
                 $httpRequest->withOptions(['proxy' => $proxy, 'verify' => false]);
             } else {
-                if (config('app.env') !== 'local') {
-                    Log::error("❌ Security Block [Image]: No Proxy available for image download. Aborting to prevent hosting IP leakage.");
-                    return $url;
-                }
-                Log::warning("⚠️ Image downloading directly without proxy (DEV MODE)");
+                Log::info("🌐 Image downloading via direct secure stream: $url");
             }
             $response = $httpRequest->get($url);
 

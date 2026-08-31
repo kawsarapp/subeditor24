@@ -61,22 +61,34 @@ class ExternalLiveTrendsService
     {
         return Cache::remember('external_live_trends_cache_v3', 180, function () {
             $rawItems = [];
+            $headers = [
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Accept' => 'application/rss+xml, application/xml, text/xml, */*',
+                'Accept-Language' => 'bn,en-US,en;q=0.9',
+            ];
 
-            foreach ($this->externalSources as $source) {
-                try {
-                    $response = Http::timeout(7)->withHeaders([
-                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    ])->get($source['url']);
-
-                    if ($response->successful()) {
-                        $parsed = $this->parseRssFeed($response->body(), $source['name']);
-                        $rawItems = array_merge($rawItems, $parsed);
-                    } else {
-                        Log::warning("⚠️ External feed returned non-200 HTTP status ({$response->status()}) for {$source['name']} ({$source['url']})");
+            try {
+                $responses = Http::pool(function ($pool) use ($headers) {
+                    $requests = [];
+                    foreach ($this->externalSources as $source) {
+                        $requests[] = $pool->as($source['name'])
+                            ->timeout(6)
+                            ->withHeaders($headers)
+                            ->withOptions(['verify' => false])
+                            ->get($source['url']);
                     }
-                } catch (\Exception $e) {
-                    Log::warning("⚠️ External feed fetch failed for {$source['name']}: " . $e->getMessage());
+                    return $requests;
+                });
+
+                foreach ($this->externalSources as $source) {
+                    $name = $source['name'];
+                    if (isset($responses[$name]) && $responses[$name] instanceof \Illuminate\Http\Client\Response && $responses[$name]->successful()) {
+                        $parsed = $this->parseRssFeed($responses[$name]->body(), $name);
+                        $rawItems = array_merge($rawItems, $parsed);
+                    }
                 }
+            } catch (\Exception $e) {
+                Log::warning("⚠️ External feed pool exception: " . $e->getMessage());
             }
 
             // Fallback sample current breaking news if internet RSS is unreachable

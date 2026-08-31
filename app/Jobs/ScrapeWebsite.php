@@ -204,7 +204,8 @@ class ScrapeWebsite implements ShouldQueue
                     foreach (array_slice($nextDataLinks, 0, $limit ?? 5) as $item) {
                         if (!empty($item['link']) && !empty($item['title']) && strlen($item['title']) > 5) {
                             Log::info("⚡ Dispatching Job for: " . \Illuminate\Support\Str::limit($item['title'], 30));
-                            \App\Jobs\ProcessSingleNews::dispatch($item['link'], $item['title'], $this->userId, $website->id, $item['image'] ?? null);
+                            \App\Jobs\ProcessSingleNews::dispatch($item['link'], $item['title'], $this->userId, $website->id, $item['image'] ?? null)
+                                ->delay(now()->addSeconds($count * 2));
                             $count++;
                         }
                     }
@@ -236,7 +237,7 @@ class ScrapeWebsite implements ShouldQueue
                                 $this->userId,
                                 $website->id,
                                 $item['image'] ?? null
-                            );
+                            )->delay(now()->addSeconds($count * 2));
                             $count++;
                         }
                     }
@@ -455,7 +456,7 @@ class ScrapeWebsite implements ShouldQueue
                         $this->userId, 
                         $website->id, 
                         $listImage // অপশনাল: লিস্ট পেজের ইমেজ পাস করলে ভালো
-                    );
+                    )->delay(now()->addSeconds($count * 2));
 
                     $count++;
 

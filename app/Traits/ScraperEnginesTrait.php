@@ -182,6 +182,18 @@ trait ScraperEnginesTrait
                   ->timeout(120)
                   ->post('https://scraper.smartproxy.org/v1/scrape');
 
+                if ($response->status() === 429) {
+                    Log::warning("⚠️ SmartProxy 429 Rate Limit. Backing off 2s and retrying for: $url");
+                    sleep(2);
+                    $response = \Illuminate\Support\Facades\Http::withHeaders([
+                        'Authorization' => 'Basic ' . $tokenValue,
+                        'Content-Type'  => 'application/json',
+                        'Accept'        => 'application/json'
+                    ])->withBody($payload, 'application/json')
+                      ->timeout(120)
+                      ->post('https://scraper.smartproxy.org/v1/scrape');
+                }
+
                 if ($response->successful()) {
                     $html = $response->json('data.html');
                     if ($html && strlen($html) > 500) {
@@ -206,6 +218,18 @@ trait ScraperEnginesTrait
                 ])->withBody($payload, 'application/json')
                   ->timeout(120)
                   ->post('https://scraper-api.decodo.com/v2/scrape');
+
+                if ($response->status() === 429) {
+                    Log::warning("⚠️ Decodo API 429 Rate Limit. Backing off 2s and retrying for: $url");
+                    sleep(2);
+                    $response = \Illuminate\Support\Facades\Http::withHeaders([
+                        'Authorization' => 'Basic ' . $tokenValue,
+                        'Content-Type'  => 'application/json',
+                        'Accept'        => 'application/json'
+                    ])->withBody($payload, 'application/json')
+                      ->timeout(120)
+                      ->post('https://scraper-api.decodo.com/v2/scrape');
+                }
 
                 if ($response->successful()) {
                     $json = $response->json();
