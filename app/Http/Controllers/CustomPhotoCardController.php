@@ -63,8 +63,14 @@ class CustomPhotoCardController extends Controller
             usort($frames, fn($a, $b) => $b['time'] - $a['time']);
         }
 
-        // 2. Fetch existing DB templates
-        $dbTemplates = Template::where('is_active', true)->latest()->get();
+        // 2. Fetch user-scoped or global system DB templates
+        $dbTemplates = Template::where('is_active', true)
+            ->where(function($q) use ($user) {
+                $q->whereNull('user_id')
+                  ->orWhere('user_id', $user->id);
+            })
+            ->latest()
+            ->get();
 
         // 3. Optional News Item
         $newsItem = null;
@@ -301,6 +307,7 @@ class CustomPhotoCardController extends Controller
                 : $request->input('layout_data');
 
             $template = Template::create([
+                'user_id' => Auth::id(),
                 'name' => $request->input('name'),
                 'thumbnail_url' => $thumbnailUrl,
                 'frame_url' => $request->input('frame_url'),
@@ -312,6 +319,7 @@ class CustomPhotoCardController extends Controller
                 'success' => true,
                 'template' => [
                     'id' => $template->id,
+                    'user_id' => $template->user_id,
                     'name' => $template->name,
                     'thumbnail_url' => $template->thumbnail_url,
                     'frame_url' => $template->frame_url,
@@ -331,11 +339,16 @@ class CustomPhotoCardController extends Controller
     public function deleteTemplate($id)
     {
         try {
-            $template = Template::findOrFail($id);
+            $user = Auth::user();
+            $query = Template::where('id', $id);
+            if ($user->role !== 'super_admin') {
+                $query->where('user_id', $user->id);
+            }
+            $template = $query->firstOrFail();
             $template->delete();
             return response()->json(['success' => true, 'message' => 'টেমপ্লেট মুছে ফেলা হয়েছে!']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'টেমপ্লেট ডিলিট করার অনুমতি নেই বা খুঁজে পাওয়া যায়নি।'], 403);
         }
     }
 }

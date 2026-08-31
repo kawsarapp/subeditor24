@@ -1216,24 +1216,10 @@
 
                 this.canvas.clear();
 
-                // Theme Presets Configuration
-                let themeConfig = {
-                    bgColor: '#f8fafc',
-                    gradientStops: [
-                        { offset: 0, color: '#f0f9ff' },
-                        { offset: 0.5, color: '#ffffff' },
-                        { offset: 1, color: '#e2e8f0' }
-                    ],
-                    quoteMarkColor: '#0f172a',
-                    quoteTextColor: '#0f172a',
-                    accentBarColor: '#dc2626',
-                    nameTextColor: '#0f172a',
-                    desigTextColor: '#64748b',
-                    dateTextColor: '#64748b',
-                };
-
-                if (theme === 'clean-white') {
-                    themeConfig = {
+                // Complete 35+ Generic Themes Catalog
+                const themeCatalog = {
+                    // 1. Light & Minimalist
+                    'clean-white': {
                         bgColor: '#ffffff',
                         gradientStops: null,
                         quoteMarkColor: '#dc2626',
@@ -1242,9 +1228,94 @@
                         nameTextColor: '#111827',
                         desigTextColor: '#6b7280',
                         dateTextColor: '#9ca3af',
-                    };
-                } else if (theme === 'dark-elegant') {
-                    themeConfig = {
+                    },
+                    'soft-sky': {
+                        bgColor: '#f8fafc',
+                        gradientStops: [
+                            { offset: 0, color: '#f0f9ff' },
+                            { offset: 0.5, color: '#ffffff' },
+                            { offset: 1, color: '#e0f2fe' }
+                        ],
+                        quoteMarkColor: '#0284c7',
+                        quoteTextColor: '#0f172a',
+                        accentBarColor: '#0284c7',
+                        nameTextColor: '#0f172a',
+                        desigTextColor: '#475569',
+                        dateTextColor: '#64748b',
+                    },
+                    'warm-cream': {
+                        bgColor: '#fefce8',
+                        gradientStops: [
+                            { offset: 0, color: '#fefce8' },
+                            { offset: 0.5, color: '#fffbeb' },
+                            { offset: 1, color: '#fef3c7' }
+                        ],
+                        quoteMarkColor: '#d97706',
+                        quoteTextColor: '#1c1917',
+                        accentBarColor: '#d97706',
+                        nameTextColor: '#1c1917',
+                        desigTextColor: '#78716c',
+                        dateTextColor: '#a8a29e',
+                    },
+                    'mint-fresh': {
+                        bgColor: '#f0fdf4',
+                        gradientStops: [
+                            { offset: 0, color: '#f0fdf4' },
+                            { offset: 0.5, color: '#ffffff' },
+                            { offset: 1, color: '#dcfce7' }
+                        ],
+                        quoteMarkColor: '#059669',
+                        quoteTextColor: '#064e3b',
+                        accentBarColor: '#059669',
+                        nameTextColor: '#064e3b',
+                        desigTextColor: '#047857',
+                        dateTextColor: '#6ee7b7',
+                    },
+                    'lavender-soft': {
+                        bgColor: '#faf5ff',
+                        gradientStops: [
+                            { offset: 0, color: '#faf5ff' },
+                            { offset: 0.5, color: '#ffffff' },
+                            { offset: 1, color: '#f3e8ff' }
+                        ],
+                        quoteMarkColor: '#9333ea',
+                        quoteTextColor: '#3b0764',
+                        accentBarColor: '#9333ea',
+                        nameTextColor: '#3b0764',
+                        desigTextColor: '#6b21a8',
+                        dateTextColor: '#a855f7',
+                    },
+                    'blush-rose': {
+                        bgColor: '#fff1f2',
+                        gradientStops: [
+                            { offset: 0, color: '#fff1f2' },
+                            { offset: 0.5, color: '#ffffff' },
+                            { offset: 1, color: '#ffe4e6' }
+                        ],
+                        quoteMarkColor: '#e11d48',
+                        quoteTextColor: '#4c0519',
+                        accentBarColor: '#e11d48',
+                        nameTextColor: '#4c0519',
+                        desigTextColor: '#9f1239',
+                        dateTextColor: '#fb7185',
+                    },
+                    'silver-pearl': {
+                        bgColor: '#f1f5f9',
+                        gradientStops: [
+                            { offset: 0, color: '#f8fafc' },
+                            { offset: 0.5, color: '#e2e8f0' },
+                            { offset: 1, color: '#cbd5e1' }
+                        ],
+                        quoteMarkColor: '#334155',
+                        quoteTextColor: '#0f172a',
+                        accentBarColor: '#475569',
+                        nameTextColor: '#0f172a',
+                        desigTextColor: '#475569',
+                        dateTextColor: '#64748b',
+                    },
+
+                    // 2. Dark & Midnight Series
+                    'dark-slate': {
                         bgColor: '#0f172a',
                         gradientStops: [
                             { offset: 0, color: '#0f172a' },
@@ -1257,9 +1328,108 @@
                         nameTextColor: '#ffffff',
                         desigTextColor: '#cbd5e1',
                         dateTextColor: '#94a3b8',
-                    };
-                } else if (theme === 'breaking-red') {
-                    themeConfig = {
+                    },
+                    'dark-navy': {
+                        bgColor: '#0a192f',
+                        gradientStops: [
+                            { offset: 0, color: '#0a192f' },
+                            { offset: 0.5, color: '#172a45' },
+                            { offset: 1, color: '#020c1b' }
+                        ],
+                        quoteMarkColor: '#38bdf8',
+                        quoteTextColor: '#f8fafc',
+                        accentBarColor: '#38bdf8',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#94a3b8',
+                        dateTextColor: '#64748b',
+                    },
+                    'dark-emerald': {
+                        bgColor: '#064e3b',
+                        gradientStops: [
+                            { offset: 0, color: '#064e3b' },
+                            { offset: 0.5, color: '#047857' },
+                            { offset: 1, color: '#022c22' }
+                        ],
+                        quoteMarkColor: '#34d399',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#10b981',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#a7f3d0',
+                        dateTextColor: '#6ee7b7',
+                    },
+                    'dark-burgundy': {
+                        bgColor: '#4c0519',
+                        gradientStops: [
+                            { offset: 0, color: '#4c0519' },
+                            { offset: 0.5, color: '#881337' },
+                            { offset: 1, color: '#250009' }
+                        ],
+                        quoteMarkColor: '#fb7185',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#f43f5e',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#fecdd3',
+                        dateTextColor: '#fda4af',
+                    },
+                    'dark-charcoal': {
+                        bgColor: '#18181b',
+                        gradientStops: [
+                            { offset: 0, color: '#18181b' },
+                            { offset: 0.5, color: '#27272a' },
+                            { offset: 1, color: '#09090b' }
+                        ],
+                        quoteMarkColor: '#eab308',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#eab308',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#d4d4d8',
+                        dateTextColor: '#a1a1aa',
+                    },
+                    'dark-obsidian': {
+                        bgColor: '#000000',
+                        gradientStops: [
+                            { offset: 0, color: '#09090b' },
+                            { offset: 0.5, color: '#000000' },
+                            { offset: 1, color: '#09090b' }
+                        ],
+                        quoteMarkColor: '#ffffff',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#ef4444',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#a1a1aa',
+                        dateTextColor: '#71717a',
+                    },
+                    'dark-plum': {
+                        bgColor: '#2e1065',
+                        gradientStops: [
+                            { offset: 0, color: '#2e1065' },
+                            { offset: 0.5, color: '#3b0764' },
+                            { offset: 1, color: '#180033' }
+                        ],
+                        quoteMarkColor: '#e879f9',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#d946ef',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#f0abfc',
+                        dateTextColor: '#e879f9',
+                    },
+                    'dark-teal': {
+                        bgColor: '#042f2e',
+                        gradientStops: [
+                            { offset: 0, color: '#042f2e' },
+                            { offset: 0.5, color: '#115e59' },
+                            { offset: 1, color: '#011c1b' }
+                        ],
+                        quoteMarkColor: '#2dd4bf',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#14b8a6',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#99f6e4',
+                        dateTextColor: '#5eead4',
+                    },
+
+                    // 3. Bold & Breaking
+                    'breaking-red': {
                         bgColor: '#7f1d1d',
                         gradientStops: [
                             { offset: 0, color: '#7f1d1d' },
@@ -1272,8 +1442,290 @@
                         nameTextColor: '#ffffff',
                         desigTextColor: '#fecaca',
                         dateTextColor: '#fca5a5',
-                    };
-                }
+                    },
+                    'scarlet-fire': {
+                        bgColor: '#991b1b',
+                        gradientStops: [
+                            { offset: 0, color: '#b91c1c' },
+                            { offset: 0.5, color: '#991b1b' },
+                            { offset: 1, color: '#7f1d1d' }
+                        ],
+                        quoteMarkColor: '#fef08a',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#facc15',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#fee2e2',
+                        dateTextColor: '#fecaca',
+                    },
+                    'royal-purple': {
+                        bgColor: '#3b0764',
+                        gradientStops: [
+                            { offset: 0, color: '#3b0764' },
+                            { offset: 0.5, color: '#581c87' },
+                            { offset: 1, color: '#1e013a' }
+                        ],
+                        quoteMarkColor: '#facc15',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#facc15',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#e9d5ff',
+                        dateTextColor: '#c084fc',
+                    },
+                    'sunset-orange': {
+                        bgColor: '#7c2d12',
+                        gradientStops: [
+                            { offset: 0, color: '#7c2d12' },
+                            { offset: 0.5, color: '#9a3412' },
+                            { offset: 1, color: '#431407' }
+                        ],
+                        quoteMarkColor: '#fde047',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#f97316',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#fed7aa',
+                        dateTextColor: '#fdba74',
+                    },
+                    'amber-flame': {
+                        bgColor: '#78350f',
+                        gradientStops: [
+                            { offset: 0, color: '#92400e' },
+                            { offset: 0.5, color: '#b45309' },
+                            { offset: 1, color: '#451a03' }
+                        ],
+                        quoteMarkColor: '#fef08a',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#f59e0b',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#fef3c7',
+                        dateTextColor: '#fde68a',
+                    },
+                    'ocean-cyan': {
+                        bgColor: '#0e7490',
+                        gradientStops: [
+                            { offset: 0, color: '#0e7490' },
+                            { offset: 0.5, color: '#0891b2' },
+                            { offset: 1, color: '#164e63' }
+                        ],
+                        quoteMarkColor: '#a5f3fc',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#22d3ee',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#cffafe',
+                        dateTextColor: '#67e8f9',
+                    },
+                    'electric-blue': {
+                        bgColor: '#1e3a8a',
+                        gradientStops: [
+                            { offset: 0, color: '#1d4ed8' },
+                            { offset: 0.5, color: '#1e40af' },
+                            { offset: 1, color: '#172554' }
+                        ],
+                        quoteMarkColor: '#60a5fa',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#3b82f6',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#bfdbfe',
+                        dateTextColor: '#93c5fd',
+                    },
+
+                    // 4. Modern Gradients & Metallic
+                    'aurora-borealis': {
+                        bgColor: '#022c22',
+                        gradientStops: [
+                            { offset: 0, color: '#0f766e' },
+                            { offset: 0.5, color: '#115e59' },
+                            { offset: 1, color: '#3b0764' }
+                        ],
+                        quoteMarkColor: '#5eead4',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#2dd4bf',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#ccfbf1',
+                        dateTextColor: '#99f6e4',
+                    },
+                    'cosmic-glow': {
+                        bgColor: '#1e1b4b',
+                        gradientStops: [
+                            { offset: 0, color: '#312e81' },
+                            { offset: 0.5, color: '#4338ca' },
+                            { offset: 1, color: '#1e1b4b' }
+                        ],
+                        quoteMarkColor: '#a78bfa',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#818cf8',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#e0e7ff',
+                        dateTextColor: '#c7d2fe',
+                    },
+                    'cyber-neon': {
+                        bgColor: '#09090b',
+                        gradientStops: [
+                            { offset: 0, color: '#18181b' },
+                            { offset: 0.5, color: '#09090b' },
+                            { offset: 1, color: '#18181b' }
+                        ],
+                        quoteMarkColor: '#a3e635',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#84cc16',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#bef264',
+                        dateTextColor: '#a3e635',
+                    },
+                    'rose-gold': {
+                        bgColor: '#3f1d24',
+                        gradientStops: [
+                            { offset: 0, color: '#4c1d24' },
+                            { offset: 0.5, color: '#831843' },
+                            { offset: 1, color: '#270810' }
+                        ],
+                        quoteMarkColor: '#fecdd3',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#fda4af',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#ffe4e6',
+                        dateTextColor: '#fecdd3',
+                    },
+                    'bronze-copper': {
+                        bgColor: '#451a03',
+                        gradientStops: [
+                            { offset: 0, color: '#542308' },
+                            { offset: 0.5, color: '#7c2d12' },
+                            { offset: 1, color: '#290f02' }
+                        ],
+                        quoteMarkColor: '#fed7aa',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#fb923c',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#ffedd5',
+                        dateTextColor: '#fed7aa',
+                    },
+                    'crimson-noir': {
+                        bgColor: '#000000',
+                        gradientStops: [
+                            { offset: 0, color: '#450a0a' },
+                            { offset: 0.6, color: '#180202' },
+                            { offset: 1, color: '#000000' }
+                        ],
+                        quoteMarkColor: '#ef4444',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#dc2626',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#fca5a5',
+                        dateTextColor: '#f87171',
+                    },
+                    'sapphire-glow': {
+                        bgColor: '#030712',
+                        gradientStops: [
+                            { offset: 0, color: '#1e3a8a' },
+                            { offset: 0.5, color: '#0f172a' },
+                            { offset: 1, color: '#030712' }
+                        ],
+                        quoteMarkColor: '#38bdf8',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#0ea5e9',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#bae6fd',
+                        dateTextColor: '#7dd3fc',
+                    },
+
+                    // 5. Earthy & Nature Tones
+                    'olive-moss': {
+                        bgColor: '#365314',
+                        gradientStops: [
+                            { offset: 0, color: '#3f6212' },
+                            { offset: 0.5, color: '#4d7c0f' },
+                            { offset: 1, color: '#1a2e05' }
+                        ],
+                        quoteMarkColor: '#bef264',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#a3e635',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#ecfccb',
+                        dateTextColor: '#d9f99d',
+                    },
+                    'terracotta': {
+                        bgColor: '#7c2d12',
+                        gradientStops: [
+                            { offset: 0, color: '#9a3412' },
+                            { offset: 0.5, color: '#c2410c' },
+                            { offset: 1, color: '#431407' }
+                        ],
+                        quoteMarkColor: '#ffedd5',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#ea580c',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#fed7aa',
+                        dateTextColor: '#fdba74',
+                    },
+                    'espresso-coffee': {
+                        bgColor: '#271b16',
+                        gradientStops: [
+                            { offset: 0, color: '#38251e' },
+                            { offset: 0.5, color: '#442d25' },
+                            { offset: 1, color: '#19110e' }
+                        ],
+                        quoteMarkColor: '#d6c7b2',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#bfa07a',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#e6ded3',
+                        dateTextColor: '#d6c7b2',
+                    },
+                    'desert-sand': {
+                        bgColor: '#fdfbf7',
+                        gradientStops: [
+                            { offset: 0, color: '#fef3c7' },
+                            { offset: 0.5, color: '#fdfbf7' },
+                            { offset: 1, color: '#fde68a' }
+                        ],
+                        quoteMarkColor: '#b45309',
+                        quoteTextColor: '#451a03',
+                        accentBarColor: '#d97706',
+                        nameTextColor: '#451a03',
+                        desigTextColor: '#78350f',
+                        dateTextColor: '#92400e',
+                    },
+                    'sage-green': {
+                        bgColor: '#f1f5f2',
+                        gradientStops: [
+                            { offset: 0, color: '#f1f5f2' },
+                            { offset: 0.5, color: '#e2ece4' },
+                            { offset: 1, color: '#d3e2d6' }
+                        ],
+                        quoteMarkColor: '#2d6a4f',
+                        quoteTextColor: '#1b4332',
+                        accentBarColor: '#40916c',
+                        nameTextColor: '#1b4332',
+                        desigTextColor: '#2d6a4f',
+                        dateTextColor: '#52b788',
+                    },
+                    'caramel-mocha': {
+                        bgColor: '#3d261d',
+                        gradientStops: [
+                            { offset: 0, color: '#573729' },
+                            { offset: 0.5, color: '#6d4533' },
+                            { offset: 1, color: '#271710' }
+                        ],
+                        quoteMarkColor: '#fcd34d',
+                        quoteTextColor: '#ffffff',
+                        accentBarColor: '#f59e0b',
+                        nameTextColor: '#ffffff',
+                        desigTextColor: '#fef3c7',
+                        dateTextColor: '#fde68a',
+                    },
+                };
+
+                // Fallback / Selected Theme Config
+                let themeConfig = themeCatalog[theme] || themeCatalog['soft-sky'] || {
+                    bgColor: '#f8fafc',
+                    gradientStops: null,
+                    quoteMarkColor: '#0284c7',
+                    quoteTextColor: '#0f172a',
+                    accentBarColor: '#0284c7',
+                    nameTextColor: '#0f172a',
+                    desigTextColor: '#475569',
+                    dateTextColor: '#64748b',
+                };
 
                 this.canvas.setBackgroundColor(themeConfig.bgColor, () => this.canvas.renderAll());
 
@@ -2016,6 +2468,303 @@
 
         /**
          * ====================================================================
+         * ✨ UNIQUE TEXTURES, DOT SHADOWS & EDITORIAL PATTERNS
+         * ====================================================================
+         */
+        applyCardTextureOverlay(type = 'dot-grid') {
+            // Remove existing texture overlay if present
+            const existing = this.canvas.getObjects().find(o => o.isTextureOverlay);
+            if (existing) {
+                this.canvas.remove(existing);
+            }
+
+            if (type === 'none' || !type) {
+                this.canvas.renderAll();
+                this.saveState();
+                this.renderLayersList();
+                this.showNotification("info", "টেক্সচার রিমুভ করা হয়েছে।");
+                return;
+            }
+
+            const canvasW = this.canvas.getWidth();
+            const canvasH = this.canvas.getHeight();
+
+            const patternCanvas = document.createElement('canvas');
+            const pctx = patternCanvas.getContext('2d');
+
+            let patternObj = null;
+
+            if (type === 'dot-grid') {
+                // High-density modern dot grid (24px spacing)
+                patternCanvas.width = 24;
+                patternCanvas.height = 24;
+                pctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+                pctx.beginPath();
+                pctx.arc(12, 12, 1.8, 0, Math.PI * 2);
+                pctx.fill();
+
+                // Dark dot fallback on light cards
+                const isDark = this.isCanvasBackgroundDark();
+                if (!isDark) {
+                    pctx.clearRect(0, 0, 24, 24);
+                    pctx.fillStyle = 'rgba(15, 23, 42, 0.12)';
+                    pctx.beginPath();
+                    pctx.arc(12, 12, 1.8, 0, Math.PI * 2);
+                    pctx.fill();
+                }
+
+                const pattern = new fabric.Pattern({
+                    source: patternCanvas,
+                    repeat: 'repeat'
+                });
+
+                patternObj = new fabric.Rect({
+                    left: 0,
+                    top: 0,
+                    width: canvasW,
+                    height: canvasH,
+                    fill: pattern,
+                    selectable: false,
+                    evented: false,
+                    isTextureOverlay: true,
+                    customName: '⠶ ডট গ্রিড টেক্সচার',
+                    opacity: 0.85
+                });
+
+            } else if (type === 'halftone-dots') {
+                // Editorial halftone dots pattern (36px cell with multiple size dots)
+                patternCanvas.width = 36;
+                patternCanvas.height = 36;
+                const isDark = this.isCanvasBackgroundDark();
+                pctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(0, 0, 0, 0.08)';
+
+                pctx.beginPath();
+                pctx.arc(18, 18, 4, 0, Math.PI * 2);
+                pctx.fill();
+
+                pctx.beginPath();
+                pctx.arc(6, 6, 1.5, 0, Math.PI * 2);
+                pctx.arc(30, 6, 1.5, 0, Math.PI * 2);
+                pctx.arc(6, 30, 1.5, 0, Math.PI * 2);
+                pctx.arc(30, 30, 1.5, 0, Math.PI * 2);
+                pctx.fill();
+
+                const pattern = new fabric.Pattern({
+                    source: patternCanvas,
+                    repeat: 'repeat'
+                });
+
+                patternObj = new fabric.Rect({
+                    left: 0,
+                    top: 0,
+                    width: canvasW,
+                    height: canvasH,
+                    fill: pattern,
+                    selectable: false,
+                    evented: false,
+                    isTextureOverlay: true,
+                    customName: '🏁 হাফটোন ডটস প্যাটার্ন',
+                    opacity: 0.9
+                });
+
+            } else if (type === 'spotlight-glow') {
+                // Dramatic radial spotlight focused on left/center
+                patternObj = new fabric.Circle({
+                    left: canvasW * 0.25,
+                    top: canvasH * 0.5,
+                    radius: canvasW * 0.45,
+                    originX: 'center',
+                    originY: 'center',
+                    selectable: false,
+                    evented: false,
+                    isTextureOverlay: true,
+                    customName: '🔆 স্পটলাইট গ্লো বিম',
+                    opacity: 0.35,
+                    fill: new fabric.Gradient({
+                        type: 'radial',
+                        coords: {
+                            r1: 0,
+                            r2: canvasW * 0.45,
+                            x1: 0,
+                            y1: 0,
+                            x2: 0,
+                            y2: 0,
+                        },
+                        colorStops: [
+                            { offset: 0, color: 'rgba(255, 255, 255, 0.55)' },
+                            { offset: 0.5, color: 'rgba(255, 255, 255, 0.18)' },
+                            { offset: 1, color: 'rgba(255, 255, 255, 0)' }
+                        ]
+                    })
+                });
+
+            } else if (type === 'vignette-shadow') {
+                // Rich edge vignette shadow
+                patternObj = new fabric.Rect({
+                    left: 0,
+                    top: 0,
+                    width: canvasW,
+                    height: canvasH,
+                    selectable: false,
+                    evented: false,
+                    isTextureOverlay: true,
+                    customName: '🌫️ ভিনিয়েট এজ শ্যাডো',
+                    opacity: 0.55,
+                    fill: new fabric.Gradient({
+                        type: 'radial',
+                        coords: {
+                            r1: canvasW * 0.2,
+                            r2: canvasW * 0.65,
+                            x1: canvasW / 2,
+                            y1: canvasH / 2,
+                            x2: canvasW / 2,
+                            y2: canvasH / 2,
+                        },
+                        colorStops: [
+                            { offset: 0, color: 'rgba(0, 0, 0, 0)' },
+                            { offset: 0.65, color: 'rgba(0, 0, 0, 0.25)' },
+                            { offset: 1, color: 'rgba(0, 0, 0, 0.75)' }
+                        ]
+                    })
+                });
+
+            } else if (type === 'diagonal-mesh') {
+                // Clean diagonal 45deg stripe pattern
+                patternCanvas.width = 16;
+                patternCanvas.height = 16;
+                const isDark = this.isCanvasBackgroundDark();
+                pctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)';
+                pctx.lineWidth = 1.5;
+                pctx.beginPath();
+                pctx.moveTo(0, 16);
+                pctx.lineTo(16, 0);
+                pctx.stroke();
+
+                const pattern = new fabric.Pattern({
+                    source: patternCanvas,
+                    repeat: 'repeat'
+                });
+
+                patternObj = new fabric.Rect({
+                    left: 0,
+                    top: 0,
+                    width: canvasW,
+                    height: canvasH,
+                    fill: pattern,
+                    selectable: false,
+                    evented: false,
+                    isTextureOverlay: true,
+                    customName: '📐 ডায়াগোনাল স্ট্রাইপস মেশ',
+                    opacity: 0.8
+                });
+            }
+
+            if (patternObj) {
+                // Insert pattern just above backdrop (layer index 1 or bottom)
+                this.canvas.add(patternObj);
+                
+                // Find backdrop
+                const backdrop = this.canvas.getObjects().find(o => o.customName && o.customName.includes('ব্যাকগ্রাউন্ড'));
+                if (backdrop) {
+                    patternObj.moveTo(1);
+                } else {
+                    patternObj.sendToBack();
+                }
+
+                this.canvas.renderAll();
+                this.saveState();
+                this.renderLayersList();
+                this.showNotification("success", `${patternObj.customName} যুক্ত করা হয়েছে!`);
+            }
+        }
+
+        addDecorativeDotCluster(position = 'top-right') {
+            const canvasW = this.canvas.getWidth();
+            const canvasH = this.canvas.getHeight();
+            const isDark = this.isCanvasBackgroundDark();
+
+            const dotColor = isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(15, 23, 42, 0.25)';
+            const dots = [];
+            const rows = 5;
+            const cols = 5;
+            const gap = 16;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const dot = new fabric.Circle({
+                        left: c * gap,
+                        top: r * gap,
+                        radius: 2.2,
+                        fill: dotColor,
+                        selectable: false,
+                        evented: false
+                    });
+                    dots.push(dot);
+                }
+            }
+
+            let initialLeft = canvasW - (cols * gap) - 40;
+            let initialTop = 40;
+
+            if (position === 'bottom-left') {
+                initialLeft = 40;
+                initialTop = canvasH - (rows * gap) - 40;
+            } else if (position === 'center-speaker') {
+                initialLeft = canvasW * 0.15;
+                initialTop = canvasH * 0.45;
+            }
+
+            const clusterGroup = new fabric.Group(dots, {
+                left: initialLeft,
+                top: initialTop,
+                selectable: true,
+                customName: '⠶ ডট ক্লাস্টার প্যাচ',
+                cornerColor: '#ffffff',
+                cornerStrokeColor: '#4f46e5',
+                borderColor: '#6366f1',
+                padding: 6
+            });
+
+            this.canvas.add(clusterGroup);
+            this.canvas.setActiveObject(clusterGroup);
+            this.canvas.renderAll();
+            this.saveState();
+            this.renderLayersList();
+            this.showNotification("success", "ডট ক্লাস্টার প্যাচ যুক্ত হয়েছে! ইচ্ছামতো মুভ ও রিসাইজ করুন।");
+        }
+
+        addHugeWatermarkQuoteMark() {
+            const canvasW = this.canvas.getWidth();
+            const canvasH = this.canvas.getHeight();
+            const isDark = this.isCanvasBackgroundDark();
+
+            const quoteMark = new fabric.Text('❝', {
+                left: canvasW * 0.08,
+                top: canvasH * 0.12,
+                fontSize: Math.round(canvasH * 0.38),
+                fontFamily: 'serif',
+                fill: isDark ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.05)',
+                selectable: true,
+                customName: '❝ ওয়াটারমার্ক কোটেশন মার্ক',
+                cornerColor: '#ffffff',
+                cornerStrokeColor: '#4f46e5',
+                borderColor: '#6366f1'
+            });
+
+            this.canvas.add(quoteMark);
+            quoteMark.sendToBack();
+            const backdrop = this.canvas.getObjects().find(o => o.customName && o.customName.includes('ব্যাকগ্রাউন্ড'));
+            if (backdrop) quoteMark.moveTo(1);
+
+            this.canvas.setActiveObject(quoteMark);
+            this.canvas.renderAll();
+            this.saveState();
+            this.renderLayersList();
+            this.showNotification("success", "ওয়াটারমার্ক কোটেশন মার্ক যুক্ত হয়েছে!");
+        }
+
+        /**
+         * ====================================================================
          * 🎨 PRO STYLING, STROKE, SHADOW & RESET CONTROLS
          * ====================================================================
          */
@@ -2310,9 +3059,19 @@
          * 💾 SAVE & REUSE CUSTOMIZED TEMPLATES / PRESETS
          * ====================================================================
          */
+        getStorageKey() {
+            return 'studio_custom_templates_user_' + (this.config.userId || 'guest');
+        }
+
         getCustomTemplates() {
             try {
-                const raw = localStorage.getItem('studio_custom_templates_v1');
+                const key = this.getStorageKey();
+                let raw = localStorage.getItem(key);
+                // Fallback / migrate from legacy key if user has none
+                if (!raw && localStorage.getItem('studio_custom_templates_v1')) {
+                    raw = localStorage.getItem('studio_custom_templates_v1');
+                    localStorage.setItem(key, raw);
+                }
                 return raw ? JSON.parse(raw) : [];
             } catch (e) {
                 console.error("Error reading custom templates from localStorage:", e);
@@ -2322,7 +3081,8 @@
 
         saveCustomTemplates(list) {
             try {
-                localStorage.setItem('studio_custom_templates_v1', JSON.stringify(list));
+                const key = this.getStorageKey();
+                localStorage.setItem(key, JSON.stringify(list));
             } catch (e) {
                 console.error("Error saving custom templates to localStorage:", e);
             }

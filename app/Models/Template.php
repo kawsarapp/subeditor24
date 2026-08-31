@@ -9,8 +9,8 @@ class Template extends Model
 {
     use HasFactory;
 
-    // ১. এই লাইনটি মিসিং ছিল, যার কারণে এরর আসছিল
     protected $fillable = [
+        'user_id',
         'name',
         'thumbnail_url',
         'frame_url',
@@ -24,4 +24,9 @@ class Template extends Model
         'layout_data' => 'array',
         'is_active' => 'boolean',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

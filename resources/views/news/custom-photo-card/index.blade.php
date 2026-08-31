@@ -284,6 +284,7 @@
             uploadFrameUrl: "{{ route('custom-photo-card.upload-frame') }}",
             saveCardUrl: "{{ route('custom-photo-card.save') }}",
             csrfToken: "{{ csrf_token() }}",
+            userId: {{ Auth::id() ?? 0 }},
             initialWidth: 1080,
             initialHeight: 1080,
             newsData: @json($newsItem ? ['title' => $newsItem->title, 'image_url' => $newsItem->image] : null),

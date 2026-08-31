@@ -101,12 +101,53 @@
 
             {{-- Theme Selector & Layout Options --}}
             <div>
-                <label class="text-[10px] font-bold text-slate-500 block mb-1">🎨 কার্ড থিম ও কালার স্টাইল</label>
+                <label class="text-[10px] font-bold text-slate-500 block mb-1">🎨 কার্ড থিম ও কালার স্টাইল (৩৫টি প্রিসেট)</label>
                 <select id="quote-card-theme" onchange="onQuoteFieldChange('theme', this.value)" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none bg-slate-50 focus:bg-white focus:border-indigo-500">
-                    <option value="soft-blue" selected>🔵 সফট ব্লু গ্রেডিয়েন্ট (স্টার নিউজ স্টাইল)</option>
-                    <option value="clean-white">⚪ ক্লিন হোয়াইট (প্রথম আলো স্টাইল)</option>
-                    <option value="dark-elegant">⚫ ডার্ক এলিগ্যান্ট মোড (যমুনা/ইন্টারন্যাশনাল)</option>
-                    <option value="breaking-red">🔴 ব্রেকিং স্টেটমেন্ট (গাঢ় লাল থিম)</option>
+                    <optgroup label="⚪ ১. লাইট ও মিনিমাল থিম (Light & Clean)">
+                        <option value="clean-white">⚪ ক্লিন মিনিমাল হোয়াইট (Pure White)</option>
+                        <option value="soft-sky" selected>🔵 সফট স্কাই ব্লু (Soft Sky Blue)</option>
+                        <option value="warm-cream">📜 ওয়ার্ম ক্রিম নিউজপ্রিন্ট (Warm Cream)</option>
+                        <option value="mint-fresh">🍃 সফট মিন্ট গ্রিন (Mint Fresh)</option>
+                        <option value="lavender-soft">💜 সফট ল্যাভেন্ডার (Soft Lavender)</option>
+                        <option value="blush-rose">🌸 সফট ব্লাশ পিঙ্ক (Blush Rose)</option>
+                        <option value="silver-pearl">🔘 সিলভার পার্ল গ্রে (Silver Pearl)</option>
+                    </optgroup>
+                    <optgroup label="⚫ ২. ডার্ক ও মিডনাইট সিরিজ (Dark & Midnight)">
+                        <option value="dark-slate">⚫ ডার্ক স্লেট / মিডনাইট (Midnight Slate)</option>
+                        <option value="dark-navy">🌌 রয়্যাল নেভি ব্লু (Royal Deep Navy)</option>
+                        <option value="dark-emerald">🌲 ডিপ এমারেল্ড গ্রিন (Deep Emerald)</option>
+                        <option value="dark-burgundy">🍷 ডিপ বার্গান্ডি / ওয়াইন (Deep Burgundy)</option>
+                        <option value="dark-charcoal">🖤 চারকোল ও লাক্সারি গোল্ড (Charcoal Gold)</option>
+                        <option value="dark-obsidian">🌑 অবসিডিয়ান পিচ ব্ল্যাক (Obsidian Black)</option>
+                        <option value="dark-plum">🍇 ডিপ ডার্ক প্লাম (Deep Plum)</option>
+                        <option value="dark-teal">🦚 ডিপ ফরেস্ট টিল (Deep Forest Teal)</option>
+                    </optgroup>
+                    <optgroup label="🔥 ৩. বোল্ড, ব্রেকিং ও প্রাইম কালার (Bold & Breaking)">
+                        <option value="breaking-red">🔴 ব্রেকিং ক্রিমসন রেড (Crimson Red)</option>
+                        <option value="scarlet-fire">🏮 স্কারলেট ফায়ার রেড (Scarlet Fire)</option>
+                        <option value="royal-purple">🔮 রয়্যাল ভায়োলেট পার্পল (Royal Violet)</option>
+                        <option value="sunset-orange">🌅 সানসেট গোল্ডেন অরেঞ্জ (Sunset Orange)</option>
+                        <option value="amber-flame">⚡ আম্বার গোল্ডেন ফ্লেম (Amber Flame)</option>
+                        <option value="ocean-cyan">🌊 ডিপ ওশান সায়ান (Deep Ocean Cyan)</option>
+                        <option value="electric-blue">⚡ ইলেকট্রিক কোবাল্ট ব্লু (Electric Blue)</option>
+                    </optgroup>
+                    <optgroup label="🌈 ৪. আধুনিক গ্রেডিয়েন্ট ও মেটালিক (Modern Gradients)">
+                        <option value="aurora-borealis">🌌 অরোরা নর্দার্ন লাইটস (Aurora Teal-Purple)</option>
+                        <option value="cosmic-glow">🪐 কসমিক ব্লু-পার্পল গ্লো (Cosmic Glow)</option>
+                        <option value="cyber-neon">🧪 সাইবার নিয়ন লাইম (Cyber Neon Lime)</option>
+                        <option value="rose-gold">👑 লাক্সারি রোজ গোল্ড (Rose Gold Metallic)</option>
+                        <option value="bronze-copper">🪙 ক্লাসিক ব্রোঞ্জ ও কপার (Bronze Copper)</option>
+                        <option value="crimson-noir">🩸 ক্রিমসন টু ব্ল্যাক ফেড (Crimson Noir)</option>
+                        <option value="sapphire-glow">💎 স্যাফায়ার ব্লু গ্লো (Sapphire Glow)</option>
+                    </optgroup>
+                    <optgroup label="🍃 ৫. ন্যাচারাল ও আর্দি টোন (Earthy & Nature)">
+                        <option value="olive-moss">🫒 অলিভ ও মস গ্রিন (Olive Moss)</option>
+                        <option value="terracotta">🏺 টেরাকোটা ক্লে অরেঞ্জ (Terracotta Clay)</option>
+                        <option value="espresso-coffee">☕ ডিপ এসপ্রেসো ব্রাউন (Espresso Coffee)</option>
+                        <option value="desert-sand">🏜️ ডেজার্ট স্যান্ড গোল্ড (Desert Sand)</option>
+                        <option value="sage-green">🌿 ক্লাসিক সেজ গ্রিন (Sage Green)</option>
+                        <option value="caramel-mocha">🍮 ক্যারামেল মোকা টোন (Caramel Mocha)</option>
+                    </optgroup>
                 </select>
             </div>
 
@@ -128,6 +169,36 @@
                         <input type="checkbox" id="quote-card-flip-check" class="rounded accent-indigo-600">
                         <span>↔️ মুখ ঘোরান (Flip)</span>
                     </label>
+                </div>
+            </div>
+
+            {{-- Unique Textures & Dot Shadow Overlays --}}
+            <div class="border-t border-slate-100 pt-3 space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="text-[10px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                        <span>✨ ইউনিক ডট প্যাটার্ন ও ব্যাকগ্রাউন্ড টেক্সচার</span>
+                    </label>
+                    <button type="button" onclick="window.customStudio.applyCardTextureOverlay('none')" class="text-[9px] text-red-500 font-bold hover:underline">রিমুভ</button>
+                </div>
+                <div class="grid grid-cols-3 gap-1.5">
+                    <button type="button" onclick="window.customStudio.applyCardTextureOverlay('dot-grid')" class="py-1.5 px-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-400 rounded-xl text-[10px] font-bold text-slate-700 transition flex items-center justify-center gap-1 shadow-xs">
+                        <span>⠶ ডট গ্রিড</span>
+                    </button>
+                    <button type="button" onclick="window.customStudio.applyCardTextureOverlay('halftone-dots')" class="py-1.5 px-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-400 rounded-xl text-[10px] font-bold text-slate-700 transition flex items-center justify-center gap-1 shadow-xs">
+                        <span>🏁 হাফটোন</span>
+                    </button>
+                    <button type="button" onclick="window.customStudio.applyCardTextureOverlay('spotlight-glow')" class="py-1.5 px-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-400 rounded-xl text-[10px] font-bold text-slate-700 transition flex items-center justify-center gap-1 shadow-xs">
+                        <span>🔆 স্পটলাইট</span>
+                    </button>
+                    <button type="button" onclick="window.customStudio.applyCardTextureOverlay('vignette-shadow')" class="py-1.5 px-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-400 rounded-xl text-[10px] font-bold text-slate-700 transition flex items-center justify-center gap-1 shadow-xs">
+                        <span>🌫️ ভিনিয়েট</span>
+                    </button>
+                    <button type="button" onclick="window.customStudio.applyCardTextureOverlay('diagonal-mesh')" class="py-1.5 px-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-400 rounded-xl text-[10px] font-bold text-slate-700 transition flex items-center justify-center gap-1 shadow-xs">
+                        <span>📐 স্ট্রাইপস</span>
+                    </button>
+                    <button type="button" onclick="window.customStudio.addDecorativeDotCluster('top-right')" class="py-1.5 px-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-400 rounded-xl text-[10px] font-bold text-slate-700 transition flex items-center justify-center gap-1 shadow-xs">
+                        <span>➕ ডট প্যাচ</span>
+                    </button>
                 </div>
             </div>
 
@@ -702,6 +773,19 @@
                     </div>
                 </div>
 
+            </div>
+
+            {{-- Decorative Accents & Watermarks --}}
+            <div class="border-t border-slate-100 pt-3 space-y-2">
+                <label class="text-xs font-black text-slate-700 block">✨ ডেকোরেটিভ উপাদান ও অ্যাকসেন্ট</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="window.customStudio.addDecorativeDotCluster('top-right')" class="py-2 px-2.5 bg-slate-50 border border-slate-200 hover:border-indigo-500 rounded-xl text-xs font-bold text-slate-700 transition flex items-center justify-center gap-1.5 shadow-xs">
+                        <span>⠶ ডট ম্যাট্রিক্স প্যাচ</span>
+                    </button>
+                    <button type="button" onclick="window.customStudio.addHugeWatermarkQuoteMark()" class="py-2 px-2.5 bg-slate-50 border border-slate-200 hover:border-indigo-500 rounded-xl text-xs font-bold text-slate-700 transition flex items-center justify-center gap-1.5 shadow-xs">
+                        <span>❝ ওয়াটারমার্ক কোট</span>
+                    </button>
+                </div>
             </div>
 
         </div>
