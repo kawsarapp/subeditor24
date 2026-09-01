@@ -204,39 +204,58 @@ trait ScraperEnginesTrait
             } else {
                 Log::info("🌐 Calling Decodo (SmartProxy) Web Scraping API v2 for: $url");
 
-                $payload = json_encode([
+                $payloadData = [
                     'url'        => $url,
-                    'proxy_pool' => 'premium',
-                    'headless'   => 'html',
-                    'geo'        => 'Bangladesh'
-                ]);
+                    'target'     => 'universal',
+                    'headless'   => 'html'
+                ];
+                if (str_contains($url, '.bd') || str_contains($url, 'prothomalo.com') || str_contains($url, 'jamuna.tv') || str_contains($url, 'kalerkantho.com') || str_contains($url, 'somoynews.tv') || str_contains($url, 'samakal.com') || str_contains($url, 'dailyamardesh.com')) {
+                    $payloadData['geo'] = 'Bangladesh';
+                }
 
+                $payloadJson = json_encode($payloadData);
+
+                // 🔥 Stream Context with HTTP/1.1 to avoid OpenSSL unexpected EOF cURL errors
+                $streamOptions = [
+                    'http' => [
+                        'method'        => 'POST',
+                        'header'        => "Authorization: Basic " . $tokenValue . "\r\n" .
+                                           "Content-Type: application/json\r\n" .
+                                           "Accept: application/json\r\n",
+                        'content'       => $payloadJson,
+                        'timeout'       => 90,
+                        'ignore_errors' => true
+                    ],
+                    'ssl' => [
+                        'verify_peer'      => false,
+                        'verify_peer_name' => false,
+                    ]
+                ];
+
+                $context = stream_context_create($streamOptions);
+                $rawBody = @file_get_contents('https://scraper-api.smartproxy.com/v2/scrape', false, $context);
+
+                if ($rawBody) {
+                    $json = json_decode($rawBody, true);
+                    $html = $json['results'][0]['content'] ?? $json['results'][0]['html'] ?? $json['data']['html'] ?? null;
+                    if ($html && strlen($html) > 500) {
+                        Log::info("✅ Decodo Universal Scraping API Success. HTML length: " . strlen($html));
+                        return $html;
+                    }
+                }
+
+                // Fallback to Http client
                 $response = \Illuminate\Support\Facades\Http::withHeaders([
                     'Authorization' => 'Basic ' . $tokenValue,
                     'Content-Type'  => 'application/json',
                     'Accept'        => 'application/json'
-                ])->withBody($payload, 'application/json')
-                  ->timeout(120)
-                  ->post('https://scraper-api.decodo.com/v2/scrape');
-
-                if ($response->status() === 429) {
-                    Log::warning("⚠️ Decodo API 429 Rate Limit. Backing off 2s and retrying for: $url");
-                    sleep(2);
-                    $response = \Illuminate\Support\Facades\Http::withHeaders([
-                        'Authorization' => 'Basic ' . $tokenValue,
-                        'Content-Type'  => 'application/json',
-                        'Accept'        => 'application/json'
-                    ])->withBody($payload, 'application/json')
-                      ->timeout(120)
-                      ->post('https://scraper-api.decodo.com/v2/scrape');
-                }
+                ])->withBody($payloadJson, 'application/json')
+                  ->timeout(90)
+                  ->post('https://scraper-api.smartproxy.com/v2/scrape');
 
                 if ($response->successful()) {
                     $json = $response->json();
                     $html = $json['results'][0]['content'] ?? $json['results'][0]['html'] ?? $json['data']['html'] ?? null;
-                    if (!$html) {
-                        $html = $response->body(); // Fallback for direct HTML output
-                    }
                     if ($html && strlen($html) > 500) {
                         Log::info("✅ Decodo Universal Scraping API Success. HTML length: " . strlen($html));
                         return $html;
@@ -244,7 +263,7 @@ trait ScraperEnginesTrait
                 }
             }
 
-            Log::warning("⚠️ Universal Scraping API failed: " . $response->status() . " — " . substr($response->body(), 0, 500));
+            Log::warning("⚠️ Universal Scraping API failed for: $url");
         } catch (\Exception $e) {
             Log::warning("⚠️ Universal Scraping API exception: " . $e->getMessage());
         }

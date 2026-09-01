@@ -127,20 +127,21 @@ def extract_data(html, base_url):
     # ৩. স্ট্রিক্ট ইমেজ ফলব্যাক (Anti-Branding)
     if not image:
         bad_img_keywords = [
-            'logo', 'icon', 'avatar', '.svg', 'profile', '/ad-', 'banner', 'share_button', 'share-icon', 
-            'facebook', 'twitter', 'whatsapp', 'placeholder', 'default-image', 'default_image', 
-            'lazy', 'blank', 'spinner', 'thumbs', '300x250', 'branding', 'bg-', 'og-image', 'og_image'
+            'site_logo', 'site-logo', 'sitelogo', 'header-logo', 'footer-logo', 'icon', 'avatar', '.svg', 
+            'profile', '/ad-', 'banner', 'share_button', 'share-icon', 'facebook', 'twitter', 'whatsapp', 
+            'placeholder', 'default-image', 'default_image', 'lazy', 'blank', 'spinner', 'thumbs', 
+            '300x250', 'branding', 'og_image'
         ]
 
         og_img = soup.find('meta', property='og:image')
         tw_img = soup.find('meta', attrs={'name': 'twitter:image'})
         
-        if og_img and not any(x in og_img.get('content', '').lower() for x in bad_img_keywords):
+        if og_img and og_img.get('content') and not any(x in og_img.get('content', '').lower() for x in bad_img_keywords):
             image = og_img.get('content')
-        elif tw_img and not any(x in tw_img.get('content', '').lower() for x in bad_img_keywords):
+        elif tw_img and tw_img.get('content') and not any(x in tw_img.get('content', '').lower() for x in bad_img_keywords):
             image = tw_img.get('content')
         else:
-            main_area = soup.select_one('article, [itemprop="articleBody"], .post-content, .details-content, #content')
+            main_area = soup.select_one('.detailPage, .storyParagraphFigure, .artContent, .contentSec, #mainArea, .psContent, #contentbox, .articlebox, .artText, article, [itemprop="articleBody"], .post-content, .details-content, #content')
             target = main_area if main_area else soup
             
             for img in target.find_all('img'):
@@ -163,19 +164,18 @@ def extract_data(html, base_url):
         include_images=False, 
         include_comments=False, 
         favor_precision=True
-        # target_language removed: it caused partial extraction when language detection failed
     )
     
     # Fallback Mechanism
-    if not body_text:
-        if schema_body:
+    if not body_text or len(body_text.strip()) < 50:
+        if schema_body and len(schema_body.strip()) > 50:
             body_text = schema_body
         else:
             # শুধু নির্দিষ্ট কন্টেইনার থেকে প্যারাগ্রাফ নেবে
-            main_article = clean_soup.select_one('article, [itemprop="articleBody"], .article-details, .details-text, .post-content')
+            main_article = clean_soup.select_one('.detailPage, .storyParagraphFigure, .artContent, .contentSec, #mainArea, .psContent, #contentbox, .articlebox, .artText, article, [itemprop="articleBody"], .article-details, .details-text, .post-content')
             target_soup = main_article if main_article else clean_soup
             paragraphs = target_soup.find_all('p')
-            body_text = "\n\n".join([p.get_text(strip=True) for p in paragraphs if len(p.get_text(strip=True)) > 30])
+            body_text = "\n\n".join([p.get_text(strip=True) for p in paragraphs if len(p.get_text(strip=True)) > 20])
 
     # ৫. HTML ফরম্যাটিং ও গারবেজ ফিল্টার
     formatted_body = ""

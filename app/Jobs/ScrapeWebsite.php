@@ -616,6 +616,38 @@ class ScrapeWebsite implements ShouldQueue
             // Associated Press News
             return ['container' => 'a[href*="/article/"]', 'title' => 'h1, h2, h3, .Page-headline'];
         }
+        if (str_contains($url, 'thehindu.com')) {
+            // The Hindu
+            return ['container' => 'h3.title a, .title a, a[href*="/article"][href*=".ece"], a[href*=".ece"]', 'title' => 'h1, h2, h3, .title, span'];
+        }
+        if (str_contains($url, 'indianexpress.com')) {
+            // Indian Express
+            return ['container' => 'a[href*="/article/"]', 'title' => 'h1, h2, h3, .title, span'];
+        }
+        if (str_contains($url, 'indiatimes.com') || str_contains($url, 'timesofindia')) {
+            // Times of India / Economic Times
+            return ['container' => 'a[href*="/articleshow/"]', 'title' => 'h1, h2, h3, .title, span'];
+        }
+        if (str_contains($url, 'hindustantimes.com')) {
+            // Hindustan Times
+            return ['container' => 'a[href$=".html"][href*="-10"], .storyCard a, .newsCard a, .story-card a, .news-item a, h3 a, h2 a', 'title' => 'h1, h2, h3, .title, .heading'];
+        }
+        if (str_contains($url, 'livemint.com')) {
+            // Livemint
+            return ['container' => 'a[href$=".html"][href*="-11"], a[href$=".html"], .storyCard a, .headline a, h2 a, h3 a', 'title' => 'h1, h2, h3, .title, .heading'];
+        }
+        if (str_contains($url, 'telegraphindia.com')) {
+            // Telegraph India
+            return ['container' => 'a[href*="/cid/"]', 'title' => 'h1, h2, h3, .title, .heading'];
+        }
+        if (str_contains($url, 'japantimes.co.jp')) {
+            // Japan Times
+            return ['container' => 'article a, .article-list a, .tag-articles a, a[href*="/2026/"], a[href*="/2025/"]', 'title' => 'h1, h2, h3, .title, .heading, p, span'];
+        }
+        if (str_contains($url, 'thediplomat.com')) {
+            // The Diplomat
+            return ['container' => 'a[href*="/2026/"], a[href*="/2025/"], article a, .td-card a, .story-item a, h3 a, h2 a', 'title' => 'h1, h2, h3, .title, .heading, p, span'];
+        }
         return null;
     }
 

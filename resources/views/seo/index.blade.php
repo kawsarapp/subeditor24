@@ -1607,10 +1607,10 @@
             </div>
 
             <form action="{{ route('seo.google.redirect') }}" method="GET" class="space-y-3">
-                <input type="hidden" name="website_id" value="{{ $activeWebsite->id }}">
+                <input type="hidden" name="website_id" value="{{ $activeWebsite?->id }}">
                 <div>
                     <label class="block text-[11px] font-extrabold text-slate-700 uppercase mb-1">Target Website Domain:</label>
-                    <input type="text" readonly value="{{ $activeWebsite->domain }} (ID: #{{ $activeWebsite->id }})" class="w-full border border-slate-200 bg-slate-100 rounded-xl p-2.5 text-xs font-bold text-slate-800">
+                    <input type="text" readonly value="{{ $activeWebsite ? ($activeWebsite->domain . ' (ID: #' . $activeWebsite->id . ')') : 'No Website Connected' }}" class="w-full border border-slate-200 bg-slate-100 rounded-xl p-2.5 text-xs font-bold text-slate-800">
                 </div>
                 <div>
                     <label class="block text-[11px] font-extrabold text-slate-700 uppercase mb-1">Google OAuth Client ID (Optional / Saved in .env):</label>

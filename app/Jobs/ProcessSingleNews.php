@@ -139,7 +139,20 @@ class ProcessSingleNews implements ShouldQueue
             str_contains($imageUrl, 'bbci.co.uk') ||
             str_contains($imageUrl, 'cnn.com') ||
             str_contains($imageUrl, 'apnews.com') ||
-            str_contains($imageUrl, 'voanews.com')) {
+            str_contains($imageUrl, 'voanews.com') ||
+            str_contains($imageUrl, 'thehindu.com') ||
+            str_contains($imageUrl, 'thgim.com') ||
+            str_contains($imageUrl, 'indianexpress.com') ||
+            str_contains($imageUrl, 'indiatimes.com') ||
+            str_contains($imageUrl, 'toiimg.com') ||
+            str_contains($imageUrl, 'hindustantimes.com') ||
+            str_contains($imageUrl, 'ht-img') ||
+            str_contains($imageUrl, 'livemint.com') ||
+            str_contains($imageUrl, 'lm-img') ||
+            str_contains($imageUrl, 'etimg.com') ||
+            str_contains($imageUrl, 'telegraphindia.com') ||
+            str_contains($imageUrl, 'japantimes.co.jp') ||
+            str_contains($imageUrl, 'thediplomat.com')) {
             return $this->downloadImage($imageUrl, false); // Download only, no crop
         }
 
@@ -157,12 +170,26 @@ class ProcessSingleNews implements ShouldQueue
             // 🔥 Get Proxy to prevent server IP leak during image download
             $proxy = app(\App\Services\NewsScraperService::class)->getProxyConfig($this->userId, $url);
 
-            // 🚀 Fast Download using Laravel HTTP (Timeout 15s)
-            $httpRequest = Http::withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            $parsedHost = parse_url($url, PHP_URL_HOST);
+            $referer = $parsedHost ? ('https://' . $parsedHost . '/') : null;
+
+            $headers = [
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
                 'Accept' => 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-                'Accept-Language' => 'en-US,en;q=0.9,bn;q=0.8'
-            ])->withOptions(['verify' => false])->timeout(15);
+                'Accept-Language' => 'en-US,en;q=0.9,bn;q=0.8',
+                'sec-ch-ua' => '"Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"',
+                'sec-ch-ua-mobile' => '?0',
+                'sec-ch-ua-platform' => '"Windows"',
+                'sec-fetch-dest' => 'image',
+                'sec-fetch-mode' => 'no-cors',
+                'sec-fetch-site' => 'same-origin',
+            ];
+            if ($referer) {
+                $headers['Referer'] = $referer;
+            }
+
+            // 🚀 Fast Download using Laravel HTTP (Timeout 15s)
+            $httpRequest = Http::withHeaders($headers)->withOptions(['verify' => false])->timeout(15);
             
             if ($proxy) {
                 // withOptions merges with existing config
@@ -176,11 +203,7 @@ class ProcessSingleNews implements ShouldQueue
             // If the proxy download fails, we fallback to a Direct Server Download for the image only.
             if ($response->failed() && $proxy) {
                 Log::warning("⚠️ Proxy blocked by firewall/Cloudflare. Attempting Direct Server Download for: $url");
-                $directRequest = Http::withHeaders([
-                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-                    'Accept' => 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-                    'Accept-Language' => 'en-US,en;q=0.9,bn;q=0.8',
-                ])->withOptions(['verify' => false])->timeout(15);
+                $directRequest = Http::withHeaders($headers)->withOptions(['verify' => false])->timeout(15);
                 
                 $response = $directRequest->get($url);
             }

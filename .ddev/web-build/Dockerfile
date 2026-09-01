@@ -1,0 +1,1 @@
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-pip python3-requests python3-lxml && pip3 install --no-deps curl_cffi trafilatura beautifulsoup4 justext htmldate courlan dateparser tld soupsieve lxml-html-clean pycparser cffi babel python-dateutil pytz regex tzlocal six --break-system-packages
