@@ -93,7 +93,7 @@
                 </div>
                 <div class="flex justify-between">
                     <span>Scanned News Articles:</span>
-                    <span class="text-slate-900 font-extrabold">{{ $activeWebsite->pageAudits()->count() }} Articles</span>
+                    <span class="text-slate-900 font-extrabold">{{ $totalUrls ?? 0 }} Articles</span>
                 </div>
                 <div class="flex justify-between">
                     <span>GSC Property:</span>
@@ -264,7 +264,7 @@
         <p class="text-xs text-slate-600 mb-4 font-medium">যেসব সংবাদ বর্তমানে গুগলের সার্চ ফলাফলে ১, ২ এবং ৩ নম্বর পজিশনে থেকে <strong>{{ $activeWebsite->domain }}</strong> ওয়েবসাইটে সবচেয়ে বেশি ভিজিটর নিয়ে আসছে:</p>
 
         @php 
-            $topKeywords = $activeWebsite->keywordMetrics->filter(fn($k) => $k->avg_position <= 3);
+            $topKeywords = $activeWebsite ? $activeWebsite->keywordMetrics->filter(fn($k) => $k->avg_position <= 3) : collect();
             $totalTopClicks = $topKeywords->sum('clicks');
             $avgTopCtr = $topKeywords->count() > 0 ? number_format($topKeywords->avg('ctr'), 1) : '0.0';
         @endphp
@@ -540,17 +540,17 @@
             <div class="p-4 bg-sky-50 rounded-2xl border border-sky-200">
                 <span class="text-[10px] font-black text-sky-900 uppercase">Discover Readiness Score</span>
                 <p class="text-3xl font-black text-sky-700 mt-1">{{ $discoverScore }}%</p>
-                <span class="text-[10px] font-bold text-sky-600">{{ $discoverAudit['status'] }}</span>
+                <span class="text-[10px] font-bold text-sky-600">{{ $discoverAudit['status'] ?? 'Ready' }}</span>
             </div>
             <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200">
                 <span class="text-[10px] font-black text-emerald-900 uppercase">Image Spec & Meta Audit</span>
-                <p class="text-xl font-black text-emerald-700 mt-1">{{ $checks[0]['passed'] && $checks[1]['passed'] ? 'Passed (1200px + Tag)' : 'Needs Image Tag' }}</p>
+                <p class="text-xl font-black text-emerald-700 mt-1">{{ (!empty($checks[0]['passed']) && !empty($checks[1]['passed'])) ? 'Passed (1200px + Tag)' : 'Needs Image Tag' }}</p>
                 <span class="text-[10px] font-bold text-emerald-600">max-image-preview:large tag audited</span>
             </div>
             <div class="p-4 bg-purple-50 rounded-2xl border border-purple-200">
                 <span class="text-[10px] font-black text-purple-900 uppercase">Google News Sitemap & Schema</span>
-                <p class="text-xl font-black text-purple-700 mt-1">{{ $checks[2]['passed'] ? 'Active XML Sitemap' : 'Missing Sitemap' }}</p>
-                <span class="text-[10px] font-bold text-purple-600">{{ $checks[3]['passed'] ? 'NewsArticle JSON-LD Verified' : 'Standard Schema Active' }}</span>
+                <p class="text-xl font-black text-purple-700 mt-1">{{ !empty($checks[2]['passed']) ? 'Active XML Sitemap' : 'Missing Sitemap' }}</p>
+                <span class="text-[10px] font-bold text-purple-600">{{ !empty($checks[3]['passed']) ? 'NewsArticle JSON-LD Verified' : 'Standard Schema Active' }}</span>
             </div>
         </div>
 
@@ -563,7 +563,7 @@
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <input type="text" id="discoverInputTitle" value="{{ $firstAudit->title ?? 'কালিয়াকৈরে শিক্ষার মানোন্নয়নে ইউএনও এর পরিদর্শন' }}" placeholder="সংবাদের শিরোনাম লিখুন..." class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-400 w-full sm:w-72 focus:outline-none focus:border-amber-400 font-medium">
-                    <button onclick="generateDiscoverHeadlines('{{ $activeWebsite->id }}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shrink-0 shadow-md transition flex items-center gap-1">
+                    <button onclick="generateDiscoverHeadlines('{{ $activeWebsite?->id }}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shrink-0 shadow-md transition flex items-center gap-1">
                         <i class="fa-solid fa-bolt"></i> Generate
                     </button>
                 </div>
@@ -666,16 +666,7 @@
         </div>
 
         @php 
-            $brokenAudits = $activeWebsite->pageAudits->filter(function($a) {
-                if ($a->status_code >= 400) return true;
-                if (is_array($a->issues_found)) {
-                    foreach ($a->issues_found as $issue) {
-                        if (($issue['code'] ?? '') === 'broken_link') return true;
-                    }
-                }
-                return false;
-            });
-            $brokenCount = $brokenAudits->count();
+            $brokenCount = $brokenCount ?? 0;
         @endphp
 
         {{-- SUMMARY BADGES --}}
@@ -776,7 +767,7 @@
 
         {{-- PLATFORM TRAFFIC STAT CARDS --}}
         @php
-            $audits = $activeWebsite->pageAudits;
+            $audits = $activeWebsite ? $activeWebsite->pageAudits : collect();
             $hasAudits = $audits->count() > 0;
         @endphp
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
@@ -869,7 +860,7 @@
         </div>
 
         @php
-            $allAudits = $activeWebsite->pageAudits;
+            $allAudits = $activeWebsite ? $activeWebsite->pageAudits : collect();
             $criticalCount = 0;
             $warningCount = 0;
             $cleanCount = 0;
@@ -957,7 +948,7 @@
         <p class="text-xs text-slate-600 mb-4 font-medium">যেসব কিউওয়ার্ড বর্তমানে গুগলে ৪ থেকে ১৫ পজিশনে রয়েছে, সামান্য অপটিমাইজেশন করলেই সেগুলোর Top 3-এ যাওয়ার সম্ভাবনা সবচেয়ে বেশি:</p>
 
         @php 
-            $quickWins = $activeWebsite->keywordMetrics->filter(fn($k) => $k->avg_position >= 4 && $k->avg_position <= 15);
+            $quickWins = $activeWebsite ? $activeWebsite->keywordMetrics->filter(fn($k) => $k->avg_position >= 4 && $k->avg_position <= 15) : collect();
             $totalImpressionsPotential = $quickWins->sum('impressions');
         @endphp
 
@@ -1113,7 +1104,7 @@
         <p class="text-xs text-slate-600 mb-5 font-medium">গুগলের সাম্প্রতিক অ্যালগরিদম অনুযায়ী সাইটের গতি ও পারফরম্যান্স মেট্রিক্সের আসল ল্যাব পরিমাপের ডাটা:</p>
 
         @php 
-            $cwv = $activeWebsite->coreWebVitals->first(); 
+            $cwv = $activeWebsite?->coreWebVitals?->first(); 
             $lcp = $cwv ? $cwv->lcp_sec : null;
             $inp = $cwv ? $cwv->inp_ms : null;
             $cls = $cwv ? $cwv->cls_score : null;
@@ -1267,7 +1258,7 @@
 
         <div class="flex flex-col sm:flex-row gap-2 mb-6">
             <input type="text" id="competitorInputDomain" placeholder="prothomalo.com" value="prothomalo.com" class="border border-slate-300 rounded-xl p-2.5 text-xs font-mono w-full sm:w-72 focus:outline-none focus:border-indigo-600">
-            <button onclick="runCompetitorGap('{{ $activeWebsite->id }}')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-sm transition">
+            <button onclick="runCompetitorGap('{{ $activeWebsite?->id }}')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-sm transition">
                 🔍 Analyze Keyword Gap
             </button>
         </div>
@@ -1277,23 +1268,23 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl">
                     <span class="text-[10px] font-black text-indigo-900 uppercase">Target Domain</span>
-                    <p class="text-lg font-black text-indigo-700 mt-0.5 truncate">{{ $activeWebsite->domain }}</p>
-                    <span class="text-[10px] font-bold text-indigo-600">Health Score: {{ $activeWebsite->seo_health_score }}/100</span>
+                    <p class="text-lg font-black text-indigo-700 mt-0.5 truncate">{{ $activeWebsite?->domain }}</p>
+                    <span class="text-[10px] font-bold text-indigo-600">Health Score: {{ $activeWebsite?->seo_health_score ?? 100 }}/100</span>
                 </div>
                 <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl">
                     <span class="text-[10px] font-black text-rose-900 uppercase">Competitor Domain</span>
-                    <p class="text-lg font-black text-rose-700 mt-0.5 truncate">{{ $gapData['competitor_domain'] }}</p>
+                    <p class="text-lg font-black text-rose-700 mt-0.5 truncate">{{ $gapData['competitor_domain'] ?? 'prothomalo.com' }}</p>
                     <span class="text-[10px] font-bold text-rose-600">Market Leader</span>
                 </div>
                 <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
                     <span class="text-[10px] font-black text-emerald-900 uppercase">Keyword Gap Score</span>
-                    <p class="text-2xl font-black text-emerald-700 mt-0.5">{{ $gapData['gap_score'] }}%</p>
+                    <p class="text-2xl font-black text-emerald-700 mt-0.5">{{ $gapData['gap_score'] ?? 0 }}%</p>
                     <span class="text-[10px] font-bold text-emerald-600">High Growth Potential</span>
                 </div>
             </div>
 
             {{-- MISSING KEYWORDS TABLE --}}
-            <h4 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider mb-3">🔥 {{ $gapData['competitor_domain'] }} র‍্যাঙ্কিংয়ে এগিয়ে থাকা মিসিং কিউওয়ার্ডসমূহ:</h4>
+            <h4 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider mb-3">🔥 {{ $gapData['competitor_domain'] ?? 'প্রতিদ্বন্দ্বী ডোমেইন' }} র‍্যাঙ্কিংয়ে এগিয়ে থাকা মিসিং কিউওয়ার্ডসমূহ:</h4>
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left text-xs text-slate-700 border border-slate-200 rounded-2xl overflow-hidden">
                     <thead class="bg-slate-100 text-slate-800 uppercase text-[10px] font-black border-b border-slate-200">
@@ -1306,7 +1297,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium">
-                        @foreach($gapData['missing_keywords'] as $kw)
+                        @foreach(($gapData['missing_keywords'] ?? []) as $kw)
                         <tr class="hover:bg-slate-50 transition">
                             <td class="p-3 font-extrabold text-rose-700">• {{ $kw['keyword'] }}</td>
                             <td class="p-3 font-black text-slate-900">Rank #{{ $kw['competitor_pos'] }}</td>
@@ -1418,11 +1409,11 @@
                 <div class="space-y-2.5 text-xs font-medium text-slate-700">
                     <div class="flex justify-between items-center">
                         <span>Sitemap Link:</span> 
-                        <a href="{{ $activeWebsite->sitemap_url }}" target="_blank" class="font-mono text-indigo-600 font-bold hover:underline truncate max-w-[200px]">{{ $activeWebsite->sitemap_url }}</a>
+                        <a href="{{ $activeWebsite?->sitemap_url }}" target="_blank" class="font-mono text-indigo-600 font-bold hover:underline truncate max-w-[200px]">{{ $activeWebsite?->sitemap_url }}</a>
                     </div>
-                    <div class="flex justify-between"><span>Total News URLs Scanned:</span> <span class="font-extrabold text-slate-900">{{ $activeWebsite->pageAudits()->count() }} Articles</span></div>
-                    <div class="flex justify-between"><span>Indexed Pages:</span> <span class="font-black text-emerald-600">{{ $activeWebsite->pageAudits()->where('is_indexed', true)->count() }} Pages</span></div>
-                    <div class="flex justify-between"><span>Non-Indexed / Pending:</span> <span class="font-black text-rose-600">{{ $activeWebsite->pageAudits()->where('is_indexed', false)->count() }} Pages</span></div>
+                    <div class="flex justify-between"><span>Total News URLs Scanned:</span> <span class="font-extrabold text-slate-900">{{ $totalUrls ?? 0 }} Articles</span></div>
+                    <div class="flex justify-between"><span>Indexed Pages:</span> <span class="font-black text-emerald-600">{{ $indexedPagesCount ?? 0 }} Pages</span></div>
+                    <div class="flex justify-between"><span>Non-Indexed / Pending:</span> <span class="font-black text-rose-600">{{ $nonIndexedPagesCount ?? 0 }} Pages</span></div>
                 </div>
             </div>
 
@@ -1437,10 +1428,10 @@
                 <div class="space-y-2.5 text-xs font-medium text-slate-700">
                     <div class="flex justify-between items-center">
                         <span>Robots Link:</span> 
-                        <a href="{{ $activeWebsite->robots_txt_url }}" target="_blank" class="font-mono text-indigo-600 font-bold hover:underline truncate max-w-[200px]">{{ $activeWebsite->robots_txt_url }}</a>
+                        <a href="{{ $activeWebsite?->robots_txt_url }}" target="_blank" class="font-mono text-indigo-600 font-bold hover:underline truncate max-w-[200px]">{{ $activeWebsite?->robots_txt_url }}</a>
                     </div>
                     <div class="flex justify-between"><span>Googlebot Access:</span> <span class="font-bold text-emerald-600">Allowed for Public Pages ✅</span></div>
-                    <div class="flex justify-between"><span>Sitemap Declaration:</span> <span class="font-bold text-emerald-600">{{ !empty($activeWebsite->sitemap_url) ? 'Declared in Robots.txt ✅' : 'Missing Declaration ⚠️' }}</span></div>
+                    <div class="flex justify-between"><span>Sitemap Declaration:</span> <span class="font-bold text-emerald-600">{{ !empty($activeWebsite?->sitemap_url) ? 'Declared in Robots.txt ✅' : 'Missing Declaration ⚠️' }}</span></div>
                     <div class="flex justify-between"><span>Crawl Directive:</span> <span class="font-mono text-slate-600">User-agent: * (Disallow: /admin)</span></div>
                 </div>
             </div>
@@ -1776,8 +1767,8 @@ function openSchemaGeneratorModal(title) {
         "headline": title || "সংবাদ শিরোনাম",
         "publisher": {
             "@@type": "Organization",
-            "name": "{{ $activeWebsite->domain }}",
-            "url": "{{ $activeWebsite->target_url }}"
+            "name": "{{ $activeWebsite?->domain ?? '' }}",
+            "url": "{{ $activeWebsite?->target_url ?? '' }}"
         },
         "datePublished": new Date().toISOString()
     };
@@ -1867,7 +1858,7 @@ function triggerInstantIndexing(siteId, targetUrl) {
 }
 
 function applyInstantIndexingFilter() {
-    const siteId = document.getElementById('filterWebsiteId')?.value || '{{ $activeWebsite->id }}';
+    const siteId = document.getElementById('filterWebsiteId')?.value || '{{ $activeWebsite?->id ?? '' }}';
     const status = document.getElementById('filterStatus')?.value || 'all';
     const month = document.getElementById('filterMonth')?.value || '';
     const date = document.getElementById('filterDate')?.value || '';
@@ -1983,7 +1974,7 @@ function approveInternalLink(auditId) {
 }
 
 function generateSmartUtmLink() {
-    const url = document.getElementById('utmTargetUrl')?.value || '{{ $activeWebsite->target_url }}';
+    const url = document.getElementById('utmTargetUrl')?.value || '{{ $activeWebsite?->target_url ?? '' }}';
     const platform = document.getElementById('utmPlatform')?.value || 'facebook';
 
     fetch('/seo/generate-utm', {
@@ -2010,7 +2001,7 @@ function generateSmartUtmLink() {
 }
 
 function set301Redirect(auditId, brokenUrl) {
-    const destination = prompt(`🛠️ Configure 301 Permanent Redirect for broken URL:\n\n${brokenUrl}\n\nEnter destination redirect URL (or leave default for homepage):`, '{{ $activeWebsite->target_url }}');
+    const destination = prompt(`🛠️ Configure 301 Permanent Redirect for broken URL:\n\n${brokenUrl}\n\nEnter destination redirect URL (or leave default for homepage):`, '{{ $activeWebsite?->target_url ?? '' }}');
     if (destination) {
         alert(`✅ 301 Permanent Redirect Configured Successfully!\n\n• Broken URL: ${brokenUrl}\n• Redirect Target: ${destination}\n\nSearch engine crawlers and users will now be redirected seamlessly without 404 penalties!`);
     }
@@ -2197,7 +2188,7 @@ function changeAuditPage(type, direction) {
     if (nextPage < 1 || nextPage > auditTotalPages[type]) return;
 
     auditPages[type] = nextPage;
-    loadAuditTableData('{{ $activeWebsite->id ?? 0 }}', type, nextPage);
+    loadAuditTableData('{{ $activeWebsite?->id ?? 0 }}', type, nextPage);
 }
 
 function loadAuditTableData(siteId, type, page) {

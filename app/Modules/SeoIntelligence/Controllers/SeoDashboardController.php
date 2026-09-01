@@ -78,7 +78,13 @@ class SeoDashboardController extends Controller
         $maxPreviewPassed = 0;
         $ogImagePassed = 0;
 
+        $indexedPagesCount = 0;
+        $nonIndexedPagesCount = 0;
+
         if ($activeWebsite) {
+            $indexedPagesCount = $activeWebsite->pageAudits()->where('is_indexed', true)->count();
+            $nonIndexedPagesCount = $activeWebsite->pageAudits()->where('is_indexed', false)->count();
+
             $newsArticleCount = $activeWebsite->pageAudits()
                 ->where(function($q) {
                     $q->where('schema_detected', 'like', '%NewsArticle%')
@@ -99,7 +105,8 @@ class SeoDashboardController extends Controller
             'websites', 'activeWebsite', 'indexingLogs', 'indexingLogsPaginator',
             'linkSuggestions', 'decayArticles', 'missingTitleCount', 'missingDescCount',
             'discoverAudit', 'gapData', 'totalUrls', 'brokenCount', 'newsArticleCount',
-            'breadcrumbCount', 'organizationCount', 'maxPreviewPassed', 'ogImagePassed'
+            'breadcrumbCount', 'organizationCount', 'maxPreviewPassed', 'ogImagePassed',
+            'indexedPagesCount', 'nonIndexedPagesCount'
         ));
     }
 
