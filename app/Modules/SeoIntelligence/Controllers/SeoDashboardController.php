@@ -120,11 +120,21 @@ class SeoDashboardController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        $website = SeoWebsite::where('user_id', $user->id)->findOrFail($id);
+        $website = SeoWebsite::where('user_id', $user->id)->find($id);
+        if (!$website) {
+            return response()->json(['success' => false, 'message' => 'Website record not found.'], 404);
+        }
 
-        $result = $this->crawlerEngine->crawlWebsite($website);
-
-        return response()->json($result);
+        try {
+            $result = $this->crawlerEngine->crawlWebsite($website);
+            return response()->json($result);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("SEO Crawl failed: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Crawl failed: ' . $e->getMessage()
+            ], 200);
+        }
     }
 
     /**

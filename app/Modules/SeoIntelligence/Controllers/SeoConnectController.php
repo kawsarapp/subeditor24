@@ -169,7 +169,7 @@ class SeoConnectController extends Controller
                 }
             }
 
-            return redirect()->route('seo.index', ['website_id' => $website?->id])
+            return redirect()->route('seo.index', ['website_id' => $firstWebsite?->id])
                 ->with('success', '✅ Google Search Console & GA4 Account Authenticated Successfully!');
         } catch (\Exception $e) {
             return redirect()->route('seo.index')->with('error', '❌ Google Authentication Failed: ' . $e->getMessage());

@@ -2117,24 +2117,33 @@ function triggerSiteCrawl(siteId) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
         }
     })
-    .then(res => res.json())
+    .then(async res => {
+        let data;
+        try {
+            data = await res.json();
+        } catch (e) {
+            data = { success: false, message: 'Server returned HTTP ' + res.status + ' response.' };
+        }
+        return data;
+    })
     .then(data => {
         clearInterval(interval);
-        if (bar) bar.style.width = '100%';
-        if (percentText) percentText.innerText = '100%';
-        if (stepText) stepText.innerText = '✅ SEO Audit Complete! Health Score: ' + (data.health_score || 100) + '/100';
+        if (data.success) {
+            if (bar) bar.style.width = '100%';
+            if (percentText) percentText.innerText = '100%';
+            if (stepText) stepText.innerText = '✅ SEO Audit Complete! Health Score: ' + (data.health_score || 100) + '/100';
 
-        setTimeout(() => {
-            if (data.success) {
+            setTimeout(() => {
                 location.reload();
-            } else {
-                if (modal) modal.classList.add('hidden');
-                alert('❌ Crawl error: ' + data.message);
-            }
-        }, 800);
+            }, 800);
+        } else {
+            if (modal) modal.classList.add('hidden');
+            alert('❌ Crawl error: ' + (data.message || 'Unknown error occurred while crawling'));
+        }
     })
     .catch(err => {
         clearInterval(interval);

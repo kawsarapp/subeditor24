@@ -14,17 +14,19 @@ class WebsiteCrawlerEngine
      */
     public function crawlWebsite(SeoWebsite $website): array
     {
-        $targetUrl = rtrim($website->target_url, '/');
-        
-        // SSRF Safety Check: Ensure URL is public and valid
-        if (!$this->isPublicUrl($targetUrl)) {
-            throw new \Exception("Invalid target domain for crawling. Only public domains are allowed.");
-        }
-
         try {
+            $targetUrl = rtrim($website->target_url, '/');
+            
+            if (!filter_var($targetUrl, FILTER_VALIDATE_URL)) {
+                return [
+                    'success' => false,
+                    'message' => "Invalid target domain for crawling: {$targetUrl}"
+                ];
+            }
+
             $startTime = microtime(true);
-            $response = Http::timeout(10)->withHeaders([
-                'User-Agent' => 'Subeditor24-SeoBot/1.0 (+https://subeditor24.ddev.site)'
+            $response = Http::timeout(15)->withHeaders([
+                'User-Agent' => 'Subeditor24-SeoBot/1.0 (+https://subeditor24.com)'
             ])->get($targetUrl);
 
             $loadTimeMs = round((microtime(true) - $startTime) * 1000, 2);
