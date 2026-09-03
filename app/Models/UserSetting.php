@@ -61,6 +61,7 @@ class UserSetting extends Model
         'huggingface_api_key',
         'huggingface_model',
         'smartproxy_api_token',
+        'photoroom_api_key',
         'target_language',
     ];
 
@@ -89,6 +90,7 @@ class UserSetting extends Model
         'qwen_api_key' => 'encrypted',
         'huggingface_api_key' => 'encrypted',
         'smartproxy_api_token' => 'encrypted',
+        'photoroom_api_key' => 'encrypted',
     ];
 
     public const AVAILABLE_TEMPLATES = [

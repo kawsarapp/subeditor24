@@ -77,13 +77,14 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/admin/settings', [SettingsController::class, 'update'])->name('settings.update');
         Route::post('/admin/settings/upload-logo', [SettingsController::class, 'uploadLogo'])->name('settings.upload-logo');
         
-        // 🔥 কানেকশন টেস্টগুলো এখন সম্পূর্ণ নিরাপদ
         Route::prefix('settings/test')->name('settings.')->group(function () {
             Route::post('/facebook', [SettingsController::class, 'testFacebookConnection'])->name('test-facebook');
             Route::post('/telegram', [SettingsController::class, 'testTelegramConnection'])->name('test-telegram');
             Route::post('/twitter', [SettingsController::class, 'testTwitterConnection'])->name('test-twitter');
             Route::post('/wordpress', [SettingsController::class, 'testWordPressConnection'])->name('test-wordpress');
             Route::post('/custom-api', [SettingsController::class, 'testCustomApiConnection'])->name('test-custom-api');
+            Route::post('/photoroom', [SettingsController::class, 'testPhotoRoomConnection'])->name('test-photoroom');
+            Route::post('/decodo-proxy', [SettingsController::class, 'testDecodoProxyConnection'])->name('test-decodo-proxy');
         });
 
         // 🔥 Multi-Facebook Page Routes

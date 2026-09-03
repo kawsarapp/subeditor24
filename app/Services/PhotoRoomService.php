@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\UserSetting;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
@@ -9,14 +11,21 @@ use Illuminate\Support\Str;
 
 class PhotoRoomService
 {
-    protected string $apiKey;
+    protected ?string $apiKey;
     protected string $apiUrl = 'https://image-api.photoroom.com/v2/edit';
     protected string $fallbackUrl = 'https://sdk.photoroom.com/v1/segment';
     protected string $outputDir;
 
-    public function __construct()
+    public function __construct(?int $userId = null)
     {
-        $this->apiKey = config('services.photoroom.api_key', env('PHOTOROOM_API_KEY', 'sk_pr_default_a91d0124ce87d1d539d31255baa867e66adf5884'));
+        $targetUserId = $userId ?? Auth::id();
+        
+        // 1. Fetch key from database (UserSetting with Super Admin fallback)
+        $dbKey = UserSetting::getSettingWithFallback($targetUserId, 'photoroom_api_key');
+        
+        // 2. Fallback to config / .env
+        $this->apiKey = $dbKey ?: config('services.photoroom.api_key', env('PHOTOROOM_API_KEY'));
+        
         $this->outputDir = public_path('uploads/cutouts');
 
         if (!File::exists($this->outputDir)) {
@@ -41,7 +50,6 @@ class PhotoRoomService
         }
 
         try {
-            $tempFilePath = null;
             $fileContent = null;
             $fileName = 'image.png';
 
@@ -87,12 +95,12 @@ class PhotoRoomService
 
             Log::info("🚀 PhotoRoom: Sending request to API (Size: " . strlen($fileContent) . " bytes)");
 
-            // Attempt 1: Call v2 edit endpoint
+            // Attempt 1: Call v2 edit endpoint with imageFile
             $response = Http::withHeaders([
                 'x-api-key' => $this->apiKey,
                 'Accept' => 'image/png, application/json',
             ])->timeout(60)
-              ->attach('image_file', $fileContent, $fileName)
+              ->attach('imageFile', $fileContent, $fileName)
               ->post($this->apiUrl);
 
             // Attempt 2: Fallback to v1 segment if v2 returns error
@@ -128,10 +136,13 @@ class PhotoRoomService
             $errorMessage = 'PhotoRoom API error (' . $response->status() . '): ' . $response->body();
             Log::error("❌ " . $errorMessage);
 
+            $errorJson = $response->json();
+            $msg = $errorJson['error']['message'] ?? ($errorJson['message'] ?? $response->body());
+
             return [
                 'success' => false,
                 'url' => null,
-                'error' => 'PhotoRoom API Error: ' . ($response->json('message') ?? $response->body())
+                'error' => 'PhotoRoom API Error: ' . $msg
             ];
 
         } catch (\Exception $e) {
@@ -140,6 +151,63 @@ class PhotoRoomService
                 'success' => false,
                 'url' => null,
                 'error' => 'Exception during background removal: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Test PhotoRoom API Connection
+     *
+     * @param string|null $customKey
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public function testConnection(?string $customKey = null): array
+    {
+        $keyToTest = $customKey ?: $this->apiKey;
+
+        if (empty($keyToTest)) {
+            return [
+                'success' => false,
+                'message' => 'PhotoRoom API Key প্রদান করা হয়নি।'
+            ];
+        }
+
+        try {
+            $tinyPng = base64_decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAA=");
+
+            $response = Http::withHeaders([
+                'x-api-key' => $keyToTest,
+                'Accept'    => 'image/png, application/json',
+            ])->timeout(15)
+              ->attach('imageFile', $tinyPng, 'test.png')
+              ->post($this->apiUrl);
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'message' => "✅ PhotoRoom API কানেকশন সফল! ব্যাকগ্রাউন্ড রিমুভাল সার্ভিস সম্পূর্ণ সক্রিয়।"
+                ];
+            }
+
+            if ($response->status() === 401 || $response->status() === 403) {
+                return [
+                    'success' => false,
+                    'message' => "❌ অথেনটিকেশন ফেইল্ড (HTTP {$response->status()})! PhotoRoom API Key ভুল বা ইনভ্যালিড।"
+                ];
+            }
+
+            $err = $response->json();
+            $detail = $err['error']['message'] ?? ($err['message'] ?? 'Status ' . $response->status());
+
+            return [
+                'success' => false,
+                'message' => "❌ PhotoRoom কানেকশন ব্যর্থ: " . $detail
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => '❌ কানেকশন এরর: ' . $e->getMessage()
             ];
         }
     }
