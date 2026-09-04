@@ -386,13 +386,17 @@
         {{-- ========================================================= --}}
         <div id="panel-image" class="studio-panel space-y-5 hidden">
             
-            {{-- Upload Extra Image --}}
-            <div>
-                <label class="w-full cursor-pointer bg-slate-800 text-white p-3 rounded-2xl shadow-sm text-xs font-black hover:bg-black transition-all flex items-center justify-center gap-2">
+            {{-- Upload or Replace Image --}}
+            <div class="grid grid-cols-2 gap-2">
+                <label class="cursor-pointer bg-slate-800 text-white p-2.5 rounded-2xl shadow-sm text-xs font-bold hover:bg-black transition-all flex items-center justify-center gap-1.5 text-center">
                     <input type="file" accept="image/*" onchange="window.customStudio.addImageFromFile(this)" class="hidden">
-                    <i class="fa-solid fa-plus-circle text-sm"></i>
-                    <span>নতুন ছবি আপলোড করুন</span>
+                    <i class="fa-solid fa-plus-circle text-xs"></i>
+                    <span>+ ছবি যোগ</span>
                 </label>
+                <button type="button" onclick="window.customStudio.triggerReplaceActiveImage()" class="bg-indigo-50 border border-indigo-200 text-indigo-700 p-2.5 rounded-2xl shadow-xs text-xs font-bold hover:bg-indigo-100 transition-all flex items-center justify-center gap-1.5 text-center" title="সিলেক্ট করা ছবিটি নতুন ছবি দিয়ে পরিবর্তন করুন">
+                    <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                    <span>🔄 ছবি পরিবর্তন</span>
+                </button>
             </div>
 
             {{-- Prominent White-Label Background Remover Button --}}
@@ -487,6 +491,68 @@
                         <span id="opacity-val">100%</span>
                     </label>
                     <input type="range" id="image-opacity-slider" min="0.1" max="1" step="0.05" value="1" oninput="changeActiveOpacity(this.value)" class="w-full accent-indigo-600">
+                </div>
+
+                {{-- Photo Color Filter Presets --}}
+                <div class="border-t border-slate-100 pt-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-black text-slate-700">🎚️ ফটো কালার ফিল্টার (Filters)</label>
+                        <button type="button" onclick="window.customStudio.applyActiveImagePreset('reset')" class="text-[10px] text-indigo-600 font-bold hover:underline">রিসেট</button>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1.5">
+                        <button type="button" onclick="window.customStudio.applyActiveImagePreset('bw')" class="py-1.5 px-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-[10px] font-bold text-center transition shadow-2xs">⚫ B&W</button>
+                        <button type="button" onclick="window.customStudio.applyActiveImagePreset('vintage')" class="py-1.5 px-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl text-[10px] font-bold text-center transition shadow-2xs">🎞️ ভিন্টেজ</button>
+                        <button type="button" onclick="window.customStudio.applyActiveImagePreset('vibrant')" class="py-1.5 px-1 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded-xl text-[10px] font-bold text-center transition shadow-2xs">✨ ভাইব্রেন্ট</button>
+                        <button type="button" onclick="window.customStudio.applyActiveImagePreset('cool')" class="py-1.5 px-1 bg-sky-50 hover:bg-sky-100 text-sky-800 rounded-xl text-[10px] font-bold text-center transition shadow-2xs">🧊 কোল্ড</button>
+                    </div>
+
+                    {{-- Manual Filter Sliders --}}
+                    <div class="space-y-2 pt-1">
+                        <div>
+                            <div class="flex justify-between text-[9px] font-bold text-slate-400 mb-0.5">
+                                <span>ব্রাইটনেস (Brightness)</span>
+                            </div>
+                            <input type="range" id="filter-brightness-slider" min="-0.5" max="0.5" step="0.02" value="0" 
+                                oninput="window.customStudio.applyActiveImageFilter('brightness', this.value)" class="w-full accent-indigo-600">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[9px] font-bold text-slate-400 mb-0.5">
+                                <span>কনট্রাস্ট (Contrast)</span>
+                            </div>
+                            <input type="range" id="filter-contrast-slider" min="-0.5" max="0.5" step="0.02" value="0" 
+                                oninput="window.customStudio.applyActiveImageFilter('contrast', this.value)" class="w-full accent-indigo-600">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[9px] font-bold text-slate-400 mb-0.5">
+                                <span>স্যাচুরেশন (Saturation)</span>
+                            </div>
+                            <input type="range" id="filter-saturation-slider" min="-1" max="1" step="0.05" value="0" 
+                                oninput="window.customStudio.applyActiveImageFilter('saturation', this.value)" class="w-full accent-indigo-600">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[9px] font-bold text-slate-400 mb-0.5">
+                                <span>ব্লার / ঝাপসা (Blur)</span>
+                            </div>
+                            <input type="range" id="filter-blur-slider" min="0" max="0.8" step="0.05" value="0" 
+                                oninput="window.customStudio.applyActiveImageFilter('blur', this.value)" class="w-full accent-indigo-600">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Brand Logo / Watermark 1-Click Stamper --}}
+                <div class="border-t border-slate-100 pt-3 space-y-2">
+                    <label class="text-xs font-black text-slate-700 block">🏷️ ব্র্যান্ড লোগো ও ওয়াটারমার্ক স্ট্যাম্প</label>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button type="button" onclick="window.customStudio.applyBrandLogoStamp('top-left')" class="py-2 px-1.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-400 rounded-xl text-[10px] font-bold text-slate-700 transition flex items-center justify-center gap-1 shadow-2xs">
+                            <span>↖️ টপ-লেফট</span>
+                        </button>
+                        <button type="button" onclick="window.customStudio.applyBrandLogoStamp('top-right')" class="py-2 px-1.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-400 rounded-xl text-[10px] font-bold text-slate-700 transition flex items-center justify-center gap-1 shadow-2xs">
+                            <span>↗️ টপ-রাইট</span>
+                        </button>
+                        <button type="button" onclick="window.customStudio.applyBrandLogoStamp('bottom-right')" class="py-2 px-1.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-400 rounded-xl text-[10px] font-bold text-slate-700 transition flex items-center justify-center gap-1 shadow-2xs">
+                            <span>↘️ ওয়াটারমার্ক</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -677,10 +743,31 @@
         {{-- ========================================================= --}}
         <div id="panel-elements" class="studio-panel space-y-5 hidden">
             
-            {{-- News Badges --}}
+            {{-- News Ribbons & Special Banners --}}
             <div>
-                <label class="text-xs font-black text-slate-700 block mb-2">🔴 সংবাদ ব্যাজসমূহ (1-Click Badges)</label>
+                <label class="text-xs font-black text-slate-700 block mb-2">🎀 এডিটরিয়াল ফিতা ও ব্যানার (News Ribbons)</label>
                 <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="window.customStudio.addNewsRibbon('breaking-ribbon')" class="py-2.5 px-2 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl text-xs font-black hover:from-red-700 hover:to-rose-700 transition shadow-sm text-center">
+                        🔴 ব্রেকিং ফিতা
+                    </button>
+                    <button type="button" onclick="window.customStudio.addNewsRibbon('exclusive-gold')" class="py-2.5 px-2 bg-gradient-to-r from-amber-600 to-yellow-600 text-white rounded-xl text-xs font-black hover:from-amber-700 hover:to-yellow-700 transition shadow-sm text-center">
+                        ⚡ বিশেষ ব্যানার
+                    </button>
+                </div>
+            </div>
+
+            {{-- News Badges & Verified Stickers --}}
+            <div class="border-t border-slate-100 pt-3">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-black text-slate-700">🔴 সংবাদ ব্যাজ ও স্টিকার</label>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="window.customStudio.addVerifiedBadge()" class="py-2 px-2.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs">
+                        <span>✅ ভেরিফাইড টিক</span>
+                    </button>
+                    <button type="button" onclick="window.customStudio.addLocationBadge('ঢাকা')" class="py-2 px-2.5 bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs">
+                        <span>📍 স্পট লোকেশন</span>
+                    </button>
                     <button type="button" onclick="window.customStudio.addBadge('ব্রেকিং নিউজ', '#dc2626', '#ffffff')" class="py-2 px-2.5 bg-red-600 text-white rounded-xl text-xs font-black hover:bg-red-700 transition shadow-sm text-center">
                         🔴 ব্রেকিং নিউজ
                     </button>
@@ -692,12 +779,6 @@
                     </button>
                     <button type="button" onclick="window.customStudio.addBadge('সরাসরি', '#059669', '#ffffff')" class="py-2 px-2.5 bg-emerald-600 text-white rounded-xl text-xs font-black hover:bg-emerald-700 transition shadow-sm text-center">
                         🎥 সরাসরি
-                    </button>
-                    <button type="button" onclick="window.customStudio.addBadge('শোক সংবাদ', '#000000', '#ffffff')" class="py-2 px-2.5 bg-black text-white rounded-xl text-xs font-black hover:bg-slate-900 transition shadow-sm text-center">
-                        🖤 শোক সংবাদ
-                    </button>
-                    <button type="button" onclick="window.customStudio.addBadge('খেলাধুলা', '#d97706', '#ffffff')" class="py-2 px-2.5 bg-amber-600 text-white rounded-xl text-xs font-black hover:bg-amber-700 transition shadow-sm text-center">
-                        ⚽ খেলাধুলা
                     </button>
                 </div>
             </div>

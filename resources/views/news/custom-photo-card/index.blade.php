@@ -71,6 +71,22 @@
                 <span class="hidden sm:inline">সেভ টেমপ্লেট</span>
             </button>
 
+            @if(isset($facebookPages) && count($facebookPages) > 0)
+            {{-- Direct Facebook Publish Button --}}
+            <button type="button" onclick="openDirectPublishModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-sm" title="সরাসরি ফেসবুক পেজে পোস্ট করুন">
+                <i class="fa-brands fa-facebook"></i>
+                <span class="hidden sm:inline">ফেসবুক পোস্ট</span>
+            </button>
+            @endif
+
+            @if(isset($newsItem) && $newsItem)
+            {{-- Attach as News Featured Image --}}
+            <button type="button" onclick="window.customStudio.attachToNewsItem({{ $newsItem->id }})" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-sm" title="বর্তমান কার্ডটি নিউজের ফিচার্ড ইমেজ হিসেবে সেট করুন">
+                <i class="fa-solid fa-newspaper"></i>
+                <span class="hidden sm:inline">নিউজে সেট</span>
+            </button>
+            @endif
+
             {{-- 1-Click Copy Image --}}
             <button type="button" onclick="window.customStudio.copyToClipboard()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-xs border border-slate-200">
                 <i class="fa-regular fa-copy"></i>
@@ -147,6 +163,13 @@
                     <span>Background Remove</span>
                 </button>
 
+                {{-- Replace Image Button --}}
+                <button type="button" id="floating-replace-img-btn" onclick="window.customStudio.triggerReplaceActiveImage()" 
+                    class="px-2.5 py-1 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-black transition flex items-center gap-1 shadow-xs" title="বর্তমান ছবিটি নতুন ছবি দিয়ে পরিবর্তন করুন">
+                    <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+                    <span>ছবি পরিবর্তন</span>
+                </button>
+
                 {{-- Text Quick Font --}}
                 <select id="floating-font-select" onchange="changeActiveFont(this.value)" class="text-xs font-bold text-slate-700 border border-slate-200 rounded-lg px-2 py-1 outline-none bg-slate-50">
                     <option value="'SolaimanLipi'">SolaimanLipi</option>
@@ -198,6 +221,9 @@
                     <button type="button" onclick="window.customStudio.duplicateActive()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-between transition">
                         <span class="flex items-center gap-2"><i class="fa-regular fa-copy w-4 text-center"></i> <span>ডুপ্লিকেট</span></span>
                         <span class="text-[10px] text-slate-400 font-normal">Ctrl+D</span>
+                    </button>
+                    <button type="button" id="context-replace-btn" onclick="window.customStudio.triggerReplaceActiveImage()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2 transition">
+                        <i class="fa-solid fa-arrows-rotate w-4 text-center text-indigo-500"></i> <span>ছবি পরিবর্তন (Replace)</span>
                     </button>
                     <button type="button" id="context-bg-remove-btn" onclick="window.customStudio.removeBackgroundActive()" class="w-full px-3 py-1.5 text-left hover:bg-violet-50 hover:text-violet-600 flex items-center gap-2 transition">
                         <i class="fa-solid fa-scissors w-4 text-center text-violet-500"></i> <span>Background Remove</span>
@@ -268,6 +294,51 @@
         </div>
     </div>
 
+    {{-- Direct Facebook Publish Modal --}}
+    <div id="direct-publish-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-5 space-y-4 border border-slate-100">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-black text-slate-800 flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-sm">
+                        <i class="fa-brands fa-facebook"></i>
+                    </span>
+                    <span>সরাসরি ফেসবুক পেজে পোস্ট করুন</span>
+                </h3>
+                <button type="button" onclick="closeDirectPublishModal()" class="text-slate-400 hover:text-slate-700 text-lg">✕</button>
+            </div>
+
+            <p class="text-xs text-slate-500 leading-relaxed">
+                বর্তমান ফটো কার্ডটি আপনার নির্বাচিত ফেসবুক পেজে সরাসরি ফটো পোস্ট হিসেবে প্রকাশিত হবে।
+            </p>
+
+            <div>
+                <label class="text-xs font-bold text-slate-700 block mb-1.5">ফেসবুক পেজ সিলেক্ট করুন *</label>
+                <select id="direct-publish-page-select" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-blue-500 bg-slate-50">
+                    @if(isset($facebookPages))
+                        @foreach($facebookPages as $page)
+                            <option value="{{ $page->id }}">{{ $page->page_name }}</option>
+                        @endforeach
+                    @endif
+                </select>
+            </div>
+
+            <div>
+                <label class="text-xs font-bold text-slate-700 block mb-1.5">পোস্ট ক্যাপশন (ঐচ্ছিক)</label>
+                <textarea id="direct-publish-caption-input" rows="3" placeholder="পোস্টের সাথে যে বার্তা দিতে চান..." class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 outline-none focus:border-blue-500 bg-slate-50"></textarea>
+            </div>
+
+            <div class="flex items-center gap-2 pt-2">
+                <button type="button" onclick="closeDirectPublishModal()" class="flex-1 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs rounded-xl transition">
+                    বাতিল
+                </button>
+                <button type="button" onclick="confirmDirectPublishFacebook()" class="flex-1 py-2.5 bg-blue-600 text-white hover:bg-blue-700 font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>এখনই পোস্ট করুন</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 {{-- Editor Engine Script --}}
@@ -283,13 +354,33 @@
             removeBgUrl: "{{ route('custom-photo-card.remove-bg') }}",
             uploadFrameUrl: "{{ route('custom-photo-card.upload-frame') }}",
             saveCardUrl: "{{ route('custom-photo-card.save') }}",
+            publishFacebookUrl: "{{ route('custom-photo-card.publish-facebook') }}",
+            attachNewsUrl: "{{ route('custom-photo-card.attach-news') }}",
             csrfToken: "{{ csrf_token() }}",
             userId: {{ Auth::id() ?? 0 }},
+            userBrandLogo: "{{ $userBrandLogo ? asset($userBrandLogo) : '' }}",
             initialWidth: 1080,
             initialHeight: 1080,
             newsData: @json($newsItem ? ['title' => $newsItem->title, 'image_url' => $newsItem->image] : null),
         });
     });
+
+    // Facebook Modal Helpers
+    function openDirectPublishModal() {
+        const modal = document.getElementById('direct-publish-modal');
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeDirectPublishModal() {
+        const modal = document.getElementById('direct-publish-modal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    function confirmDirectPublishFacebook() {
+        const pageId = document.getElementById('direct-publish-page-select')?.value;
+        const caption = document.getElementById('direct-publish-caption-input')?.value;
+        window.customStudio.publishToFacebook(pageId, caption);
+    }
 
     // Tab Switching
     function switchStudioTab(tabKey) {

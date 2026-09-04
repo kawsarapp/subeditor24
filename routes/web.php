@@ -186,6 +186,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/save', 'saveCard')->name('save');
         Route::post('/save-template', 'saveTemplate')->name('save-template');
         Route::delete('/delete-template/{id}', 'deleteTemplate')->name('delete-template');
+        Route::post('/publish-facebook', 'publishToFacebook')->name('publish-facebook');
+        Route::post('/attach-news', 'attachToNews')->name('attach-news');
     });
 });
 

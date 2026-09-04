@@ -67,6 +67,8 @@
             this.setupCanvasEvents();
             this.setupSnappingGuides();
             this.setupKeyboardShortcuts();
+            this.setupClipboardPaste();
+            this.setupDragAndDrop();
             this.setupContextMenu();
             this.setupFloatingToolbarDrag();
 
@@ -2102,6 +2104,11 @@
                 bgRemoveBtn.style.display = isImage ? 'inline-flex' : 'none';
             }
 
+            const replaceImgBtn = document.getElementById('floating-replace-img-btn');
+            if (replaceImgBtn) {
+                replaceImgBtn.style.display = isImage ? 'inline-flex' : 'none';
+            }
+
             const fontSelect = document.getElementById('floating-font-select');
             if (fontSelect) {
                 fontSelect.style.display = isText ? 'inline-flex' : 'none';
@@ -2191,9 +2198,14 @@
                         contextMenu.style.left = x + 'px';
                         contextMenu.classList.remove('hidden');
 
+                        const isImage = (active.type === 'image');
                         const bgBtn = document.getElementById('context-bg-remove-btn');
                         if (bgBtn) {
-                            bgBtn.style.display = (active.type === 'image') ? 'flex' : 'none';
+                            bgBtn.style.display = isImage ? 'flex' : 'none';
+                        }
+                        const replaceBtn = document.getElementById('context-replace-btn');
+                        if (replaceBtn) {
+                            replaceBtn.style.display = isImage ? 'flex' : 'none';
                         }
                     }
                 } else {
@@ -2204,6 +2216,182 @@
             document.addEventListener('click', () => {
                 if (contextMenu) contextMenu.classList.add('hidden');
             });
+        }
+
+        /**
+         * ====================================================================
+         * 📋 CLIPBOARD PASTE (Ctrl+V) & DRAG-AND-DROP IMAGE HANDLERS
+         * ====================================================================
+         */
+        setupClipboardPaste() {
+            window.addEventListener('paste', async (e) => {
+                // If user is currently typing inside an input/textarea, allow default text paste
+                if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+                
+                const active = this.canvas.getActiveObject();
+                if (active && active.isEditing) return; // In fabric text editing mode
+
+                const items = e.clipboardData?.items;
+                if (!items || items.length === 0) return;
+
+                let imageFound = false;
+
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        imageFound = true;
+                        e.preventDefault();
+
+                        const blob = items[i].getAsFile();
+                        if (!blob) continue;
+
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const dataUrl = event.target.result;
+                            
+                            // If an image is currently active on the canvas, replace it!
+                            if (active && active.type === 'image') {
+                                this.replaceImageObject(active, dataUrl);
+                            } else {
+                                this.addImageFromUrl(dataUrl);
+                            }
+                            this.showNotification("success", "📋 ক্লিপবোর্ড থেকে ছবি পেস্ট করা হয়েছে!");
+                        };
+                        reader.readAsDataURL(blob);
+                        break;
+                    }
+                }
+
+                // If text was pasted and no image found
+                if (!imageFound) {
+                    const text = e.clipboardData.getData('text');
+                    if (text && text.trim()) {
+                        e.preventDefault();
+                        this.addText(text.trim());
+                        this.showNotification("success", "📋 টেক্সট পেস্ট করা হয়েছে!");
+                    }
+                }
+            });
+        }
+
+        setupDragAndDrop() {
+            const container = document.getElementById(this.config.workspaceContainerId);
+            if (!container) return;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                container.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            container.addEventListener('dragover', () => {
+                container.classList.add('ring-4', 'ring-indigo-500/40');
+            });
+
+            container.addEventListener('dragleave', () => {
+                container.classList.remove('ring-4', 'ring-indigo-500/40');
+            });
+
+            container.addEventListener('drop', (e) => {
+                container.classList.remove('ring-4', 'ring-indigo-500/40');
+                const dt = e.dataTransfer;
+                const files = dt?.files;
+
+                if (files && files.length > 0) {
+                    const file = files[0];
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const dataUrl = event.target.result;
+                            const active = this.canvas.getActiveObject();
+                            if (active && active.type === 'image') {
+                                this.replaceImageObject(active, dataUrl);
+                            } else {
+                                this.addImageFromUrl(dataUrl);
+                            }
+                            this.showNotification("success", "🖼️ ড্রপ করা ছবি সফলভাবে যুক্ত হয়েছে!");
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+        }
+
+        replaceImageObject(targetImgObj, newSourceUrl) {
+            if (!targetImgObj || !newSourceUrl) return;
+
+            this.showLoader("ছবি পরিবর্তন (Replace) হচ্ছে...");
+
+            const prevProps = {
+                left: targetImgObj.left,
+                top: targetImgObj.top,
+                scaleX: targetImgObj.scaleX,
+                scaleY: targetImgObj.scaleY,
+                angle: targetImgObj.angle,
+                flipX: targetImgObj.flipX,
+                flipY: targetImgObj.flipY,
+                originX: targetImgObj.originX || 'center',
+                originY: targetImgObj.originY || 'center',
+                customName: targetImgObj.customName || 'ছবি',
+                isQuotePortrait: targetImgObj.isQuotePortrait || false,
+                isHeadline: targetImgObj.isHeadline || false,
+            };
+
+            const zIndex = this.canvas.getObjects().indexOf(targetImgObj);
+
+            fabric.Image.fromURL(newSourceUrl, (newImg) => {
+                // Adjust scale to match previous target bounding size nicely if aspect ratio differs
+                const prevTargetWidth = (targetImgObj.width || 100) * (targetImgObj.scaleX || 1);
+                const prevTargetHeight = (targetImgObj.height || 100) * (targetImgObj.scaleY || 1);
+
+                const newScale = Math.min(
+                    prevTargetWidth / newImg.width,
+                    prevTargetHeight / newImg.height
+                );
+
+                newImg.set(Object.assign({}, prevProps, {
+                    scaleX: newScale || prevProps.scaleX,
+                    scaleY: newScale || prevProps.scaleY,
+                    cornerColor: '#ffffff',
+                    cornerStrokeColor: '#4f46e5',
+                    borderColor: '#6366f1',
+                    cornerSize: 13,
+                    cornerStyle: 'circle',
+                    padding: 8,
+                }));
+
+                this.canvas.remove(targetImgObj);
+                this.canvas.insertAt(newImg, zIndex);
+                this.canvas.setActiveObject(newImg);
+                this.canvas.renderAll();
+
+                this.hideLoader();
+                this.saveState();
+                this.renderLayersList();
+                this.showNotification("success", "ছবি সফলভাবে প্রতিস্থাপন (Replace) করা হয়েছে!");
+            }, { crossOrigin: 'anonymous' });
+        }
+
+        triggerReplaceActiveImage() {
+            const active = this.canvas.getActiveObject();
+            if (!active || active.type !== 'image') {
+                this.showNotification("warning", "দয়া করে একটি ছবি সিলেক্ট করুন যা পরিবর্তন করতে চান।");
+                return;
+            }
+
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        this.replaceImageObject(active, ev.target.result);
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            };
+            input.click();
         }
 
         /**
@@ -2394,15 +2582,449 @@
             }
         }
 
-        deleteActive() {
+        /**
+         * ====================================================================
+         * 🎚️ PHOTO COLOR FILTERS & ADJUSTMENTS (FABRIC.JS FILTERS)
+         * ====================================================================
+         */
+        applyActiveImageFilter(filterType, value) {
             const active = this.canvas.getActiveObject();
-            if (active) {
-                this.canvas.remove(active);
-                this.canvas.discardActiveObject();
+            if (!active || active.type !== 'image') return;
+
+            if (!active.filters) active.filters = [];
+
+            // Remove existing instance of this filter
+            const filterClassMap = {
+                'brightness': fabric.Image.filters.Brightness,
+                'contrast': fabric.Image.filters.Contrast,
+                'saturation': fabric.Image.filters.Saturation,
+                'blur': fabric.Image.filters.Blur,
+                'grayscale': fabric.Image.filters.Grayscale,
+                'sepia': fabric.Image.filters.Sepia,
+            };
+
+            const targetClass = filterClassMap[filterType];
+            if (!targetClass) return;
+
+            active.filters = active.filters.filter(f => !(f instanceof targetClass));
+
+            if (filterType === 'brightness') {
+                const bVal = parseFloat(value) || 0; // -1 to 1
+                if (bVal !== 0) active.filters.push(new fabric.Image.filters.Brightness({ brightness: bVal }));
+            } else if (filterType === 'contrast') {
+                const cVal = parseFloat(value) || 0; // -1 to 1
+                if (cVal !== 0) active.filters.push(new fabric.Image.filters.Contrast({ contrast: cVal }));
+            } else if (filterType === 'saturation') {
+                const sVal = parseFloat(value) || 0; // -1 to 1
+                if (sVal !== 0) active.filters.push(new fabric.Image.filters.Saturation({ saturation: sVal }));
+            } else if (filterType === 'blur') {
+                const blurVal = parseFloat(value) || 0; // 0 to 1
+                if (blurVal > 0) active.filters.push(new fabric.Image.filters.Blur({ blur: blurVal }));
+            } else if (filterType === 'grayscale') {
+                active.filters.push(new fabric.Image.filters.Grayscale());
+            } else if (filterType === 'sepia') {
+                active.filters.push(new fabric.Image.filters.Sepia());
+            }
+
+            active.applyFilters();
+            this.canvas.renderAll();
+            this.saveState();
+        }
+
+        applyActiveImagePreset(presetName) {
+            const active = this.canvas.getActiveObject();
+            if (!active || active.type !== 'image') {
+                this.showNotification("warning", "দয়া করে একটি ছবি সিলেক্ট করুন যার ফিল্টার পরিবর্তন করতে চান।");
+                return;
+            }
+
+            active.filters = [];
+
+            if (presetName === 'bw') {
+                active.filters.push(new fabric.Image.filters.Grayscale());
+                active.filters.push(new fabric.Image.filters.Contrast({ contrast: 0.15 }));
+                this.showNotification("success", "⚫ ব্ল্যাক অ্যান্ড হোয়াইট ফিল্টার প্রয়োগ করা হয়েছে!");
+            } else if (presetName === 'vintage') {
+                active.filters.push(new fabric.Image.filters.Sepia());
+                active.filters.push(new fabric.Image.filters.Contrast({ contrast: 0.1 }));
+                this.showNotification("success", "🎞️ ভিন্টেজ সেপিয়া ফিল্টার প্রয়োগ করা হয়েছে!");
+            } else if (presetName === 'vibrant') {
+                active.filters.push(new fabric.Image.filters.Saturation({ saturation: 0.35 }));
+                active.filters.push(new fabric.Image.filters.Contrast({ contrast: 0.12 }));
+                active.filters.push(new fabric.Image.filters.Brightness({ brightness: 0.05 }));
+                this.showNotification("success", "✨ ভাইব্রেন্ট কালার বুস্ট প্রয়োগ করা হয়েছে!");
+            } else if (presetName === 'cool') {
+                active.filters.push(new fabric.Image.filters.Contrast({ contrast: 0.08 }));
+                active.filters.push(new fabric.Image.filters.Brightness({ brightness: 0.02 }));
+                this.showNotification("success", "🧊 কোল্ড এডিটরিয়াল টোন প্রয়োগ করা হয়েছে!");
+            } else if (presetName === 'reset') {
+                this.resetFilterSlidersUI();
+                this.showNotification("info", "ফিল্টার রিসেট করা হয়েছে।");
+            }
+
+            active.applyFilters();
+            this.canvas.renderAll();
+            this.saveState();
+        }
+
+        resetFilterSlidersUI() {
+            const b = document.getElementById('filter-brightness-slider');
+            const c = document.getElementById('filter-contrast-slider');
+            const s = document.getElementById('filter-saturation-slider');
+            const bl = document.getElementById('filter-blur-slider');
+            if (b) b.value = 0;
+            if (c) c.value = 0;
+            if (s) s.value = 0;
+            if (bl) bl.value = 0;
+        }
+
+        /**
+         * ====================================================================
+         * 🏷️ EDITORIAL RIBBONS, BREAKING BADGES & VECTOR STICKERS
+         * ====================================================================
+         */
+        addNewsRibbon(type = 'breaking-ribbon') {
+            const canvasW = this.canvas.getWidth();
+            const canvasH = this.canvas.getHeight();
+
+            if (type === 'breaking-ribbon') {
+                // Top-Left Diagonal Corner Banner
+                const ribbonBg = new fabric.Polygon([
+                    { x: 0, y: 0 },
+                    { x: 260, y: 0 },
+                    { x: 220, y: 56 },
+                    { x: 0, y: 56 }
+                ], {
+                    fill: '#dc2626',
+                    originX: 'left',
+                    originY: 'top',
+                });
+
+                const ribbonText = new fabric.Text('🔴 ব্রেকিং নিউজ', {
+                    left: 24,
+                    top: 14,
+                    fontSize: 22,
+                    fontWeight: '900',
+                    fontFamily: "'Hind Siliguri', sans-serif",
+                    fill: '#ffffff',
+                });
+
+                const ribbonGroup = new fabric.Group([ribbonBg, ribbonText], {
+                    left: 0,
+                    top: 40,
+                    customName: '🔴 ব্রেকিং নিউজ ফিতা',
+                    cornerColor: '#ffffff',
+                    cornerStrokeColor: '#dc2626',
+                    borderColor: '#ef4444',
+                    shadow: new fabric.Shadow({
+                        color: 'rgba(0,0,0,0.3)',
+                        blur: 8,
+                        offsetX: 3,
+                        offsetY: 4
+                    })
+                });
+
+                this.canvas.add(ribbonGroup);
+                this.canvas.setActiveObject(ribbonGroup);
                 this.canvas.renderAll();
                 this.saveState();
                 this.renderLayersList();
-                this.hideFloatingToolbar();
+                this.showNotification("success", "ব্রেকিং নিউজ ফিতা যুক্ত হয়েছে!");
+            } else if (type === 'exclusive-gold') {
+                const ribbonBg = new fabric.Rect({
+                    left: 0,
+                    top: 0,
+                    width: 220,
+                    height: 52,
+                    rx: 14,
+                    ry: 14,
+                    fill: '#d97706',
+                });
+
+                const ribbonText = new fabric.Text('⚡ বিশেষ প্রতিবেদন', {
+                    left: 20,
+                    top: 13,
+                    fontSize: 20,
+                    fontWeight: '900',
+                    fontFamily: "'Hind Siliguri', sans-serif",
+                    fill: '#ffffff',
+                });
+
+                const group = new fabric.Group([ribbonBg, ribbonText], {
+                    left: 40,
+                    top: 40,
+                    customName: '⚡ বিশেষ প্রতিবেদন ব্যাজ',
+                    cornerColor: '#ffffff',
+                    cornerStrokeColor: '#d97706',
+                    borderColor: '#f59e0b',
+                    shadow: new fabric.Shadow({
+                        color: 'rgba(0,0,0,0.25)',
+                        blur: 6,
+                        offsetX: 2,
+                        offsetY: 3
+                    })
+                });
+
+                this.canvas.add(group);
+                this.canvas.setActiveObject(group);
+                this.canvas.renderAll();
+                this.saveState();
+                this.renderLayersList();
+                this.showNotification("success", "বিশেষ প্রতিবেদন ব্যাজ যুক্ত হয়েছে!");
+            }
+        }
+
+        addVerifiedBadge() {
+            const circle = new fabric.Circle({
+                radius: 20,
+                fill: '#2563eb',
+                originX: 'center',
+                originY: 'center',
+            });
+
+            const check = new fabric.Text('✓', {
+                fontSize: 24,
+                fontWeight: '900',
+                fill: '#ffffff',
+                originX: 'center',
+                originY: 'center',
+                top: -2,
+            });
+
+            const badge = new fabric.Group([circle, check], {
+                left: this.canvas.getWidth() / 2,
+                top: this.canvas.getHeight() / 2,
+                customName: '✅ ভেরিফাইড ব্যাজ',
+                cornerColor: '#ffffff',
+                cornerStrokeColor: '#2563eb',
+                borderColor: '#3b82f6',
+            });
+
+            this.canvas.add(badge);
+            this.canvas.setActiveObject(badge);
+            this.canvas.renderAll();
+            this.saveState();
+            this.renderLayersList();
+            this.showNotification("success", "ভেরিফাইড টিকমার্ক যুক্ত হয়েছে!");
+        }
+
+        addLocationBadge(locationText = 'ঢাকা') {
+            const locName = (locationText || 'ঢাকা').trim();
+
+            const bg = new fabric.Rect({
+                width: 140,
+                height: 42,
+                rx: 21,
+                ry: 21,
+                fill: 'rgba(15, 23, 42, 0.85)',
+                originX: 'center',
+                originY: 'center',
+            });
+
+            const text = new fabric.Text('📍 ' + locName, {
+                fontSize: 16,
+                fontWeight: '700',
+                fontFamily: "'Hind Siliguri', sans-serif",
+                fill: '#ffffff',
+                originX: 'center',
+                originY: 'center',
+            });
+
+            const badge = new fabric.Group([bg, text], {
+                left: 60,
+                top: this.canvas.getHeight() - 100,
+                customName: '📍 স্পট লোকেশন ব্যাজ',
+                cornerColor: '#ffffff',
+                cornerStrokeColor: '#4f46e5',
+                borderColor: '#6366f1',
+            });
+
+            this.canvas.add(badge);
+            this.canvas.setActiveObject(badge);
+            this.canvas.renderAll();
+            this.saveState();
+            this.renderLayersList();
+            this.showNotification("success", "লোকেশন ব্যাজ যুক্ত হয়েছে!");
+        }
+
+        /**
+         * ====================================================================
+         * 🏷️ BRAND LOGO & WATERMARK AUTO-STAMP (TENANT ISOLATED)
+         * ====================================================================
+         */
+        applyBrandLogoStamp(position = 'top-right', customLogoUrl = null) {
+            const logoUrl = customLogoUrl || this.config.userBrandLogo;
+            if (!logoUrl) {
+                this.showNotification("warning", "কোনো ব্র্যান্ড লোগো পাওয়া যায়নি। অনুগ্রহ করে সেটিংস থেকে লোগো আপলোড করুন বা নতুন ইমেজ যোগ করুন।");
+                return;
+            }
+
+            // Remove previous brand logo stamp if present
+            const prevStamp = this.canvas.getObjects().find(o => o.isBrandLogoStamp);
+            if (prevStamp) this.canvas.remove(prevStamp);
+
+            this.showLoader("ব্র্যান্ড লোগো স্ট্যাম্প যুক্ত হচ্ছে...");
+
+            fabric.Image.fromURL(logoUrl, (img) => {
+                const canvasW = this.canvas.getWidth();
+                const canvasH = this.canvas.getHeight();
+
+                // Target standard logo width of approx 15-20% of canvas width
+                const targetW = canvasW * 0.18;
+                const scale = targetW / img.width;
+
+                img.set({
+                    scaleX: scale,
+                    scaleY: scale,
+                    opacity: 0.9,
+                    isBrandLogoStamp: true,
+                    customName: '🏷️ ব্র্যান্ড লোগো',
+                    cornerColor: '#ffffff',
+                    cornerStrokeColor: '#4f46e5',
+                    borderColor: '#6366f1',
+                });
+
+                const stampW = img.width * scale;
+                const stampH = img.height * scale;
+                const margin = 40;
+
+                if (position === 'top-left') {
+                    img.set({ left: margin, top: margin });
+                } else if (position === 'top-right') {
+                    img.set({ left: canvasW - stampW - margin, top: margin });
+                } else if (position === 'bottom-left') {
+                    img.set({ left: margin, top: canvasH - stampH - margin });
+                } else if (position === 'bottom-right') {
+                    img.set({ left: canvasW - stampW - margin, top: canvasH - stampH - margin });
+                }
+
+                this.canvas.add(img);
+                img.bringToFront();
+                this.canvas.setActiveObject(img);
+                this.canvas.renderAll();
+
+                this.hideLoader();
+                this.saveState();
+                this.renderLayersList();
+                this.showNotification("success", "ব্র্যান্ড লোগো স্ট্যাম্প যুক্ত করা হয়েছে!");
+            }, { crossOrigin: 'anonymous' });
+        }
+
+        /**
+         * ====================================================================
+         * 🌐 DIRECT PUBLISH TO FACEBOOK & ATTACH TO NEWS
+         * ====================================================================
+         */
+        async publishToFacebook(pageId, caption = '') {
+            if (!pageId) {
+                this.showNotification("warning", "দয়া করে একটি ফেসবুক পেজ নির্বাচন করুন।");
+                return;
+            }
+
+            this.showLoader("ফেসবুক পেজে পোস্ট আপলোড হচ্ছে...");
+
+            try {
+                // Generate clean high-resolution image
+                const active = this.canvas.getActiveObject();
+                if (active) {
+                    this.canvas.discardActiveObject();
+                    this.canvas.renderAll();
+                }
+
+                const dataUrl = this.canvas.toDataURL({
+                    format: 'png',
+                    multiplier: 1.5,
+                    quality: 1.0,
+                });
+
+                if (active) {
+                    this.canvas.setActiveObject(active);
+                    this.canvas.renderAll();
+                }
+
+                const formData = new FormData();
+                formData.append('page_id', pageId);
+                formData.append('image', dataUrl);
+                formData.append('caption', caption || '');
+                formData.append('_token', this.config.csrfToken);
+
+                const targetUrl = this.config.publishFacebookUrl || "/studio/custom-photo-card/publish-facebook";
+                const response = await fetch(targetUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.config.csrfToken,
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                this.hideLoader();
+
+                if (data.success) {
+                    this.showNotification("success", "🎉 " + data.message);
+                    const modal = document.getElementById('direct-publish-modal');
+                    if (modal) modal.classList.add('hidden');
+                } else {
+                    this.showNotification("error", data.message || "পোস্ট করতে সমস্যা হয়েছে।");
+                }
+            } catch (err) {
+                this.hideLoader();
+                console.error("FB Publish error:", err);
+                this.showNotification("error", "সার্ভার এরর: " + (err.message || 'ফেসবুকে পোস্ট করা যায়নি।'));
+            }
+        }
+
+        async attachToNewsItem(newsId) {
+            if (!newsId) return;
+
+            this.showLoader("নিউজ আর্টিকেলে ইমেজ যুক্ত হচ্ছে...");
+
+            try {
+                const active = this.canvas.getActiveObject();
+                if (active) {
+                    this.canvas.discardActiveObject();
+                    this.canvas.renderAll();
+                }
+
+                const dataUrl = this.canvas.toDataURL({
+                    format: 'png',
+                    multiplier: 1.2,
+                    quality: 1.0,
+                });
+
+                if (active) {
+                    this.canvas.setActiveObject(active);
+                    this.canvas.renderAll();
+                }
+
+                const formData = new FormData();
+                formData.append('news_id', newsId);
+                formData.append('image', dataUrl);
+                formData.append('_token', this.config.csrfToken);
+
+                const attachUrl = this.config.attachNewsUrl || "/studio/custom-photo-card/attach-news";
+                const response = await fetch(attachUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.config.csrfToken,
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                this.hideLoader();
+
+                if (data.success) {
+                    this.showNotification("success", "🎉 " + data.message);
+                } else {
+                    this.showNotification("error", data.message || "সংযুক্ত করতে ব্যর্থ হয়েছে।");
+                }
+            } catch (err) {
+                this.hideLoader();
+                console.error("Attach News error:", err);
+                this.showNotification("error", "সার্ভার এরর: " + (err.message || 'যুক্ত করা যায়নি।'));
             }
         }
 

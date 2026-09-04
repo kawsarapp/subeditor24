@@ -103,6 +103,11 @@ class CustomPhotoCardController extends Controller
         $dailyUsed = $user->todays_bg_remove_count ?? 0;
         $dailyLimit = $user->daily_bg_remove_limit ?? 20;
 
+        // 6. User's connected Facebook Pages & Branding
+        $facebookPages = $user->facebookPages()->where('is_active', true)->get();
+        $userBrandLogo = UserSetting::getSettingWithFallback($user->id, 'site_logo') ?: null;
+        $portalName = UserSetting::getSettingWithFallback($user->id, 'site_name') ?: 'News Portal';
+
         return view('news.custom-photo-card.index', compact(
             'frames',
             'dbTemplates',
@@ -110,7 +115,10 @@ class CustomPhotoCardController extends Controller
             'dynamicMediaFonts',
             'creditCost',
             'dailyUsed',
-            'dailyLimit'
+            'dailyLimit',
+            'facebookPages',
+            'userBrandLogo',
+            'portalName'
         ));
     }
 
@@ -349,6 +357,127 @@ class CustomPhotoCardController extends Controller
             return response()->json(['success' => true, 'message' => 'টেমপ্লেট মুছে ফেলা হয়েছে!']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'টেমপ্লেট ডিলিট করার অনুমতি নেই বা খুঁজে পাওয়া যায়নি।'], 403);
+        }
+    }
+
+    /**
+     * Publish photo card directly to tenant's Facebook Page
+     */
+    public function publishToFacebook(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'page_id' => 'required|integer',
+            'image'   => 'required|string',
+            'caption' => 'nullable|string|max:2000',
+        ]);
+
+        try {
+            // Strict tenant ownership validation
+            $fbPage = $user->facebookPages()->where('id', $request->input('page_id'))->firstOrFail();
+
+            if (empty($fbPage->page_access_token) || empty($fbPage->page_id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'এই ফেসবুক পেজের অ্যাক্সেস টোকেন পাওয়া যায়নি।'
+                ], 400);
+            }
+
+            // Decode base64 image
+            $imageData = $request->input('image');
+            if (preg_match('/^data:image\/(\w+);base64,/', $imageData, $type)) {
+                $imageData = substr($imageData, strpos($imageData, ',') + 1);
+            }
+            $decoded = base64_decode($imageData);
+
+            // Save temporary file
+            $tempDir = storage_path('app/temp_fb_posts');
+            if (!File::exists($tempDir)) {
+                File::makeDirectory($tempDir, 0755, true);
+            }
+            $tempFilePath = $tempDir . '/post_' . time() . '_' . Str::random(6) . '.png';
+            file_put_contents($tempFilePath, $decoded);
+
+            // Post to Facebook Graph API
+            $endpoint = "https://graph.facebook.com/v19.0/{$fbPage->page_id}/photos";
+            $caption = $request->input('caption') ?: '';
+
+            $response = \Illuminate\Support\Facades\Http::attach('source', file_get_contents($tempFilePath), 'photocard.png')
+                ->post($endpoint, [
+                    'message'      => $caption,
+                    'access_token' => $fbPage->page_access_token,
+                    'published'    => true,
+                ]);
+
+            // Clean temp file
+            @unlink($tempFilePath);
+
+            $data = $response->json();
+
+            if ($response->successful() && !empty($data['id'])) {
+                return response()->json([
+                    'success' => true,
+                    'post_id' => $data['id'],
+                    'message' => 'ফেসবুক পেজে সফলভাবে পোস্ট করা হয়েছে!'
+                ]);
+            } else {
+                $errorMsg = $data['error']['message'] ?? 'ফেসবুকে পোস্ট করতে ব্যর্থ হয়েছে।';
+                return response()->json(['success' => false, 'message' => $errorMsg], 500);
+            }
+
+        } catch (\Exception $e) {
+            Log::error("Direct Facebook Post Error: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Attach photo card directly to a News Item as Featured Image
+     */
+    public function attachToNews(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'news_id' => 'required|integer',
+            'image'   => 'required|string',
+        ]);
+
+        try {
+            // Strict tenant ownership validation
+            $news = NewsItem::withoutGlobalScopes()
+                ->where('user_id', $user->id)
+                ->findOrFail($request->input('news_id'));
+
+            // Decode base64 image
+            $imageData = $request->input('image');
+            if (preg_match('/^data:image\/(\w+);base64,/', $imageData, $type)) {
+                $imageData = substr($imageData, strpos($imageData, ',') + 1);
+            }
+            $decoded = base64_decode($imageData);
+
+            $newsImgDir = public_path('uploads/news');
+            if (!File::exists($newsImgDir)) {
+                File::makeDirectory($newsImgDir, 0755, true);
+            }
+
+            $filename = 'news_card_' . time() . '_' . Str::random(6) . '.png';
+            file_put_contents($newsImgDir . '/' . $filename, $decoded);
+            $imageUrl = asset('uploads/news/' . $filename);
+
+            $news->image = $imageUrl;
+            $news->save();
+
+            return response()->json([
+                'success'   => true,
+                'image_url' => $imageUrl,
+                'message'   => 'নিউজ আর্টিকেলে ফিচার্ড ইমেজ হিসেবে সফলভাবে যুক্ত হয়েছে!'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Attach To News Error: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }
