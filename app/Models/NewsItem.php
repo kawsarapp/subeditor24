@@ -42,14 +42,18 @@ class NewsItem extends Model
         'hashtags',
         'plagiarism_score',
         'fact_check_status',
-        'fact_check_report'
+        'fact_check_report',
+        'is_queued',
+        'scheduled_at'
     ];
 
     protected $casts = [
         'published_at' => 'datetime',
         'posted_at' => 'datetime',
+        'scheduled_at' => 'datetime',
         'is_posted' => 'boolean',
         'is_rewritten' => 'boolean',
+        'is_queued' => 'boolean',
     ];
 
     protected static function booted()

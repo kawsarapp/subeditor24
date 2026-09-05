@@ -37,6 +37,9 @@ trait NewsDraftsTrait
             ->orderBy('updated_at', 'desc')
             ->paginate(20);
 
+        // 🔍 Smart News Deduplication Annotation (Tenant-Scoped)
+        app(\App\Services\NewsDeduplicationService::class)->annotateCollection($drafts);
+
         return view('news.drafts', compact('drafts', 'settings'));
     }
 
@@ -102,7 +105,7 @@ trait NewsDraftsTrait
     
     public function getDraftContent($id)
     {
-        $news = NewsItem::with('lockedBy')->findOrFail($id);
+        $news = NewsItem::withoutGlobalScopes()->with(['lockedBy', 'website' => function ($q) { $q->withoutGlobalScopes(); }])->findOrFail($id);
         $user = Auth::user();
         $adminUser = $this->getEffectiveAdmin();
 
@@ -124,20 +127,27 @@ trait NewsDraftsTrait
             if (is_array($decodedTags)) $extraImages = $decodedTags;
         }
 
+        // 🔍 Deduplication Check for this specific news item
+        $duplicates = app(\App\Services\NewsDeduplicationService::class)->findDuplicates($user, $news->title, $news->id, 55.0);
+
         return response()->json([
-            'success'      => true,
-            'title'        => $title,
-            'content'      => $content,
-            'hashtags'     => $news->hashtags,
-            'image_url'    => $news->thumbnail_url,
-            'extra_images' => $extraImages,
-            'location'     => $news->location,
-            'original_link'=> $news->original_link,
+            'success'          => true,
+            'title'            => $title,
+            'content'          => $content,
+            'original_title'   => $news->title,
+            'original_content' => $news->content,
+            'source_name'      => $news->website->name ?? 'Custom / Reporter',
+            'hashtags'         => $news->hashtags,
+            'image_url'        => $news->thumbnail_url,
+            'extra_images'     => $extraImages,
+            'location'         => $news->location,
+            'original_link'    => $news->original_link,
             // 🔥 ফিক্স: স্টাফ এখন তার অ্যাডমিনের ক্যাটাগরি দেখতে পাবে
-            'categories'   => $adminUser->settings->category_mapping ?? [],
-            'plagiarism_score'  => $news->plagiarism_score,
-            'fact_check_status' => $news->fact_check_status,
-            'fact_check_report' => $news->fact_check_report
+            'categories'       => $adminUser->settings->category_mapping ?? [],
+            'plagiarism_score' => $news->plagiarism_score,
+            'fact_check_status'=> $news->fact_check_status,
+            'fact_check_report'=> $news->fact_check_report,
+            'duplicates'       => $duplicates
         ]);
     }
 

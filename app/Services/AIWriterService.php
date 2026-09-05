@@ -681,4 +681,59 @@ EOT;
         }
         return null;
     }
+
+    /**
+     * 🎯 3-Option Viral Headline Suggester (Informative, Viral, Breaking)
+     */
+    public function generateViralHeadlines($title, $content = '', $userId = null): array
+    {
+        $systemPrompt = <<<EOT
+You are an expert Chief Sub-Editor and Viral Social Media Strategist for a leading Bangladeshi daily newspaper.
+Generate exactly 3 distinct, high-impact Bengali news headlines based on the provided title and body:
+
+1. "informative": A formal, objective, standard journalistic headline in Promit Bangla (Max 10-12 words).
+2. "viral": An engaging, curiosity-piquing headline designed for high social media CTR and Facebook engagement without being clickbait or misleading.
+3. "breaking": A concise, punchy, urgent breaking news headline (Max 7-9 words).
+
+Return ONLY valid JSON:
+{
+    "informative": "...",
+    "viral": "...",
+    "breaking": "..."
+}
+EOT;
+
+        $input = "শিরোনাম: " . $title . "\n\nবিস্তারিত: " . \Illuminate\Support\Str::limit(strip_tags($content), 500);
+        $provider = \App\Models\UserSetting::getSettingWithFallback($userId, 'ai_provider') ?? 'gemini';
+
+        // Try primary provider
+        try {
+            $result = $this->callAiForJsonPrompt($provider, $systemPrompt, $input, $userId);
+            if ($result && !empty($result['informative']) && !empty($result['viral']) && !empty($result['breaking'])) {
+                return $result;
+            }
+        } catch (\Exception $e) {
+            Log::warning("Headline generation with primary provider ({$provider}) failed: " . $e->getMessage());
+        }
+
+        // Try fallbacks
+        $fallbacks = ['gemini', 'deepseek', 'openai', 'groq'];
+        foreach ($fallbacks as $fb) {
+            if ($fb === $provider) continue;
+            try {
+                $result = $this->callAiForJsonPrompt($fb, $systemPrompt, $input, $userId);
+                if ($result && !empty($result['informative']) && !empty($result['viral']) && !empty($result['breaking'])) {
+                    return $result;
+                }
+            } catch (\Exception $e) { continue; }
+        }
+
+        // Programmatic intelligent Bengali fallback
+        $cleanTitle = trim(preg_replace('/^(ব্রেকিং|আন্তর্জাতিক|জাতীয়|রাজনীতি)\s*[:|-]\s*/u', '', $title));
+        return [
+            'informative' => $cleanTitle,
+            'viral'       => $cleanTitle . ': বিস্তারিত যা জানা গেল',
+            'breaking'    => 'ব্রেকিং: ' . \Illuminate\Support\Str::limit($cleanTitle, 45)
+        ];
+    }
 }

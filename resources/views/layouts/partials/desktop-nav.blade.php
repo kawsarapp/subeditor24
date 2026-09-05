@@ -124,20 +124,31 @@
                                 </a>
                                 @endif
 
-                                {{-- 5. Team Reporters --}}
-                                @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_reporters'))
-                                @if(Route::has('manage.reporters.index'))
+                                {{-- 5. Team Staff & Reporters --}}
+                                @php
+                                    $userPerms = is_array(auth()->user()->permissions) ? auth()->user()->permissions : (json_decode(auth()->user()->permissions, true) ?? []);
+                                    $canStaff = in_array('can_manage_staff', $userPerms) || auth()->user()->role === 'super_admin' || auth()->user()->role === 'client';
+                                    $canReporters = auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_reporters');
+                                @endphp
+
+                                @if($canStaff && Route::has('client.staff.index'))
+                                <a href="{{ route('client.staff.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
+                                    <i class="fa-solid fa-users-gear text-indigo-500 w-4 text-center"></i>
+                                    <span>Staff Management</span>
+                                </a>
+                                @endif
+
+                                @if($canReporters && Route::has('manage.reporters.index'))
                                 <a href="{{ route('manage.reporters.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
                                     <i class="fa-solid fa-users text-indigo-500 w-4 text-center"></i>
                                     <span>Team Members</span>
                                 </a>
                                 @endif
-                                @if(Route::has('manage.reporters.news'))
+                                @if($canReporters && Route::has('manage.reporters.news'))
                                 <a href="{{ route('manage.reporters.news') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-rose-50 hover:text-rose-700 transition-colors">
                                     <i class="fa-solid fa-satellite-dish text-rose-500 w-4 text-center"></i>
                                     <span>Team News Stream</span>
                                 </a>
-                                @endif
                                 @endif
 
                                 {{-- 6. Scraper Monitor --}}
@@ -158,15 +169,33 @@
             {{-- RIGHT CONTROL PANEL WITH USER PROFILE & CREDITS --}}
             <div class="flex items-center gap-3 shrink-0">
                 @auth
-                    {{-- Daily Limit Indicator --}}
-                    <div class="hidden xl:flex items-center gap-3">
-                        <div class="bg-indigo-50/80 border border-indigo-100 px-3 py-1.5 rounded-xl flex items-center gap-2 shadow-sm" title="Today's Post Limit">
-                            <i class="fa-solid fa-chart-simple text-indigo-500 text-xs"></i>
-                            <span class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide">
-                                Limit: <span class="text-indigo-600 font-black">{{ auth()->user()->todays_post_count ?? 0 }}/{{ auth()->user()->daily_post_limit ?? 20 }}</span>
-                            </span>
+                    {{-- 🎯 Daily Goal & Target Progress Tracker --}}
+                    @php
+                        $todayPosts = auth()->user()->todays_post_count ?? 0;
+                        $dailyTarget = auth()->user()->daily_post_limit ?? 20;
+                        $percent = min(100, round(($todayPosts / max($dailyTarget, 1)) * 100));
+                    @endphp
+                    <div class="hidden xl:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 px-3 py-1.5 rounded-2xl shadow-sm transition-all" title="দৈনিক পোস্টের লক্ষ্যমাত্রা ও অগ্রগতি">
+                        <div class="flex flex-col gap-0.5">
+                            <div class="flex items-center justify-between gap-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                <span class="flex items-center gap-1"><i class="fa-solid fa-bullseye text-indigo-500"></i> আজকের গোল</span>
+                                <span class="text-indigo-600 dark:text-indigo-400 font-black">{{ $todayPosts }}/{{ $dailyTarget }} ({{ $percent }}%)</span>
+                            </div>
+                            <div class="w-28 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-500" style="width: {{ $percent }}%"></div>
+                            </div>
                         </div>
                     </div>
+
+                    {{-- 🌙 Dark Mode Toggle Button --}}
+                    <button type="button" onclick="toggleDarkMode()" id="darkModeToggleBtn" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-amber-400 flex items-center justify-center text-xs transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm" title="ডার্ক / লাইট মোড পরিবর্তন">
+                        <i id="darkModeIcon" class="fa-solid fa-moon"></i>
+                    </button>
+
+                    {{-- ⌨️ Keyboard Shortcuts Button --}}
+                    <button type="button" onclick="openShortcutsModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-center text-xs transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm" title="কিবোর্ড শর্টকাট (?)">
+                        <i class="fa-solid fa-keyboard"></i>
+                    </button>
 
                     {{-- PROFILE DROPDOWN WITH CREDITS INSIDE --}}
                     <div class="relative">

@@ -81,6 +81,9 @@ class NewsController extends Controller
         if ($date) $query->whereDate('created_at', $date);
 
         $newsItems = $query->orderBy('id', 'desc')->paginate(20);
+
+        // 🔍 Smart News Deduplication Annotation (Tenant-Scoped)
+        app(\App\Services\NewsDeduplicationService::class)->annotateCollection($newsItems);
         
         $websites = \App\Models\Website::withoutGlobalScopes()
             ->where(function($q) use ($adminUser) {

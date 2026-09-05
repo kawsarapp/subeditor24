@@ -173,4 +173,59 @@ trait NewsAjaxTrait
 
         return response()->json(['success' => false], 404);
     }
+
+    /**
+     * 🔍 Real-time Smart News Deduplication Check (Tenant-Scoped)
+     */
+    public function checkDuplicates(Request $request, \App\Services\NewsDeduplicationService $dedupService)
+    {
+        $title = $request->input('title', '');
+        $excludeId = $request->input('exclude_id');
+
+        if (empty(trim($title)) || mb_strlen(trim($title)) < 5) {
+            return response()->json([
+                'success'    => true,
+                'duplicates' => []
+            ]);
+        }
+
+        $user = Auth::user();
+        $duplicates = $dedupService->findDuplicates($user, $title, $excludeId ? (int)$excludeId : null, 55.0);
+
+        return response()->json([
+            'success'    => true,
+            'count'      => count($duplicates),
+            'duplicates' => $duplicates
+        ]);
+    }
+
+    /**
+     * ✨ 1-Click 3-Option Viral Headline Generator Endpoint
+     */
+    public function generateHeadlines(Request $request, \App\Services\AIWriterService $aiWriter)
+    {
+        $title = $request->input('title', '');
+        $content = $request->input('content', '');
+        $newsId = $request->input('news_id');
+
+        if ($newsId && (empty($title) || empty($content))) {
+            $news = NewsItem::withoutGlobalScopes()->find($newsId);
+            if ($news) {
+                $title = $title ?: ($news->ai_title ?: $news->title);
+                $content = $content ?: ($news->ai_content ?: $news->content);
+            }
+        }
+
+        if (empty(trim($title))) {
+            return response()->json(['success' => false, 'message' => 'শিরোনাম ছাড়া এআই আইডিয়া জেনারেট করা সম্ভব নয়!'], 422);
+        }
+
+        $adminUser = $this->getEffectiveAdminForAjax();
+        $headlines = $aiWriter->generateViralHeadlines($title, $content, $adminUser->id);
+
+        return response()->json([
+            'success'   => true,
+            'headlines' => $headlines
+        ]);
+    }
 }

@@ -6,8 +6,11 @@
     </a>
     @auth
     <div class="flex items-center gap-2">
+        <button type="button" onclick="toggleDarkMode()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-amber-400 flex items-center justify-center text-xs border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer" title="ডার্ক মোড">
+            <i class="fa-solid fa-moon"></i>
+        </button>
         @if(auth()->user()->role !== 'reporter')
-            <div class="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold border border-amber-200 shadow-sm">
+            <div class="bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full text-xs font-bold border border-amber-200 dark:border-amber-800/60 shadow-sm">
                 🪙 {{ auth()->user()->credits ?? 0 }}
             </div>
         @endif
@@ -141,17 +144,29 @@
                 <i class="fa-solid fa-wand-magic-sparkles text-violet-500 w-5 text-center text-sm"></i> Custom Photo Card (AI)
             </a>
 
-            @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_reporters'))
+            @php
+                $userPerms = is_array(auth()->user()->permissions) ? auth()->user()->permissions : (json_decode(auth()->user()->permissions, true) ?? []);
+                $canStaff = in_array('can_manage_staff', $userPerms) || auth()->user()->role === 'super_admin' || auth()->user()->role === 'client';
+                $canReporters = auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_reporters');
+            @endphp
+
+            @if($canStaff || $canReporters)
             <div class="border-t border-slate-100 my-2"></div>
             <p class="px-3 pt-1 pb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Team Management</p>
             
-            @if(Route::has('manage.reporters.news'))
+            @if($canStaff && Route::has('client.staff.index'))
+            <a href="{{ route('client.staff.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('client.staff.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
+                <i class="fa-solid fa-users-gear text-indigo-500 w-5 text-center text-sm"></i> Staff Management
+            </a>
+            @endif
+
+            @if($canReporters && Route::has('manage.reporters.news'))
             <a href="{{ route('manage.reporters.news') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('manage.reporters.news') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-satellite-dish text-rose-500 w-5 text-center text-sm"></i> Reporter Feed (Team News)
             </a>
             @endif
             
-            @if(Route::has('manage.reporters.index'))
+            @if($canReporters && Route::has('manage.reporters.index'))
             <a href="{{ route('manage.reporters.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('manage.reporters.index') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-users text-blue-500 w-5 text-center text-sm"></i> Team Members
             </a>

@@ -32,6 +32,25 @@
             <p class="text-indigo-100 text-sm mt-2 font-medium relative z-10">সঠিক তথ্য ও ছবি দিয়ে ফর্মটি পূরণ করুন</p>
         </div>
 
+        {{-- 💾 Auto-Save Recovery Alert Banner --}}
+        <div id="reporterAutoSaveRecoveryAlert" class="hidden bg-amber-50 dark:bg-amber-950/70 border-b border-amber-200 dark:border-amber-800/60 px-6 sm:px-10 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-clock-rotate-left text-amber-600 dark:text-amber-400 text-lg"></i>
+                <div>
+                    <h4 class="text-xs font-extrabold text-amber-900 dark:text-amber-200 uppercase">পূর্বে অসম্পূর্ণ ড্রাফট পাওয়া গেছে</h4>
+                    <p class="text-xs text-amber-800 dark:text-amber-300 font-semibold" id="reporterAutoSaveInfo">আপনি কি এটি পুনরুদ্ধার করতে চান?</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="restoreReporterDraft()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer">
+                    📂 রিকভার করুন
+                </button>
+                <button type="button" onclick="discardReporterDraft()" class="px-3.5 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition cursor-pointer">
+                    ✕ মুছুন
+                </button>
+            </div>
+        </div>
+
         <form action="{{ route('reporter.news.store') }}" method="POST" enctype="multipart/form-data" class="p-6 sm:p-10 space-y-8" id="newsForm">
             @csrf
 
@@ -40,9 +59,9 @@
                 {{-- শিরোনাম --}}
                 <div class="md:col-span-2 input-focus-effect">
                     <label class="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide">খবরের শিরোনাম <span class="text-rose-500">*</span></label>
-                    <input type="text" name="title" value="{{ old('title') }}" required 
-                           class="w-full border-2 border-slate-200 rounded-2xl p-4 sm:p-5 outline-none focus:border-indigo-500 bg-slate-50 focus:bg-white transition-all text-lg font-bold text-slate-800 placeholder-slate-400" 
-                           placeholder="আকর্ষণীয় একটি শিরোনাম লিখুন...">
+                    <input type="text" name="title" id="reporterNewsTitle" value="{{ old('title') }}" required 
+                            class="w-full border-2 border-slate-200 rounded-2xl p-4 sm:p-5 outline-none focus:border-indigo-500 bg-slate-50 focus:bg-white transition-all text-lg font-bold text-slate-800 placeholder-slate-400" 
+                            placeholder="আকর্ষণীয় একটি শিরোনাম লিখুন...">
                 </div>
 
                 {{-- লোকেশন --}}
@@ -162,6 +181,7 @@
     // Submit Action Loader
     document.getElementById('newsForm').onsubmit = function() {
         tinymce.triggerSave(); // Ensure TinyMCE content is saved
+        localStorage.removeItem('subeditor24_reporter_draft');
         
         // Change button state to loading
         const btn = document.getElementById('submitBtn');
@@ -169,5 +189,78 @@
         btn.classList.add('cursor-not-allowed', 'opacity-80');
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> আপলোড হচ্ছে... দয়া করে অপেক্ষা করুন';
     };
+
+    // ==========================================================
+    // 💾 REPORTER DRAFT AUTO-SAVE ENGINE
+    // ==========================================================
+    const REPORTER_AUTOSAVE_KEY = 'subeditor24_reporter_draft';
+
+    document.addEventListener("DOMContentLoaded", function() {
+        checkReporterAutoSave();
+        setInterval(performReporterAutoSave, 8000);
+        
+        const titleInput = document.getElementById('reporterNewsTitle');
+        if (titleInput) titleInput.addEventListener('input', performReporterAutoSave);
+    });
+
+    function checkReporterAutoSave() {
+        try {
+            const saved = localStorage.getItem(REPORTER_AUTOSAVE_KEY);
+            if (!saved) return;
+            const draft = JSON.parse(saved);
+            const titleInput = document.getElementById('reporterNewsTitle');
+            if (titleInput && titleInput.value.trim() !== '') return;
+
+            if (draft.title || draft.content) {
+                const alertEl = document.getElementById('reporterAutoSaveRecoveryAlert');
+                const infoEl = document.getElementById('reporterAutoSaveInfo');
+                if (alertEl) {
+                    if (infoEl) infoEl.innerText = `সংরক্ষিত শিরোনাম: "${(draft.title || 'শিরোনামবিহীন').substring(0, 35)}..." (${draft.time || 'পূর্বে'})`;
+                    alertEl.classList.remove('hidden');
+                }
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    function restoreReporterDraft() {
+        try {
+            const saved = localStorage.getItem(REPORTER_AUTOSAVE_KEY);
+            if (!saved) return;
+            const draft = JSON.parse(saved);
+
+            const titleInput = document.getElementById('reporterNewsTitle');
+            if (titleInput && draft.title) titleInput.value = draft.title;
+            if (tinymce.get('news_content') && draft.content) {
+                tinymce.get('news_content').setContent(draft.content);
+            }
+
+            document.getElementById('reporterAutoSaveRecoveryAlert').classList.add('hidden');
+            if (window.showToast) window.showToast('✅ ড্রাফট পুনরুদ্ধার করা হয়েছে!', 'success');
+        } catch (e) { console.error(e); }
+    }
+
+    function discardReporterDraft() {
+        localStorage.removeItem(REPORTER_AUTOSAVE_KEY);
+        document.getElementById('reporterAutoSaveRecoveryAlert').classList.add('hidden');
+        if (window.showToast) window.showToast('ড্রাফট মুছে ফেলা হয়েছে', 'info');
+    }
+
+    function performReporterAutoSave() {
+        const titleInput = document.getElementById('reporterNewsTitle');
+        const title = titleInput ? titleInput.value.trim() : '';
+        const content = tinymce.get('news_content') ? tinymce.get('news_content').getContent() : '';
+
+        if (!title && !content) return;
+
+        const draft = {
+            title: title,
+            content: content,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        try {
+            localStorage.setItem(REPORTER_AUTOSAVE_KEY, JSON.stringify(draft));
+        } catch(e) { console.error(e); }
+    }
 </script>
 @endsection

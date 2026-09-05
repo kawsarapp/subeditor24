@@ -51,9 +51,34 @@ trait NewsPublishingTrait
             }
         }
 
-        $finalImage = $news->thumbnail_url; 
-        if ($request->hasFile('image_file')) $finalImage = asset('storage/' . $request->file('image_file')->store('news-uploads', 'public'));
-        elseif ($request->filled('image_url')) $finalImage = $request->image_url;
+        $scheduleType = $request->input('schedule_type', 'instant');
+        $scheduledAt = $request->input('scheduled_at');
+
+        if ($scheduleType === 'drip') {
+            $news->update([
+                'status' => 'draft',
+                'is_queued' => true,
+                'staff_id' => $staffId,
+                'title' => $request->title, 'content' => $request->content,
+                'ai_title' => $request->title, 'ai_content' => $request->content, 'thumbnail_url' => $finalImage,
+                'hashtags' => $request->hashtags, 'error_message' => null, 'updated_at' => now()
+            ]);
+            return response()->json(['success' => true, 'message' => '💧 নিউজটি সফলভাবে অটো-ড্রিপ কিউতে যুক্ত করা হয়েছে!']);
+        }
+
+        if ($scheduleType === 'custom' && $scheduledAt) {
+            $scheduleTime = \Carbon\Carbon::parse($scheduledAt);
+            $news->update([
+                'status' => 'draft',
+                'scheduled_at' => $scheduleTime,
+                'is_queued' => false,
+                'staff_id' => $staffId,
+                'title' => $request->title, 'content' => $request->content,
+                'ai_title' => $request->title, 'ai_content' => $request->content, 'thumbnail_url' => $finalImage,
+                'hashtags' => $request->hashtags, 'error_message' => null, 'updated_at' => now()
+            ]);
+            return response()->json(['success' => true, 'message' => "📅 নিউজটি " . $scheduleTime->format('d M, h:i A') . " এর জন্য শিডিউল করা হয়েছে!"]);
+        }
 
         $news->update([
             'status' => 'publishing', 
@@ -75,7 +100,7 @@ trait NewsPublishingTrait
             'featured_image' => $finalImage, 'hashtags' => $request->hashtags
         ], true);
 
-        return response()->json(['success' => true, 'message' => 'আপডেট শুরু হয়েছে! কিছুক্ষণের মধ্যে লাইভ হবে।']);
+        return response()->json(['success' => true, 'message' => 'পাবলিশিং শুরু হয়েছে! কিছুক্ষণের মধ্যে লাইভ হবে।']);
     }
 
     public function sendToAiQueue($id)
@@ -130,6 +155,100 @@ trait NewsPublishingTrait
         ]);
         
         return response()->json(['success' => true, 'message' => 'পাবলিশিং শুরু হয়েছে!']);
+    }
+
+    /**
+     * ⚡ BULK AI REWRITE (Multi-Select Batch Action)
+     */
+    public function bulkProcessAi(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids) || !is_array($ids)) {
+            return response()->json(['success' => false, 'message' => 'কোনো খবর সিলেক্ট করা হয়নি!'], 422);
+        }
+
+        $adminUser = $this->getEffectiveAdmin();
+        $staffId = Auth::id() !== $adminUser->id ? Auth::id() : null;
+
+        $newsList = NewsItem::withoutGlobalScopes()
+            ->whereIn('id', $ids)
+            ->where(function ($q) use ($adminUser) {
+                $q->where('user_id', $adminUser->id)
+                  ->orWhere('user_id', Auth::id());
+            })
+            ->where('status', '!=', 'processing')
+            ->get();
+
+        if ($newsList->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'প্রসেস করার মতো কোনো খবর পাওয়া যায়নি।']);
+        }
+
+        $count = $newsList->count();
+
+        // Check and deduct credits in batch
+        if ($adminUser->role !== 'super_admin') {
+            if ($adminUser->credits < $count) {
+                return response()->json(['success' => false, 'message' => "❌ পর্যাপ্ত ক্রেডিট নেই! প্রয়োজনীয়: {$count}, বর্তমান: {$adminUser->credits}"]);
+            }
+
+            DB::transaction(function () use ($adminUser, $count, $staffId) {
+                $adminUser->decrement('credits', $count);
+                \App\Models\CreditHistory::create([
+                    'user_id' => $adminUser->id,
+                    'staff_id' => $staffId,
+                    'action_type' => 'bulk_ai_rewrite',
+                    'description' => "Bulk AI Rewrite ({$count} items)",
+                    'credits_change' => -$count,
+                    'balance_after' => $adminUser->credits
+                ]);
+            });
+        }
+
+        foreach ($newsList as $index => $news) {
+            $news->update([
+                'status' => 'processing',
+                'staff_id' => $staffId,
+                'error_message' => null,
+                'ai_title' => 'Writing...',
+                'ai_content' => null
+            ]);
+
+            // Dispatch job with staggered delay
+            GenerateAIContent::dispatch($news->id, Auth::id())
+                ->delay(now()->addSeconds($index * 2));
+        }
+
+        return response()->json([
+            'success' => true,
+            'count'   => $count,
+            'message' => "⚡ সফলভাবে {$count}টি খবর এআই রিরাইট কিউতে যুক্ত করা হয়েছে!"
+        ]);
+    }
+
+    /**
+     * 🗑️ BULK DESTROY (Multi-Select Batch Delete)
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids) || !is_array($ids)) {
+            return response()->json(['success' => false, 'message' => 'কোনো খবর সিলেক্ট করা হয়নি!'], 422);
+        }
+
+        $adminUser = $this->getEffectiveAdmin();
+        $deleted = NewsItem::withoutGlobalScopes()
+            ->whereIn('id', $ids)
+            ->where(function ($q) use ($adminUser) {
+                $q->where('user_id', $adminUser->id)
+                  ->orWhere('user_id', Auth::id());
+            })
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'count'   => $deleted,
+            'message' => "🗑️ {$deleted}টি খবর সফলভাবে মুছে ফেলা হয়েছে।"
+        ]);
     }
 
     public function publishManualFromIndex(Request $request, $id)

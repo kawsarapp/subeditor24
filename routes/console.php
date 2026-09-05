@@ -107,9 +107,30 @@ Artisan::command('news:autopost', function () {
 
 })->purpose('Auto post news via Queue Job');
 
+// --- ⏰ SCHEDULED NEWS PUBLISHER COMMAND ---
+Artisan::command('news:process-scheduled', function () {
+    $now = now();
+    $scheduledNews = NewsItem::withoutGlobalScopes()
+        ->where('is_posted', false)
+        ->whereNotNull('scheduled_at')
+        ->where('scheduled_at', '<=', $now)
+        ->whereNotIn('status', ['published', 'publishing'])
+        ->limit(20)
+        ->get();
+
+    foreach ($scheduledNews as $news) {
+        $user = User::find($news->user_id);
+        if (!$user) continue;
+
+        Log::info("⏰ Processing Scheduled News [ID: {$news->id}] for User: {$user->name}");
+        $news->update(['status' => 'publishing']);
+        ProcessNewsPost::dispatch($news->id, $user->id, [], true);
+    }
+})->purpose('Publish scheduled news when due time arrives');
 
 // শিডিউল সেটআপ
 Schedule::command('news:autopost')->everyMinute();
+Schedule::command('news:process-scheduled')->everyMinute();
 Schedule::command('news:check-inactivity')->everyThirtyMinutes();
 
 Schedule::call(function () {

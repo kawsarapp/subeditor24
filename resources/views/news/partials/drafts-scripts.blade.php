@@ -199,6 +199,14 @@
         });
     }
 
+    let currentOriginalData = {
+        title: '',
+        content: '',
+        source_name: '',
+        original_link: '',
+        duplicates: []
+    };
+
     function fetchDraftContent(id, imageUrl) {
         const modal = document.getElementById('rewriteModal');
         const titleInput = document.getElementById('previewTitle');
@@ -224,6 +232,15 @@
         document.getElementById('link-suggestions').innerHTML = '';
         displayFactCheckResults(null);
 
+        // Reset duplicate alerts
+        const dupAlert = document.getElementById('modalDuplicateAlert');
+        const dupList = document.getElementById('modalDuplicateDetailsList');
+        if (dupAlert) dupAlert.classList.add('hidden');
+        if (dupList) {
+            dupList.classList.add('hidden');
+            dupList.innerHTML = '';
+        }
+
         fetch(`/news/${id}/get-draft`)
             .then(res => res.json())
             .then(data => {
@@ -236,9 +253,57 @@
                     } else {
                         document.getElementById('previewContent').value = data.content;
                     }
+
+                    // 🔀 Store & Populate Side-by-Side Original Source Data
+                    currentOriginalData = {
+                        title: data.original_title || data.title,
+                        content: data.original_content || data.content,
+                        source_name: data.source_name || 'অনলাইন সোর্স',
+                        original_link: data.original_link || '#',
+                        duplicates: data.duplicates || []
+                    };
+
+                    const sideTitle = document.getElementById('sideOriginalTitle');
+                    const sideContent = document.getElementById('sideOriginalContent');
+                    const sideTag = document.getElementById('sideOriginalSourceTag');
+                    const sideLink = document.getElementById('sideOriginalLinkBtn');
+                    const sourceBadge = document.getElementById('modalSourceBadge');
+
+                    if (sideTitle) sideTitle.innerText = currentOriginalData.title;
+                    if (sideContent) sideContent.innerHTML = currentOriginalData.content || '<p class="text-slate-400">মূল লেখার টেক্সট পাওয়া যায়নি।</p>';
+                    if (sideTag) sideTag.innerText = currentOriginalData.source_name;
+                    if (sideLink) {
+                        sideLink.href = currentOriginalData.original_link;
+                        if (currentOriginalData.original_link === '#' || !currentOriginalData.original_link) sideLink.style.display = 'none';
+                        else sideLink.style.display = 'inline-flex';
+                    }
+                    if (sourceBadge) sourceBadge.innerText = `সোর্স: ${currentOriginalData.source_name}`;
+
+                    // ⚠️ Smart News Deduplication Detection inside Modal
+                    if (data.duplicates && data.duplicates.length > 0) {
+                        const topDup = data.duplicates[0];
+                        if (dupAlert) {
+                            document.getElementById('modalDuplicateAlertText').innerHTML = `⚠️ <strong>সতর্কতা:</strong> একই ঘটনার আরও <strong>${data.duplicates.length}টি</strong> খবর রয়েছে (যেমন: <u>${topDup.website_name}</u> - ${topDup.similarity}% মিল)`;
+                            dupAlert.classList.remove('hidden');
+                        }
+                        if (dupList) {
+                            dupList.innerHTML = data.duplicates.map(d => `
+                                <div class="flex items-center justify-between p-2 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-amber-200 dark:border-amber-800/40">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100">${d.website_name}</span>
+                                        <span class="truncate font-bold">${d.title}</span>
+                                    </div>
+                                    <span class="text-[10px] font-extrabold text-amber-700 dark:text-amber-300 shrink-0 ml-2">${d.similarity}% মিল</span>
+                                </div>
+                            `).join('');
+                        }
+                    }
                     
                     displayFactCheckResults(data.plagiarism_score, data.fact_check_status, data.fact_check_report);
-                    setTimeout(calculateSEO, 500);
+                    setTimeout(() => {
+                        calculateSEO();
+                        syncSocialCardPreview();
+                    }, 400);
                 } else {
                     if (tinymce.get('previewContent')) tinymce.get('previewContent').setContent("Error loading content.");
                 }
@@ -268,6 +333,18 @@
         
         const urlInput = document.getElementById('newImageUrl');
         if (urlInput && urlInput.value) formData.append('image_url', urlInput.value);
+
+        // ⏰ Drip & Scheduling Options
+        const scheduleTypeEl = document.querySelector('input[name="modal_schedule_type"]:checked');
+        const scheduleType = scheduleTypeEl ? scheduleTypeEl.value : 'instant';
+        formData.append('schedule_type', scheduleType);
+
+        if (scheduleType === 'custom') {
+            const scheduledAtInput = document.getElementById('modalScheduledAtInput');
+            if (scheduledAtInput && scheduledAtInput.value) {
+                formData.append('scheduled_at', scheduledAtInput.value);
+            }
+        }
 
         btn.innerText = "Publishing...";
         btn.disabled = true;
@@ -518,5 +595,214 @@
             alert('⚠️ সার্ভার কানেকশন এরর!');
             displayFactCheckResults(null);
         });
+    }
+
+    // ==========================================================
+    // 🔀 MODAL VIEW MODE SWITCHER (Editor / Side-by-Side / Social)
+    // ==========================================================
+    let currentModalView = 'editor';
+
+    function switchModalView(mode) {
+        currentModalView = mode;
+        const container = document.getElementById('rewriteModalContainer');
+        const sidePanel = document.getElementById('sideBySideOriginalPanel');
+        const editorPanel = document.getElementById('editorMainPanel');
+        const socialPanel = document.getElementById('socialPreviewTabPanel');
+        const sidebarPanel = document.getElementById('editorSidebarPanel');
+
+        // Update button states
+        document.querySelectorAll('.modal-view-btn').forEach(btn => {
+            btn.className = 'modal-view-btn px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer';
+        });
+
+        if (mode === 'sidebyside') {
+            document.getElementById('viewBtnSideBySide').className = 'modal-view-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition-all cursor-pointer';
+            if (container) container.className = 'bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-7xl mx-4 overflow-hidden flex flex-col max-h-[92vh] border border-slate-200 dark:border-slate-800 transition-all duration-300';
+            if (sidePanel) sidePanel.classList.remove('hidden');
+            if (editorPanel) editorPanel.classList.remove('hidden');
+            if (socialPanel) socialPanel.classList.add('hidden');
+            if (sidebarPanel) sidebarPanel.classList.remove('hidden');
+        } else if (mode === 'social') {
+            document.getElementById('viewBtnSocial').className = 'modal-view-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition-all cursor-pointer';
+            if (container) container.className = 'bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-6xl mx-4 overflow-hidden flex flex-col max-h-[92vh] border border-slate-200 dark:border-slate-800 transition-all duration-300';
+            if (sidePanel) sidePanel.classList.add('hidden');
+            if (editorPanel) editorPanel.classList.add('hidden');
+            if (socialPanel) socialPanel.classList.remove('hidden');
+            if (sidebarPanel) sidebarPanel.classList.remove('hidden');
+            syncSocialCardPreview();
+        } else {
+            // Default editor view
+            document.getElementById('viewBtnEditor').className = 'modal-view-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition-all cursor-pointer';
+            if (container) container.className = 'bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-5xl mx-4 overflow-hidden flex flex-col max-h-[92vh] border border-slate-200 dark:border-slate-800 transition-all duration-300';
+            if (sidePanel) sidePanel.classList.add('hidden');
+            if (editorPanel) editorPanel.classList.remove('hidden');
+            if (socialPanel) socialPanel.classList.add('hidden');
+            if (sidebarPanel) sidebarPanel.classList.remove('hidden');
+        }
+    }
+
+    // ==========================================================
+    // 📱 LIVE SOCIAL CARD & GOOGLE SEARCH PREVIEW ENGINE
+    // ==========================================================
+    function syncSocialCardPreview() {
+        const title = document.getElementById('previewTitle') ? document.getElementById('previewTitle').value : '';
+        const metaDesc = document.getElementById('meta_description') ? document.getElementById('meta_description').value : '';
+        const imgDisplay = document.getElementById('previewImageDisplay');
+        const imgSrc = imgDisplay ? imgDisplay.src : '';
+
+        let contentText = '';
+        if (tinymce.get('previewContent')) {
+            contentText = tinymce.get('previewContent').getContent({ format: 'text' });
+        }
+
+        const excerpt = metaDesc.trim() || contentText.substring(0, 150) || 'খবরের বিস্তারিত বিবরণ...';
+        const displayTitle = title.trim() || 'শিরোনামহীন খবর';
+
+        // Facebook Card
+        const fbTitle = document.getElementById('fbPreviewTitle');
+        const fbDesc = document.getElementById('fbPreviewDesc');
+        const fbPost = document.getElementById('fbPreviewPostText');
+        const fbImg = document.getElementById('fbPreviewImage');
+        if (fbTitle) fbTitle.innerText = displayTitle;
+        if (fbDesc) fbDesc.innerText = excerpt;
+        if (fbPost) fbPost.innerText = displayTitle;
+        if (fbImg && imgSrc) fbImg.src = imgSrc;
+
+        // Twitter Card
+        const twTitle = document.getElementById('twitterPreviewTitle');
+        const twDesc = document.getElementById('twitterPreviewDesc');
+        const twImg = document.getElementById('twitterPreviewImage');
+        if (twTitle) twTitle.innerText = displayTitle;
+        if (twDesc) twDesc.innerText = excerpt;
+        if (twImg && imgSrc) twImg.src = imgSrc;
+
+        // Google Search Snippet
+        const gTitle = document.getElementById('googlePreviewTitle');
+        const gDesc = document.getElementById('googlePreviewDesc');
+        if (gTitle) gTitle.innerText = displayTitle.substring(0, 60);
+        if (gDesc) gDesc.innerText = (metaDesc || excerpt).substring(0, 155);
+    }
+
+    // ==========================================================
+    // 📋 SIDE-BY-SIDE HELPER FUNCTIONS
+    // ==========================================================
+    function copyOriginalContent() {
+        if (currentOriginalData.content) {
+            const cleanText = currentOriginalData.content.replace(/<[^>]*>?/gm, '').trim();
+            if (window.copyToClipboard) window.copyToClipboard(cleanText, '📋 মূল খবরের টেক্সট কপি করা হয়েছে!');
+            else alert('কপি করা হয়েছে!');
+        }
+    }
+
+    function insertOriginalToEditor() {
+        if (currentOriginalData.content && tinymce.get('previewContent')) {
+            tinymce.get('previewContent').execCommand('mceInsertContent', false, `<p>${currentOriginalData.content}</p>`);
+            if (window.showToast) window.showToast('➕ এডিটরে মূল টেক্সট যুক্ত করা হয়েছে', 'success');
+            calculateSEO();
+        }
+    }
+
+    function toggleDuplicateDetails() {
+        const details = document.getElementById('modalDuplicateDetailsList');
+        if (details) details.classList.toggle('hidden');
+    }
+
+    // ==========================================================
+    // ✨ 1-CLICK 3-OPTION VIRAL HEADLINE GENERATOR
+    // ==========================================================
+    function generateViralHeadlinesModal() {
+        const titleInput = document.getElementById('previewTitle');
+        const newsId = document.getElementById('previewNewsId') ? document.getElementById('previewNewsId').value : null;
+        const currentTitle = titleInput ? titleInput.value : '';
+        let contentText = '';
+        if (tinymce.get('previewContent')) {
+            contentText = tinymce.get('previewContent').getContent({ format: 'text' });
+        }
+
+        if (!currentTitle.trim() && !contentText.trim()) {
+            alert('অনুগ্রহ করে শিরোনাম বা কন্টেন্ট লিখুন!');
+            return;
+        }
+
+        const btn = document.getElementById('btnGenerateViralHeadlines');
+        const origBtnText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>জেনারেট হচ্ছে...</span>`;
+
+        fetch("{{ route('news.generate-headlines') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                title: currentTitle,
+                content: contentText,
+                news_id: newsId
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.headlines) {
+                const box = document.getElementById('viralHeadlineSuggestionsBox');
+                const container = document.getElementById('viralHeadlineCardsContainer');
+                if (box && container) {
+                    const h = data.headlines;
+                    const items = [
+                        { type: '💡 তথ্যবহুল ও প্রমিত (Informative)', text: h.informative, color: 'border-blue-300 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200' },
+                        { type: '🔥 ভাইরাল / হাই-সিটিআর (Viral & High-CTR)', text: h.viral, color: 'border-purple-300 dark:border-purple-800 bg-purple-50/80 dark:bg-purple-950/40 text-purple-900 dark:text-purple-200' },
+                        { type: '⚡ ছোট ও ব্রেকিং (Short & Breaking)', text: h.breaking, color: 'border-rose-300 dark:border-rose-800 bg-rose-50/80 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200' }
+                    ];
+
+                    container.innerHTML = items.map(item => `
+                        <div class="p-3 rounded-xl border ${item.color} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition hover:shadow-sm">
+                            <div class="flex-1">
+                                <span class="text-[10px] font-black uppercase tracking-wider block mb-0.5 opacity-80">${item.type}</span>
+                                <p class="text-xs font-bold leading-snug font-bangla">${item.text}</p>
+                            </div>
+                            <button type="button" onclick="applyViralHeadline('${item.text.replace(/'/g, "\\'")}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shrink-0 shadow-sm flex items-center gap-1 transition cursor-pointer">
+                                <span>ব্যবহার করুন</span> ↵
+                            </button>
+                        </div>
+                    `).join('');
+
+                    box.classList.remove('hidden');
+                }
+            } else {
+                alert(data.message || 'শিরোনাম তৈরি করতে সমস্যা হয়েছে!');
+            }
+        })
+        .catch(err => {
+            console.error('Viral Headlines Error:', err);
+            alert('সার্ভারে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = origBtnText;
+        });
+    }
+
+    function applyViralHeadline(headlineText) {
+        const titleInput = document.getElementById('previewTitle');
+        if (titleInput) {
+            titleInput.value = headlineText;
+            calculateSEO();
+            syncSocialCardPreview();
+            const box = document.getElementById('viralHeadlineSuggestionsBox');
+            if (box) box.classList.add('hidden');
+        }
+    }
+
+    function toggleModalScheduleInput(type) {
+        const input = document.getElementById('modalScheduledAtInput');
+        if (input) {
+            if (type === 'custom') {
+                input.classList.remove('hidden');
+                input.focus();
+            } else {
+                input.classList.add('hidden');
+            }
+        }
     }
 </script>

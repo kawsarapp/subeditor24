@@ -136,6 +136,10 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/check-draft-updates', 'checkDraftUpdates')->name('check-draft-updates');
         Route::get('/published', 'published')->name('published');
         Route::get('/suggest-links', 'suggestLinks')->name('suggest-links');
+        Route::post('/check-duplicates', 'checkDuplicates')->name('check-duplicates');
+        Route::post('/generate-headlines', 'generateHeadlines')->name('generate-headlines');
+        Route::post('/bulk-process-ai', 'bulkProcessAi')->name('bulk-process-ai');
+        Route::post('/bulk-destroy', 'bulkDestroy')->name('bulk-destroy');
         
         Route::get('/{id}/unlock', 'unlockNews')->name('unlock');
         Route::get('/{id}/get-draft', 'getDraftContent')->name('get-draft');
