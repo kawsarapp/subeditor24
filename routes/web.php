@@ -163,6 +163,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::get('/{id}/studio', 'studio')->name('studio');
             Route::post('/{id}/publish-studio', 'publishStudioDesign')->name('publish-studio');
             Route::post('/{id}/track-download', 'incrementDownloadCount')->name('track-download');
+            Route::post('/studio/save-template', 'saveStudioTemplate')->name('studio.save-template');
+            Route::delete('/studio/delete-template/{id}', 'deleteStudioTemplate')->name('studio.delete-template');
         });
     });
 

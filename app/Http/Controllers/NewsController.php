@@ -128,18 +128,38 @@ class NewsController extends Controller
             ['key' => 'ITVNews', 'name' => 'ITVNews', 'image' => 'templates/ITVNews.png', 'layout' => 'ITVNews'],
         ];
 
+        $mySavedTemplates = [];
+
         try {
-            $dbTemplates = Template::where('is_active', true)->latest()->get()->map(function($t) {
-                return [
-                    'key'         => 'custom_db_' . $t->id,
-                    'name'        => $t->name,
-                    'image'       => $t->thumbnail_url,
-                    'layout'      => 'dynamic',
-                    'layout_data' => $t->layout_data,
-                    'frame_url'   => $t->frame_url,
-                    'font_url'    => $t->font_url ?? null,
-                ];
-            })->toArray();
+            $dbTemplates = Template::where('is_active', true)
+                ->where(function($q) use ($user, $adminUser) {
+                    $q->whereNull('user_id')
+                      ->orWhere('user_id', $user->id)
+                      ->orWhere('user_id', $adminUser->id);
+                })
+                ->latest()
+                ->get()
+                ->map(function($t) use ($user) {
+                    return [
+                        'id'          => $t->id,
+                        'key'         => 'custom_db_' . $t->id,
+                        'name'        => $t->name,
+                        'image'       => $t->thumbnail_url ?: $t->frame_url,
+                        'layout'      => 'dynamic',
+                        'layout_data' => $t->layout_data,
+                        'frame_url'   => $t->frame_url,
+                        'font_url'    => $t->font_url ?? null,
+                        'user_id'     => $t->user_id,
+                        'is_mine'     => ($t->user_id == $user->id),
+                    ];
+                })->toArray();
+
+            foreach ($dbTemplates as $dt) {
+                if (!empty($dt['is_mine'])) {
+                    $mySavedTemplates[] = $dt;
+                }
+            }
+
             $allTemplates = array_merge($dbTemplates, $allTemplates); 
         } catch (\Exception $e) {}
 
@@ -147,13 +167,10 @@ class NewsController extends Controller
         $availableTemplates = [];
 
         if ($user->role === 'super_admin') {
-            // ১. Super Admin সব টেমপ্লেট দেখবে
             $availableTemplates = $allTemplates;
         } else {
-            // ২. Admin, Staff, Reporter - তাদের নিজস্ব পারমিশন চেক করা হবে
             $allowedLayouts = [];
 
-            // User টেবিলে allowed_templates থাকলে সেটা নিবে, না থাকলে Settings টেবিল থেকে নিবে
             if (isset($user->allowed_templates)) {
                 $allowedLayouts = is_string($user->allowed_templates) ? json_decode($user->allowed_templates, true) : $user->allowed_templates;
             } elseif (isset($settings->allowed_templates)) {
@@ -163,8 +180,7 @@ class NewsController extends Controller
             $allowedLayouts = is_array($allowedLayouts) ? $allowedLayouts : [];
 
             foreach ($allTemplates as $template) {
-                // key বা layout দুটোর যেকোনো একটি allowed হলে দেখাবে
-                if (in_array($template['key'], $allowedLayouts) || in_array($template['layout'], $allowedLayouts)) {
+                if (!empty($template['is_mine']) || in_array($template['key'], $allowedLayouts) || in_array($template['layout'], $allowedLayouts)) {
                     $availableTemplates[] = $template;
                 }
             }
@@ -172,9 +188,7 @@ class NewsController extends Controller
         
         $categories = $settings->category_mapping ?? [];
 
-        return view('news.studio', compact('newsItem', 'settings', 'availableTemplates', 'categories'));
-
-
+        return view('news.studio', compact('newsItem', 'settings', 'availableTemplates', 'mySavedTemplates', 'categories'));
     }
 
     public function create() { return view('news.create'); }
@@ -276,5 +290,84 @@ class NewsController extends Controller
         }
 
         return response()->json(['new_count' => $query->count()]);
+    }
+
+    public function saveStudioTemplate(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'frame_url' => 'nullable|string',
+            'layout_data' => 'required',
+            'thumbnail' => 'nullable|string',
+        ]);
+
+        try {
+            $thumbnailUrl = null;
+            if ($request->filled('thumbnail')) {
+                $thumbData = $request->input('thumbnail');
+                if (preg_match('/^data:image\/(\w+);base64,/', $thumbData)) {
+                    $thumbData = substr($thumbData, strpos($thumbData, ',') + 1);
+                    $decoded = base64_decode($thumbData);
+                    $thumbDir = public_path('uploads/custom_templates');
+                    if (!\Illuminate\Support\Facades\File::exists($thumbDir)) {
+                        \Illuminate\Support\Facades\File::makeDirectory($thumbDir, 0755, true);
+                    }
+                    $thumbFile = 'thumb_' . time() . '_' . \Illuminate\Support\Str::random(6) . '.png';
+                    file_put_contents($thumbDir . '/' . $thumbFile, $decoded);
+                    $thumbnailUrl = asset('uploads/custom_templates/' . $thumbFile);
+                }
+            }
+
+            if (!$thumbnailUrl && $request->filled('frame_url')) {
+                $thumbnailUrl = $request->input('frame_url');
+            }
+
+            $layout = is_string($request->input('layout_data'))
+                ? json_decode($request->input('layout_data'), true)
+                : $request->input('layout_data');
+
+            $template = Template::create([
+                'user_id' => Auth::id(),
+                'name' => $request->input('name'),
+                'thumbnail_url' => $thumbnailUrl,
+                'frame_url' => $request->input('frame_url'),
+                'layout_data' => $layout,
+                'is_active' => true,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'template' => [
+                    'id' => $template->id,
+                    'key' => 'custom_db_' . $template->id,
+                    'user_id' => $template->user_id,
+                    'name' => $template->name,
+                    'thumbnail_url' => $template->thumbnail_url,
+                    'frame_url' => $template->frame_url,
+                    'layout_data' => $template->layout_data,
+                    'is_mine' => true,
+                ],
+                'message' => 'টেমপ্লেট সফলভাবে সংরক্ষিত হয়েছে!'
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Save Studio Template Error: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteStudioTemplate($id)
+    {
+        try {
+            $user = Auth::user();
+            $query = Template::where('id', $id);
+            if ($user->role !== 'super_admin') {
+                $query->where('user_id', $user->id);
+            }
+            $template = $query->firstOrFail();
+            $template->delete();
+            return response()->json(['success' => true, 'message' => 'টেমপ্লেট মুছে ফেলা হয়েছে!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'টেমপ্লেট ডিলিট করা যায়নি।'], 403);
+        }
     }
 }

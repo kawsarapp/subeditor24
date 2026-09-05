@@ -22,8 +22,11 @@
        <div class="flex flex-wrap justify-center md:justify-end gap-2 items-center w-full md:w-auto">
             <button type="button" onclick="restoreSavedDesign()" class="btn btn-warning text-white px-2 py-1.5 rounded-lg text-xs" title="Restore"><i class="fas fa-undo"></i></button>
             <button onclick="resetCanvas()" class="text-gray-500 hover:text-red-500 font-bold text-xs px-2 py-1.5 border border-gray-300 rounded-lg transition" title="Reset">↻</button>
-            <button onclick="saveCurrentDesign()" class="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-indigo-100 transition border border-indigo-200 shadow-sm">💾 Save</button>
-            <button id="downloadBtn" onclick="downloadCard()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md transition transform hover:-translate-y-0.5">📥 Down</button>
+            <button onclick="saveCurrentDesign()" class="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-indigo-100 transition border border-indigo-200 shadow-sm" title="ডিফল্ট সেটিংস হিসেবে সেভ">💾 Default Save</button>
+            <button onclick="openSaveTemplateModal()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md transition flex items-center gap-1 cursor-pointer" title="নতুন কাস্টম টেমপ্লেট হিসেবে সেভ">
+                <i class="fa-solid fa-cloud-arrow-up text-xs"></i> <span>+ সেভ টেমপ্লেট</span>
+            </button>
+            <button id="downloadBtn" onclick="downloadCard()" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md transition transform hover:-translate-y-0.5">📥 Down</button>
             
             {{-- 🔥 POST BUTTON calls the optimized modal opener --}}
             <button onclick="openPublishModal()" class="bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-red-700 transition shadow-md border border-red-500">
@@ -65,9 +68,44 @@
             <div class="flex-1 overflow-y-auto custom-scrollbar p-4 pb-20 md:pb-5 bg-white">
                 {{-- Design Tab --}}
                 <div id="tab-design" class="space-y-6">
+                    
+                    {{-- 📁 আমার সেভ করা টেমপ্লেট (Saved Templates) --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="label-title !mb-0 flex items-center gap-1.5">
+                                <span>📁 আমার টেমপ্লেট</span>
+                                <span id="myTemplatesCountBadge" class="text-[10px] bg-indigo-100 text-indigo-700 font-extrabold px-2 py-0.5 rounded-full">{{ count($mySavedTemplates ?? []) }}</span>
+                            </label>
+                            <button type="button" onclick="openSaveTemplateModal()" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1 cursor-pointer">
+                                <i class="fa-solid fa-plus-circle text-xs"></i> নতুন সেভ
+                            </button>
+                        </div>
+                        
+                        <div id="mySavedTemplatesGrid" class="grid grid-cols-2 gap-2.5 max-h-[220px] overflow-y-auto custom-scrollbar p-1.5 mb-4 bg-slate-50 rounded-2xl border border-slate-200">
+                            @forelse($mySavedTemplates ?? [] as $myTpl)
+                                <div id="my-template-card-{{ $myTpl['id'] }}" class="relative group border border-slate-200 rounded-xl overflow-hidden bg-white hover:border-indigo-500 transition shadow-xs">
+                                    <div onclick="applyAdminTemplate('{{ $myTpl['frame_url'] }}', 'dynamic', false, '{{ $myTpl['key'] }}')" class="cursor-pointer p-1">
+                                        <img src="{{ $myTpl['image'] }}" alt="{{ $myTpl['name'] }}" loading="lazy" class="w-full h-16 object-contain bg-slate-100 rounded-lg">
+                                        <p class="text-[10px] text-center font-bold text-slate-700 truncate mt-1 group-hover:text-indigo-600">{{ $myTpl['name'] }}</p>
+                                    </div>
+                                    <button type="button" onclick="deleteSavedTemplate({{ $myTpl['id'] }}, event)" class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-rose-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-md transition hover:scale-110 cursor-pointer" title="টেমপ্লেট মুছুন">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            @empty
+                                <div id="noSavedTemplatesMsg" class="col-span-2 py-4 text-center">
+                                    <p class="text-[11px] text-slate-400 font-semibold mb-1">কোনো সেভ করা টেমপ্লেট নেই</p>
+                                    <button type="button" onclick="openSaveTemplateModal()" class="text-[10px] font-bold text-indigo-600 hover:underline">
+                                        + বর্তমান ডিজাইন সেভ করুন
+                                    </button>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+
                     <div>
                         <label class="label-title">🎨 প্রিসেট ডিজাইন</label>
-                        <div class="grid grid-cols-3 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto custom-scrollbar p-1">
+                        <div class="grid grid-cols-3 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto custom-scrollbar p-1">
                             @foreach($availableTemplates as $template)
                                 @php
                                     // DB dynamic template: frame_url আলাদা, thumbnail শুধু preview
@@ -277,6 +315,40 @@
 
     {{-- ২. Publish Modal ইমপোর্ট করা হলো --}}
     @include('partials.studio_publish_modal')
+
+    {{-- 💾 Save as Custom Template Modal --}}
+    <div id="saveTemplateModal" class="hidden fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md p-6 font-bangla transform transition-all animate-in fade-in zoom-in-95">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-indigo-600"></i> নতুন টেমপ্লেট হিসেবে সংরক্ষণ
+                </h3>
+                <button type="button" onclick="closeSaveTemplateModal()" class="text-slate-400 hover:text-slate-600 text-sm p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <p class="text-xs text-slate-500 mb-4 leading-relaxed">
+                বর্তমান ফ্রেম, ফন্ট স্টাইল, কালার এবং হেডলাইনের অবস্থান একটি কাস্টম টেমপ্লেট হিসেবে সেভ হবে। পরবর্তীতে যেকোনো নিউজে এটি ১-ক্লিকে রিইউজ করতে পারবেন।
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">টেমপ্লেটের নাম লিখুন *</label>
+                    <input type="text" id="studioTemplateNameInput" placeholder="যেমন: আমার ব্রেকিং নিউজ, স্পেশাল রিপোর্ট..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeSaveTemplateModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                        বাতিল
+                    </button>
+                    <button type="button" id="btnSubmitSaveTemplate" onclick="submitSaveTemplate()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-check"></i> সেভ করুন
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </div>
 

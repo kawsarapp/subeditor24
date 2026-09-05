@@ -17,7 +17,7 @@ const STUDIO_TEMPLATES = {
     'rtv': { 
         title: { ...T_DEFAULTS, top: 603, left: 540, originX: 'center', textAlign: 'center', width: 950, fill: '#d90429', fontSize: 45 },
         date: { ...T_DEFAULTS, top: 43, left: 500, originX: 'left', fill: '#d90429', fontSize: 30 },
-        image: { ...T_DEFAULTS, left: 40, top: 115, width: 1000, height: 430, zoom: 0.9 }
+        image: { ...T_DEFAULTS, left: 40, top: 140, width: 1000, height: 440, zoom: 1.25 }
     },
     'dhakapost': { 
         title: { ...T_DEFAULTS, top: 772, left: 545, originX: 'center', textAlign: 'center', width: 980, fill: '#ffffff' }, 

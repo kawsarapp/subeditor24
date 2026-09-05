@@ -367,8 +367,189 @@
             templateKey: userSettings.templateKey || null   // 🔥 DB template key সেভ
         };
         fetch("{{ route('settings.save-design') }}", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') }, body: JSON.stringify({ preferences }) })
-        .then(res => res.json()).then(data => { if (data.success) { alert("✅ ডিজাইন সেভ হয়েছে!"); localStorage.setItem('studio_prefs', JSON.stringify(preferences)); Object.assign(userSettings, preferences); } });
+        .then(res => res.json()).then(data => { if (data.success) { alert("✅ ডিফল্ট ডিজাইন সেভ হয়েছে!"); localStorage.setItem('studio_prefs', JSON.stringify(preferences)); Object.assign(userSettings, preferences); } });
     }
+
+    // ==========================================
+    // 💾 SAVE & REUSE CUSTOM STUDIO TEMPLATES
+    // ==========================================
+    window.openSaveTemplateModal = function() {
+        const modal = document.getElementById('saveTemplateModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            const input = document.getElementById('studioTemplateNameInput');
+            if (input) {
+                const count = document.querySelectorAll('#mySavedTemplatesGrid > div[id^="my-template-card-"]').length;
+                input.value = 'আমার টেমপ্লেট #' + (count + 1);
+                setTimeout(() => input.focus(), 50);
+            }
+        }
+    };
+
+    window.closeSaveTemplateModal = function() {
+        const modal = document.getElementById('saveTemplateModal');
+        if (modal) modal.classList.add('hidden');
+    };
+
+    window.submitSaveTemplate = function() {
+        const nameInput = document.getElementById('studioTemplateNameInput');
+        const name = (nameInput?.value || '').trim();
+        if (!name) {
+            alert('⚠️ অনুগ্রহ করে টেমপ্লেটের একটি নাম লিখুন!');
+            nameInput?.focus();
+            return;
+        }
+
+        const titleObj = canvas.getObjects().find(obj => obj.isHeadline);
+        const dateObj = canvas.getObjects().find(obj => obj.isDate);
+        const mainImg = canvas.getObjects().find(obj => obj.isMainImage);
+
+        let imageConfig = { left: 40, top: 120, width: 1000, height: 450, zoom: 1.1 };
+        if (mainImg) {
+            const scaleX = mainImg.scaleX || 1;
+            const scaleY = mainImg.scaleY || 1;
+            imageConfig = {
+                left: mainImg.left - ((mainImg.width * scaleX) / 2),
+                top: mainImg.top - ((mainImg.height * scaleY) / 2),
+                width: mainImg.width * scaleX,
+                height: mainImg.height * scaleY,
+                zoom: 1.0
+            };
+        }
+
+        const layoutData = {
+            title: titleObj ? {
+                top: titleObj.top,
+                left: titleObj.left,
+                width: titleObj.width,
+                textAlign: titleObj.textAlign || 'center',
+                originX: titleObj.originX || 'center',
+                fontSize: titleObj.fontSize || 50,
+                fill: titleObj.fill || '#ffffff',
+                fontFamily: titleObj.fontFamily || 'Hind Siliguri',
+                backgroundColor: titleObj.backgroundColor || ''
+            } : { top: 800, left: 540, width: 980, textAlign: 'center', originX: 'center', fontSize: 60, fill: '#ffffff', fontFamily: 'Hind Siliguri', backgroundColor: '' },
+            date: dateObj ? {
+                top: dateObj.top,
+                left: dateObj.left,
+                originX: dateObj.originX || 'left',
+                fontSize: dateObj.fontSize || 30,
+                fill: dateObj.fill || '#ffffff',
+                backgroundColor: dateObj.backgroundColor || '',
+                fontFamily: dateObj.fontFamily || 'Hind Siliguri'
+            } : { top: 50, left: 50, originX: 'left', fontSize: 30, fill: '#ffffff', backgroundColor: '', fontFamily: 'Hind Siliguri' },
+            image: imageConfig
+        };
+
+        const thumbnail = canvas.toDataURL({ format: 'png', multiplier: 0.25, quality: 0.8 });
+
+        const btn = document.getElementById('btnSubmitSaveTemplate');
+        const origText = btn ? btn.innerHTML : '';
+        if (btn) { btn.innerHTML = '⏳ সেভ হচ্ছে...'; btn.disabled = true; }
+
+        const payload = {
+            name: name,
+            frame_url: userSettings.frameUrl || null,
+            layout_data: layoutData,
+            thumbnail: thumbnail
+        };
+
+        fetch("{{ route('news.studio.save-template') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.template) {
+                const tpl = data.template;
+                
+                if (!window.DB_LAYOUTS) window.DB_LAYOUTS = {};
+                window.DB_LAYOUTS[tpl.key] = tpl.layout_data;
+
+                const grid = document.getElementById('mySavedTemplatesGrid');
+                const emptyMsg = document.getElementById('noSavedTemplatesMsg');
+                if (emptyMsg) emptyMsg.remove();
+
+                const cardHtml = `
+                    <div id="my-template-card-${tpl.id}" class="relative group border border-slate-200 rounded-xl overflow-hidden bg-white hover:border-indigo-500 transition shadow-xs">
+                        <div onclick="applyAdminTemplate('${tpl.frame_url || ''}', 'dynamic', false, '${tpl.key}')" class="cursor-pointer p-1">
+                            <img src="${tpl.thumbnail_url || tpl.frame_url}" alt="${tpl.name}" loading="lazy" class="w-full h-16 object-contain bg-slate-100 rounded-lg">
+                            <p class="text-[10px] text-center font-bold text-slate-700 truncate mt-1 group-hover:text-indigo-600">${tpl.name}</p>
+                        </div>
+                        <button type="button" onclick="deleteSavedTemplate(${tpl.id}, event)" class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-rose-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-md transition hover:scale-110 cursor-pointer" title="টেমপ্লেট মুছুন">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `;
+
+                if (grid) {
+                    grid.insertAdjacentHTML('afterbegin', cardHtml);
+                }
+
+                const badge = document.getElementById('myTemplatesCountBadge');
+                if (badge) {
+                    const count = document.querySelectorAll('#mySavedTemplatesGrid > div[id^="my-template-card-"]').length;
+                    badge.innerText = count;
+                }
+
+                closeSaveTemplateModal();
+                alert(`✅ "${tpl.name}" টেমপ্লেট সফলভাবে সংরক্ষিত হয়েছে! এখন যেকোনো নিউজে ১-ক্লিকে রিইউজ করতে পারবেন।`);
+            } else {
+                alert("❌ " + (data.message || 'টেমপ্লেট সেভ করতে সমস্যা হয়েছে'));
+            }
+        })
+        .catch(err => {
+            console.error("Save Template Error:", err);
+            alert("❌ সেভ করতে ত্রুটি হয়েছে!");
+        })
+        .finally(() => {
+            if (btn) { btn.innerHTML = origText; btn.disabled = false; }
+        });
+    };
+
+    window.deleteSavedTemplate = function(templateId, e) {
+        if (e) e.stopPropagation();
+        if (!confirm('আপনি কি নিশ্চিতভাবে এই টেমপ্লেটটি মুছে ফেলতে চান?')) return;
+
+        fetch(`/news/studio/delete-template/${templateId}`, {
+            method: "DELETE",
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const el = document.getElementById(`my-template-card-${templateId}`);
+                if (el) el.remove();
+
+                const badge = document.getElementById('myTemplatesCountBadge');
+                const remaining = document.querySelectorAll('#mySavedTemplatesGrid > div[id^="my-template-card-"]').length;
+                if (badge) badge.innerText = remaining;
+
+                if (remaining === 0) {
+                    const grid = document.getElementById('mySavedTemplatesGrid');
+                    if (grid) {
+                        grid.innerHTML = `
+                            <div id="noSavedTemplatesMsg" class="col-span-2 py-4 text-center">
+                                <p class="text-[11px] text-slate-400 font-semibold mb-1">কোনো সেভ করা টেমপ্লেট নেই</p>
+                                <button type="button" onclick="openSaveTemplateModal()" class="text-[10px] font-bold text-indigo-600 hover:underline">
+                                    + বর্তমান ডিজাইন সেভ করুন
+                                </button>
+                            </div>
+                        `;
+                    }
+                }
+            } else {
+                alert("❌ " + (data.message || 'ডিলিট করতে ব্যর্থ হয়েছে'));
+            }
+        })
+        .catch(err => alert("❌ ডিলিট করতে সমস্যা হয়েছে"));
+    };
 
     // ==========================================
     // 🔤 ৫. ফন্ট ম্যানেজমেন্ট
