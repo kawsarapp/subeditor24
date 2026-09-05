@@ -97,4 +97,20 @@ class ScraperMonitorController extends Controller
             'failedLogs'
         ));
     }
+
+    /**
+     * Clear / Reset Scraper Monitor Logs
+     */
+    public function clearLogs(Request $request)
+    {
+        $type = $request->input('type', 'all');
+
+        if ($type === 'failed') {
+            ScraperLog::where('status', 'failed')->delete();
+            return redirect()->route('admin.scraper-monitor')->with('success', 'সকল ব্যর্থ (Failed) স্ক্র্যাপার লগ সফলভাবে মুছে ফেলা হয়েছে।');
+        }
+
+        ScraperLog::truncate();
+        return redirect()->route('admin.scraper-monitor')->with('success', 'স্ক্র্যাপার মনিটরের সমস্ত লগ সফলভাবে রিসেট করা হয়েছে।');
+    }
 }

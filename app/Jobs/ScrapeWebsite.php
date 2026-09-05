@@ -379,8 +379,8 @@ class ScrapeWebsite implements ShouldQueue
                         return;
                     }
 
-                    // 🔥 Skip Homepage / Root URL exactly
-                    if (rtrim($link, '/') === rtrim($baseUrl, '/')) {
+                    // 🔥 Skip Homepage / Root URL exactly & hash placeholder links
+                    if (rtrim($link, '/') === rtrim($baseUrl, '/') || $link === '#' || str_ends_with($link, '#') || str_ends_with($link, '/#')) {
                         return;
                     }
 

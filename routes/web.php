@@ -85,6 +85,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/custom-api', [SettingsController::class, 'testCustomApiConnection'])->name('test-custom-api');
             Route::post('/photoroom', [SettingsController::class, 'testPhotoRoomConnection'])->name('test-photoroom');
             Route::post('/decodo-proxy', [SettingsController::class, 'testDecodoProxyConnection'])->name('test-decodo-proxy');
+            Route::post('/ai-provider', [SettingsController::class, 'testAiProviderConnection'])->name('test-ai-provider');
         });
 
         // 🔥 Multi-Facebook Page Routes
@@ -245,8 +246,8 @@ Route::middleware(['auth', 'nocache', AdminMiddleware::class])->group(function (
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
-        Route::get('/post-history', [AdminController::class, 'postHistory'])->name('post-history');
         Route::get('/scraper-monitor', [\App\Http\Controllers\SuperAdmin\ScraperMonitorController::class, 'index'])->name('scraper-monitor');
+        Route::post('/scraper-monitor/clear', [\App\Http\Controllers\SuperAdmin\ScraperMonitorController::class, 'clearLogs'])->name('scraper-monitor.clear');
 
         Route::prefix('users/{id}')->name('users.')->group(function () {
             Route::post('/toggle-status', [AdminController::class, 'toggleStatus'])->name('toggle');

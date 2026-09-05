@@ -188,27 +188,37 @@ class ProcessSingleNews implements ShouldQueue
                 $headers['Referer'] = $referer;
             }
 
-            // 🚀 Fast Download using Laravel HTTP (Timeout 15s)
-            $httpRequest = Http::withHeaders($headers)->withOptions(['verify' => false])->timeout(15);
-            
+            // 🚀 Fast Download using Laravel HTTP (Timeout 8s for proxy, 10s for direct)
+            $response = null;
             if ($proxy) {
-                // withOptions merges with existing config
-                $httpRequest->withOptions(['proxy' => $proxy, 'verify' => false]);
-            } else {
-                Log::info("🌐 Image downloading via direct secure stream: $url");
-            }
-            $response = $httpRequest->get($url);
-
-            // ⚠️ Smart Fallback: Cloudflare usually blocks Datacenter Proxies from downloading static files (ntv, dailystar, etc.)
-            // If the proxy download fails, we fallback to a Direct Server Download for the image only.
-            if ($response->failed() && $proxy) {
-                Log::warning("⚠️ Proxy blocked by firewall/Cloudflare. Attempting Direct Server Download for: $url");
-                $directRequest = Http::withHeaders($headers)->withOptions(['verify' => false])->timeout(15);
-                
-                $response = $directRequest->get($url);
+                try {
+                    $response = Http::withHeaders($headers)
+                        ->withOptions(['proxy' => $proxy, 'verify' => false])
+                        ->timeout(8)
+                        ->get($url);
+                } catch (\Exception $proxyEx) {
+                    Log::warning("⚠️ Image Proxy failed/timed out ($url): " . $proxyEx->getMessage() . ". Retrying via direct download...");
+                    $response = null;
+                }
             }
 
-            if ($response->failed()) return $url; // ডাউনলোড না হলে অরিজিনাল ইউআরএল রিটার্ন
+            // ⚠️ Smart Fallback: If proxy is null/failed/blocked, fallback to Direct Server Download
+            if (!$response || $response->failed()) {
+                if ($proxy) {
+                    Log::info("🌐 Proxy failed/blocked. Attempting Direct Server Download for: $url");
+                }
+                try {
+                    $directRequest = Http::withHeaders($headers)
+                        ->withOptions(['verify' => false])
+                        ->timeout(10);
+                    $response = $directRequest->get($url);
+                } catch (\Exception $directEx) {
+                    Log::warning("⚠️ Direct Image Download also failed ($url): " . $directEx->getMessage());
+                    return $url;
+                }
+            }
+
+            if (!$response || $response->failed()) return $url; // ডাউনলোড না হলে অরিজিনাল ইউআরএল রিটার্ন
 
             $manager = new ImageManager(new Driver());
             $image = $manager->read($response->body());

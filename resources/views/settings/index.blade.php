@@ -403,16 +403,23 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Gemini -->
-                    <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
-                        <h3 class="font-bold text-gray-700 mb-2 text-xs">Gemini (Google)</h3>
+                    <div class="bg-white p-4 rounded-xl border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+                            <h3 class="font-bold text-gray-800 text-xs flex items-center gap-1.5">
+                                <i class="fab fa-google text-blue-500"></i> Gemini (Google AI)
+                            </h3>
+                            <button type="button" onclick="testAiProvider('gemini')" class="text-[11px] bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded border border-blue-200 transition cursor-pointer flex items-center gap-1">
+                                <i class="fas fa-vial"></i> <span>Test Connection</span>
+                            </button>
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">API Key</label>
-                                <input type="password" name="gemini_api_key" value="{{ old('gemini_api_key', $settings->gemini_api_key ?? '') }}" placeholder="AIzaSy... (খালি রাখলে .env ব্যবহার হবে)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
+                                <input type="password" id="gemini_api_key" name="gemini_api_key" value="{{ old('gemini_api_key', $settings->gemini_api_key ?? '') }}" placeholder="AIzaSy... (খালি রাখলে .env ব্যবহার হবে)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">Model Selection</label>
-                                <select name="gemini_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                                <select id="gemini_model" name="gemini_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
                                     <option value="">Default (gemini-1.5-flash)</option>
                                     <option value="gemini-2.5-flash" {{ ($settings->gemini_model ?? '') == 'gemini-2.5-flash' ? 'selected' : '' }}>Gemini 2.5 Flash (Fast + Balance)</option>
                                     <option value="gemini-2.5-pro" {{ ($settings->gemini_model ?? '') == 'gemini-2.5-pro' ? 'selected' : '' }}>Gemini 2.5 Pro (Complex Reasoning)</option>
@@ -422,38 +429,54 @@
                                 </select>
                             </div>
                         </div>
+                        <div id="gemini_status_msg" class="text-xs font-bold mt-2 whitespace-pre-line"></div>
                     </div>
 
                     <!-- DeepSeek -->
-                    <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
-                        <h3 class="font-bold text-gray-700 mb-2 text-xs">DeepSeek</h3>
+                    <div class="bg-white p-4 rounded-xl border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+                            <h3 class="font-bold text-gray-800 text-xs flex items-center gap-1.5">
+                                <i class="fas fa-brain text-indigo-600"></i> DeepSeek AI
+                            </h3>
+                            <button type="button" onclick="testAiProvider('deepseek')" class="text-[11px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded border border-indigo-200 transition cursor-pointer flex items-center gap-1">
+                                <i class="fas fa-vial"></i> <span>Test Connection</span>
+                            </button>
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">API Key</label>
-                                <input type="password" name="deepseek_api_key" value="{{ old('deepseek_api_key', $settings->deepseek_api_key ?? '') }}" placeholder="sk-... (খালি রাখলে .env ব্যবহার হবে)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
+                                <input type="password" id="deepseek_api_key" name="deepseek_api_key" value="{{ old('deepseek_api_key', $settings->deepseek_api_key ?? '') }}" placeholder="sk-... (খালি রাখলে .env ব্যবহার হবে)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">Model Selection</label>
-                                <select name="deepseek_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                                <select id="deepseek_model" name="deepseek_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
                                     <option value="">Default (deepseek-chat)</option>
                                     <option value="deepseek-chat" {{ ($settings->deepseek_model ?? '') == 'deepseek-chat' ? 'selected' : '' }}>DeepSeek V3 (deepseek-chat)</option>
                                     <option value="deepseek-reasoner" {{ ($settings->deepseek_model ?? '') == 'deepseek-reasoner' ? 'selected' : '' }}>DeepSeek R1 (deepseek-reasoner)</option>
                                 </select>
                             </div>
                         </div>
+                        <div id="deepseek_status_msg" class="text-xs font-bold mt-2 whitespace-pre-line"></div>
                     </div>
 
                     <!-- Qwen (DashScope) -->
-                    <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
-                        <h3 class="font-bold text-gray-700 mb-2 text-xs">Qwen (DashScope API)</h3>
+                    <div class="bg-white p-4 rounded-xl border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+                            <h3 class="font-bold text-gray-800 text-xs flex items-center gap-1.5">
+                                <i class="fas fa-microchip text-orange-500"></i> Qwen (DashScope API)
+                            </h3>
+                            <button type="button" onclick="testAiProvider('qwen')" class="text-[11px] bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold px-3 py-1 rounded border border-orange-200 transition cursor-pointer flex items-center gap-1">
+                                <i class="fas fa-vial"></i> <span>Test Connection</span>
+                            </button>
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">API Key</label>
-                                <input type="password" name="qwen_api_key" value="{{ old('qwen_api_key', $settings->qwen_api_key ?? '') }}" placeholder="sk-... (DashScope API Key)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
+                                <input type="password" id="qwen_api_key" name="qwen_api_key" value="{{ old('qwen_api_key', $settings->qwen_api_key ?? '') }}" placeholder="sk-... (DashScope API Key)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">Model Selection</label>
-                                <select name="qwen_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                                <select id="qwen_model" name="qwen_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
                                     <option value="">Default (qwen-turbo)</option>
                                     <option value="qwen-turbo" {{ ($settings->qwen_model ?? '') == 'qwen-turbo' ? 'selected' : '' }}>Qwen Turbo (Fast & Cheap)</option>
                                     <option value="qwen-plus" {{ ($settings->qwen_model ?? '') == 'qwen-plus' ? 'selected' : '' }}>Qwen Plus (Balanced)</option>
@@ -461,19 +484,27 @@
                                 </select>
                             </div>
                         </div>
+                        <div id="qwen_status_msg" class="text-xs font-bold mt-2 whitespace-pre-line"></div>
                     </div>
 
                     <!-- Groq -->
-                    <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
-                        <h3 class="font-bold text-gray-700 mb-2 text-xs">Groq (Ultra-Fast LPU)</h3>
+                    <div class="bg-white p-4 rounded-xl border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+                            <h3 class="font-bold text-gray-800 text-xs flex items-center gap-1.5">
+                                <i class="fas fa-bolt text-yellow-500"></i> Groq (Ultra-Fast LPU)
+                            </h3>
+                            <button type="button" onclick="testAiProvider('groq')" class="text-[11px] bg-yellow-50 hover:bg-yellow-100 text-yellow-800 font-bold px-3 py-1 rounded border border-yellow-200 transition cursor-pointer flex items-center gap-1">
+                                <i class="fas fa-vial"></i> <span>Test Connection</span>
+                            </button>
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">API Key</label>
-                                <input type="password" name="groq_api_key" value="{{ old('groq_api_key', $settings->groq_api_key ?? '') }}" placeholder="gsk_... (Groq Console)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
+                                <input type="password" id="groq_api_key" name="groq_api_key" value="{{ old('groq_api_key', $settings->groq_api_key ?? '') }}" placeholder="gsk_... (Groq Console)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">Model Selection</label>
-                                <select name="groq_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                                <select id="groq_model" name="groq_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
                                     <option value="">Default (llama-3.3-70b-versatile)</option>
                                     <option value="llama-3.3-70b-versatile" {{ ($settings->groq_model ?? '') == 'llama-3.3-70b-versatile' ? 'selected' : '' }}>Llama 3.3 70B (Versatile)</option>
                                     <option value="llama-3.1-8b-instant" {{ ($settings->groq_model ?? '') == 'llama-3.1-8b-instant' ? 'selected' : '' }}>Llama 3.1 8B (Instant Speed)</option>
@@ -481,34 +512,50 @@
                                 </select>
                             </div>
                         </div>
+                        <div id="groq_status_msg" class="text-xs font-bold mt-2 whitespace-pre-line"></div>
                     </div>
 
                     <!-- Hugging Face -->
-                    <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
-                        <h3 class="font-bold text-gray-700 mb-2 text-xs">Hugging Face (Inference API)</h3>
+                    <div class="bg-white p-4 rounded-xl border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+                            <h3 class="font-bold text-gray-800 text-xs flex items-center gap-1.5">
+                                <i class="fas fa-smile text-amber-500"></i> Hugging Face (Inference API)
+                            </h3>
+                            <button type="button" onclick="testAiProvider('huggingface')" class="text-[11px] bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold px-3 py-1 rounded border border-amber-200 transition cursor-pointer flex items-center gap-1">
+                                <i class="fas fa-vial"></i> <span>Test Connection</span>
+                            </button>
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">User Access Token</label>
-                                <input type="password" name="huggingface_api_key" value="{{ old('huggingface_api_key', $settings->huggingface_api_key ?? '') }}" placeholder="hf_... (HuggingFace Access Token)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
+                                <input type="password" id="huggingface_api_key" name="huggingface_api_key" value="{{ old('huggingface_api_key', $settings->huggingface_api_key ?? '') }}" placeholder="hf_... (HuggingFace Access Token)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">Model Repository ID</label>
-                                <input type="text" name="huggingface_model" value="{{ old('huggingface_model', $settings->huggingface_model ?? '') }}" placeholder="e.g. meta-llama/Llama-3.2-3B-Instruct" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
+                                <input type="text" id="huggingface_model" name="huggingface_model" value="{{ old('huggingface_model', $settings->huggingface_model ?? '') }}" placeholder="e.g. meta-llama/Llama-3.2-3B-Instruct" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
                             </div>
                         </div>
+                        <div id="huggingface_status_msg" class="text-xs font-bold mt-2 whitespace-pre-line"></div>
                     </div>
 
                     <!-- OpenAI -->
-                    <div class="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
-                        <h3 class="font-bold text-gray-700 mb-2 text-xs">OpenAI (ChatGPT)</h3>
+                    <div class="bg-white p-4 rounded-xl border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+                            <h3 class="font-bold text-gray-800 text-xs flex items-center gap-1.5">
+                                <i class="fas fa-cube text-emerald-600"></i> OpenAI (ChatGPT)
+                            </h3>
+                            <button type="button" onclick="testAiProvider('openai')" class="text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded border border-emerald-200 transition cursor-pointer flex items-center gap-1">
+                                <i class="fas fa-vial"></i> <span>Test Connection</span>
+                            </button>
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">API Key</label>
-                                <input type="password" name="openai_api_key" value="{{ old('openai_api_key', $settings->openai_api_key ?? '') }}" placeholder="sk-proj-... (খালি রাখলে .env ব্যবহার হবে)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
+                                <input type="password" id="openai_api_key" name="openai_api_key" value="{{ old('openai_api_key', $settings->openai_api_key ?? '') }}" placeholder="sk-proj-... (খালি রাখলে .env ব্যবহার হবে)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">Model Selection</label>
-                                <select name="openai_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                                <select id="openai_model" name="openai_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
                                     <option value="">Default (gpt-4o-mini)</option>
                                     <option value="gpt-4o-mini" {{ ($settings->openai_model ?? '') == 'gpt-4o-mini' ? 'selected' : '' }}>GPT-4o Mini (Fast & Cheap)</option>
                                     <option value="gpt-4o" {{ ($settings->openai_model ?? '') == 'gpt-4o' ? 'selected' : '' }}>GPT-4o (Smartest)</option>
@@ -517,6 +564,7 @@
                                 </select>
                             </div>
                         </div>
+                        <div id="openai_status_msg" class="text-xs font-bold mt-2 whitespace-pre-line"></div>
                     </div>
                 </div>
             </div>
@@ -1371,6 +1419,49 @@
         .catch(err => {
             statusMsg.innerText = "❌ নেটওয়ার্ক এরর: " + err.message;
             statusMsg.className = "text-xs font-bold mb-4 text-red-700 bg-red-50 p-3 rounded-lg border border-red-300 block whitespace-pre-line";
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+
+    function testAiProvider(provider) {
+        const keyInput = document.getElementById(provider + '_api_key');
+        const modelInput = document.getElementById(provider + '_model');
+        const statusMsg = document.getElementById(provider + '_status_msg');
+        const btn = event.currentTarget || document.activeElement;
+        const originalText = btn.innerHTML;
+
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+        btn.disabled = true;
+        statusMsg.innerHTML = "⏳ এআই সার্ভারে টেস্ট রিকোয়েস্ট পাঠানো হচ্ছে...";
+        statusMsg.className = "text-xs font-bold mt-2 text-blue-600 bg-blue-50 p-2.5 rounded border border-blue-200 block";
+
+        fetch(`/settings/test/ai-provider`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                provider: provider,
+                api_key: keyInput ? keyInput.value.trim() : '',
+                model: modelInput ? modelInput.value.trim() : ''
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            statusMsg.innerText = data.message;
+            if (data.success) {
+                statusMsg.className = "text-xs font-bold mt-2 text-green-700 bg-green-50 p-2.5 rounded border border-green-300 block whitespace-pre-line";
+            } else {
+                statusMsg.className = "text-xs font-bold mt-2 text-red-700 bg-red-50 p-2.5 rounded border border-red-300 block whitespace-pre-line";
+            }
+        })
+        .catch(err => {
+            statusMsg.innerText = "❌ নেটওয়ার্ক এরর: " + err.message;
+            statusMsg.className = "text-xs font-bold mt-2 text-red-700 bg-red-50 p-2.5 rounded border border-red-300 block whitespace-pre-line";
         })
         .finally(() => {
             btn.innerHTML = originalText;

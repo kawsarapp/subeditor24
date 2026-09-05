@@ -9,12 +9,41 @@
             <h1 class="text-3xl font-bold text-slate-800">📊 স্ক্র্যাপার মনিটর ড্যাশবোর্ড</h1>
             <p class="text-slate-500 mt-1">সব সোর্সের লাইভ স্ক্র্যাপিং পারফরম্যান্স এবং এরর ট্র্যাকিং</p>
         </div>
-        <div class="mt-4 md:mt-0 flex gap-3">
-            <span class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">
+        <div class="mt-4 md:mt-0 flex flex-wrap items-center gap-3">
+            {{-- Clear Failed Logs Only --}}
+            <form action="{{ route('admin.scraper-monitor.clear') }}" method="POST" onsubmit="return confirm('আপনি কি নিশ্চিত যে শুধুমাত্র ব্যর্থ (Failed) এরর লগগুলো মুছে ফেলতে চান?');">
+                @csrf
+                <input type="hidden" name="type" value="failed">
+                <button type="submit" class="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <span>🗑️</span> ব্যর্থ লগ ক্লিয়ার করুন
+                </button>
+            </form>
+
+            {{-- Reset All Logs --}}
+            <form action="{{ route('admin.scraper-monitor.clear') }}" method="POST" onsubmit="return confirm('⚠️ আপনি কি নিশ্চিত যে সমস্ত স্ক্র্যাপার লগ রিসেট করতে চান? এতে মনিটরের সকল পুরনো রেকর্ড ও কাউন্টার শূন্য হয়ে যাবে।');">
+                @csrf
+                <input type="hidden" name="type" value="all">
+                <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <span>♻️</span> সকল লগ রিসেট করুন
+                </button>
+            </form>
+
+            <span class="bg-indigo-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md">
                 Super Admin Only
             </span>
         </div>
     </div>
+
+    {{-- Success Flash Alert --}}
+    @if(session('success'))
+    <div class="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm font-bold flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-2">
+            <span>✅</span>
+            <span>{{ session('success') }}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-green-500 hover:text-green-700 font-bold">&times;</button>
+    </div>
+    @endif
 
     {{-- Stats Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">

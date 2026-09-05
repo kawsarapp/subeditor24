@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Cache;
 use App\Services\PhotoRoomService;
+use Illuminate\Support\Str;
 
 class SettingsController extends Controller
 {
@@ -685,6 +686,252 @@ class SettingsController extends Controller
                     'message' => '❌ প্রক্সি কানেকশন এরর: ' . $e->getMessage()
                 ]);
             }
+        }
+    }
+
+    /**
+     * AI Provider লাইভ কানেকশন টেস্ট (Gemini, DeepSeek, OpenAI, Groq, Qwen, HuggingFace)
+     */
+    public function testAiProviderConnection(Request $request)
+    {
+        $provider = strtolower($request->input('provider', ''));
+        $apiKey   = trim((string) $request->input('api_key', ''));
+        $model    = trim((string) $request->input('model', ''));
+
+        $user = Auth::user();
+        $settings = $user ? $user->settings : null;
+
+        $providerNames = [
+            'gemini'      => 'Gemini (Google AI)',
+            'deepseek'    => 'DeepSeek AI',
+            'openai'      => 'OpenAI (ChatGPT)',
+            'groq'        => 'Groq (Ultra-Fast LPU)',
+            'qwen'        => 'Qwen (DashScope API)',
+            'huggingface' => 'Hugging Face Inference'
+        ];
+
+        $displayName = $providerNames[$provider] ?? ucfirst($provider);
+
+        // Fallback for API keys if user didn't enter one in test input
+        if (empty($apiKey)) {
+            switch ($provider) {
+                case 'gemini':
+                    $apiKey = ($settings ? $settings->gemini_api_key : null) ?? (config('services.gemini.key') ?? env('GEMINI_API_KEY'));
+                    break;
+                case 'deepseek':
+                    $apiKey = ($settings ? $settings->deepseek_api_key : null) ?? (config('services.deepseek.key') ?? env('DEEPSEEK_API_KEY'));
+                    break;
+                case 'openai':
+                    $apiKey = ($settings ? $settings->openai_api_key : null) ?? (config('services.openai.key') ?? env('OPENAI_API_KEY'));
+                    break;
+                case 'groq':
+                    $apiKey = ($settings ? $settings->groq_api_key : null) ?? env('GROQ_API_KEY');
+                    break;
+                case 'qwen':
+                    $apiKey = ($settings ? $settings->qwen_api_key : null) ?? env('QWEN_API_KEY');
+                    break;
+                case 'huggingface':
+                    $apiKey = ($settings ? $settings->huggingface_api_key : null) ?? env('HUGGINGFACE_API_KEY');
+                    break;
+            }
+        }
+
+        if (empty($apiKey)) {
+            return response()->json([
+                'success' => false,
+                'message' => "❌ অনুগ্রহ করে {$displayName} এর API Key প্রদান করুন বা সেটিংস সেভ করুন।"
+            ]);
+        }
+
+        $startTime = microtime(true);
+
+        try {
+            switch ($provider) {
+                case 'gemini':
+                    $selectedModel = !empty($model) ? $model : ($settings->gemini_model ?? 'gemini-1.5-flash');
+                    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$selectedModel}:generateContent?key={$apiKey}";
+                    
+                    $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                        ->timeout(25)
+                        ->post($url, [
+                            "contents" => [[
+                                "parts" => [["text" => "Ping test. Reply with exactly: Connected successfully."]]
+                            ]]
+                        ]);
+
+                    $elapsed = round(microtime(true) - $startTime, 2);
+
+                    if ($response->successful()) {
+                        $reply = $response->json('candidates.0.content.parts.0.text') ?? 'OK';
+                        return response()->json([
+                            'success' => true,
+                            'message' => "✅ {$displayName} কানেকশন ১০০% সফল ও সক্রিয়!\n🤖 মডেল: {$selectedModel}\n⚡ রেসপন্স টাইম: {$elapsed} সেকেন্ড\n💬 এআই টেস্ট রেসপন্স: " . trim($reply)
+                        ]);
+                    }
+                    break;
+
+                case 'deepseek':
+                    $selectedModel = !empty($model) ? $model : ($settings->deepseek_model ?? 'deepseek-chat');
+                    
+                    $response = Http::withHeaders([
+                        'Authorization' => 'Bearer ' . $apiKey,
+                        'Content-Type'  => 'application/json',
+                    ])->timeout(25)->post("https://api.deepseek.com/chat/completions", [
+                        "model" => $selectedModel,
+                        "messages" => [
+                            ["role" => "user", "content" => "Ping test. Reply with: Connected successfully."]
+                        ],
+                        "max_tokens" => 30
+                    ]);
+
+                    $elapsed = round(microtime(true) - $startTime, 2);
+
+                    if ($response->successful()) {
+                        $reply = $response->json('choices.0.message.content') ?? 'OK';
+                        return response()->json([
+                            'success' => true,
+                            'message' => "✅ {$displayName} কানেকশন ১০০% সফল ও সক্রিয়!\n🤖 মডেল: {$selectedModel}\n⚡ রেসপন্স টাইম: {$elapsed} সেকেন্ড\n💬 এআই টেস্ট রেসপন্স: " . trim($reply)
+                        ]);
+                    }
+                    break;
+
+                case 'openai':
+                    $selectedModel = !empty($model) ? $model : ($settings->openai_model ?? 'gpt-4o-mini');
+                    
+                    $response = Http::withHeaders([
+                        'Authorization' => 'Bearer ' . $apiKey,
+                        'Content-Type'  => 'application/json',
+                    ])->timeout(25)->post("https://api.openai.com/v1/chat/completions", [
+                        "model" => $selectedModel,
+                        "messages" => [
+                            ["role" => "user", "content" => "Ping test. Reply with: Connected successfully."]
+                        ],
+                        "max_tokens" => 30
+                    ]);
+
+                    $elapsed = round(microtime(true) - $startTime, 2);
+
+                    if ($response->successful()) {
+                        $reply = $response->json('choices.0.message.content') ?? 'OK';
+                        return response()->json([
+                            'success' => true,
+                            'message' => "✅ {$displayName} কানেকশন ১০০% সফল ও সক্রিয়!\n🤖 মডেল: {$selectedModel}\n⚡ রেসপন্স টাইম: {$elapsed} সেকেন্ড\n💬 এআই টেস্ট রেসপন্স: " . trim($reply)
+                        ]);
+                    }
+                    break;
+
+                case 'groq':
+                    $selectedModel = !empty($model) ? $model : ($settings->groq_model ?? 'llama-3.3-70b-versatile');
+                    
+                    $response = Http::withHeaders([
+                        'Authorization' => 'Bearer ' . $apiKey,
+                        'Content-Type'  => 'application/json',
+                    ])->timeout(25)->post("https://api.groq.com/openai/v1/chat/completions", [
+                        "model" => $selectedModel,
+                        "messages" => [
+                            ["role" => "user", "content" => "Ping test. Reply with: Connected successfully."]
+                        ],
+                        "max_tokens" => 30
+                    ]);
+
+                    $elapsed = round(microtime(true) - $startTime, 2);
+
+                    if ($response->successful()) {
+                        $reply = $response->json('choices.0.message.content') ?? 'OK';
+                        return response()->json([
+                            'success' => true,
+                            'message' => "✅ {$displayName} কানেকশন ১০০% সফল ও সক্রিয়!\n🤖 মডেল: {$selectedModel}\n⚡ রেসপন্স টাইম: {$elapsed} সেকেন্ড\n💬 এআই টেস্ট রেসপন্স: " . trim($reply)
+                        ]);
+                    }
+                    break;
+
+                case 'qwen':
+                    $selectedModel = !empty($model) ? $model : ($settings->qwen_model ?? 'qwen-turbo');
+                    
+                    $response = Http::withHeaders([
+                        'Authorization' => 'Bearer ' . $apiKey,
+                        'Content-Type'  => 'application/json',
+                    ])->timeout(25)->post("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", [
+                        "model" => $selectedModel,
+                        "messages" => [
+                            ["role" => "user", "content" => "Ping test. Reply with: Connected successfully."]
+                        ],
+                        "max_tokens" => 30
+                    ]);
+
+                    $elapsed = round(microtime(true) - $startTime, 2);
+
+                    if ($response->successful()) {
+                        $reply = $response->json('choices.0.message.content') ?? 'OK';
+                        return response()->json([
+                            'success' => true,
+                            'message' => "✅ {$displayName} কানেকশন ১০০% সফল ও সক্রিয়!\n🤖 মডেল: {$selectedModel}\n⚡ রেসপন্স টাইম: {$elapsed} সেকেন্ড\n💬 এআই টেস্ট রেসপন্স: " . trim($reply)
+                        ]);
+                    }
+                    break;
+
+                case 'huggingface':
+                    $selectedModel = !empty($model) ? $model : ($settings->huggingface_model ?? 'Qwen/Qwen2.5-72B-Instruct');
+                    
+                    $response = Http::withHeaders([
+                        'Authorization' => 'Bearer ' . $apiKey,
+                        'Content-Type'  => 'application/json',
+                    ])->timeout(25)->post("https://api-inference.huggingface.co/models/{$selectedModel}", [
+                        "inputs" => "Ping test. Reply with: Connected successfully.",
+                        "parameters" => ["max_new_tokens" => 30]
+                    ]);
+
+                    $elapsed = round(microtime(true) - $startTime, 2);
+
+                    if ($response->successful()) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => "✅ {$displayName} কানেকশন ১০০% সফল ও সক্রিয়!\n🤖 মডেল: {$selectedModel}\n⚡ রেসপন্স টাইম: {$elapsed} সেকেন্ড"
+                        ]);
+                    }
+                    break;
+
+                default:
+                    return response()->json([
+                        'success' => false,
+                        'message' => '❌ অজানা AI প্রোভাইডার সিলেক্ট করা হয়েছে।'
+                    ]);
+            }
+
+            $status = $response->status();
+            $body = $response->body();
+
+            if ($status === 401 || $status === 403) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "❌ {$displayName} অথেনটিকেশন ফেইল্ড (HTTP {$status})! API Key টি সঠিক নয় বা ইনভ্যালিড।"
+                ]);
+            }
+
+            if ($status === 429) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "⚠️ {$displayName} কোটা লিমিট অতিক্রম করেছে (HTTP 429)! আপনার অ্যাকাউন্টের ব্যালেন্স/ক্রেডিট শেষ অথবা রেট লিমিট হয়েছে।"
+                ]);
+            }
+
+            if ($status === 404) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "❌ {$displayName} মডেল বা এন্ডপয়েন্ট পাওয়া যায়নি (HTTP 404)! মডেল নামটি সঠিক কি না যাচাই করুন।"
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => "❌ {$displayName} এরর (HTTP {$status}): " . Str::limit($body, 150)
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => "❌ {$displayName} কানেকশন ব্যর্থ: " . $e->getMessage()
+            ]);
         }
     }
 
