@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
 			'nocache' => \App\Http\Middleware\NoCacheMiddleware::class, // 🔥 Notun add holo
         ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\GzipResponseMiddleware::class,
+        ]);
         
         // 🔥 Login/Guest redirect loop ফিক্স
         $middleware->redirectTo(

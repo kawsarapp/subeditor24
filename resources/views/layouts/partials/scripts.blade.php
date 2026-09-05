@@ -168,6 +168,28 @@
     // ==========================================================
     // ⌨️ GLOBAL KEYBOARD SHORTCUTS ENGINE
     // ==========================================================
+    let focusedCardIndex = -1;
+
+    function getFocusableCards() {
+        return Array.from(document.querySelectorAll('.news-feed-card, [data-news-id], .luxe-card'))
+            .filter(el => el.offsetParent !== null && !el.classList.contains('hidden'));
+    }
+
+    function highlightFocusedCard(index) {
+        const cards = getFocusableCards();
+        if (cards.length === 0) return;
+        
+        cards.forEach(c => {
+            c.classList.remove('ring-4', 'ring-indigo-500', 'shadow-2xl', 'scale-[1.01]', 'border-indigo-500');
+        });
+
+        if (index >= 0 && index < cards.length) {
+            const card = cards[index];
+            card.classList.add('ring-4', 'ring-indigo-500', 'shadow-2xl', 'scale-[1.01]', 'border-indigo-500');
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
     function openShortcutsModal() {
         const modal = document.getElementById('shortcutsModal');
         if (modal) modal.classList.remove('hidden');
@@ -182,25 +204,39 @@
         const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
         const isInput = (activeTag === 'input' || activeTag === 'textarea' || document.activeElement.isContentEditable);
 
-        // '?' pressed outside input -> Open Shortcuts Modal
+        // '?' pressed outside input -> Open/Close Shortcuts Modal
         if (e.key === '?' && !isInput) {
             e.preventDefault();
             const modal = document.getElementById('shortcutsModal');
-            if (modal && modal.classList.contains('hidden')) {
-                openShortcutsModal();
-            } else {
+            if (modal && !modal.classList.contains('hidden')) {
                 closeShortcutsModal();
+            } else {
+                openShortcutsModal();
             }
+            return;
         }
 
-        // 'Escape' pressed -> Close any visible modal
+        // 'Escape' pressed -> Close any visible modal & remove card focus
         if (e.key === 'Escape') {
             closeShortcutsModal();
             document.querySelectorAll('.fixed:not(.hidden)').forEach(m => {
-                if (m.id && (m.id.includes('Modal') || m.id.includes('modal'))) {
+                if (m.id && (m.id.includes('Modal') || m.id.includes('modal') || m.id.includes('alert') || m.id.includes('Sheet'))) {
                     m.classList.add('hidden');
                 }
             });
+            if (focusedCardIndex !== -1) {
+                const cards = getFocusableCards();
+                cards.forEach(c => c.classList.remove('ring-4', 'ring-indigo-500', 'shadow-2xl', 'scale-[1.01]', 'border-indigo-500'));
+                focusedCardIndex = -1;
+            }
+            return;
+        }
+
+        // 'Alt + D' -> Toggle Dark Mode
+        if (e.altKey && e.key.toLowerCase() === 'd') {
+            e.preventDefault();
+            toggleDarkMode();
+            return;
         }
 
         // 'Ctrl + S' or 'Cmd + S' -> Save active form
@@ -212,6 +248,74 @@
                 const submitBtn = form.querySelector('button[type="submit"]');
                 if (submitBtn) submitBtn.click();
                 else form.submit();
+            }
+            return;
+        }
+
+        // 'Ctrl + Enter' or 'Cmd + Enter' -> Quick Publish/Submit in modals or drafts
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            const openModal = document.querySelector('.fixed:not(.hidden)');
+            if (openModal) {
+                const publishBtn = openModal.querySelector('button[type="submit"], button[onclick*="publish"], button[onclick*="save"]');
+                if (publishBtn) {
+                    e.preventDefault();
+                    publishBtn.click();
+                    return;
+                }
+            }
+        }
+
+        // News Navigation shortcuts only when NOT typing in inputs
+        if (isInput) return;
+
+        const cards = getFocusableCards();
+        if (cards.length === 0) return;
+
+        // 'J' -> Next Card
+        if (e.key.toLowerCase() === 'j') {
+            e.preventDefault();
+            focusedCardIndex = (focusedCardIndex < cards.length - 1) ? focusedCardIndex + 1 : 0;
+            highlightFocusedCard(focusedCardIndex);
+        }
+
+        // 'K' -> Previous Card
+        if (e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            focusedCardIndex = (focusedCardIndex > 0) ? focusedCardIndex - 1 : cards.length - 1;
+            highlightFocusedCard(focusedCardIndex);
+        }
+
+        // 'X' -> Toggle Card Selection Checkbox
+        if (e.key.toLowerCase() === 'x' && focusedCardIndex >= 0 && focusedCardIndex < cards.length) {
+            e.preventDefault();
+            const card = cards[focusedCardIndex];
+            const cb = card.querySelector('input[type="checkbox"]');
+            if (cb) {
+                cb.checked = !cb.checked;
+                cb.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+
+        // 'R' -> Trigger AI Rewrite for Focused Card
+        if (e.key.toLowerCase() === 'r' && focusedCardIndex >= 0 && focusedCardIndex < cards.length) {
+            e.preventDefault();
+            const card = cards[focusedCardIndex];
+            const rewriteBtn = card.querySelector('button[onclick*="startAiProcess"], button[onclick*="processAi"], button[onclick*="aiRewrite"]');
+            if (rewriteBtn) {
+                window.showToast('🤖 AI Rewrite শুরু হচ্ছে...', 'info', 1500);
+                rewriteBtn.click();
+            } else {
+                window.showToast('এই কার্ডের জন্য AI Rewrite বাটন পাওয়া যায়নি', 'warning', 2000);
+            }
+        }
+
+        // 'E' -> Trigger Edit / Studio for Focused Card
+        if (e.key.toLowerCase() === 'e' && focusedCardIndex >= 0 && focusedCardIndex < cards.length) {
+            e.preventDefault();
+            const card = cards[focusedCardIndex];
+            const editBtn = card.querySelector('button[onclick*="openManualModal"], button[onclick*="editNews"], a[href*="studio"], a[href*="edit"]');
+            if (editBtn) {
+                editBtn.click();
             }
         }
     });
@@ -242,6 +346,20 @@
             window.showToast('☀️ লাইট মোড চালু করা হয়েছে!', 'info', 2000);
         }
         syncDarkModeIcons();
+    }
+
+    // ==========================================================
+    // 📲 PWA SERVICE WORKER REGISTRATION
+    // ==========================================================
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('{{ asset("sw.js") }}')
+                .then(reg => {
+                    // PWA Service Worker Registered Successfully
+                }).catch(err => {
+                    // Service Worker Registration Ignored or Failed
+                });
+        });
     }
 
     document.addEventListener('DOMContentLoaded', () => {

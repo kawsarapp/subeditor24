@@ -183,7 +183,7 @@
         {{-- Image --}}
         <div class="h-48 overflow-hidden relative bg-slate-100">
             @if($item->thumbnail_url)
-                <img src="{{ $item->thumbnail_url }}" alt="Thumb" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                <img src="{{ $item->thumbnail_url }}" alt="Thumb" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-80"></div>
             @else
                 <div class="flex items-center justify-center h-full bg-slate-50 text-slate-300 text-xs font-bold uppercase">No Image</div>
@@ -367,8 +367,10 @@
     function startNewNewsPoller() {
         const lastId = document.querySelector('meta[name="latest-news-id"]')?.content || 0;
         
-        // প্রতি ১০ সেকেন্ডে চেক করবে নতুন নিউজ এসেছে কি না
+        // প্রতি ১০ সেকেন্ডে চেক করবে নতুন নিউজ এসেছে কি না (Inactive ট্যাবে পোলিং বন্ধ থাকবে)
         setInterval(() => {
+            if (document.hidden) return;
+
             fetch(`{{ route('news.check-new-news') }}?last_id=${lastId}`)
                 .then(res => res.json())
                 .then(data => {
@@ -380,7 +382,7 @@
                     }
                 })
                 .catch(err => console.error("Polling error:", err));
-        }, 10000);
+        }, 12000);
     }
 
     // --- Manual Edit Logic ---

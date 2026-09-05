@@ -65,7 +65,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // 🔥 AI Viral & Trending Predictor Routes
     Route::get('/trending', [\App\Http\Controllers\TrendingController::class, 'index'])->name('trending.index');
-    Route::post('/trending/generate-script', [\App\Http\Controllers\TrendingController::class, 'generateScript'])->name('trending.generate-script');
+    Route::post('/trending/generate-script', [\App\Http\Controllers\TrendingController::class, 'generateScript'])->middleware('throttle:ai-operations')->name('trending.generate-script');
 
     // প্রোফাইল ও ক্রেডিট
     Route::get('/credits', [SettingsController::class, 'credits'])->name('credits.index');
@@ -76,6 +76,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/admin/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/admin/settings', [SettingsController::class, 'update'])->name('settings.update');
         Route::post('/admin/settings/upload-logo', [SettingsController::class, 'uploadLogo'])->name('settings.upload-logo');
+        Route::post('/admin/settings/diagnostics', [SettingsController::class, 'runSystemDiagnostics'])->name('settings.diagnostics');
         
         Route::prefix('settings/test')->name('settings.')->group(function () {
             Route::post('/facebook', [SettingsController::class, 'testFacebookConnection'])->name('test-facebook');
@@ -127,18 +128,18 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/{id}/queue', 'toggleQueue')->name('queue');
         
         // 🔥 স্ট্যাটাস চেকিং (GET এবং POST আলাদা করা হলো)
-        Route::get('/check-status', 'checkAutoPostStatus')->name('check-auto-status');
-        Route::post('/check-status', 'checkStatus')->name('check-status'); // Smart Polling এর জন্য
+        Route::get('/check-status', 'checkAutoPostStatus')->middleware('throttle:live-polling')->name('check-auto-status');
+        Route::post('/check-status', 'checkStatus')->middleware('throttle:live-polling')->name('check-status'); // Smart Polling এর জন্য
         
         Route::get('/check-scrape-status', 'checkScrapeStatus')->name('check-scrape-status');
-        Route::get('/check-new-news', 'checkNewNews')->name('check-new-news');
+        Route::get('/check-new-news', 'checkNewNews')->middleware('throttle:live-polling')->name('check-new-news');
         Route::post('/toggle-automation', 'toggleAutomation')->name('toggle-automation');
-        Route::post('/check-draft-updates', 'checkDraftUpdates')->name('check-draft-updates');
+        Route::post('/check-draft-updates', 'checkDraftUpdates')->middleware('throttle:live-polling')->name('check-draft-updates');
         Route::get('/published', 'published')->name('published');
         Route::get('/suggest-links', 'suggestLinks')->name('suggest-links');
-        Route::post('/check-duplicates', 'checkDuplicates')->name('check-duplicates');
-        Route::post('/generate-headlines', 'generateHeadlines')->name('generate-headlines');
-        Route::post('/bulk-process-ai', 'bulkProcessAi')->name('bulk-process-ai');
+        Route::post('/check-duplicates', 'checkDuplicates')->middleware('throttle:dedup-check')->name('check-duplicates');
+        Route::post('/generate-headlines', 'generateHeadlines')->middleware('throttle:ai-operations')->name('generate-headlines');
+        Route::post('/bulk-process-ai', 'bulkProcessAi')->middleware('throttle:ai-operations')->name('bulk-process-ai');
         Route::post('/bulk-destroy', 'bulkDestroy')->name('bulk-destroy');
         
         Route::get('/{id}/unlock', 'unlockNews')->name('unlock');

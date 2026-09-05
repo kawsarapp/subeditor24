@@ -90,25 +90,29 @@ class NewsDeduplicationService
 
         $effectiveAdminId = $this->resolveAdminId($user);
         
-        // Query recent news items for this tenant
-        $query = NewsItem::withoutGlobalScopes()
-            ->with(['website' => function ($q) { $q->withoutGlobalScopes(); }])
-            ->where(function ($q) use ($user, $effectiveAdminId) {
-                $uid = is_object($user) ? $user->id : $user;
-                $q->where('user_id', $effectiveAdminId)
-                  ->orWhere('user_id', $uid);
-            })
-            ->where('created_at', '>=', now()->subDays(3));
+        // Cache candidates for 90 seconds to minimize database hits during rapid live typing
+        $cacheKey = "tenant_recent_candidates_{$effectiveAdminId}";
+        $candidates = \Illuminate\Support\Facades\Cache::remember($cacheKey, 90, function () use ($user, $effectiveAdminId) {
+            $query = NewsItem::withoutGlobalScopes()
+                ->select(['id', 'user_id', 'website_id', 'title', 'ai_title', 'original_link', 'thumbnail_url', 'status', 'published_at', 'created_at'])
+                ->with(['website' => function ($q) { $q->withoutGlobalScopes()->select(['id', 'name']); }])
+                ->where(function ($q) use ($user, $effectiveAdminId) {
+                    $uid = is_object($user) ? $user->id : $user;
+                    $q->where('user_id', $effectiveAdminId)
+                      ->orWhere('user_id', $uid);
+                })
+                ->where('created_at', '>=', now()->subDays(3));
 
-        if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
-        }
-
-        $candidates = $query->orderBy('created_at', 'desc')->limit(60)->get();
+            return $query->orderBy('created_at', 'desc')->limit(60)->get();
+        });
 
         $duplicates = [];
 
         foreach ($candidates as $item) {
+            if ($excludeId && $item->id == $excludeId) {
+                continue;
+            }
+
             $candidateTitle = $item->ai_title ?: $item->title;
             $similarity = $this->calculateSimilarity($title, $candidateTitle);
 

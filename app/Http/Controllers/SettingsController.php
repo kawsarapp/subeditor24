@@ -1090,4 +1090,156 @@ class SettingsController extends Controller
         $user->save();
         return back()->with('success', 'প্রোফাইল আপডেট হয়েছে!');
     }
+
+    /**
+     * ১২. ১-ক্লিক ফুল সিস্টেম হেলথ ডায়াগনস্টিকস
+     */
+    public function runSystemDiagnostics(Request $request)
+    {
+        $user = Auth::user();
+        $adminUser = in_array($user->role, ['staff', 'reporter']) ? \App\Models\User::find($user->parent_id) : $user;
+        $settings = $adminUser->settings;
+
+        $results = [];
+
+        // ১. ডাটাবেস ও কিউ চেক
+        try {
+            DB::connection()->getPdo();
+            $dbName = DB::connection()->getDatabaseName();
+            $pendingJobs = DB::table('jobs')->count();
+            $results[] = [
+                'category' => 'Database & Queue',
+                'name'     => 'ডাটাবেস ও কিউ সিস্টেম',
+                'status'   => 'ok',
+                'badge'    => 'Healthy',
+                'message'  => "ডাটাবেস ({$dbName}) সংযুক্ত। কিউতে পেন্ডিং জব: {$pendingJobs}টি।"
+            ];
+        } catch (\Throwable $e) {
+            $results[] = [
+                'category' => 'Database & Queue',
+                'name'     => 'ডাটাবেস সিস্টেম',
+                'status'   => 'error',
+                'badge'    => 'Error',
+                'message'  => "ডাটাবেস কানেকশনে সমস্যা: " . $e->getMessage()
+            ];
+        }
+
+        // ২. এআই প্রোভাইডার চেক
+        $primaryAi = $settings->primary_ai ?? 'gemini';
+        $hasKey = false;
+        $aiKeyName = '';
+
+        if ($primaryAi === 'gemini' && !empty($settings->gemini_api_key)) { $hasKey = true; $aiKeyName = 'Google Gemini'; }
+        elseif ($primaryAi === 'deepseek' && !empty($settings->deepseek_api_key)) { $hasKey = true; $aiKeyName = 'DeepSeek AI'; }
+        elseif ($primaryAi === 'openai' && !empty($settings->openai_api_key)) { $hasKey = true; $aiKeyName = 'OpenAI (ChatGPT)'; }
+        elseif ($primaryAi === 'groq' && !empty($settings->groq_api_key)) { $hasKey = true; $aiKeyName = 'Groq Fast AI'; }
+        elseif (!empty($settings->gemini_api_key) || !empty($settings->deepseek_api_key) || !empty($settings->openai_api_key) || !empty($settings->groq_api_key)) {
+            $hasKey = true;
+            $aiKeyName = 'Multi-Provider Fallback';
+        }
+
+        if ($hasKey) {
+            $results[] = [
+                'category' => 'AI Engine',
+                'name'     => "এআই ইঞ্জিন ({$aiKeyName})",
+                'status'   => 'ok',
+                'badge'    => 'Configured',
+                'message'  => "প্রাইমারি এআই হিসেবে '{$primaryAi}' সক্রিয় ও API কী কনফিগার করা আছে।"
+            ];
+        } else {
+            $results[] = [
+                'category' => 'AI Engine',
+                'name'     => 'এআই ইঞ্জিন',
+                'status'   => 'warning',
+                'badge'    => 'No API Key',
+                'message'  => "কোনো এআই API কী সেট করা নেই! AI Settings থেকে Gemini বা DeepSeek কী দিন।"
+            ];
+        }
+
+        // ৩. ওয়ার্ডপ্রেস / CMS কানেকশন চেক
+        if ($settings && !empty($settings->wp_url) && !empty($settings->wp_username)) {
+            try {
+                $wpUrl = rtrim($settings->wp_url, '/');
+                $response = Http::timeout(6)->withOptions(['verify' => false])->get("{$wpUrl}/wp-json");
+                if ($response->successful()) {
+                    $siteName = $response->json('name') ?? 'WordPress Site';
+                    $results[] = [
+                        'category' => 'WordPress CMS',
+                        'name'     => 'ওয়ার্ডপ্রেস REST API',
+                        'status'   => 'ok',
+                        'badge'    => 'Connected',
+                        'message'  => "সাইট '{$siteName}' সংযুক্ত। REST API রেসপন্স স্বাভাবিক (HTTP 200)।"
+                    ];
+                } else {
+                    $results[] = [
+                        'category' => 'WordPress CMS',
+                        'name'     => 'ওয়ার্ডপ্রেস REST API',
+                        'status'   => 'warning',
+                        'badge'    => 'HTTP ' . $response->status(),
+                        'message'  => "ওয়ার্ডপ্রেস সাইট থেকে অস্বাভাবিক রেসপন্স পাওয়া গেছে (HTTP {$response->status()})।"
+                    ];
+                }
+            } catch (\Throwable $e) {
+                $results[] = [
+                    'category' => 'WordPress CMS',
+                    'name'     => 'ওয়ার্ডপ্রেস REST API',
+                    'status'   => 'error',
+                    'badge'    => 'Unreachable',
+                    'message'  => "ওয়ার্ডপ্রেস সাইটে কানেক্ট করা যায়নি: " . \Illuminate\Support\Str::limit($e->getMessage(), 100)
+                ];
+            }
+        } else {
+            $results[] = [
+                'category' => 'WordPress CMS',
+                'name'     => 'ওয়ার্ডপ্রেস CMS',
+                'status'   => 'info',
+                'badge'    => 'Not Configured',
+                'message'  => "ওয়ার্ডপ্রেস সাইট URL ও ইউজারনেম এখনো কনফিগার করা হয়নি।"
+            ];
+        }
+
+        // ৪. ফেসবুক পেজ ইন্টিগ্রেশন চেক
+        try {
+            $fbPages = \App\Models\FacebookPage::where('user_id', $adminUser->id)->get();
+            if ($fbPages->count() > 0) {
+                $activeCount = $fbPages->where('is_active', true)->count();
+                $results[] = [
+                    'category' => 'Social Media',
+                    'name'     => 'ফেসবুক পেজ কানেকশন',
+                    'status'   => 'ok',
+                    'badge'    => "{$activeCount} Active",
+                    'message'  => "মোট {$fbPages->count()}টি পেজ কনফিগার করা রয়েছে ({$activeCount}টি অটো-পোস্ট সক্রিয়)।"
+                ];
+            } else {
+                $results[] = [
+                    'category' => 'Social Media',
+                    'name'     => 'ফেসবুক পেজ',
+                    'status'   => 'info',
+                    'badge'    => 'Optional',
+                    'message'  => "কোনো ফেসবুক পেজ যুক্ত করা নেই।"
+                ];
+            }
+        } catch (\Throwable $e) {
+            // Ignore if table not present
+        }
+
+        // ৫. ব্যাকগ্রাউন্ড ক্রন জব ও অটো-পোস্ট স্ট্যাটাস
+        $lastAuto = ($settings && $settings->last_auto_post_at) ? \Carbon\Carbon::parse($settings->last_auto_post_at)->diffForHumans() : 'এখনো রান হয়নি';
+        $isAutoOn = $settings && !empty($settings->is_auto_posting);
+        $interval = $settings->auto_post_interval ?? 10;
+
+        $results[] = [
+            'category' => 'Automation & Scheduler',
+            'name'     => 'ব্যাকগ্রাউন্ড অটোমেশন',
+            'status'   => 'ok',
+            'badge'    => $isAutoOn ? 'Auto-Post ON' : 'Manual Mode',
+            'message'  => "অটো-পোস্ট: " . ($isAutoOn ? "সক্রিয় (ইন্টারভাল: {$interval} মিনিট)" : "ম্যানুয়াল মোড") . "। সর্বশেষ একশন: {$lastAuto}।"
+        ];
+
+        return response()->json([
+            'success'   => true,
+            'timestamp' => now()->format('d M, Y h:i A'),
+            'checks'    => $results
+        ]);
+    }
 }

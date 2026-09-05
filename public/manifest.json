@@ -1,0 +1,17 @@
+{
+  "name": "Subeditor24 - News Automation Suite",
+  "short_name": "Subeditor24",
+  "description": "AI-Powered Multi-Tenant Newsroom and Automation Suite",
+  "start_url": "/news",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

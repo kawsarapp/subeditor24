@@ -77,10 +77,7 @@ trait NewsDraftsTrait
         
         if ($request->hasFile('image_file')) {
             try {
-                $file = $request->file('image_file');
-                $filename = 'news_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('news-images', $filename, 'public');
-                $news->thumbnail_url = asset('storage/' . $path);
+                $news->thumbnail_url = app(\App\Services\ImageOptimizerService::class)->optimizeAndStore($request->file('image_file'));
             } catch (\Exception $e) {
                 Log::error("Image Upload Failed: " . $e->getMessage());
             }

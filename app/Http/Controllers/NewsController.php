@@ -188,8 +188,11 @@ class NewsController extends Controller
 
         try {
             $finalImage = null;
-            if ($request->hasFile('image_file')) $finalImage = asset('storage/' . $request->file('image_file')->store('news-uploads', 'public'));
-            elseif ($request->filled('image_url')) $finalImage = $request->image_url;
+            if ($request->hasFile('image_file')) {
+                $finalImage = app(\App\Services\ImageOptimizerService::class)->optimizeAndStore($request->file('image_file'));
+            } elseif ($request->filled('image_url')) {
+                $finalImage = $request->image_url;
+            }
 
             $news = NewsItem::create([
                 'user_id' => $adminUser->id, 

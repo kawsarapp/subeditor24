@@ -25,7 +25,7 @@
         {{-- Image Area --}}
         <div class="relative aspect-video overflow-hidden bg-slate-100">
              @if($item->thumbnail_url)
-                <img src="{{ $item->thumbnail_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                <img src="{{ $item->thumbnail_url }}" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
              @else
                 <div class="flex items-center justify-center h-full text-slate-300 font-bold text-xs uppercase">No Image</div>
              @endif

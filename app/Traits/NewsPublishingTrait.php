@@ -51,6 +51,14 @@ trait NewsPublishingTrait
             }
         }
 
+        // 📷 Optimized Image Processing
+        $finalImage = $news->thumbnail_url;
+        if ($request->hasFile('image_file')) {
+            $finalImage = app(\App\Services\ImageOptimizerService::class)->optimizeAndStore($request->file('image_file'));
+        } elseif ($request->filled('image_url')) {
+            $finalImage = $request->image_url;
+        }
+
         $scheduleType = $request->input('schedule_type', 'instant');
         $scheduledAt = $request->input('scheduled_at');
 
@@ -261,8 +269,11 @@ trait NewsPublishingTrait
         if ($news->status === 'published' || $news->status === 'publishing') return response()->json(['success' => false, 'message' => '⚠️ এটি ইতিমধ্যেই প্রসেসিং বা পাবলিশড!']);
 
         $finalImage = $news->thumbnail_url; 
-        if ($request->hasFile('image_file')) $finalImage = asset('storage/' . $request->file('image_file')->store('news-uploads', 'public'));
-        elseif ($request->filled('image_url')) $finalImage = $request->image_url;
+        if ($request->hasFile('image_file')) {
+            $finalImage = app(\App\Services\ImageOptimizerService::class)->optimizeAndStore($request->file('image_file'));
+        } elseif ($request->filled('image_url')) {
+            $finalImage = $request->image_url;
+        }
 
         $news->update([
             'title' => $request->title, 'content' => $request->content, 

@@ -46,7 +46,7 @@
             </div>
 
             <div class="relative w-full aspect-video overflow-hidden bg-gray-50">
-                 <img src="{{ $item->thumbnail_url ?? asset('images/placeholder.png') }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+                 <img src="{{ $item->thumbnail_url ?? asset('images/placeholder.png') }}" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
                  <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                  
                  <form action="{{ route('news.destroy', $item->id) }}" method="POST" onsubmit="return confirm('নিউজটি মুছতে চান?');" class="absolute top-3 left-3 z-30 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">

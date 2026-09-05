@@ -17,18 +17,21 @@
         </div>
     </div>
 
-    <!-- Global Accordion Expand/Collapse Controls -->
-    <div class="flex flex-wrap justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 gap-3">
-        <div class="flex items-center gap-2 text-xs text-gray-600 font-semibold">
+    <!-- Global Accordion Expand/Collapse Controls & Diagnostics -->
+    <div class="flex flex-wrap justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm mb-6 gap-3">
+        <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-slate-400 font-semibold">
             <i class="fas fa-layer-group text-indigo-600 text-sm"></i>
             <span>সেটিংস সেকশনগুলো ডিফল্টভাবে ফোল্ড করা (Collapsed) রয়েছে।</span>
         </div>
         <div class="flex items-center gap-2">
+            <button type="button" onclick="runDiagnosticsModal()" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-heart-pulse animate-pulse"></i> 🩺 ১-ক্লিক হেলথ চেক
+            </button>
             <button type="button" onclick="expandAllSettings()" class="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 flex items-center gap-1.5 transition cursor-pointer shadow-sm">
-                <i class="fas fa-expand-alt"></i> সব খুলুন (Expand All)
+                <i class="fas fa-expand-alt"></i> সব খুলুন
             </button>
             <button type="button" onclick="collapseAllSettings()" class="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg border border-gray-300 flex items-center gap-1.5 transition cursor-pointer shadow-sm">
-                <i class="fas fa-compress-alt"></i> সব বন্ধ করুন (Collapse All)
+                <i class="fas fa-compress-alt"></i> সব বন্ধ করুন
             </button>
         </div>
     </div>
@@ -1892,5 +1895,132 @@ async def receive_news(data: NewsPayload, authorization: Optional[str] = Header(
         fetchWPCategories();
         syncMappingJsonToVisual();
     });
+
+    // ==========================================================
+    // 🩺 1-CLICK SYSTEM HEALTH & DIAGNOSTICS ENGINE
+    // ==========================================================
+    function runDiagnosticsModal() {
+        const modal = document.getElementById('systemDiagnosticsModal');
+        const loading = document.getElementById('diagnosticsLoading');
+        const container = document.getElementById('diagnosticsResultsContainer');
+        const timestamp = document.getElementById('diagnosticsTimestamp');
+
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        if (loading) loading.classList.remove('hidden');
+        if (container) {
+            container.classList.add('hidden');
+            container.innerHTML = '';
+        }
+
+        fetch("{{ route('settings.diagnostics') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (loading) loading.classList.add('hidden');
+            if (timestamp && data.timestamp) timestamp.innerText = `সর্বশেষ চেক: ${data.timestamp}`;
+
+            if (data.success && data.checks) {
+                if (container) {
+                    const statusIcons = {
+                        ok: '<div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm"><i class="fa-solid fa-circle-check"></i></div>',
+                        warning: '<div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm"><i class="fa-solid fa-triangle-exclamation"></i></div>',
+                        error: '<div class="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm"><i class="fa-solid fa-circle-xmark"></i></div>',
+                        info: '<div class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center text-sm"><i class="fa-solid fa-circle-info"></i></div>'
+                    };
+
+                    const badgeColors = {
+                        ok: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800',
+                        warning: 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800',
+                        error: 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800',
+                        info: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                    };
+
+                    container.innerHTML = data.checks.map(item => `
+                        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-sm flex items-start gap-3">
+                            ${statusIcons[item.status] || statusIcons.info}
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2 mb-0.5">
+                                    <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">${item.name}</h4>
+                                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${badgeColors[item.status] || badgeColors.info}">${item.badge}</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">${item.message}</p>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    container.classList.remove('hidden');
+                }
+            }
+        })
+        .catch(err => {
+            if (loading) loading.classList.add('hidden');
+            if (container) {
+                container.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-xl text-xs font-bold">সার্ভারে সমস্যা হয়েছে: ${err.message}</div>`;
+                container.classList.remove('hidden');
+            }
+        });
+    }
+
+    function closeDiagnosticsModal() {
+        const modal = document.getElementById('systemDiagnosticsModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
 </script>
+
+{{-- 🩺 SYSTEM HEALTH & DIAGNOSTICS MODAL --}}
+<div id="systemDiagnosticsModal" class="fixed inset-0 bg-slate-950/70 hidden items-center justify-center z-[110] backdrop-blur-md transition-all">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]">
+        <div class="px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-lg shadow-inner">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-black font-bangla">সিস্টেম হেলথ ডায়াগনস্টিকস</h3>
+                    <p class="text-[11px] text-white/80 font-semibold" id="diagnosticsTimestamp">১-ক্লিক লাইভ সিস্টেম স্ট্যাটাস</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeDiagnosticsModal()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition cursor-pointer">
+                ✕
+            </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto space-y-4 font-bangla">
+            {{-- Loading Spinner --}}
+            <div id="diagnosticsLoading" class="py-12 flex flex-col items-center justify-center gap-3">
+                <div class="w-12 h-12 rounded-full border-4 border-emerald-200 border-t-emerald-600 animate-spin"></div>
+                <p class="text-sm font-bold text-slate-600 dark:text-slate-300 animate-pulse">ডাটাবেস, এআই ও এপিআই কানেকশন টেস্ট করা হচ্ছে...</p>
+            </div>
+
+            {{-- Diagnostics Results Container --}}
+            <div id="diagnosticsResultsContainer" class="hidden space-y-3">
+                {{-- Injected dynamically --}}
+            </div>
+        </div>
+
+        <div class="p-4 bg-slate-50 dark:bg-slate-850 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center font-bangla">
+            <span class="text-xs text-slate-400 font-semibold">স্বয়ংক্রিয় লাইভ কানেকশন অডিট</span>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="runDiagnosticsModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-rotate-right"></i> রি-টেস্ট
+                </button>
+                <button type="button" onclick="closeDiagnosticsModal()" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition cursor-pointer">
+                    বন্ধ করুন
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection

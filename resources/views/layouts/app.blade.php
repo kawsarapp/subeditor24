@@ -6,6 +6,23 @@
     <title>{{ config('app.name', 'Subeditor24') }}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
+    {{-- ⚡ Fast CDN Preconnect & Resource Hints --}}
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://fonts.maateen.me">
+    
+    {{-- 📲 PWA Manifest & App Meta Tags --}}
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Subeditor24">
+    <link rel="apple-touch-icon" href="{{ asset('favicon.ico') }}">
+    
     {{-- Tailwind, Alpine.js & Icons --}}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -149,6 +166,9 @@
     <footer class="mt-auto py-6 text-center text-slate-500 text-xs hidden lg:block border-t border-slate-200/60 bg-white/50">
         <p>© {{ date('Y') }} <span class="font-extrabold text-indigo-600">Subeditor24</span> | Content Automation & Editorial Platform</p>
     </footer>
+
+    {{-- Modals & Overlays --}}
+    @include('layouts.partials.shortcuts-modal')
 
     {{-- Scripts --}}
     @include('layouts.partials.scripts')
