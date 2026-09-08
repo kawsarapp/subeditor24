@@ -211,9 +211,11 @@ class CustomPhotoCardController extends Controller
 
                 CreditHistory::create([
                     'user_id' => $user->id,
-                    'amount' => -$creditCost,
-                    'type' => 'bg_remove',
+                    'staff_id' => (Auth::id() !== $user->id) ? Auth::id() : null,
+                    'action_type' => 'bg_remove',
                     'description' => 'AI Background Removal',
+                    'credits_change' => -$creditCost,
+                    'balance_after' => $user->credits,
                 ]);
             }
 

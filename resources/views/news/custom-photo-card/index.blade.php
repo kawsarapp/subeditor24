@@ -342,7 +342,7 @@
 </div>
 
 {{-- Editor Engine Script --}}
-<script src="{{ asset('js/custom-photo-card/editor-engine.js') }}"></script>
+<script src="{{ asset('js/custom-photo-card/editor-engine.js') }}?v={{ filemtime(public_path('js/custom-photo-card/editor-engine.js')) }}"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {

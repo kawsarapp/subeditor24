@@ -99,6 +99,57 @@
                 </select>
             </div>
 
+            {{-- Typography Controls: Size, Line-Height, Weight --}}
+            <div class="bg-slate-50 border border-slate-200/80 p-2.5 rounded-2xl space-y-2.5">
+                {{-- Font Size Slider & Number Box --}}
+                <div>
+                    <div class="flex items-center justify-between text-[10px] font-bold text-slate-600 mb-1">
+                        <span>📏 ফন্ট সাইজ (Font Size)</span>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="quote-card-font-size-num" value="44" min="16" max="100" 
+                                oninput="document.getElementById('quote-card-font-size').value = this.value; onQuoteFieldChange('fontSize', this.value)" 
+                                class="w-12 text-center border border-slate-300 rounded-lg text-[11px] font-bold py-0.5 bg-white text-indigo-700 outline-none">
+                            <span class="text-[10px] text-slate-400 font-bold">px</span>
+                        </div>
+                    </div>
+                    <input type="range" id="quote-card-font-size" min="16" max="90" value="44" 
+                        oninput="document.getElementById('quote-card-font-size-num').value = this.value; onQuoteFieldChange('fontSize', this.value)" 
+                        class="w-full accent-indigo-600">
+                </div>
+
+                {{-- Line Spacing & Weight --}}
+                <div class="grid grid-cols-2 gap-2 pt-0.5">
+                    <div>
+                        <div class="flex justify-between text-[10px] font-bold text-slate-600 mb-1">
+                            <span>↕️ লাইন স্পেস</span>
+                            <span id="quote-line-height-val" class="text-indigo-600 font-black text-[10px]">1.2</span>
+                        </div>
+                        <input type="range" id="quote-card-line-height" min="1.0" max="1.8" step="0.05" value="1.2" 
+                            oninput="document.getElementById('quote-line-height-val').innerText = this.value; onQuoteFieldChange('lineHeight', this.value)" 
+                            class="w-full accent-indigo-600">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-600 block mb-1">বোল্ডনেস</label>
+                        <select id="quote-card-font-weight" onchange="onQuoteFieldChange('fontWeight', this.value)" class="w-full border border-slate-200 rounded-xl p-1.5 text-[11px] font-bold text-slate-800 outline-none bg-white">
+                            <option value="bold" selected>Bold (বোল্ড)</option>
+                            <option value="900">Black (ভারী)</option>
+                            <option value="normal">Normal (নরমাল)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Text Alignment Selector --}}
+            <div>
+                <label class="text-[10px] font-bold text-slate-500 block mb-1">📐 টেক্সট অ্যালাইনমেন্ট (Text Alignment)</label>
+                <select id="quote-card-align" onchange="onQuoteFieldChange('align', this.value)" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none bg-slate-50 focus:bg-white focus:border-indigo-500">
+                    <option value="star-news" selected>✨ স্মার্ট কন্টুর র‍্যাপ (Flush Right & Contour)</option>
+                    <option value="left">📄 লেফট অ্যালাইন (Left Align)</option>
+                    <option value="center">📑 সেন্টার অ্যালাইন (Center Align)</option>
+                    <option value="right">👉 রাইট অ্যালাইন (Right Align)</option>
+                </select>
+            </div>
+
             {{-- Theme Selector & Layout Options --}}
             <div>
                 <label class="text-[10px] font-bold text-slate-500 block mb-1">🎨 কার্ড থিম ও কালার স্টাইল (৩৫টি প্রিসেট)</label>
@@ -169,6 +220,23 @@
                         <input type="checkbox" id="quote-card-flip-check" class="rounded accent-indigo-600">
                         <span>↔️ মুখ ঘোরান (Flip)</span>
                     </label>
+                </div>
+            </div>
+
+            {{-- Text Wrap around Speaker / Subject --}}
+            <div class="border-t border-slate-100 pt-3 space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer">
+                        <input type="checkbox" id="quote-card-wrap-check" checked onchange="window.customStudio.updateQuoteLiveField('wrap', this.checked)" class="rounded accent-indigo-600">
+                        <span>🔀 বক্তার সাথে টেক্সট র‍্যাপ (Contour Wrap)</span>
+                    </label>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[9px] font-bold text-slate-400 mb-0.5">
+                        <span>র‍্যাপ মার্জিন / প্যাডিং</span>
+                        <span id="quote-wrap-margin-val">25px</span>
+                    </div>
+                    <input type="range" id="quote-card-wrap-margin" min="5" max="60" value="25" oninput="document.getElementById('quote-wrap-margin-val').innerText = this.value + 'px'; window.customStudio.updateQuoteLiveField('wrapMargin', this.value)" class="w-full accent-indigo-600">
                 </div>
             </div>
 
@@ -416,6 +484,11 @@
                     class="w-full py-2.5 bg-white text-indigo-700 hover:bg-indigo-50 font-black text-xs rounded-xl shadow transition-transform transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-scissors"></i>
                     <span>Background Remove</span>
+                </button>
+                <button type="button" onclick="window.customStudio.trimActiveImageTransparent()" 
+                    class="w-full py-2 bg-indigo-700/60 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 border border-white/20 shadow-xs" title="ছবির চারপাশের অতিরিক্ত অদৃশ্য/ট্রান্সপারেন্ট অংশ ছেঁটে ফেলুন">
+                    <i class="fa-solid fa-crop-simple"></i>
+                    <span>✂️ অতিরিক্ত স্পেস ট্রিম (Auto Crop)</span>
                 </button>
             </div>
 

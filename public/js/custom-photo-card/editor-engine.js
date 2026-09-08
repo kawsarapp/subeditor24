@@ -287,7 +287,7 @@
                     throw new Error(data.message || 'ব্যাকগ্রাউন্ড রিমুভ ব্যর্থ হয়েছে।');
                 }
 
-                // 4. In-place seamless image replacement (Retain X, Y, Scale, Angle, Z-Index)
+                // 4. In-place seamless image replacement with AUTO-TRIM of empty padding
                 const cutoutUrl = data.output_url;
                 const prevProps = {
                     left: activeObj.left,
@@ -297,34 +297,223 @@
                     angle: activeObj.angle,
                     flipX: activeObj.flipX,
                     flipY: activeObj.flipY,
-                    originX: activeObj.originX,
-                    originY: activeObj.originY,
+                    originX: activeObj.originX || 'center',
+                    originY: activeObj.originY || 'center',
+                    customName: activeObj.customName || 'ছবি',
+                    isQuotePortrait: activeObj.isQuotePortrait || false,
                 };
                 const zIndex = this.canvas.getObjects().indexOf(activeObj);
 
-                fabric.Image.fromURL(cutoutUrl, (newImg) => {
-                    newImg.set(prevProps);
-                    this.canvas.remove(activeObj);
-                    this.canvas.insertAt(newImg, zIndex);
-                    this.canvas.setActiveObject(newImg);
-                    this.canvas.renderAll();
+                const rawImg = new Image();
+                rawImg.crossOrigin = 'anonymous';
+                rawImg.onload = () => {
+                    const trimResult = this.trimTransparentImage(rawImg);
 
-                    this.hideLoader();
-                    this.saveState();
-                    this.renderLayersList();
-                    this.showNotification("success", "ব্যাকগ্রাউন্ড সফলভাবে রিমুভ হয়েছে!");
+                    fabric.Image.fromURL(trimResult.dataUrl, (newImg) => {
+                        let newLeft = prevProps.left;
+                        let newTop = prevProps.top;
 
-                    // Update UI credit balance
-                    if (data.remaining_credits !== undefined) {
-                        this.updateCreditBadge(data.remaining_credits, data.daily_used, data.daily_limit);
-                    }
-                }, { crossOrigin: 'anonymous' });
+                        if (prevProps.originX === 'center') {
+                            const origCenterX = trimResult.origW / 2;
+                            const trimmedCenterX = trimResult.offsetX + (trimResult.trimmedW / 2);
+                            const shiftX = (trimmedCenterX - origCenterX) * prevProps.scaleX;
+                            newLeft = prevProps.left + (prevProps.flipX ? -shiftX : shiftX);
+                        }
+                        if (prevProps.originY === 'center') {
+                            const origCenterY = trimResult.origH / 2;
+                            const trimmedCenterY = trimResult.offsetY + (trimResult.trimmedH / 2);
+                            const shiftY = (trimmedCenterY - origCenterY) * prevProps.scaleY;
+                            newTop = prevProps.top + (prevProps.flipY ? -shiftY : shiftY);
+                        }
+
+                        newImg.set(Object.assign({}, prevProps, {
+                            left: newLeft,
+                            top: newTop,
+                            cornerColor: '#ffffff',
+                            cornerStrokeColor: '#4f46e5',
+                            borderColor: '#6366f1',
+                            cornerSize: 13,
+                            cornerStyle: 'circle',
+                            padding: 8,
+                        }));
+
+                        this.canvas.remove(activeObj);
+                        this.canvas.insertAt(newImg, zIndex);
+                        this.canvas.setActiveObject(newImg);
+                        this.canvas.renderAll();
+
+                        this.hideLoader();
+                        this.saveState();
+                        this.renderLayersList();
+                        this.showNotification("success", "ব্যাকগ্রাউন্ড রিমুভ ও অটো-ক্রপ সম্পন্ন হয়েছে!");
+
+                        // Update UI credit balance
+                        if (data.remaining_credits !== undefined) {
+                            this.updateCreditBadge(data.remaining_credits, data.daily_used, data.daily_limit);
+                        }
+                    }, { crossOrigin: 'anonymous' });
+                };
+                rawImg.onerror = () => {
+                    fabric.Image.fromURL(cutoutUrl, (newImg) => {
+                        newImg.set(prevProps);
+                        this.canvas.remove(activeObj);
+                        this.canvas.insertAt(newImg, zIndex);
+                        this.canvas.setActiveObject(newImg);
+                        this.canvas.renderAll();
+                        this.hideLoader();
+                        this.saveState();
+                        this.renderLayersList();
+                    }, { crossOrigin: 'anonymous' });
+                };
+                rawImg.src = cutoutUrl;
 
             } catch (err) {
                 this.hideLoader();
                 console.error("BG Remove Error:", err);
                 this.showNotification("error", err.message || "ব্যাকগ্রাউন্ড রিমুভ করতে সমস্যা হয়েছে।");
             }
+        }
+
+        /**
+         * Trim empty transparent padding around any image
+         */
+        trimTransparentImage(sourceImgOrElement) {
+            const tempCanvas = document.createElement('canvas');
+            const w = sourceImgOrElement.naturalWidth || sourceImgOrElement.width || 100;
+            const h = sourceImgOrElement.naturalHeight || sourceImgOrElement.height || 100;
+            tempCanvas.width = w;
+            tempCanvas.height = h;
+            const ctx = tempCanvas.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(sourceImgOrElement, 0, 0);
+
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+
+            let minX = w, minY = h, maxX = 0, maxY = 0;
+            let found = false;
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const alpha = data[(y * w + x) * 4 + 3];
+                    if (alpha > 15) { // Non-transparent pixel
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                        found = true;
+                    }
+                }
+            }
+
+            if (!found) {
+                return {
+                    dataUrl: tempCanvas.toDataURL('image/png'),
+                    offsetX: 0,
+                    offsetY: 0,
+                    trimmedW: w,
+                    trimmedH: h,
+                    origW: w,
+                    origH: h
+                };
+            }
+
+            // Margin of 2px
+            minX = Math.max(0, minX - 2);
+            minY = Math.max(0, minY - 2);
+            maxX = Math.min(w - 1, maxX + 2);
+            maxY = Math.min(h - 1, maxY + 2);
+
+            const trimmedW = maxX - minX + 1;
+            const trimmedH = maxY - minY + 1;
+
+            const trimmedCanvas = document.createElement('canvas');
+            trimmedCanvas.width = trimmedW;
+            trimmedCanvas.height = trimmedH;
+            const tctx = trimmedCanvas.getContext('2d');
+            tctx.drawImage(tempCanvas, minX, minY, trimmedW, trimmedH, 0, 0, trimmedW, trimmedH);
+
+            return {
+                dataUrl: trimmedCanvas.toDataURL('image/png'),
+                offsetX: minX,
+                offsetY: minY,
+                trimmedW: trimmedW,
+                trimmedH: trimmedH,
+                origW: w,
+                origH: h
+            };
+        }
+
+        trimActiveImageTransparent() {
+            const active = this.canvas.getActiveObject();
+            if (!active || active.type !== 'image') {
+                this.showNotification("warning", "দয়া করে একটি ট্রান্সপারেন্ট ছবি সিলেক্ট করুন যা ট্রিম করতে চান।");
+                return;
+            }
+
+            this.showLoader("অপ্রয়োজনীয় স্পেস ট্রিম হচ্ছে...");
+
+            const element = active.getElement();
+            const trimResult = this.trimTransparentImage(element);
+
+            if (trimResult.trimmedW === trimResult.origW && trimResult.trimmedH === trimResult.origH) {
+                this.hideLoader();
+                this.showNotification("info", "এই ছবিতে কোনো অতিরিক্ত খালি স্পেস নেই।");
+                return;
+            }
+
+            const prevProps = {
+                left: active.left,
+                top: active.top,
+                scaleX: active.scaleX,
+                scaleY: active.scaleY,
+                angle: active.angle,
+                flipX: active.flipX,
+                flipY: active.flipY,
+                originX: active.originX || 'center',
+                originY: active.originY || 'center',
+                customName: active.customName || 'ছবি',
+                isQuotePortrait: active.isQuotePortrait || false,
+            };
+            const zIndex = this.canvas.getObjects().indexOf(active);
+
+            fabric.Image.fromURL(trimResult.dataUrl, (newImg) => {
+                let newLeft = prevProps.left;
+                let newTop = prevProps.top;
+
+                if (prevProps.originX === 'center') {
+                    const origCenterX = trimResult.origW / 2;
+                    const trimmedCenterX = trimResult.offsetX + (trimResult.trimmedW / 2);
+                    const shiftX = (trimmedCenterX - origCenterX) * prevProps.scaleX;
+                    newLeft = prevProps.left + (prevProps.flipX ? -shiftX : shiftX);
+                }
+                if (prevProps.originY === 'center') {
+                    const origCenterY = trimResult.origH / 2;
+                    const trimmedCenterY = trimResult.offsetY + (trimResult.trimmedH / 2);
+                    const shiftY = (trimmedCenterY - origCenterY) * prevProps.scaleY;
+                    newTop = prevProps.top + (prevProps.flipY ? -shiftY : shiftY);
+                }
+
+                newImg.set(Object.assign({}, prevProps, {
+                    left: newLeft,
+                    top: newTop,
+                    cornerColor: '#ffffff',
+                    cornerStrokeColor: '#4f46e5',
+                    borderColor: '#6366f1',
+                    cornerSize: 13,
+                    cornerStyle: 'circle',
+                    padding: 8,
+                }));
+
+                this.canvas.remove(active);
+                this.canvas.insertAt(newImg, zIndex);
+                this.canvas.setActiveObject(newImg);
+                this.canvas.renderAll();
+
+                this.hideLoader();
+                this.saveState();
+                this.renderLayersList();
+                this.showNotification("success", "খালি স্পেস সফলভাবে ট্রিম করা হয়েছে!");
+            }, { crossOrigin: 'anonymous' });
         }
 
         updateCreditBadge(credits, dailyUsed, dailyLimit) {
@@ -907,42 +1096,428 @@
                 this.canvas.remove(existingImg);
             }
 
-            fabric.Image.fromURL(dataUrl, (img) => {
-                const maxW = canvasW * 0.44;
-                const maxH = canvasH * 0.85;
-                const scale = Math.min(maxW / img.width, maxH / img.height);
-                const scaledW = img.width * scale;
-                const scaledH = img.height * scale;
+            const tempImg = new Image();
+            tempImg.crossOrigin = 'anonymous';
+            tempImg.onload = () => {
+                const trimmed = this.trimTransparentImage(tempImg);
+                fabric.Image.fromURL(trimmed.dataUrl, (img) => {
+                    const maxW = canvasW * 0.44;
+                    const maxH = canvasH * 0.85;
+                    const scale = Math.min(maxW / img.width, maxH / img.height);
+                    const scaledW = img.width * scale;
+                    const scaledH = img.height * scale;
 
-                const posSelect = document.getElementById('quote-card-pos')?.value || 'left';
-                const flipCheck = document.getElementById('quote-card-flip-check')?.checked === true;
-                const nameVal = document.getElementById('quote-card-name')?.value || 'বক্তার নাম';
+                    const posSelect = document.getElementById('quote-card-pos')?.value || 'left';
+                    const flipCheck = document.getElementById('quote-card-flip-check')?.checked === true;
+                    const nameVal = document.getElementById('quote-card-name')?.value || 'বক্তার নাম';
 
-                img.set({
-                    scaleX: scale,
-                    scaleY: scale,
-                    flipX: flipCheck,
-                    left: posSelect === 'left' ? (scaledW / 2 + 25) : (canvasW - (scaledW / 2) - 25),
-                    top: canvasH - (scaledH / 2),
-                    originX: 'center',
-                    originY: 'center',
-                    selectable: true,
-                    isQuotePortrait: true,
-                    customName: '👤 ' + nameVal,
-                });
+                    img.set({
+                        scaleX: scale,
+                        scaleY: scale,
+                        flipX: flipCheck,
+                        left: posSelect === 'left' ? (scaledW / 2 + 25) : (canvasW - (scaledW / 2) - 25),
+                        top: canvasH - (scaledH / 2),
+                        originX: 'center',
+                        originY: 'center',
+                        selectable: true,
+                        isQuotePortrait: true,
+                        customName: '👤 ' + nameVal,
+                    });
 
-                this.canvas.add(img);
-                this.canvas.renderAll();
-                this.renderLayersList();
-            }, { crossOrigin: 'anonymous' });
+                    this.canvas.add(img);
+                    this.recalculateQuoteCardLayout();
+                    this.canvas.renderAll();
+                    this.renderLayersList();
+                }, { crossOrigin: 'anonymous' });
+            };
+            tempImg.src = dataUrl;
         }
 
-        recalculateQuoteCardLayout() {
+        /**
+         * Scans the exact pixel boundary (silhouette edge) of portraitImg at a given Y interval [yStart, yEnd] on canvas coordinates.
+         */
+        getPortraitSilhouetteAtY(portraitImg, yStart, yEnd, canvasW, canvasH) {
+            if (!portraitImg || !portraitImg._element) {
+                return null;
+            }
+
+            portraitImg.setCoords();
+            const pBounds = portraitImg.getBoundingRect();
+
+            const overlapTop = Math.max(pBounds.top, yStart);
+            const overlapBottom = Math.min(pBounds.top + pBounds.height, yEnd);
+
+            if (overlapTop >= overlapBottom) {
+                return {
+                    leftEdge: pBounds.left,
+                    rightEdge: pBounds.left + pBounds.width,
+                    hasPixels: false,
+                    pBounds: pBounds
+                };
+            }
+
+            if (!this._portraitSilhouetteCanvas || this._portraitSilhouetteImgSrc !== portraitImg._element.src) {
+                this._portraitSilhouetteCanvas = document.createElement('canvas');
+                this._portraitSilhouetteCanvas.width = portraitImg._element.naturalWidth || portraitImg._element.width || 500;
+                this._portraitSilhouetteCanvas.height = portraitImg._element.naturalHeight || portraitImg._element.height || 500;
+                const sCtx = this._portraitSilhouetteCanvas.getContext('2d', { willReadFrequently: true });
+                sCtx.drawImage(portraitImg._element, 0, 0);
+                this._portraitSilhouetteImgData = sCtx.getImageData(0, 0, this._portraitSilhouetteCanvas.width, this._portraitSilhouetteCanvas.height);
+                this._portraitSilhouetteImgSrc = portraitImg._element.src;
+            }
+
+            const imgData = this._portraitSilhouetteImgData;
+            if (!imgData) {
+                return {
+                    leftEdge: pBounds.left,
+                    rightEdge: pBounds.left + pBounds.width,
+                    hasPixels: true,
+                    pBounds: pBounds
+                };
+            }
+
+            const rawW = imgData.width;
+            const rawH = imgData.height;
+            const data = imgData.data;
+
+            const scaleY = portraitImg.scaleY || 1;
+            const scaleX = portraitImg.scaleX || 1;
+            const flipX = portraitImg.flipX === true;
+
+            const localYStart = Math.max(0, Math.floor((overlapTop - pBounds.top) / scaleY));
+            const localYEnd = Math.min(rawH - 1, Math.ceil((overlapBottom - pBounds.top) / scaleY));
+
+            let minLocalX = rawW;
+            let maxLocalX = -1;
+
+            for (let y = localYStart; y <= localYEnd; y += 2) {
+                const rowOffset = y * rawW * 4;
+                for (let x = 0; x < rawW; x += 3) {
+                    const alpha = data[rowOffset + (x * 4) + 3];
+                    if (alpha > 25) {
+                        if (x < minLocalX) minLocalX = x;
+                        if (x > maxLocalX) maxLocalX = x;
+                    }
+                }
+            }
+
+            if (maxLocalX < 0) {
+                return {
+                    leftEdge: pBounds.left,
+                    rightEdge: pBounds.left + pBounds.width,
+                    hasPixels: false,
+                    pBounds: pBounds
+                };
+            }
+
+            let canvasLeftEdge = 0;
+            let canvasRightEdge = 0;
+
+            if (flipX) {
+                canvasRightEdge = pBounds.left + ((rawW - minLocalX) * scaleX);
+                canvasLeftEdge = pBounds.left + ((rawW - maxLocalX) * scaleX);
+            } else {
+                canvasLeftEdge = pBounds.left + (minLocalX * scaleX);
+                canvasRightEdge = pBounds.left + (maxLocalX * scaleX);
+            }
+
+            return {
+                leftEdge: canvasLeftEdge,
+                rightEdge: canvasRightEdge,
+                hasPixels: true,
+                pBounds: pBounds
+            };
+        }
+
+        /**
+         * Formats and lays out quote text line-by-line following the portrait silhouette contour
+         */
+        buildContourQuoteLines(quoteText, fontConfig, startTop, maxAllowedH) {
+            const canvasW = this.canvas.getWidth();
+            const canvasH = this.canvas.getHeight();
+            const margin = Math.round(canvasW * 0.05);
+            const position = document.getElementById('quote-card-pos')?.value || 'left';
+            const isWrap = document.getElementById('quote-card-wrap-check')?.checked === true;
+            const wrapMargin = parseInt(document.getElementById('quote-card-wrap-margin')?.value) || 25;
+
+            const portraitImg = this.canvas.getObjects().find(o => o.isQuotePortrait || (o.customName && o.customName.includes('👤')));
+
+            let fontSize = fontConfig.fontSize || 44;
+            const fontFamily = fontConfig.fontFamily || 'SolaimanLipi';
+            const fontWeight = fontConfig.fontWeight || 'bold';
+            const lineHeightRatio = fontConfig.lineHeightRatio || 1.2;
+            let lineHeightPx = Math.round(fontSize * lineHeightRatio);
+
+            const mCanvas = document.createElement('canvas');
+            const mCtx = mCanvas.getContext('2d');
+
+            const words = quoteText.split(/\s+/).filter(w => w.length > 0);
+            let lines = [];
+
+            // Attempt layout, scaling down fontSize if text exceeds maxAllowedH (unless user set manual font size)
+            const allowAutoShrink = !fontConfig.isUserManualSize;
+            const maxAttempts = allowAutoShrink ? 10 : 1;
+
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                mCtx.font = `${fontWeight} ${fontSize}px ${fontFamily}, SolaimanLipi, sans-serif`;
+                lineHeightPx = Math.round(fontSize * lineHeightRatio);
+                lines = [];
+                let wordIdx = 0;
+                let currentY = startTop;
+
+                while (wordIdx < words.length) {
+                    let lineLeft = margin;
+                    let lineRight = canvasW - margin;
+                    let lineWidth = lineRight - lineLeft;
+
+                    if (portraitImg && isWrap) {
+                        const sil = this.getPortraitSilhouetteAtY(portraitImg, currentY, currentY + lineHeightPx, canvasW, canvasH);
+                        if (sil && sil.hasPixels) {
+                            if (position === 'left') {
+                                lineLeft = Math.max(margin, Math.round(sil.rightEdge + wrapMargin));
+                                lineWidth = Math.max(160, lineRight - lineLeft);
+                            } else {
+                                lineRight = Math.min(canvasW - margin, Math.round(sil.leftEdge - wrapMargin));
+                                lineWidth = Math.max(160, lineRight - lineLeft);
+                            }
+                        } else if (sil && sil.pBounds) {
+                            if (position === 'left') {
+                                lineLeft = Math.max(margin, Math.round(sil.pBounds.left + sil.pBounds.width + (canvasW * 0.03)));
+                                lineWidth = Math.max(160, lineRight - lineLeft);
+                            } else {
+                                lineRight = Math.min(canvasW - margin, Math.round(sil.pBounds.left - (canvasW * 0.03)));
+                                lineWidth = Math.max(160, lineRight - lineLeft);
+                            }
+                        }
+                    }
+
+                    let lineStr = '';
+                    while (wordIdx < words.length) {
+                        const testStr = lineStr ? (lineStr + ' ' + words[wordIdx]) : words[wordIdx];
+                        const testW = mCtx.measureText(testStr).width;
+
+                        if (testW <= lineWidth || !lineStr) {
+                            lineStr = testStr;
+                            wordIdx++;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    lines.push({
+                        text: lineStr,
+                        left: lineLeft,
+                        right: lineRight,
+                        top: currentY,
+                        width: lineWidth,
+                    });
+
+                    currentY += lineHeightPx;
+                }
+
+                const totalH = currentY - startTop;
+                if (!allowAutoShrink || totalH <= maxAllowedH || fontSize <= 18) {
+                    return {
+                        lines: lines,
+                        totalHeight: totalH,
+                        bottomY: currentY,
+                        fontSize: fontSize,
+                        lineHeightPx: lineHeightPx
+                    };
+                }
+
+                fontSize -= 2;
+            }
+
+            return {
+                lines: lines,
+                totalHeight: lines.length * lineHeightPx,
+                bottomY: startTop + (lines.length * lineHeightPx),
+                fontSize: fontSize,
+                lineHeightPx: lineHeightPx
+            };
+        }
+
+        formatBengaliQuoteText(text) {
+            if (!text) return '';
+            return text
+                .replace(/।(?=[^\s\d।])/g, '। ')
+                .replace(/,(?=[^\s\d])/g, ', ')
+                .replace(/!(?=[^\s\d])/g, '! ')
+                .replace(/\?(?=[^\s\d])/g, '? ')
+                .replace(/;(?=[^\s\d])/g, '; ')
+                .replace(/[ \t]+/g, ' ')
+                .trim();
+        }
+
+        repositionQuoteMeta(quoteObj) {
+            if (!quoteObj) return;
             const canvasW = this.canvas.getWidth();
             const canvasH = this.canvas.getHeight();
 
-            const quoteMark = this.canvas.getObjects().find(o => o.isQuoteMark || o.customName === '❝ কোটেশন মার্ক');
-            const quoteBox = this.canvas.getObjects().find(o => o.isQuoteText || o.customName === '💬 মূল উক্তি');
+            const quoteMark = this.canvas.getObjects().find(o => o.isQuoteMark || o.customName === '❝ কোটেশন মার্ক' || o.customName === '❝ কোটーション মার্ক');
+            const barRect = this.canvas.getObjects().find(o => o.isQuoteBar || o.customName === '🔴 অ্যাকসেন্ট বার');
+            const nameObj = this.canvas.getObjects().find(o => o.isQuoteName || (o.customName && o.customName.startsWith('🏷️')));
+            const desigObj = this.canvas.getObjects().find(o => o.isQuoteDesig || (o.customName && o.customName.startsWith('📋')));
+            const portraitImg = this.canvas.getObjects().find(o => o.isQuotePortrait || (o.customName && o.customName.includes('👤')));
+
+            const alignMode = document.getElementById('quote-card-align')?.value || 'star-news';
+            const isRightAlign = (alignMode === 'right' || alignMode === 'star-news');
+            const isCenterAlign = (alignMode === 'center');
+            const fontVal = document.getElementById('quote-card-font')?.value || (quoteObj.fontFamily || 'SolaimanLipi');
+
+            quoteObj.setCoords();
+            const qb = quoteObj.getBoundingRect();
+            const quoteTop = qb.top;
+            const quoteHeight = qb.height;
+            const quoteLeft = qb.left;
+            const quoteWidth = qb.width;
+            const quoteBottom = quoteTop + quoteHeight + Math.max(16, Math.round(canvasH * 0.024));
+
+            // 1. Quote Mark ❝
+            if (quoteMark) {
+                const qmSize = quoteMark.getScaledHeight() || 48;
+                const qmTop = Math.max(70, quoteTop - qmSize - 10);
+                if (isRightAlign) {
+                    quoteMark.set({ originX: 'right', left: quoteLeft + quoteWidth, top: qmTop });
+                } else if (isCenterAlign) {
+                    quoteMark.set({ originX: 'center', left: quoteLeft + (quoteWidth / 2), top: qmTop });
+                } else {
+                    quoteMark.set({ originX: 'left', left: quoteLeft, top: qmTop });
+                }
+                quoteMark.setCoords();
+            }
+
+            // 2. Speaker Name & Accent Bar
+            const nameFontSize = Math.max(20, Math.round(canvasH * 0.028));
+            const rawNameText = nameObj ? (nameObj.text || '') : '';
+            let nameActualTextW = 120;
+            if (nameObj && typeof nameObj.getLineWidth === 'function') {
+                nameActualTextW = nameObj.getLineWidth(0) || 120;
+            } else {
+                const mCanvas = document.createElement('canvas');
+                const mCtx = mCanvas.getContext('2d');
+                mCtx.font = `bold ${nameFontSize}px ${fontVal}, SolaimanLipi, sans-serif`;
+                nameActualTextW = mCtx.measureText(rawNameText).width || 120;
+            }
+            let nameH = 28;
+
+            if (isRightAlign) {
+                if (nameObj) {
+                    nameObj.set({
+                        originX: 'right',
+                        left: quoteLeft + quoteWidth,
+                        top: quoteBottom,
+                        width: quoteWidth,
+                        textAlign: 'right',
+                    });
+                    nameObj.initDimensions();
+                    nameObj.setCoords();
+                    nameH = Math.max(26, nameObj.getScaledHeight());
+                }
+                if (barRect) {
+                    barRect.set({
+                        originX: 'left',
+                        left: (quoteLeft + quoteWidth) - nameActualTextW - 14,
+                        top: quoteBottom + 3,
+                    });
+                    barRect.setCoords();
+                }
+                if (desigObj) {
+                    desigObj.set({
+                        originX: 'right',
+                        left: quoteLeft + quoteWidth,
+                        top: quoteBottom + nameH + 6,
+                        width: quoteWidth,
+                        textAlign: 'right',
+                    });
+                    desigObj.initDimensions();
+                    desigObj.setCoords();
+                }
+            } else if (isCenterAlign) {
+                const centerPos = quoteLeft + (quoteWidth / 2);
+                if (nameObj) {
+                    nameObj.set({
+                        originX: 'center',
+                        left: centerPos,
+                        top: quoteBottom,
+                        width: quoteWidth,
+                        textAlign: 'center',
+                    });
+                    nameObj.initDimensions();
+                    nameObj.setCoords();
+                    nameH = Math.max(26, nameObj.getScaledHeight());
+                }
+                if (barRect) {
+                    barRect.set({
+                        originX: 'center',
+                        left: centerPos - (nameActualTextW / 2) - 14,
+                        top: quoteBottom + 3,
+                    });
+                    barRect.setCoords();
+                }
+                if (desigObj) {
+                    desigObj.set({
+                        originX: 'center',
+                        left: centerPos,
+                        top: quoteBottom + nameH + 6,
+                        width: quoteWidth,
+                        textAlign: 'center',
+                    });
+                    desigObj.initDimensions();
+                    desigObj.setCoords();
+                }
+            } else {
+                if (nameObj) {
+                    nameObj.set({
+                        originX: 'left',
+                        left: quoteLeft + 20,
+                        top: quoteBottom,
+                        width: quoteWidth - 25,
+                        textAlign: 'left',
+                    });
+                    nameObj.initDimensions();
+                    nameObj.setCoords();
+                    nameH = Math.max(26, nameObj.getScaledHeight());
+                }
+                if (barRect) {
+                    barRect.set({
+                        originX: 'left',
+                        left: quoteLeft,
+                        top: quoteBottom + 3,
+                    });
+                    barRect.setCoords();
+                }
+                if (desigObj) {
+                    desigObj.set({
+                        originX: 'left',
+                        left: quoteLeft + 20,
+                        top: quoteBottom + nameH + 6,
+                        width: quoteWidth - 25,
+                        textAlign: 'left',
+                    });
+                    desigObj.initDimensions();
+                    desigObj.setCoords();
+                }
+            }
+
+            if (portraitImg) {
+                if (quoteObj) this.canvas.bringToFront(quoteObj);
+                if (quoteMark) this.canvas.bringToFront(quoteMark);
+                if (barRect) this.canvas.bringToFront(barRect);
+                if (nameObj) this.canvas.bringToFront(nameObj);
+                if (desigObj) this.canvas.bringToFront(desigObj);
+            }
+
+            this.canvas.renderAll();
+        }
+
+        recalculateQuoteCardLayout(options = {}) {
+            const canvasW = this.canvas.getWidth();
+            const canvasH = this.canvas.getHeight();
+
+            const quoteMark = this.canvas.getObjects().find(o => o.isQuoteMark || o.customName === '❝ কোটেশন মার্ক' || o.customName === '❝ কোটーション মার্ক');
+            let quoteBox = this.canvas.getObjects().find(o => o.isQuoteText || o.customName === '💬 মূল উক্তি');
             const barRect = this.canvas.getObjects().find(o => o.isQuoteBar || o.customName === '🔴 অ্যাকসেন্ট বার');
             const nameObj = this.canvas.getObjects().find(o => o.isQuoteName || (o.customName && o.customName.startsWith('🏷️')));
             const desigObj = this.canvas.getObjects().find(o => o.isQuoteDesig || (o.customName && o.customName.startsWith('📋')));
@@ -950,121 +1525,123 @@
 
             if (!quoteBox && !nameObj) return;
 
-            const position = document.getElementById('quote-card-pos')?.value || 'left';
-            const margin = Math.round(canvasW * 0.05); // 5% margin (50px on 1000px canvas)
-
-            let scaledW = 0;
-            if (portraitImg) {
-                scaledW = portraitImg.getScaledWidth();
+            if (options.customTop !== undefined) {
+                this._quoteCustomTop = options.customTop;
             }
 
-            // 1. Calculate Horizontal Text Bounds
+            const margin = Math.round(canvasW * 0.05);
+            const isWrap = document.getElementById('quote-card-wrap-check')?.checked === true;
+            const wrapMargin = parseInt(document.getElementById('quote-card-wrap-margin')?.value) || 25;
+            const alignMode = document.getElementById('quote-card-align')?.value || 'star-news';
+            const position = document.getElementById('quote-card-pos')?.value || 'left';
+            const fontVal = document.getElementById('quote-card-font')?.value || (quoteBox ? quoteBox.fontFamily : 'SolaimanLipi');
+            let rawQuoteText = document.getElementById('quote-card-text')?.value || (quoteBox ? (quoteBox.quoteRawText || quoteBox.text) : '') || 'এখানে আপনার উক্তি লিখুন...';
+            rawQuoteText = this.formatBengaliQuoteText(rawQuoteText);
+
+            let textColor = '#0f172a';
+            if (quoteBox) {
+                textColor = quoteBox.fill || (quoteBox._objects && quoteBox._objects[0] ? quoteBox._objects[0].fill : '#0f172a');
+            }
+
+            // 1. Initial Font Sizing & Typography Controls
+            const customFontSize = this._quoteCustomFontSize || (document.getElementById('quote-card-font-size') ? parseInt(document.getElementById('quote-card-font-size').value) : null);
+            const customLineHeight = this._quoteCustomLineHeight || (document.getElementById('quote-card-line-height') ? parseFloat(document.getElementById('quote-card-line-height').value) : 1.2);
+            const customFontWeight = this._quoteCustomFontWeight || (document.getElementById('quote-card-font-weight') ? document.getElementById('quote-card-font-weight').value : 'bold');
+
+            let initialFontSize = customFontSize || Math.round(canvasH * 0.044);
+            if (!customFontSize) {
+                if (rawQuoteText.length > 250) initialFontSize = Math.round(canvasH * 0.024);
+                else if (rawQuoteText.length > 160) initialFontSize = Math.round(canvasH * 0.030);
+                else if (rawQuoteText.length > 90) initialFontSize = Math.round(canvasH * 0.036);
+                else if (rawQuoteText.length < 40) initialFontSize = Math.round(canvasH * 0.048);
+            }
+
+            const quoteMarkTop = this._quoteCustomTop !== undefined ? (this._quoteCustomTop - 60) : Math.max(70, Math.round(canvasH * 0.08));
+            const quoteMarkSize = Math.max(48, Math.round(canvasH * 0.065));
+            const textStartTop = this._quoteCustomTop !== undefined ? this._quoteCustomTop : (quoteMarkTop + quoteMarkSize + 14);
+
+            // Sync font size controls in UI
+            const sizeSlider = document.getElementById('quote-card-font-size');
+            const sizeNum = document.getElementById('quote-card-font-size-num');
+            if (sizeSlider) sizeSlider.value = initialFontSize;
+            if (sizeNum) sizeNum.value = initialFontSize;
+
+            // 2. Setup Dimensions and Alignment
+            const isRightAlign = (alignMode === 'right' || alignMode === 'star-news');
+            const isCenterAlign = (alignMode === 'center');
+            const textAlignVal = isRightAlign ? 'right' : (isCenterAlign ? 'center' : 'left');
+
             let textLeft = margin;
             let textWidth = canvasW - (margin * 2);
 
-            if (portraitImg && scaledW > 0) {
+            if (portraitImg) {
+                portraitImg.setCoords();
+                const pBounds = portraitImg.getBoundingRect();
                 if (position === 'left') {
-                    textLeft = scaledW + Math.round(canvasW * 0.04);
-                    textWidth = canvasW - textLeft - margin;
+                    textLeft = Math.max(margin, Math.round(pBounds.left + pBounds.width + (isWrap ? wrapMargin : 30)));
+                    textWidth = Math.max(200, canvasW - textLeft - margin);
                 } else {
                     textLeft = margin;
-                    textWidth = (canvasW - scaledW - Math.round(canvasW * 0.03)) - textLeft;
+                    textWidth = Math.max(200, Math.round(pBounds.left - (isWrap ? wrapMargin : 30)) - textLeft);
                 }
             }
 
-            // 2. Position Top Quotation Mark ❝ (Generous top spacing, never overlapping quote text)
-            const quoteMarkTop = Math.max(35, Math.round(canvasH * 0.08));
-            const quoteMarkSize = Math.max(48, Math.round(canvasH * 0.065));
-            if (quoteMark) {
-                quoteMark.set({
-                    left: textLeft,
-                    top: quoteMarkTop,
-                    fontSize: quoteMarkSize,
-                });
-                quoteMark.setCoords();
-            }
+            if (this._quoteCustomLeft !== undefined) textLeft = this._quoteCustomLeft;
+            if (this._quoteCustomWidth !== undefined) textWidth = this._quoteCustomWidth;
 
-            // 3. Position & Dynamic Sizing for Quote Textbox
-            const textTop = quoteMarkTop + quoteMarkSize + 14;
-            if (quoteBox) {
-                const quoteText = quoteBox.text || '';
-                let fontSize = Math.round(canvasH * 0.044);
-                if (quoteText.length > 250) fontSize = Math.round(canvasH * 0.024);
-                else if (quoteText.length > 160) fontSize = Math.round(canvasH * 0.030);
-                else if (quoteText.length > 90) fontSize = Math.round(canvasH * 0.036);
-                else if (quoteText.length < 40) fontSize = Math.round(canvasH * 0.050);
+            // 3. Render Quote Text Box
+            const zIndex = quoteBox ? this.canvas.getObjects().indexOf(quoteBox) : -1;
+            const wasActive = (this.canvas.getActiveObject() === quoteBox);
 
+            if (quoteBox && quoteBox.type === 'textbox') {
                 quoteBox.set({
+                    text: rawQuoteText,
                     left: textLeft,
-                    top: textTop,
+                    top: textStartTop,
                     width: textWidth,
-                    fontSize: fontSize,
-                    lineHeight: 1.4,
-                    breakWords: true,
+                    fontSize: initialFontSize,
+                    fontFamily: fontVal,
+                    fontWeight: customFontWeight,
+                    fill: textColor,
+                    lineHeight: customLineHeight,
+                    textAlign: textAlignVal,
+                    breakWords: false,
+                    lockRotation: true,
                 });
                 quoteBox.initDimensions();
                 quoteBox.setCoords();
-
-                // Auto-scale font down if total text overflows available height
-                const maxAllowedQuoteH = canvasH * 0.50;
-                while (fontSize > 16 && quoteBox.getScaledHeight() > maxAllowedQuoteH) {
-                    fontSize -= 2;
-                    quoteBox.set('fontSize', fontSize);
-                    quoteBox.initDimensions();
-                    quoteBox.setCoords();
-                }
-            }
-
-            // 4. Calculate Quote Bottom (Generous 32px breathing room between quote and speaker name)
-            const quoteH = quoteBox ? quoteBox.getScaledHeight() : 40;
-            const quoteBottom = textTop + quoteH + Math.max(28, Math.round(canvasH * 0.036));
-
-            // 5. Position Speaker Name & Accent Bar
-            const nameFontSize = Math.max(22, Math.round(canvasH * 0.028));
-            let nameH = 30;
-            if (nameObj) {
-                nameObj.set({
-                    left: textLeft + 20,
-                    top: quoteBottom,
-                    width: textWidth - 25,
-                    fontSize: nameFontSize,
-                    lineHeight: 1.25,
-                    breakWords: true,
-                });
-                nameObj.initDimensions();
-                nameObj.setCoords();
-                nameH = Math.max(28, nameObj.getScaledHeight());
-            }
-
-            if (barRect) {
-                barRect.set({
+            } else {
+                if (quoteBox) this.canvas.remove(quoteBox);
+                const quoteTextbox = new fabric.Textbox(rawQuoteText, {
                     left: textLeft,
-                    top: quoteBottom + 3,
-                    width: 6,
-                    height: Math.max(26, nameH - 4),
-                    rx: 3,
-                    ry: 3,
+                    top: textStartTop,
+                    width: textWidth,
+                    fontSize: initialFontSize,
+                    fontFamily: fontVal,
+                    fontWeight: customFontWeight,
+                    fill: textColor,
+                    lineHeight: customLineHeight,
+                    textAlign: textAlignVal,
+                    breakWords: false,
+                    selectable: true,
+                    isQuoteText: true,
+                    quoteRawText: rawQuoteText,
+                    customName: '💬 মূল উক্তি',
+                    lockRotation: true,
                 });
-                barRect.setCoords();
+
+                if (zIndex >= 0) {
+                    this.canvas.insertAt(quoteTextbox, zIndex);
+                } else {
+                    this.canvas.add(quoteTextbox);
+                }
+                if (wasActive) {
+                    this.canvas.setActiveObject(quoteTextbox);
+                }
+                quoteBox = quoteTextbox;
             }
 
-            // 6. Position Designation (8px gap below Name)
-            if (desigObj) {
-                const desigFontSize = Math.max(15, Math.round(canvasH * 0.019));
-                const desigTop = quoteBottom + nameH + 8;
-                desigObj.set({
-                    left: textLeft + 20,
-                    top: desigTop,
-                    width: textWidth - 25,
-                    fontSize: desigFontSize,
-                    lineHeight: 1.25,
-                    breakWords: true,
-                });
-                desigObj.initDimensions();
-                desigObj.setCoords();
-            }
-
-            this.canvas.renderAll();
+            this.repositionQuoteMeta(quoteBox);
         }
 
         updateQuoteLiveField(field, value) {
@@ -1078,7 +1655,7 @@
                 const nameVal = document.getElementById('quote-card-name')?.value || 'বক্তার নাম';
                 const desigVal = document.getElementById('quote-card-desig')?.value || '';
                 const fontVal = document.getElementById('quote-card-font')?.value || "'SolaimanLipi'";
-                const themeVal = document.getElementById('quote-card-theme')?.value || 'soft-blue';
+                const themeVal = document.getElementById('quote-card-theme')?.value || 'soft-sky';
                 const posVal = document.getElementById('quote-card-pos')?.value || 'left';
                 const flipVal = document.getElementById('quote-card-flip-check')?.checked === true;
 
@@ -1097,7 +1674,24 @@
             }
 
             if (field === 'text' && quoteBox) {
-                quoteBox.set('text', value || 'এখানে আপনার উক্তি লিখুন...');
+                quoteBox.quoteRawText = value || 'এখানে আপনার উক্তি লিখুন...';
+            } else if (field === 'fontSize') {
+                this._quoteCustomFontSize = parseInt(value) || 44;
+                this.recalculateQuoteCardLayout();
+                return;
+            } else if (field === 'lineHeight') {
+                this._quoteCustomLineHeight = parseFloat(value) || 1.2;
+                this.recalculateQuoteCardLayout();
+                return;
+            } else if (field === 'fontWeight') {
+                this._quoteCustomFontWeight = value || 'bold';
+                this.recalculateQuoteCardLayout();
+                return;
+            } else if (field === 'align') {
+                this._quoteCustomLeft = undefined;
+                this._quoteCustomWidth = undefined;
+                this.recalculateQuoteCardLayout();
+                return;
             } else if (field === 'name' && nameObj) {
                 nameObj.set('text', value || 'বক্তার নাম');
                 nameObj.set('customName', '🏷️ ' + (value || 'বক্তার নাম'));
@@ -1123,17 +1717,24 @@
                     this.canvas.add(newDesig);
                 }
             } else if (field === 'font') {
-                if (quoteBox) quoteBox.set('fontFamily', value);
+                if (quoteBox) quoteBox.fontFamily = value;
                 if (nameObj) nameObj.set('fontFamily', value);
                 if (desigObj) desigObj.set('fontFamily', value);
             } else if (field === 'flip' && portraitImg) {
                 portraitImg.set('flipX', value);
-            } else if (field === 'position' && portraitImg) {
-                const canvasW = this.canvas.getWidth();
-                const scaledW = portraitImg.getScaledWidth();
-                portraitImg.set({
-                    left: value === 'left' ? (scaledW / 2 + 25) : (canvasW - (scaledW / 2) - 25)
-                });
+            } else if (field === 'position') {
+                this._quoteCustomLeft = undefined;
+                this._quoteCustomWidth = undefined;
+                if (portraitImg) {
+                    const canvasW = this.canvas.getWidth();
+                    const scaledW = portraitImg.getScaledWidth();
+                    portraitImg.set({
+                        left: value === 'left' ? (scaledW / 2 + 25) : (canvasW - (scaledW / 2) - 25)
+                    });
+                    portraitImg.setCoords();
+                }
+                this.recalculateQuoteCardLayout();
+                return;
             } else if (field === 'theme') {
                 this.generateQuoteCard({
                     quote: document.getElementById('quote-card-text')?.value,
@@ -1145,6 +1746,11 @@
                     flipPhoto: document.getElementById('quote-card-flip-check')?.checked,
                     removeBg: false
                 });
+                return;
+            } else if (field === 'wrap' || field === 'wrapMargin') {
+                this._quoteCustomLeft = undefined;
+                this._quoteCustomWidth = undefined;
+                this.recalculateQuoteCardLayout();
                 return;
             }
 
@@ -1165,6 +1771,10 @@
             const flipPhoto = params.flipPhoto === true;
             const imageSource = params.imageSource || null;
             const removeBg = params.removeBg !== false;
+
+            this._quoteCustomLeft = undefined;
+            this._quoteCustomWidth = undefined;
+            this._quoteCustomTop = undefined;
 
             this.showLoader("উক্তি কার্ড তৈরি হচ্ছে... AI প্রসেসিং ও ফন্ট রেন্ডার চলছে");
 
@@ -1911,9 +2521,20 @@
 
                 // Load image or proceed
                 if (finalImageUrl) {
-                    fabric.Image.fromURL(finalImageUrl, (img) => {
-                        placeElements(img);
-                    }, { crossOrigin: 'anonymous' });
+                    const tempImg = new Image();
+                    tempImg.crossOrigin = 'anonymous';
+                    tempImg.onload = () => {
+                        const trimmed = this.trimTransparentImage(tempImg);
+                        fabric.Image.fromURL(trimmed.dataUrl, (img) => {
+                            placeElements(img);
+                        }, { crossOrigin: 'anonymous' });
+                    };
+                    tempImg.onerror = () => {
+                        fabric.Image.fromURL(finalImageUrl, (img) => {
+                            placeElements(img);
+                        }, { crossOrigin: 'anonymous' });
+                    };
+                    tempImg.src = finalImageUrl;
                 } else {
                     placeElements(null);
                 }
@@ -1962,9 +2583,88 @@
                 this.renderLayersList();
             });
 
-            this.canvas.on('object:modified', () => {
+            this.canvas.on('object:moving', (e) => {
+                const target = e.target;
+                if (!target) return;
+
+                if (target.isQuotePortrait || (target.customName && target.customName.includes('👤'))) {
+                    this.recalculateQuoteCardLayout();
+                } else if (target.isQuoteText || target.customName === '💬 মূল উক্তি') {
+                    this._quoteCustomLeft = target.left;
+                    this._quoteCustomTop = target.top;
+                    this.repositionQuoteMeta(target);
+                }
+            });
+
+            this.canvas.on('object:scaling', (e) => {
+                const target = e.target;
+                if (!target) return;
+                if (target.isQuoteText || target.customName === '💬 মূল উক্তি') {
+                    const scaleX = target.scaleX || 1;
+                    const newWidth = Math.max(120, Math.round(target.width * scaleX));
+                    target.set({
+                        width: newWidth,
+                        scaleX: 1,
+                        scaleY: 1
+                    });
+                    target.initDimensions();
+                    target.setCoords();
+                    this._quoteCustomWidth = newWidth;
+                    this._quoteCustomLeft = target.left;
+                    this._quoteCustomTop = target.top;
+                    this.repositionQuoteMeta(target);
+                }
+            });
+
+            this.canvas.on('object:resizing', (e) => {
+                const target = e.target;
+                if (!target) return;
+                if (target.isQuoteText || target.customName === '💬 মূল উক্তি') {
+                    this._quoteCustomWidth = target.width;
+                    this._quoteCustomLeft = target.left;
+                    this._quoteCustomTop = target.top;
+                    this.repositionQuoteMeta(target);
+                }
+            });
+
+            this.canvas.on('mouse:dblclick', (e) => {
+                const target = e.target;
+                if (!target) return;
+
+                if (target.isQuoteText || target.customName === '💬 মূল উক্তি') {
+                    this.openInlineQuoteEditor(target);
+                } else if (target.isQuoteName || target.isQuoteDesig) {
+                    if (target.enterEditing) {
+                        target.enterEditing();
+                    }
+                }
+            });
+
+            this.canvas.on('object:modified', (e) => {
                 this.updateFloatingToolbar();
                 this.syncSidebarWithActiveObject();
+                const target = e.target;
+                if (target) {
+                    if (target.isQuotePortrait || (target.customName && target.customName.includes('👤'))) {
+                        this.recalculateQuoteCardLayout();
+                    } else if (target.isQuoteText || target.customName === '💬 মূল উক্তি') {
+                        if (target.scaleX !== 1 || target.scaleY !== 1) {
+                            const scaleX = target.scaleX || 1;
+                            const newWidth = Math.max(120, Math.round(target.width * scaleX));
+                            target.set({
+                                width: newWidth,
+                                scaleX: 1,
+                                scaleY: 1
+                            });
+                            target.initDimensions();
+                            target.setCoords();
+                            this._quoteCustomWidth = newWidth;
+                        }
+                        this._quoteCustomLeft = target.left;
+                        this._quoteCustomTop = target.top;
+                        this.repositionQuoteMeta(target);
+                    }
+                }
                 this.saveState();
             });
 
@@ -1977,9 +2677,67 @@
             });
         }
 
+        openInlineQuoteEditor(quoteObj) {
+            const rawText = quoteObj.quoteRawText || (document.getElementById('quote-card-text')?.value) || 'এখানে আপনার উক্তি লিখুন...';
+            const bound = quoteObj.getBoundingRect();
+            const wrapper = document.getElementById(this.config.canvasWrapperId);
+            if (!wrapper) return;
+
+            let overlay = document.getElementById('studio-inline-quote-editor');
+            if (!overlay) {
+                overlay = document.createElement('textarea');
+                overlay.id = 'studio-inline-quote-editor';
+                overlay.className = 'absolute z-50 p-3 rounded-2xl border-2 border-indigo-600 bg-white/95 shadow-2xl font-bold outline-none text-slate-800 resize-none font-bangla transition-all';
+                wrapper.appendChild(overlay);
+            }
+
+            const zoom = this.zoomLevel || 1;
+            const left = bound.left * zoom;
+            const top = bound.top * zoom;
+            const width = Math.max(280, bound.width * zoom + 30);
+            const height = Math.max(140, bound.height * zoom + 30);
+
+            overlay.style.left = `${left}px`;
+            overlay.style.top = `${top}px`;
+            overlay.style.width = `${width}px`;
+            overlay.style.height = `${height}px`;
+            overlay.style.fontSize = `${Math.max(14, (quoteObj.fontSize || 22) * zoom)}px`;
+            overlay.style.lineHeight = '1.4';
+            overlay.style.fontFamily = quoteObj.fontFamily || 'SolaimanLipi';
+            overlay.value = rawText;
+            overlay.style.display = 'block';
+            overlay.focus();
+            overlay.select();
+
+            overlay.oninput = () => {
+                const val = overlay.value;
+                const sidebarInput = document.getElementById('quote-card-text');
+                if (sidebarInput) sidebarInput.value = val;
+                this.updateQuoteLiveField('text', val);
+            };
+
+            const closeEditor = () => {
+                overlay.style.display = 'none';
+                this.recalculateQuoteCardLayout();
+            };
+
+            overlay.onblur = closeEditor;
+            overlay.onkeydown = (e) => {
+                if (e.key === 'Escape') {
+                    closeEditor();
+                }
+            };
+        }
+
         syncSidebarWithActiveObject() {
             const active = this.canvas.getActiveObject();
             if (!active) return;
+
+            if (active.isQuoteText || active.customName === '💬 মূল উক্তি') {
+                if (typeof switchStudioTab === 'function') {
+                    switchStudioTab('quote');
+                }
+            }
 
             // 1. Text Properties Sync
             if (active.type === 'i-text' || active.type === 'textbox' || active.type === 'text') {
@@ -3560,6 +4318,11 @@
 
         setTextFontSize(size) {
             const active = this.canvas.getActiveObject();
+            if (active && (active.isQuoteText || active.customName === '💬 মূল উক্তি')) {
+                const s = Math.max(14, parseInt(size) || 44);
+                this.updateQuoteLiveField('fontSize', s);
+                return;
+            }
             if (active && (active.type === 'i-text' || active.type === 'textbox' || active.type === 'text')) {
                 const s = Math.max(8, parseInt(size) || 48);
                 active.set('fontSize', s);
