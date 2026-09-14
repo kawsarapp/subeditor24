@@ -312,6 +312,27 @@ class CustomPhotoCardController extends Controller
                 }
             }
 
+            $frameUrl = $request->input('frame_url');
+            if ($request->filled('frame_url')) {
+                $frameData = $request->input('frame_url');
+                if (preg_match('/^data:image\/(\w+);base64,/', $frameData, $matches)) {
+                    $ext = strtolower($matches[1]) ?: 'png';
+                    $frameData = substr($frameData, strpos($frameData, ',') + 1);
+                    $decodedFrame = base64_decode($frameData);
+                    $frameDir = public_path('uploads/custom_frames');
+                    if (!File::exists($frameDir)) {
+                        File::makeDirectory($frameDir, 0755, true);
+                    }
+                    $frameFile = 'frame_' . time() . '_' . Str::random(6) . '.' . $ext;
+                    file_put_contents($frameDir . '/' . $frameFile, $decodedFrame);
+                    $frameUrl = asset('uploads/custom_frames/' . $frameFile);
+                }
+            }
+
+            if (!$thumbnailUrl && $frameUrl) {
+                $thumbnailUrl = $frameUrl;
+            }
+
             $layout = is_string($request->input('layout_data'))
                 ? json_decode($request->input('layout_data'), true)
                 : $request->input('layout_data');
@@ -320,7 +341,7 @@ class CustomPhotoCardController extends Controller
                 'user_id' => Auth::id(),
                 'name' => $request->input('name'),
                 'thumbnail_url' => $thumbnailUrl,
-                'frame_url' => $request->input('frame_url'),
+                'frame_url' => $frameUrl,
                 'layout_data' => $layout,
                 'is_active' => true,
             ]);

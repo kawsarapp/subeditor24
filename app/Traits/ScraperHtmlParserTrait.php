@@ -70,6 +70,7 @@ trait ScraperHtmlParserTrait
                 '.article-body', '#article-body', '.padding-article', // japantimes.co.jp
                 '.story__content', '.story-content', // dawn.com
                 // Bangladesh news portals (specific)
+                '.dtl_content_section',                             // npbnews.com
                 '.ck-content',                                      // starnews.com.bd and modern CMS / CKEditor portals
                 'article.single-post .ck-content',                  // starnews.com.bd
                 '.singlepost-main-column .ck-content',              // starnews.com.bd

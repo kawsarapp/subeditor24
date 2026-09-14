@@ -137,7 +137,7 @@ class WebsitesTableSeeder extends Seeder
                 'selector_container' => '.row.val_page_btm .col-12',
                 'selector_title' => 'h4',
                 'selector_image' => 'img.images',
-                'selector_content' => 'div.col-12',
+                'selector_content' => '.dtl_content_section',
                 'use_scraping_api' => 0,
                 'target_language' => 'bn',
             ],

@@ -9,7 +9,12 @@
             if (activeObj.isEditing && activeObj.selectionStart !== activeObj.selectionEnd) {
                 activeObj.setSelectionStyles({ fill: color });
             } else {
+                activeObj.styles = {};
                 activeObj.set('fill', color);
+            }
+            if (activeObj.isHeadline) {
+                userSettings.color = color;
+                if (typeof savePreference === 'function') savePreference('color', color);
             }
             canvas.requestRenderAll();
             if(typeof saveHistory === 'function') saveHistory();

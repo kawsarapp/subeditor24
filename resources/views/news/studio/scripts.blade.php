@@ -312,10 +312,15 @@
                 if (isRestore && window.userSettings?.titlePos) { titleObj.set(window.userSettings.titlePos); } 
                 else {
                     const config = targetLayout.title;
-                    titleObj.set({ top: config.top, left: config.left, width: config.width, textAlign: config.textAlign, originX: config.originX, fontSize: config.fontSize, backgroundColor: config.backgroundColor, fill: config.fill, fontFamily: config.fontFamily });
+                    titleObj.styles = {};
+                    titleObj.set({ top: config.top, left: config.left, width: config.width, textAlign: config.textAlign, originX: config.originX, fontSize: config.fontSize, backgroundColor: config.backgroundColor || '', fill: config.fill || '#ffffff', fontFamily: config.fontFamily });
                     if(config.fontFamily && !config.fontFamily.includes('📂')) WebFont.load({ google: { families: [config.fontFamily.replace(/'/g, "").split(',')[0].trim()] } });
-                    updateUI(config.fontSize, config.fill, config.fontFamily);
-                    Object.assign(userSettings, { color: config.fill, font: config.fontFamily, size: config.fontSize, bg: config.backgroundColor });
+                    updateUI(config.fontSize, config.fill || '#ffffff', config.fontFamily);
+                    Object.assign(userSettings, { color: config.fill || '#ffffff', font: config.fontFamily, size: config.fontSize, bg: config.backgroundColor || '' });
+                    savePreference('color', config.fill || '#ffffff');
+                    savePreference('font', config.fontFamily);
+                    savePreference('size', config.fontSize);
+                    savePreference('bg', config.backgroundColor || '');
                 }
                 titleObj.setCoords(); 
             }
@@ -340,16 +345,16 @@
         } else {
             let titleObj = canvas.getObjects().find(o => o.isHeadline);
             if(!titleObj) { titleObj = new fabric.Textbox(newsData.title, { left: 50, top: 800, width: 980, fontSize: 60, fill: '#000', fontFamily: 'Hind Siliguri', fontWeight: 'bold', textAlign: 'center', isHeadline: true }); canvas.add(titleObj); }
+            setTimeout(() => {
+                let titleObj = canvas.getObjects().find(o => o.isHeadline);
+                if (titleObj && !userSettings.frameUrl) {
+                    let fontName = userSettings.font;
+                    if(!fontName.includes('📂')) WebFont.load({ google: { families: [fontName.replace(/'/g, "").split(',')[0].trim()] } });
+                    titleObj.set({ fill: userSettings.color, fontSize: parseInt(userSettings.size), backgroundColor: userSettings.bg, fontFamily: fontName });
+                    updateUI(userSettings.size, userSettings.color, userSettings.font); canvas.requestRenderAll();
+                }
+            }, 600);
         }
-        setTimeout(() => {
-            let titleObj = canvas.getObjects().find(o => o.isHeadline);
-            if (titleObj) {
-                let fontName = userSettings.font;
-                if(!fontName.includes('📂')) WebFont.load({ google: { families: [fontName.replace(/'/g, "").split(',')[0].trim()] } });
-                titleObj.set({ fill: userSettings.color, fontSize: parseInt(userSettings.size), backgroundColor: userSettings.bg, fontFamily: fontName });
-                updateUI(userSettings.size, userSettings.color, userSettings.font); canvas.requestRenderAll();
-            }
-        }, 600);
         if (userSettings.logo) addProfileLogo(userSettings.logo);
         addDateText();
     }
@@ -417,6 +422,18 @@
             };
         }
 
+        // Extract exact active text color
+        let titleFill = '#ffffff';
+        if (titleObj) {
+            titleFill = titleObj.fill || '#ffffff';
+            if (titleObj.styles && titleObj.styles[0]) {
+                const firstStyle = Object.values(titleObj.styles[0])[0];
+                if (firstStyle && firstStyle.fill) {
+                    titleFill = firstStyle.fill;
+                }
+            }
+        }
+
         const layoutData = {
             title: titleObj ? {
                 top: titleObj.top,
@@ -425,7 +442,7 @@
                 textAlign: titleObj.textAlign || 'center',
                 originX: titleObj.originX || 'center',
                 fontSize: titleObj.fontSize || 50,
-                fill: titleObj.fill || '#ffffff',
+                fill: titleFill,
                 fontFamily: titleObj.fontFamily || 'Hind Siliguri',
                 backgroundColor: titleObj.backgroundColor || ''
             } : { top: 800, left: 540, width: 980, textAlign: 'center', originX: 'center', fontSize: 60, fill: '#ffffff', fontFamily: 'Hind Siliguri', backgroundColor: '' },
@@ -469,6 +486,10 @@
                 
                 if (!window.DB_LAYOUTS) window.DB_LAYOUTS = {};
                 window.DB_LAYOUTS[tpl.key] = tpl.layout_data;
+                if (tpl.frame_url) {
+                    userSettings.frameUrl = tpl.frame_url;
+                    savePreference('frameUrl', tpl.frame_url);
+                }
 
                 const grid = document.getElementById('mySavedTemplatesGrid');
                 const emptyMsg = document.getElementById('noSavedTemplatesMsg');

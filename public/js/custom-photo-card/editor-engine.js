@@ -2507,6 +2507,7 @@
                         fontWeight: 'bold',
                         fill: themeConfig.dateTextColor,
                         selectable: true,
+                        isDate: true,
                         customName: '📅 তারিখ',
                     });
                     this.canvas.add(dateText);
@@ -4493,7 +4494,7 @@
                     'customName', 'selectable', 'lockMovementX', 'lockMovementY', 
                     'lockScalingX', 'lockScalingY', 'lockRotation', 'hasControls',
                     'isQuoteText', 'isQuoteName', 'isQuoteDesig', 'isQuoteMark', 
-                    'isQuoteBar', 'isQuotePortrait', 'isFrame'
+                    'isQuoteBar', 'isQuotePortrait', 'isFrame', 'isDate'
                 ]);
 
                 const quoteParams = {
@@ -4576,6 +4577,15 @@
             const json = typeof tpl.canvasJson === 'string' ? JSON.parse(tpl.canvasJson) : tpl.canvasJson;
 
             this.canvas.loadFromJSON(json, () => {
+                // Auto-update Date text to TODAY's date when reusing a template
+                const todayDate = new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
+                const dateObj = this.canvas.getObjects().find(o => o.isDate || (o.customName && (o.customName.includes('তারিখ') || o.customName.includes('📅'))));
+                if (dateObj) {
+                    dateObj.set('text', todayDate);
+                    if (typeof dateObj.initDimensions === 'function') dateObj.initDimensions();
+                    dateObj.setCoords();
+                }
+
                 this.canvas.renderAll();
                 this.activeFrame = tpl.activeFrame || null;
                 this.hideLoader();
