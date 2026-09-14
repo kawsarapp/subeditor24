@@ -23,7 +23,7 @@ trait ScraperHtmlParserTrait
         ];
 
         // 1. Manual/Dashboard Custom Selector Extraction (PRIORITY #1)
-        if (!empty($customSelectors['content']) && $crawler->filter($customSelectors['content'])->count() > 0) {
+        if (!empty($customSelectors['content'])) {
             $data['body'] = $this->extractBodyManually($crawler, [$customSelectors['content']]);
         }
 
@@ -34,9 +34,12 @@ trait ScraperHtmlParserTrait
             $data['image'] = is_array($img) ? ($img['url'] ?? $img[0] ?? null) : $img;
         }
 
-        // 3. Fallback Smart Extraction
-        if (empty($data['body'])) {
-            $data['body'] = $this->extractBodyManually($crawler, []);
+        // 3. Fallback Smart Extraction (if empty or if custom selector returned suspiciously short/junk body)
+        if (empty($data['body']) || strlen(strip_tags($data['body'])) < 80) {
+            $fallbackBody = $this->extractBodyManually($crawler, []);
+            if (!empty($fallbackBody) && strlen(strip_tags($fallbackBody)) > strlen(strip_tags($data['body'] ?? ''))) {
+                $data['body'] = $fallbackBody;
+            }
         }
 
         return !empty($data['body']) ? $data : null;
@@ -44,35 +47,56 @@ trait ScraperHtmlParserTrait
 
     private function extractBodyManually(Crawler $crawler, $specificSelectors = [])
     {
-        $selectors = !empty($specificSelectors) ? $specificSelectors : [
-            // International news portals (specific)
-            '.wysiwyg--all-content', '.wysiwyg', '.article__content', '.article-p-wrapper', 'div[data-component="RichText"]', '.responsive-article', // aljazeera.com
-            '#td-23-story--center', '.story-body', '#content-area', // thediplomat.com
-            '.article-body', '#article-body', '.padding-article', // japantimes.co.jp
-            '.story__content', '.story-content', // dawn.com
-            // Bangladesh news portals (specific)
-            '.newsArticle',        // kalerkantho.com (Specific body wrapper)
-            'div.someNews',        // kalerkantho.com (fallback)
-            '.dNewsDesc', '.news-details-content', // samakal.com
-            '.cat-post-body',      // various BD portals
-            '.jw_article_body', '.news-element-text', '#news-details-page', // jugantor, others
-            '.details-content',    // dhakapost, others
-            '.story-element-text', // prothomalo
-            '.desktopDetailBody',  // jamuna.tv
-            '.innerAdDiv',         // jamuna.tv fallback
-            'div[class^="ContentDetails"]', // channel24bd.tv dynamic class
-            '.news_details', '.details_text', // dailyamardesh.com
-            '.barta-content',      // bartabazar.com
-            '.newsDetailBody', '.news-detail-body', '.news-body-content',
-            '.detailsBody', '.somoyNewsBody', '.article-detail-body', // somoynews.tv (Nuxt SSR via Universal API)
-            // Generic fallbacks
-            '.RichTextStoryBody', '.StoryBody', '[data-key="article-body"]', '.body-content', '.wsw',
-            '.article-details-body', '.content-details', '.news-article-text',
-            '#news-content', '.details-text', '.article-content',
-            'div[itemprop="articleBody"]', '.article-details', '#details',
-            '.details', 'article', '.post-content', '.entry-content',
-            '.section-content', '.post-body', '.td-post-content'
-        ];
+        // Flatten and split any comma-separated selector lists
+        $selectors = [];
+        if (!empty($specificSelectors)) {
+            foreach ($specificSelectors as $sel) {
+                if (is_string($sel)) {
+                    foreach (explode(',', $sel) as $s) {
+                        $trimmed = trim($s);
+                        if (!empty($trimmed)) {
+                            $selectors[] = $trimmed;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (empty($selectors)) {
+            $selectors = [
+                // International news portals (specific)
+                '.wysiwyg--all-content', '.wysiwyg', '.article__content', '.article-p-wrapper', 'div[data-component="RichText"]', '.responsive-article', // aljazeera.com
+                '#td-23-story--center', '.story-body', '#content-area', // thediplomat.com
+                '.article-body', '#article-body', '.padding-article', // japantimes.co.jp
+                '.story__content', '.story-content', // dawn.com
+                // Bangladesh news portals (specific)
+                '.ck-content',                                      // starnews.com.bd and modern CMS / CKEditor portals
+                'article.single-post .ck-content',                  // starnews.com.bd
+                '.singlepost-main-column .ck-content',              // starnews.com.bd
+                '.singlepost-main-column',                          // starnews.com.bd fallback
+                '.newsArticle',                                     // kalerkantho.com (Specific body wrapper)
+                'div.someNews',                                     // kalerkantho.com (fallback)
+                '.dNewsDesc', '.news-details-content',              // samakal.com
+                '.cat-post-body',                                   // various BD portals
+                '.jw_article_body', '.news-element-text', '#news-details-page', // jugantor, others
+                '.details-content',                                 // dhakapost, others
+                '.story-element-text',                              // prothomalo
+                '.desktopDetailBody',                               // jamuna.tv
+                '.innerAdDiv',                                      // jamuna.tv fallback
+                'div[class^="ContentDetails"]',                     // channel24bd.tv dynamic class
+                '.news_details', '.details_text',                   // dailyamardesh.com
+                '.barta-content',                                   // bartabazar.com
+                '.newsDetailBody', '.news-detail-body', '.news-body-content',
+                '.detailsBody', '.somoyNewsBody', '.article-detail-body', // somoynews.tv (Nuxt SSR via Universal API)
+                // Generic fallbacks
+                '.RichTextStoryBody', '.StoryBody', '[data-key="article-body"]', '.body-content', '.wsw',
+                '.article-details-body', '.content-details', '.news-article-text',
+                '#news-content', '.details-text', '.article-content',
+                'div[itemprop="articleBody"]', '.article-details', '#details',
+                '.details', 'article', '.post-content', '.entry-content',
+                '.section-content', '.post-body', '.td-post-content'
+            ];
+        }
         
         $bestContent = "";
         $maxLength = 0;
@@ -115,7 +139,7 @@ trait ScraperHtmlParserTrait
                     }
                 });
 
-                // 🔥 Fallback: if no <p> content (div-based sites like kalerkantho)
+                // 🔥 Fallback: if no <p> content (div-based sites like kalerkantho or direct div text)
                 if (empty($text)) {
                     $container->filter('div, span')->each(function (Crawler $node) use (&$text) {
                         // Only grab leaf-level text nodes with enough content
@@ -124,6 +148,14 @@ trait ScraperHtmlParserTrait
                             $text .= "<p>" . $nodeText . "</p>\n";
                         }
                     });
+                }
+
+                // 🔥 Fallback 2: If container itself contains direct clean text
+                if (empty($text)) {
+                    $directText = strip_tags(trim($container->html()));
+                    if (strlen($directText) > 30 && !$this->isGarbageText($directText) && !str_contains($directText, 'facebook.com')) {
+                        $text = "<p>" . $directText . "</p>\n";
+                    }
                 }
 
                 if (strlen($text) > $maxLength) {
@@ -138,12 +170,15 @@ trait ScraperHtmlParserTrait
     private function extractTitle(Crawler $crawler, $customSelectors)
     {
         if (!empty($customSelectors['title']) && $crawler->filter($customSelectors['title'])->count() > 0) {
-            return trim($crawler->filter($customSelectors['title'])->first()->text());
+            $candidate = trim($crawler->filter($customSelectors['title'])->first()->text());
+            if (mb_strlen($candidate, 'UTF-8') >= 10 && !in_array(strtolower($candidate), ['search', 'menu', 'home', 'login', 'untitled', 'breaking news', 'latest news'])) {
+                return $candidate;
+            }
         }
 
         if ($crawler->filter('meta[property="og:title"]')->count() > 0) return trim($crawler->filter('meta[property="og:title"]')->attr('content'));
         if ($crawler->filter('meta[name="twitter:title"]')->count() > 0) return trim($crawler->filter('meta[name="twitter:title"]')->attr('content'));
-        if ($crawler->filter('h1')->count() > 0) return trim($crawler->filter('h1')->first()->text());
+        if ($crawler->filter('article h1, .post-header h1, h1')->count() > 0) return trim($crawler->filter('article h1, .post-header h1, h1')->first()->text());
         return "Untitled News";
     }
 
@@ -151,8 +186,8 @@ trait ScraperHtmlParserTrait
     {
         $imageUrl = null;
 
-        // 1. Check Custom Selector from Dashboard
-        if (!empty($customSelectors['image']) && $crawler->filter($customSelectors['image'])->count() > 0) {
+        // 1. Check Specific Custom Selector from Dashboard (avoid generic 'img' which matches site header logo)
+        if (!empty($customSelectors['image']) && $customSelectors['image'] !== 'img' && $crawler->filter($customSelectors['image'])->count() > 0) {
             $imgNode = $crawler->filter($customSelectors['image'])->first();
             $imageUrl = $imgNode->attr('data-gl-src') ?? $imgNode->attr('data-original') ?? $imgNode->attr('data-src') ?? $imgNode->attr('src') ?? $imgNode->attr('content');
         }

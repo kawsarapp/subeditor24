@@ -41,7 +41,8 @@ trait ScraperHelperTrait
             '|NPB', '|NTV', '|RTV', '|Dhaka Post', '|Jugantor', 
             '|Prothom Alo', '|Somoy TV', '|Kaler Kantho', '|Daily Star', 
             '|Bangla Tribune', '|Ittefaq', '|Jamuna TV', '|Barta24', 
-            '|Jagonews24', '|Samakal', '|Ajker Patrika', ' - প্রথম আলো'
+            '|Jagonews24', '|Samakal', '|Ajker Patrika', ' - প্রথম আলো',
+            '| STAR NEWS', '| Star News', '| STAR NEWS BD', ' - STAR NEWS', ' - Star News'
         ];
         $title = str_ireplace($garbageBrands, '', $title);
 
@@ -61,7 +62,9 @@ trait ScraperHelperTrait
             '.author-info', '.newsletter', '.comments', '.comment-list',
             '.breadcrumb', '.post-meta', '.social-links', 'style', 'script', 'noscript',
             '.caption', 'figcaption', '.source-link', '.news-update', '.google-news',
-            '.ad-slot', '.hidden', '.d-none', '.jwplayer', '.popup' // New Added
+            '.ad-slot', '.hidden', '.d-none', '.jwplayer', '.popup', // New Added
+            '.singlepost-floating-rail', '.singlepost-floating-column', '.post-footer', 
+            '.post-related', '.widgt-content', '.product-tabs-content', '.singlepost-mobile-post-footer'
         ];
 
         foreach ($junkSelectors as $junk) {
@@ -75,7 +78,7 @@ trait ScraperHelperTrait
 
     private function cleanGarbage(Crawler $crawler)
     {
-        $junkSelectors = ['script', 'style', 'iframe', 'nav', 'header', 'footer', 'form', '.advertisement', '.ads', '.share-buttons', '.meta', '.comments-area', '.sidebar', '.menu'];
+        $junkSelectors = ['script', 'style', 'iframe', 'nav', 'header', 'footer', 'form', '.advertisement', '.ads', '.share-buttons', '.meta', '.comments-area', '.sidebar', '.menu', '.singlepost-floating-rail', '.singlepost-floating-column', '.post-footer', '.post-related', '.widgt-content', '.product-tabs-content'];
         $crawler->filter(implode(', ', $junkSelectors))->each(function (Crawler $node) {
             if ($node->getNode(0)->parentNode) {
                 $node->getNode(0)->parentNode->removeChild($node->getNode(0));
