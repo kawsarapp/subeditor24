@@ -74,6 +74,16 @@ class ProcessSingleNews implements ShouldQueue
                           ? trim($scrapedData['title']) 
                           : trim($this->title);
 
+            // 🛑 REJECT ERROR PAGES (Prevent saving proxy/DNS error pages)
+            $errorPatterns = ["This site can't be reached", "This site can’t be reached", "ERR_NAME_NOT_RESOLVED", "ERR_CONNECTION_TIMED_OUT", "403 Forbidden", "Access Denied", "Attention Required! | Cloudflare"];
+            foreach ($errorPatterns as $errPattern) {
+                if (stripos($finalTitle, $errPattern) !== false || stripos($scrapedData['body'] ?? '', $errPattern) !== false) {
+                    Log::warning("⚠️ Rejected error page text for link: {$this->link}");
+                    $this->logScraperRun($this->websiteId, $this->link, 'article', 'failed', null, null, 'Error page content detected: ' . $errPattern);
+                    return;
+                }
+            }
+
             // ৬. 💾 SAVE TO DATABASE
             $this->saveNews($finalTitle, $scrapedData['body'], $finalImage);
 

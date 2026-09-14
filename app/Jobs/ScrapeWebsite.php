@@ -95,8 +95,8 @@ class ScrapeWebsite implements ShouldQueue
                 $jsRenderedDomains = ['ekhon.tv', 'dbcnews.tv', 'banglatribune.com', 'prothomalo.com', 'channel24bd.tv', 'kalerkantho.com'];
                 $isJsRendered = $website->scraper_method === 'node' || collect($jsRenderedDomains)->some(fn($d) => str_contains($website->url, $d));
 
-                // 🚀 Force Universal Scraping API for hard CF-protected sites (no dashboard toggle needed)
-                $forceApiDomains = ['prothomalo.com', 'somoynews.tv', 'bangla.bdnews24.com', 'jamuna.tv', 'kalerkantho.com', 'dawn.com', 'aninews.in', 'thedailystar.net', 'starnews.com.bd'];
+                // 🚀 Force Universal Scraping API for hard CF-protected & proxy-timeout prone sites
+                $forceApiDomains = ['prothomalo.com', 'somoynews.tv', 'bangla.bdnews24.com', 'jamuna.tv', 'kalerkantho.com', 'dawn.com', 'aninews.in', 'thedailystar.net', 'starnews.com.bd', 'samakal.com', 'bartabazar.com', 'bd-pratidin.com', 'rtvonline.com', 'jagonews24.com', 'dailyamardesh.com', 'itvbd.com', 'bvnews24.com', 'dbcnews.tv', 'jugantor.com', 'japantimes.co.jp', 'thediplomat.com'];
                 $forceApi = collect($forceApiDomains)->some(fn($d) => str_contains($website->url, $d));
 
                 if ($forceApi) {

@@ -45,17 +45,24 @@ trait ScraperHtmlParserTrait
     private function extractBodyManually(Crawler $crawler, $specificSelectors = [])
     {
         $selectors = !empty($specificSelectors) ? $specificSelectors : [
+            // International news portals (specific)
+            '.wysiwyg--all-content', '.wysiwyg', '.article__content', '.article-p-wrapper', 'div[data-component="RichText"]', '.responsive-article', // aljazeera.com
+            '#td-23-story--center', '.story-body', '#content-area', // thediplomat.com
+            '.article-body', '#article-body', '.padding-article', // japantimes.co.jp
+            '.story__content', '.story-content', // dawn.com
             // Bangladesh news portals (specific)
             '.newsArticle',        // kalerkantho.com (Specific body wrapper)
             'div.someNews',        // kalerkantho.com (fallback)
-            '.dNewsDesc',          // samakal.com
+            '.dNewsDesc', '.news-details-content', // samakal.com
             '.cat-post-body',      // various BD portals
-            '.jw_article_body',    // jugantor, others
+            '.jw_article_body', '.news-element-text', '#news-details-page', // jugantor, others
             '.details-content',    // dhakapost, others
             '.story-element-text', // prothomalo
             '.desktopDetailBody',  // jamuna.tv
             '.innerAdDiv',         // jamuna.tv fallback
             'div[class^="ContentDetails"]', // channel24bd.tv dynamic class
+            '.news_details', '.details_text', // dailyamardesh.com
+            '.barta-content',      // bartabazar.com
             '.newsDetailBody', '.news-detail-body', '.news-body-content',
             '.detailsBody', '.somoyNewsBody', '.article-detail-body', // somoynews.tv (Nuxt SSR via Universal API)
             // Generic fallbacks
