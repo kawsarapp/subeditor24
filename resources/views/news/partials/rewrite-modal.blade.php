@@ -216,32 +216,154 @@
             {{-- 🚀 RIGHT SIDEBAR: SEO & METADATA --}}
             <div id="editorSidebarPanel" class="w-full lg:w-80 flex flex-col gap-5 h-auto lg:h-[92vh] lg:overflow-y-auto lg:sticky lg:top-4 pr-2">
                 {{-- 🚀 SEO & Meta Data Card --}}
+                {{-- 🚀 SEO & Focus Keywords Card --}}
                 <div class="bg-white dark:bg-slate-900 border border-indigo-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex-shrink-0">
-                    <div class="bg-indigo-600 text-white px-4 py-3 flex justify-between items-center">
-                        <h5 class="m-0 font-bold text-xs flex items-center gap-2">🚀 SEO Score</h5>
-                        <span class="bg-white text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">
+                    <div class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-4 py-3 flex justify-between items-center shadow-sm">
+                        <h5 class="m-0 font-bold text-xs flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line"></i> 🚀 SEO & Focus Keywords
+                        </h5>
+                        <span class="bg-white text-indigo-700 px-2.5 py-0.5 rounded-full text-xs font-black shadow-sm">
                             <span id="seo-score">0</span>/100
                         </span>
                     </div>
-                    <div class="p-4">
-                        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mb-4">
-                            <div id="seo-progress" class="bg-red-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    <div class="p-4 space-y-4">
+                        {{-- SEO Progress Bar --}}
+                        <div>
+                            <div class="flex justify-between items-center text-[11px] font-bold text-slate-500 mb-1">
+                                <span>SEO Optimization</span>
+                                <span id="seo-score-text" class="text-rose-500 font-extrabold">Needs Work</span>
+                            </div>
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                                <div id="seo-progress" class="bg-red-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Focus Keywords</label>
-                            <input type="text" id="focus_keyword" oninput="syncSocialCardPreview()" class="seo-input w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl p-2 text-xs focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100" placeholder="e.g. বাংলাদেশ, রাজনীতি">
+
+                        {{-- Focus Keywords Section --}}
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    🎯 Focus Keywords
+                                </label>
+                                <button type="button" id="btnAiKeywords" onclick="generateFocusKeywordsModal()" class="text-[10px] bg-gradient-to-r from-indigo-50 to-violet-50 hover:from-indigo-100 hover:to-violet-100 text-indigo-700 border border-indigo-200/80 px-2.5 py-1 rounded-lg font-black transition flex items-center gap-1 shadow-sm cursor-pointer" title="AI দিয়ে স্বয়ংক্রিয় কী-ওয়ার্ড বের করুন">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i>
+                                    <span>AI Auto Keywords</span>
+                                </button>
+                            </div>
+
+                            {{-- Interactive Keyword Tag Container --}}
+                            <div id="keywordPillWrapper" onclick="document.getElementById('keywordTagInput').focus()" class="w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl p-2 min-h-[46px] flex flex-wrap items-center gap-1.5 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:bg-white dark:focus-within:bg-slate-900 transition cursor-text">
+                                <div id="keywordPillsList" class="flex flex-wrap items-center gap-1.5"></div>
+                                <input type="text" id="keywordTagInput" placeholder="কী-ওয়ার্ড লিখে Enter বা কমা দিন..." class="flex-1 min-w-[110px] bg-transparent text-xs text-slate-800 dark:text-slate-100 border-none outline-none focus:ring-0 p-1 font-semibold">
+                            </div>
+                            {{-- Hidden input for form sync --}}
+                            <input type="hidden" id="focus_keyword" name="focus_keyword" value="">
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Meta Description <span class="text-slate-400 font-normal">(<span id="meta-count">0</span>/160)</span></label>
-                            <textarea id="meta_description" oninput="syncSocialCardPreview()" class="seo-input w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl p-2 text-xs focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 resize-none" rows="3" maxlength="160" placeholder="নিউজের মূল সারসংক্ষেপ..."></textarea>
+
+                        {{-- Real-Time SEO Audit Checklist & Density Meter --}}
+                        <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200 dark:border-slate-700 space-y-2 text-[11px] font-semibold">
+                            <div class="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center justify-between">
+                                <span>SEO Audit Checklist</span>
+                                <span id="seo-density-badge" class="px-2 py-0.5 rounded text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold">Density: 0%</span>
+                            </div>
+                            
+                            <div class="space-y-1.5">
+                                <div id="seoCheckTitle" class="flex items-center gap-1.5 text-slate-500 transition-colors">
+                                    <span class="status-icon">⚪</span> <span>শিরোনামে মূল কী-ওয়ার্ড উপস্থিতি</span>
+                                </div>
+                                <div id="seoCheckLead" class="flex items-center gap-1.5 text-slate-500 transition-colors">
+                                    <span class="status-icon">⚪</span> <span>প্রথম ১০০ শব্দের মধ্যে কী-ওয়ার্ড</span>
+                                </div>
+                                <div id="seoCheckMeta" class="flex items-center gap-1.5 text-slate-500 transition-colors">
+                                    <span class="status-icon">⚪</span> <span>মেটা ডেসক্রিপশনে কী-ওয়ার্ড</span>
+                                </div>
+                                <div id="seoCheckLength" class="flex items-center gap-1.5 text-slate-500 transition-colors">
+                                    <span class="status-icon">⚪</span> <span>কন্টেন্টের দৈর্ঘ্য (ন্যূনতম ৩০০ শব্দ)</span>
+                                </div>
+                            </div>
                         </div>
-                        <hr class="my-4 border-slate-100 dark:border-slate-800">
-                        <h6 class="text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">🔗 ইন্টারনাল লিংক সাজেশন</h6>
-                        <div class="flex gap-2 mb-2">
-                            <input type="text" id="link-search-keyword" class="flex-1 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl p-2 text-xs focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100" placeholder="কী-ওয়ার্ড লিখুন...">
-                            <button type="button" class="bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer" onclick="fetchRelatedLinks()">খুঁজুন</button>
+
+                        {{-- Meta Description --}}
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between items-center">
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                    <span>📝 Meta Description</span>
+                                </label>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="extractMetaFromLead()" class="text-[9px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-bold transition flex items-center gap-1 cursor-pointer" title="মূল কন্টেন্টের শুরু থেকে সারসংক্ষেপ তৈরি করুন">
+                                        <i class="fa-solid fa-align-left text-slate-500"></i> Lead থেকে
+                                    </button>
+                                    <button type="button" id="btnAiMetaGen" onclick="generateFocusKeywordsModal()" class="text-[9px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded font-bold transition flex items-center gap-1 cursor-pointer" title="AI দিয়ে মেটা ডেসক্রিপশন তৈরি করুন">
+                                        <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i> AI Gen
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <textarea id="meta_description" oninput="syncSocialCardPreview(); calculateSEO();" class="seo-input w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 text-xs focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 resize-none font-medium leading-relaxed" rows="3" maxlength="160" placeholder="গুগল সার্চ ও সোশ্যাল মিডিয়ার জন্য নিউজের আকর্ষণীয় সারসংক্ষেপ (১২০-১৬০ অক্ষর)..."></textarea>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px]">
+                                <span id="meta-length-status" class="font-bold text-slate-400">খালি</span>
+                                <span class="text-slate-400 font-bold"><span id="meta-count">0</span> / 160 অক্ষর</span>
+                            </div>
                         </div>
-                        <div id="link-suggestions" class="flex flex-col gap-2 mb-3 hidden max-h-48 overflow-y-auto pr-1"></div>
+
+                        {{-- 🔍 Google SERP Live Search Box Snippet --}}
+                        <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-3 bg-white dark:bg-slate-900 shadow-sm space-y-1.5">
+                            <div class="flex items-center justify-between text-[10px] font-black uppercase text-slate-400">
+                                <span class="flex items-center gap-1"><i class="fa-brands fa-google text-indigo-500"></i> Google SERP Preview</span>
+                                <span class="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">Live</span>
+                            </div>
+                            
+                            {{-- SERP Box --}}
+                            <div class="pt-1">
+                                <div class="flex items-center gap-1.5 text-[10px] text-slate-500 truncate">
+                                    <span class="w-3.5 h-3.5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-[8px]">G</span>
+                                    <span class="font-bold text-slate-700 dark:text-slate-300">{{ request()->getHost() }}</span>
+                                    <span>› news › <span id="serpSlug" class="truncate text-slate-400">article</span></span>
+                                </div>
+                                <h4 id="googleSerpTitle" class="text-xs font-bold text-blue-700 dark:text-blue-400 hover:underline cursor-pointer line-clamp-1 mt-0.5 font-bangla">
+                                    খবরের শিরোনাম
+                                </h4>
+                                <p id="googleSerpSnippet" class="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 mt-0.5 leading-snug font-bangla">
+                                    মেটা ডেসক্রিপশন এখানে দেখা যাবে...
+                                </p>
+                            </div>
+                        </div>
+
+                        <hr class="my-2 border-slate-100 dark:border-slate-800">
+                        
+                        {{-- 🔗 Internal Link Suggestions --}}
+                        <div class="space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <h6 class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 m-0">
+                                    <i class="fa-solid fa-link text-indigo-500"></i>
+                                    <span>🔗 ইন্টারনাল লিংক সাজেশন</span>
+                                </h6>
+                                <button type="button" onclick="fetchRelatedLinks('', true)" class="text-[9px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded font-bold transition flex items-center gap-1 cursor-pointer" title="অটো-সাজেশন রিফ্রেশ করুন">
+                                    <i class="fa-solid fa-arrows-rotate text-[10px]"></i> রিফ্রেশ
+                                </button>
+                            </div>
+
+                            <div class="flex gap-1.5">
+                                <div class="relative flex-1">
+                                    <input type="text" id="link-search-keyword" onkeydown="if(event.key==='Enter'){event.preventDefault();fetchRelatedLinks();}" class="w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-1.5 text-xs focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder:text-slate-400" placeholder="কী-ওয়ার্ড দিয়ে সার্চ করুন...">
+                                </div>
+                                <button type="button" id="btn-search-links" class="bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0" onclick="fetchRelatedLinks()">
+                                    <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
+                                    <span>খুঁজুন</span>
+                                </button>
+                            </div>
+
+                            {{-- Skeleton Loader --}}
+                            <div id="link-suggestions-skeleton" class="space-y-2 hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 animate-pulse space-y-1.5">
+                                    <div class="h-2.5 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                                    <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                                </div>
+                            </div>
+
+                            {{-- Suggestions List --}}
+                            <div id="link-suggestions" class="flex flex-col gap-2 max-h-56 overflow-y-auto pr-1"></div>
+                        </div>
                     </div>
                 </div>
 

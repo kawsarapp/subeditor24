@@ -52,6 +52,18 @@
             </div>
 
             <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">⚡ Central Sync Interval</label>
+                <select name="scrape_interval_minutes" class="w-full bg-slate-50 border-slate-300 text-slate-900 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-3 text-sm font-semibold">
+                    <option value="3">Every 3 Minutes</option>
+                    <option value="5" selected>Every 5 Minutes (Recommended)</option>
+                    <option value="10">Every 10 Minutes</option>
+                    <option value="15">Every 15 Minutes</option>
+                    <option value="30">Every 30 Minutes</option>
+                    <option value="60">Every 1 Hour</option>
+                </select>
+            </div>
+
+            <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Container</label>
                 <input type="text" name="selector_container" class="w-full bg-slate-50 border-slate-200 text-slate-800 rounded-xl text-xs font-mono p-3" placeholder="Ex: .news-card">
             </div>
@@ -70,12 +82,16 @@
                 <input type="text" name="selector_image" class="w-full bg-slate-50 border-slate-200 text-slate-800 rounded-xl text-xs font-mono p-3">
             </div>
 
-            <div class="col-span-1 md:col-span-2 lg:col-span-4 mt-2">
+            <div class="col-span-1 md:col-span-2 lg:col-span-4 flex flex-wrap items-center gap-6 mt-2">
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="is_central_active" value="1" checked class="rounded border-slate-300 text-emerald-600 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 w-5 h-5">
+                    <span class="ml-2.5 font-bold text-slate-700 text-sm">⚡ Auto-Sync to Central Feed Pool</span>
+                </label>
+                
                 <label class="inline-flex items-center cursor-pointer">
                     <input type="checkbox" name="use_scraping_api" value="1" class="rounded border-slate-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 w-5 h-5">
                     <span class="ml-2.5 font-bold text-slate-700 text-sm">Use Universal Scraping API (Bypass Proxy)</span>
                 </label>
-                <p class="text-xs text-slate-500 mt-1 pl-7">Check this if the default proxy gets blocked by the site (e.g. jamuna.tv).</p>
             </div>
 
             <div class="col-span-1 md:col-span-2 lg:col-span-4 flex justify-end mt-4">
@@ -96,6 +112,7 @@
                         @if(auth()->user()->role === 'super_admin')
                             <th class="px-4 md:px-6 py-4 font-extrabold">Name & URL</th>
                             <th class="px-4 md:px-6 py-4 font-extrabold">Engine</th>
+                            <th class="px-4 md:px-6 py-4 font-extrabold">Auto-Sync</th>
                             <th class="px-4 md:px-6 py-4 font-extrabold">Selectors</th>
                             <th class="px-4 md:px-6 py-4 font-extrabold text-right">Actions</th>
                         @else
@@ -141,6 +158,17 @@
                                 <span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded border border-green-200">Node</span>
                             @else
                                 <span class="bg-gray-100 text-gray-600 text-[10px] px-2 py-0.5 rounded border border-gray-200">Default</span>
+                            @endif
+                        </td>
+                        <td class="px-4 md:px-6 py-4 text-xs font-semibold">
+                            @if($site->is_central_active ?? true)
+                                <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-bold text-[11px]">
+                                    ⚡ {{ $site->scrape_interval_minutes ?? 5 }} min
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 text-slate-400 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md font-bold text-[11px]">
+                                    ⏸️ Off
+                                </span>
                             @endif
                         </td>
                         <td class="px-4 md:px-6 py-4 text-[10px] font-mono text-slate-500">
@@ -189,7 +217,7 @@
                                data-id="{{ $site->id }}"
                                data-remaining="{{ $remainingSeconds }}"
                                onclick="return handleScrapeClick(this)">
-                               
+                                
                                @if($isDisabled)
                                    ⏳ <span id="timer-{{ $site->id }}">Wait</span>
                                @else
@@ -250,10 +278,24 @@
 
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">⚡ Central Sync Interval</label>
+                    <select name="scrape_interval_minutes" id="editScrapeInterval" class="w-full border-gray-300 rounded-lg p-2 text-sm font-semibold bg-slate-50">
+                        <option value="3">Every 3 Minutes</option>
+                        <option value="5">Every 5 Minutes</option>
+                        <option value="10">Every 10 Minutes</option>
+                        <option value="15">Every 15 Minutes</option>
+                        <option value="30">Every 30 Minutes</option>
+                        <option value="60">Every 1 Hour</option>
+                    </select>
+                </div>
+                <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Container</label>
                     <input type="text" name="selector_container" id="editContainer" class="w-full border-gray-300 rounded-lg p-2 text-sm font-mono bg-slate-50">
                 </div>
-                <div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="col-span-2">
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Title</label>
                     <input type="text" name="selector_title" id="editTitle" class="w-full border-gray-300 rounded-lg p-2 text-sm font-mono bg-slate-50">
                 </div>
@@ -270,7 +312,11 @@
                 <input type="text" name="selector_image" id="editImage" class="w-full border-gray-300 rounded-lg p-2 text-sm font-mono bg-slate-50">
             </div>
             
-            <div class="mb-4">
+            <div class="flex flex-wrap items-center gap-6 mb-4">
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="is_central_active" id="editIsCentralActive" value="1" class="rounded border-gray-300 text-emerald-600 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50 w-5 h-5">
+                    <span class="ml-2 font-bold text-gray-700">⚡ Auto-Sync to Central Feed Pool</span>
+                </label>
                 <label class="inline-flex items-center cursor-pointer">
                     <input type="checkbox" name="use_scraping_api" id="editUseScrapingApi" value="1" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 w-5 h-5">
                     <span class="ml-2 font-bold text-gray-700">Use Universal Scraping API</span>
@@ -296,6 +342,8 @@
         document.getElementById('editImage').value = site.selector_image || "";
         document.getElementById('editContent').value = site.selector_content || "";
         document.getElementById('editUseScrapingApi').checked = site.use_scraping_api ? true : false;
+        document.getElementById('editIsCentralActive').checked = site.is_central_active !== 0 && site.is_central_active !== false;
+        document.getElementById('editScrapeInterval').value = site.scrape_interval_minutes || "5";
         document.getElementById('editTargetLanguage').value = site.target_language || "bn";
         
         document.getElementById('editModal').classList.remove('hidden');

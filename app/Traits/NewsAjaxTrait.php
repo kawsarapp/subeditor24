@@ -45,34 +45,130 @@ trait NewsAjaxTrait
 
     public function suggestLinks(Request $request)
     {
-        $keyword = $request->input('keyword');
-        if (empty($keyword)) return response()->json([]);
+        $keyword = trim($request->input('keyword', ''));
+        $focusKeyword = trim($request->input('focus_keyword', ''));
+        $title = trim($request->input('title', ''));
+        $currentNewsId = $request->input('news_id');
 
         $adminUser = $this->getEffectiveAdminForAjax();
+        $settings = $adminUser->settings;
 
-        // 🔥 অ্যাডমিন এবং স্টাফ উভয়ের নিউজ পুল থেকে লিংক সাজেস্ট করবে
-        $relatedNews = \App\Models\NewsItem::withoutGlobalScopes()
-            ->whereIn('user_id', [$adminUser->id, Auth::id()])
-            ->where('title', 'LIKE', "%{$keyword}%")
-            ->where('status', 'published')
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+        // Base query: only published or live/rewritten news of this tenant
+        $query = \App\Models\NewsItem::withoutGlobalScopes()
+            ->whereIn('user_id', array_unique([$adminUser->id, Auth::id()]))
+            ->where(function($q) {
+                $q->where('status', 'published')
+                  ->orWhere('is_posted', true)
+                  ->orWhere('is_rewritten', true);
+            });
 
-        $formattedNews = $relatedNews->map(function ($news) {
-            $url = $news->live_url ?? $news->original_link ?? url('/news/' . $news->id);
+        if (!empty($currentNewsId)) {
+            $query->where('id', '!=', $currentNewsId);
+        }
+
+        $applyTermFilter = function($subQ, $term) {
+            $cleanTerm = trim($term);
+            if (empty($cleanTerm)) return;
+            
+            // If short ASCII term (<= 3 chars, e.g. "AI", "US", "UK"), use word boundary to avoid false positives (e.g. "remain", "contain")
+            if (preg_match('/^[a-zA-Z0-9]{1,3}$/', $cleanTerm)) {
+                $pattern = "\\b" . preg_quote($cleanTerm, '/') . "\\b";
+                $subQ->orWhereRaw("title REGEXP ?", [$pattern])
+                     ->orWhereRaw("ai_title REGEXP ?", [$pattern])
+                     ->orWhere('tags', 'LIKE', "%{$cleanTerm}%")
+                     ->orWhere('hashtags', 'LIKE', "%{$cleanTerm}%");
+            } else {
+                $subQ->orWhere('title', 'LIKE', "%{$cleanTerm}%")
+                     ->orWhere('ai_title', 'LIKE', "%{$cleanTerm}%")
+                     ->orWhere('tags', 'LIKE', "%{$cleanTerm}%")
+                     ->orWhere('hashtags', 'LIKE', "%{$cleanTerm}%");
+            }
+        };
+
+        // Case 1: Explicit search term typed by user
+        if (!empty($keyword)) {
+            $terms = array_filter(explode(' ', $keyword));
+            $query->where(function($q) use ($keyword, $terms, $applyTermFilter) {
+                $applyTermFilter($q, $keyword);
+                foreach ($terms as $term) {
+                    if (mb_strlen($term) >= 2) {
+                        $applyTermFilter($q, $term);
+                    }
+                }
+            });
+        } 
+        // Case 2: Auto-suggest by Focus Keywords
+        elseif (!empty($focusKeyword)) {
+            $kwList = array_filter(array_map('trim', explode(',', $focusKeyword)));
+            $query->where(function($q) use ($kwList, $applyTermFilter) {
+                foreach ($kwList as $kw) {
+                    if (mb_strlen($kw) >= 2) {
+                        $applyTermFilter($q, $kw);
+                    }
+                }
+            });
+        }
+        // Case 3: Auto-suggest by extracting meaningful title keywords
+        elseif (!empty($title)) {
+            $cleanTitle = preg_replace('/[।!?:;,"\'\(\)\[\]\{\}]/u', ' ', $title);
+            $words = array_values(array_filter(explode(' ', trim($cleanTitle))));
+            $stopWords = [
+                'এবং', 'ও', 'বা', 'কিন্তু', 'যদি', 'তবে', 'জন্য', 'নিয়ে', 'দিয়ে', 'থেকে', 'হতে', 'করে', 
+                'হয়ে', 'হলো', 'হবে', 'করলো', 'গেছে', 'আছে', 'ছিল', 'বলেন', 'জানান', 'পর', 'এই', 'সেই', 
+                'তার', 'তাদের', 'the', 'a', 'an', 'in', 'on', 'to', 'for', 'of', 'with', 'by', 'as', 'is'
+            ];
+            $significantWords = array_values(array_filter($words, function($w) use ($stopWords) {
+                return mb_strlen($w) >= 2 && !in_array(mb_strtolower($w), $stopWords);
+            }));
+
+            if (!empty($significantWords)) {
+                $query->where(function($q) use ($significantWords, $applyTermFilter) {
+                    // Match 2-word phrase if available
+                    if (count($significantWords) >= 2) {
+                        $phrase = $significantWords[0] . ' ' . $significantWords[1];
+                        $applyTermFilter($q, $phrase);
+                    }
+                    foreach (array_slice($significantWords, 0, 3) as $w) {
+                        $applyTermFilter($q, $w);
+                    }
+                });
+            } else {
+                return response()->json([]);
+            }
+        } else {
+            return response()->json([]);
+        }
+
+        $relatedNews = $query->orderBy('created_at', 'desc')->limit(8)->get();
+
+        $formattedNews = $relatedNews->map(function ($news) use ($settings) {
+            // Smart URL construction for WordPress / Laravel / Custom PHP / Node.js
+            $url = null;
+            if ($news->wp_post_id && optional($settings)->wp_url) {
+                $url = rtrim($settings->wp_url, '/') . '/?p=' . $news->wp_post_id;
+            } elseif (optional($settings)->post_to_laravel && optional($settings)->laravel_site_url) {
+                $prefix = trim($settings->laravel_route_prefix ?? 'news', '/');
+                $id = $news->wp_post_id ?? $news->id;
+                $url = rtrim($settings->laravel_site_url, '/') . '/' . $prefix . '/' . $id;
+            } elseif (!empty($news->live_url)) {
+                $url = $news->live_url;
+            } elseif (!empty($news->original_link)) {
+                $url = $news->original_link;
+            } else {
+                $url = url('/news/' . $news->id);
+            }
+
             return [
-                'id' => $news->id,
-                'title' => $news->ai_title ?? $news->title ?? 'Untitled News',
-                'live_url' => $url
+                'id'            => $news->id,
+                'title'         => $news->ai_title ?: ($news->title ?: 'Untitled News'),
+                'live_url'      => $url,
+                'thumbnail_url' => $news->thumbnail_url ?: asset('images/placeholder.png'),
+                'published_at'  => $news->published_at ? $news->published_at->format('d M, Y') : ($news->created_at ? $news->created_at->format('d M, Y') : null),
+                'time_ago'      => $news->created_at ? $news->created_at->diffForHumans() : null,
             ];
         });
 
-        $validNews = $formattedNews->filter(function ($item) {
-            return !empty($item['live_url']);
-        })->values();
-
-        return response()->json($validNews);
+        return response()->json($formattedNews->values());
     }
 
     public function toggleQueue($id)
@@ -226,6 +322,37 @@ trait NewsAjaxTrait
         return response()->json([
             'success'   => true,
             'headlines' => $headlines
+        ]);
+    }
+
+    /**
+     * 🔍 1-Click SEO Focus Keyword & Meta Generator Endpoint
+     */
+    public function generateFocusKeywords(Request $request, \App\Services\AIWriterService $aiWriter)
+    {
+        $title = $request->input('title', '');
+        $content = $request->input('content', '');
+        $newsId = $request->input('news_id');
+
+        if ($newsId && (empty($title) || empty($content))) {
+            $news = NewsItem::withoutGlobalScopes()->find($newsId);
+            if ($news) {
+                $title = $title ?: ($news->ai_title ?: $news->title);
+                $content = $content ?: ($news->ai_content ?: $news->content);
+            }
+        }
+
+        if (empty(trim($title))) {
+            return response()->json(['success' => false, 'message' => 'শিরোনাম ছাড়া ফোকাস কী-ওয়ার্ড জেনারেট করা সম্ভব নয়!'], 422);
+        }
+
+        $adminUser = $this->getEffectiveAdminForAjax();
+        $targetLanguage = $request->input('target_language', 'bn');
+        $seoData = $aiWriter->extractFocusKeywords($title, $content, $adminUser->id, $targetLanguage);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $seoData
         ]);
     }
 }

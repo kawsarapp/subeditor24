@@ -101,6 +101,10 @@
             <a href="{{ route('news.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('news.index') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-newspaper text-indigo-500 w-5 text-center text-sm"></i> Feed
             </a>
+
+            <a href="{{ route('central-feed.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('central-feed.*') ? 'bg-indigo-600 text-white' : 'text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100' }}">
+                <i class="fa-solid fa-bolt text-indigo-500 w-5 text-center text-sm"></i> ⚡ Live Wire (Central)
+            </a>
             
             <a href="{{ route('news.published') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('news.published') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-circle-check text-emerald-500 w-5 text-center text-sm"></i> Published News

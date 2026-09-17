@@ -132,6 +132,7 @@ Artisan::command('news:process-scheduled', function () {
 Schedule::command('news:autopost')->everyMinute();
 Schedule::command('news:process-scheduled')->everyMinute();
 Schedule::command('news:check-inactivity')->everyThirtyMinutes();
+Schedule::command('news:central-pool-sync')->everyMinute();
 
 Schedule::call(function () {
     $settingsList = \App\Models\UserSetting::get();
@@ -155,8 +156,12 @@ Schedule::call(function () {
         
     $totalDeleted += $orphanedCount;
     
+    // Auto-clean central news pool older than 48 hours to maintain high database performance
+    $centralDeleted = \App\Models\CentralNewsPool::where('created_at', '<', now()->subHours(48))->delete();
+    $totalDeleted += $centralDeleted;
+    
     if ($totalDeleted > 0) {
-        Log::info("🧹 Dynamic Auto Clean: {$totalDeleted} garbage (pending) items deleted based on user preferences.");
+        Log::info("🧹 Dynamic Auto Clean: {$totalDeleted} garbage items deleted ({$centralDeleted} central pool items).");
     }
 })->hourly();
 

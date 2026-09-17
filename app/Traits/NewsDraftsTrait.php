@@ -90,7 +90,13 @@ trait NewsDraftsTrait
         $news->ai_title = $request->title; 
         $news->content = $request->content;
         $news->ai_content = $request->content;
-        $news->hashtags = $request->hashtags;
+        $news->hashtags = $request->hashtags ?? $request->focus_keyword;
+        if ($request->filled('meta_description')) {
+            $news->short_summary = $request->meta_description;
+        }
+        if ($request->filled('focus_keyword')) {
+            $news->tags = $request->focus_keyword;
+        }
         $news->is_rewritten = 1;
         $news->status = 'draft';
         $news->updated_at = now();
@@ -127,6 +133,37 @@ trait NewsDraftsTrait
         // 🔍 Deduplication Check for this specific news item
         $duplicates = app(\App\Services\NewsDeduplicationService::class)->findDuplicates($user, $news->title, $news->id, 55.0);
 
+        $rawText = strip_tags($content);
+        $rawText = preg_replace('/\s+/', ' ', $rawText);
+        $fallbackMeta = mb_substr(trim($rawText), 0, 150);
+        $metaDescription = !empty($news->short_summary) ? $news->short_summary : $fallbackMeta;
+
+        $focusKeywords = $news->tags ?: $news->hashtags;
+        if (empty($focusKeywords) && !empty($title)) {
+            $cleanTitle = preg_replace('/[।!?:;,"\'\(\)\[\]\{\}]/u', ' ', $title);
+            $words = array_values(array_filter(explode(' ', trim($cleanTitle))));
+            $stopWords = [
+                'এবং', 'ও', 'বা', 'কিন্তু', 'যদি', 'তবে', 'জন্য', 'নিয়ে', 'দিয়ে', 'থেকে', 'হতে', 'করে', 
+                'হয়ে', 'হলো', 'হবে', 'করলো', 'গেছে', 'আছে', 'ছিল', 'বলেন', 'জানান', 'পর', 'এই', 'সেই', 
+                'তার', 'তাদের', 'the', 'a', 'an', 'in', 'on', 'to', 'for', 'of', 'with', 'by', 'as', 'is', 'are'
+            ];
+            $filtered = [];
+            foreach ($words as $w) {
+                $wClean = trim($w);
+                $wLower = mb_strtolower($wClean);
+                if (mb_strlen($wLower) > 1 && !in_array($wLower, $stopWords)) {
+                    $filtered[] = $wClean;
+                }
+            }
+            if (count($filtered) >= 2) {
+                $focusKeywords = $filtered[0] . ' ' . $filtered[1] . ', ' . $filtered[0] . ', ' . $filtered[1];
+            } elseif (count($filtered) === 1) {
+                $focusKeywords = $filtered[0];
+            } else {
+                $focusKeywords = mb_substr($title, 0, 30);
+            }
+        }
+
         return response()->json([
             'success'          => true,
             'title'            => $title,
@@ -135,6 +172,9 @@ trait NewsDraftsTrait
             'original_content' => $news->content,
             'source_name'      => $news->website->name ?? 'Custom / Reporter',
             'hashtags'         => $news->hashtags,
+            'focus_keyword'    => $focusKeywords,
+            'meta_description' => $metaDescription,
+            'short_summary'    => $metaDescription,
             'image_url'        => $news->thumbnail_url,
             'extra_images'     => $extraImages,
             'location'         => $news->location,

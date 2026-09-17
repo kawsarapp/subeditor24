@@ -1,6 +1,7 @@
 <script>
     let globalCategories = [];
     let originalImageSrc = ''; 
+    let activeKeywords = [];
 
     document.addEventListener("DOMContentLoaded", function() {
         tinymce.init({
@@ -14,95 +15,553 @@
             setup: function (editor) {
                 editor.on('keyup change', function () {
                     calculateSEO();
+                    syncSocialCardPreview();
                 });
             }
         });
         loadCategoriesOnce();
         
         document.querySelectorAll('.seo-input, #previewTitle').forEach(el => {
-            if(el) el.addEventListener('keyup', calculateSEO);
+            if(el) {
+                el.addEventListener('keyup', () => { calculateSEO(); syncSocialCardPreview(); });
+                el.addEventListener('input', () => { calculateSEO(); syncSocialCardPreview(); });
+            }
         });
-    });
 
-    function calculateSEO() {
-        let score = 0;
-        let title = document.getElementById('previewTitle') ? document.getElementById('previewTitle').value : '';
-        let editor = tinymce.get('previewContent');
-        let contentHtml = editor ? editor.getContent() : ''; 
-        let contentText = editor ? editor.getContent({format: 'text'}) : ''; 
-
-        let keyword = document.getElementById('focus_keyword').value;
-        let metaDesc = document.getElementById('meta_description').value;
-
-        if(title.length >= 40 && title.length <= 70) score += 20;
-        else if(title.length > 0) score += 10;
-
-        let wordCount = contentText.split(/\s+/).filter(word => word.length > 0).length;
-        if(wordCount > 300) score += 30;
-        else if(wordCount > 100) score += 15;
-
-        if(metaDesc.length >= 120 && metaDesc.length <= 160) score += 20;
-        else if(metaDesc.length > 0) score += 10;
-
-        if(keyword.length > 0) {
-            let keywords = keyword.split(',').map(k => k.trim().toLowerCase());
-            let keywordFound = false;
-            let lowerTitle = title.toLowerCase();
-            let lowerContent = contentText.toLowerCase();
-            
-            keywords.forEach(kw => {
-                if(kw !== "" && (lowerTitle.includes(kw) || lowerContent.includes(kw))) {
-                    keywordFound = true;
+        const tagInput = document.getElementById('keywordTagInput');
+        if (tagInput) {
+            tagInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    const val = this.value.trim();
+                    if (val) {
+                        addKeywordPill(val);
+                        this.value = '';
+                    }
+                } else if (e.key === 'Backspace' && this.value === '' && activeKeywords.length > 0) {
+                    removeKeywordPill(activeKeywords.length - 1);
                 }
             });
-            if(keywordFound) score += 20;
+            tagInput.addEventListener('blur', function() {
+                const val = this.value.trim();
+                if (val) {
+                    addKeywordPill(val);
+                    this.value = '';
+                }
+            });
         }
+    });
 
-        if(contentHtml.includes('<a href=')) score += 10;
+    // ==========================================================
+    // 🏷️ KEYWORD TAG PILLS ENGINE
+    // ==========================================================
+    function renderKeywordPills() {
+        const list = document.getElementById('keywordPillsList');
+        if (!list) return;
+        list.innerHTML = '';
 
-        document.getElementById('seo-score').innerText = score;
-        let progressBar = document.getElementById('seo-progress');
-        progressBar.style.width = score + '%';
-        
-        if(score > 79) progressBar.className = 'bg-green-500 h-2 rounded-full transition-all duration-500';
-        else if(score > 49) progressBar.className = 'bg-yellow-500 h-2 rounded-full transition-all duration-500';
-        else progressBar.className = 'bg-red-500 h-2 rounded-full transition-all duration-500';
+        activeKeywords.forEach((kw, index) => {
+            const isPrimary = index === 0;
+            const pill = document.createElement('span');
+            pill.className = isPrimary
+                ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-black bg-indigo-600 text-white shadow-sm border border-indigo-700 select-none animate-fadeIn'
+                : 'inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600 select-none animate-fadeIn';
+            
+            const textSpan = document.createElement('span');
+            textSpan.innerHTML = isPrimary ? `<i class="fa-solid fa-star text-[10px] text-amber-300"></i> ${kw}` : kw;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = isPrimary 
+                ? 'text-indigo-200 hover:text-white font-bold ml-1 text-xs leading-none p-0.5 rounded transition' 
+                : 'text-slate-400 hover:text-rose-500 font-bold ml-1 text-xs leading-none p-0.5 rounded transition';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.onclick = (e) => {
+                e.stopPropagation();
+                removeKeywordPill(index);
+            };
 
-        document.getElementById('meta-count').innerText = metaDesc.length;
+            pill.appendChild(textSpan);
+            pill.appendChild(removeBtn);
+            list.appendChild(pill);
+        });
+
+        syncKeywordsToInput();
+        calculateSEO();
     }
 
-    function fetchRelatedLinks() {
-        let keyword = document.getElementById('link-search-keyword').value;
-        if(keyword.length < 2) return alert('অন্তত ২ টি অক্ষর লিখুন');
+    function addKeywordPill(rawText) {
+        if (!rawText) return;
+        const parts = rawText.split(',').map(s => s.trim().replace(/^#/, '')).filter(s => s.length > 0);
+        parts.forEach(part => {
+            if (!activeKeywords.some(k => k.toLowerCase() === part.toLowerCase())) {
+                activeKeywords.push(part);
+            }
+        });
+        renderKeywordPills();
+    }
 
-        let btn = event.target;
-        btn.innerText = 'খুঁজছে...';
+    function removeKeywordPill(index) {
+        activeKeywords.splice(index, 1);
+        renderKeywordPills();
+    }
 
-        fetch(`/news/suggest-links?keyword=${encodeURIComponent(keyword)}`)
+    function syncKeywordsToInput() {
+        const hiddenInput = document.getElementById('focus_keyword');
+        if (hiddenInput) {
+            hiddenInput.value = activeKeywords.join(', ');
+        }
+    }
+
+    function loadKeywordsFromInput(val) {
+        activeKeywords = [];
+        if (!val) {
+            renderKeywordPills();
+            return;
+        }
+
+        let rawList = [];
+        if (Array.isArray(val)) {
+            rawList = val;
+        } else if (typeof val === 'string' && val.trim() !== '') {
+            if (val.includes(',')) {
+                rawList = val.split(',');
+            } else if (val.includes('#')) {
+                rawList = val.split(/\s+/);
+            } else {
+                rawList = [val];
+            }
+        }
+
+        rawList.forEach(item => {
+            if (typeof item === 'string') {
+                const clean = item.trim().replace(/^#+/, '').trim();
+                if (clean.length > 0 && !activeKeywords.some(k => k.toLowerCase() === clean.toLowerCase())) {
+                    activeKeywords.push(clean);
+                }
+            }
+        });
+
+        renderKeywordPills();
+    }
+
+    // ==========================================================
+    // ✨ 1-CLICK AI FOCUS KEYWORDS & META GENERATOR
+    // ==========================================================
+    function generateFocusKeywordsModal() {
+        const titleInput = document.getElementById('previewTitle');
+        const newsId = document.getElementById('previewNewsId') ? document.getElementById('previewNewsId').value : null;
+        const currentTitle = titleInput ? titleInput.value : '';
+        let contentText = '';
+        if (tinymce.get('previewContent')) {
+            contentText = tinymce.get('previewContent').getContent({ format: 'text' });
+        } else if (document.getElementById('previewContent')) {
+            contentText = document.getElementById('previewContent').value;
+        }
+
+        if (!currentTitle.trim() && !contentText.trim()) {
+            alert('অনুগ্রহ করে শিরোনাম বা কন্টেন্ট লিখুন!');
+            return;
+        }
+
+        const btn = document.getElementById('btnAiKeywords');
+        const origHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin inline-block mr-1 text-indigo-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>জেনারেট হচ্ছে...</span>`;
+
+        fetch("{{ route('news.generate-focus-keywords') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                title: currentTitle,
+                content: contentText,
+                news_id: newsId
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+
+            if (data.success) {
+                activeKeywords = [];
+                if (data.primary_keyword) {
+                    activeKeywords.push(data.primary_keyword.trim());
+                }
+                if (Array.isArray(data.keywords)) {
+                    data.keywords.forEach(kw => {
+                        const cleanKw = kw.trim();
+                        if (cleanKw && !activeKeywords.some(k => k.toLowerCase() === cleanKw.toLowerCase())) {
+                            activeKeywords.push(cleanKw);
+                        }
+                    });
+                }
+                renderKeywordPills();
+
+                // Populate Meta Description if empty or provided
+                const metaInput = document.getElementById('meta_description');
+                if (metaInput && data.meta_description) {
+                    if (!metaInput.value || metaInput.value.trim() === '') {
+                        metaInput.value = data.meta_description;
+                    }
+                }
+
+                // Populate Hashtags if tags provided and empty
+                const hashtagsInput = document.getElementById('previewHashtags');
+                if (hashtagsInput && Array.isArray(data.tags) && data.tags.length > 0) {
+                    if (!hashtagsInput.value || hashtagsInput.value.trim() === '') {
+                        hashtagsInput.value = data.tags.map(t => t.startsWith('#') ? t : '#' + t.replace(/\s+/g, '')).join(' ');
+                    }
+                }
+
+                calculateSEO();
+                syncSocialCardPreview();
+                if (window.showToast) {
+                    window.showToast('🎯 AI Focus Keywords & Meta Description তৈরি সম্পন্ন!', 'success');
+                }
+            } else {
+                alert('❌ ' + (data.message || 'কী-ওয়ার্ড জেনারেট করা সম্ভব হয়নি।'));
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            console.error('Focus keywords error:', err);
+            alert('⚠️ সার্ভারে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+        });
+    }
+
+    // ==========================================================
+    // 📊 REAL-TIME SEO AUDIT & KEYWORD DENSITY CALCULATION
+    // ==========================================================
+    function calculateSEO() {
+        let score = 0;
+        const titleEl = document.getElementById('previewTitle');
+        const title = titleEl ? titleEl.value.trim() : '';
+        
+        let editor = tinymce.get('previewContent');
+        let contentHtml = editor ? editor.getContent() : (document.getElementById('previewContent') ? document.getElementById('previewContent').value : ''); 
+        let contentText = editor ? editor.getContent({format: 'text'}) : contentHtml.replace(/<[^>]*>?/gm, ' ');
+        contentText = contentText.replace(/\s+/g, ' ').trim();
+
+        const focusKeywordInput = document.getElementById('focus_keyword');
+        const keywordStr = focusKeywordInput ? focusKeywordInput.value.trim() : '';
+        const metaDescEl = document.getElementById('meta_description');
+        const metaDesc = metaDescEl ? metaDescEl.value.trim() : '';
+
+        const words = contentText.split(/\s+/).filter(w => w.length > 0);
+        const wordCount = words.length;
+
+        // Get primary keyword
+        const primaryKeyword = activeKeywords.length > 0 ? activeKeywords[0].toLowerCase() : (keywordStr.split(',')[0] || '').trim().toLowerCase();
+        const allKeywords = activeKeywords.length > 0 ? activeKeywords.map(k => k.toLowerCase()) : keywordStr.split(',').map(k => k.trim().toLowerCase()).filter(k => k.length > 0);
+
+        const lowerTitle = title.toLowerCase();
+        const lowerContent = contentText.toLowerCase();
+        const lowerMeta = metaDesc.toLowerCase();
+
+        // 1. Title Audit
+        let titleHasKw = primaryKeyword.length > 0 && lowerTitle.includes(primaryKeyword);
+        let titleGoodLength = title.length >= 40 && title.length <= 80;
+        const checkTitleEl = document.getElementById('seoCheckTitle');
+        if (checkTitleEl) {
+            const icon = checkTitleEl.querySelector('.status-icon');
+            if (!primaryKeyword) {
+                if (icon) icon.innerText = '⚪';
+                checkTitleEl.className = 'flex items-center gap-1.5 text-slate-400';
+            } else if (titleHasKw) {
+                if (icon) icon.innerText = '🟢';
+                checkTitleEl.className = 'flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold';
+                score += 25;
+            } else {
+                if (icon) icon.innerText = '❌';
+                checkTitleEl.className = 'flex items-center gap-1.5 text-rose-500 font-semibold';
+            }
+        }
+        if (titleGoodLength) score += 10;
+        else if (title.length > 0) score += 5;
+
+        // 2. Lead Paragraph (first 100 words) Audit
+        const first100Words = words.slice(0, 100).join(' ').toLowerCase();
+        let leadHasKw = primaryKeyword.length > 0 && first100Words.includes(primaryKeyword);
+        const checkLeadEl = document.getElementById('seoCheckLead');
+        if (checkLeadEl) {
+            const icon = checkLeadEl.querySelector('.status-icon');
+            if (!primaryKeyword) {
+                if (icon) icon.innerText = '⚪';
+                checkLeadEl.className = 'flex items-center gap-1.5 text-slate-400';
+            } else if (leadHasKw) {
+                if (icon) icon.innerText = '🟢';
+                checkLeadEl.className = 'flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold';
+                score += 20;
+            } else {
+                if (icon) icon.innerText = '❌';
+                checkLeadEl.className = 'flex items-center gap-1.5 text-rose-500 font-semibold';
+            }
+        }
+
+        // 3. Meta Description Audit
+        let metaHasKw = primaryKeyword.length > 0 && lowerMeta.includes(primaryKeyword);
+        let metaGoodLength = metaDesc.length >= 100 && metaDesc.length <= 160;
+        const checkMetaEl = document.getElementById('seoCheckMeta');
+        if (checkMetaEl) {
+            const icon = checkMetaEl.querySelector('.status-icon');
+            if (!primaryKeyword && metaDesc.length === 0) {
+                if (icon) icon.innerText = '⚪';
+                checkMetaEl.className = 'flex items-center gap-1.5 text-slate-400';
+            } else if (metaHasKw && metaGoodLength) {
+                if (icon) icon.innerText = '🟢';
+                checkMetaEl.className = 'flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold';
+                score += 20;
+            } else if (metaHasKw || metaGoodLength) {
+                if (icon) icon.innerText = '🟡';
+                checkMetaEl.className = 'flex items-center gap-1.5 text-amber-500 font-semibold';
+                score += 10;
+            } else {
+                if (icon) icon.innerText = '❌';
+                checkMetaEl.className = 'flex items-center gap-1.5 text-rose-500 font-semibold';
+            }
+        }
+
+        // 4. Content Length Audit
+        const checkLengthEl = document.getElementById('seoCheckLength');
+        if (checkLengthEl) {
+            const icon = checkLengthEl.querySelector('.status-icon');
+            if (wordCount >= 300) {
+                if (icon) icon.innerText = '🟢';
+                checkLengthEl.className = 'flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold';
+                score += 15;
+            } else if (wordCount >= 120) {
+                if (icon) icon.innerText = '🟡';
+                checkLengthEl.className = 'flex items-center gap-1.5 text-amber-500 font-semibold';
+                score += 8;
+            } else {
+                if (icon) icon.innerText = '❌';
+                checkLengthEl.className = 'flex items-center gap-1.5 text-rose-500 font-semibold';
+            }
+        }
+
+        // 5. Internal / External Links
+        if (contentHtml.includes('<a href=')) {
+            score += 10;
+        }
+
+        // 6. Keyword Density Calculation
+        let densityBadge = document.getElementById('seo-density-badge');
+        if (densityBadge) {
+            if (primaryKeyword && wordCount > 0) {
+                const regex = new RegExp(primaryKeyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi');
+                const matches = lowerContent.match(regex);
+                const count = matches ? matches.length : 0;
+                const kwWords = primaryKeyword.split(/\s+/).length;
+                const density = ((count * kwWords) / wordCount) * 100;
+                const densityFormatted = density.toFixed(1);
+
+                if (density >= 0.8 && density <= 3.0) {
+                    densityBadge.innerText = `Density: ${densityFormatted}% (Good)`;
+                    densityBadge.className = 'px-2 py-0.5 rounded text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-black';
+                } else if (density > 3.0) {
+                    densityBadge.innerText = `Density: ${densityFormatted}% (High)`;
+                    densityBadge.className = 'px-2 py-0.5 rounded text-[10px] bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 font-bold';
+                } else {
+                    densityBadge.innerText = `Density: ${densityFormatted}% (Low)`;
+                    densityBadge.className = 'px-2 py-0.5 rounded text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold';
+                }
+            } else {
+                densityBadge.innerText = 'Density: 0%';
+                densityBadge.className = 'px-2 py-0.5 rounded text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold';
+            }
+        }
+
+        // Cap Score at 100
+        if (score > 100) score = 100;
+
+        // Update UI Score & Progress Bar
+        const scoreEl = document.getElementById('seo-score');
+        if (scoreEl) scoreEl.innerText = score;
+
+        const scoreTextEl = document.getElementById('seo-score-text');
+        const progressBar = document.getElementById('seo-progress');
+        if (progressBar) {
+            progressBar.style.width = score + '%';
+            if (score >= 80) {
+                progressBar.className = 'bg-emerald-500 h-2 rounded-full transition-all duration-500 shadow-sm';
+                if (scoreTextEl) {
+                    scoreTextEl.innerText = 'Excellent 🚀';
+                    scoreTextEl.className = 'text-emerald-600 dark:text-emerald-400 font-extrabold';
+                }
+            } else if (score >= 50) {
+                progressBar.className = 'bg-amber-500 h-2 rounded-full transition-all duration-500 shadow-sm';
+                if (scoreTextEl) {
+                    scoreTextEl.innerText = 'Good 👍';
+                    scoreTextEl.className = 'text-amber-500 font-extrabold';
+                }
+            } else {
+                progressBar.className = 'bg-rose-500 h-2 rounded-full transition-all duration-500 shadow-sm';
+                if (scoreTextEl) {
+                    scoreTextEl.innerText = 'Needs Work';
+                    scoreTextEl.className = 'text-rose-500 font-extrabold';
+                }
+            }
+        }
+
+        const metaCountEl = document.getElementById('meta-count');
+        const metaStatusEl = document.getElementById('meta-length-status');
+        if (metaCountEl) metaCountEl.innerText = metaDesc.length;
+        if (metaStatusEl) {
+            if (metaDesc.length === 0) {
+                metaStatusEl.innerText = 'খালি';
+                metaStatusEl.className = 'font-bold text-slate-400';
+            } else if (metaDesc.length >= 120 && metaDesc.length <= 160) {
+                metaStatusEl.innerText = 'অনুকূল দৈর্ঘ্য (Ideal)';
+                metaStatusEl.className = 'font-bold text-emerald-600 dark:text-emerald-400';
+            } else if (metaDesc.length < 120) {
+                metaStatusEl.innerText = 'খুব ছোট (Short)';
+                metaStatusEl.className = 'font-bold text-amber-500';
+            } else {
+                metaStatusEl.innerText = 'বেশি বড় (Long)';
+                metaStatusEl.className = 'font-bold text-rose-500';
+            }
+        }
+
+        // Live SERP Preview box updates
+        const serpTitleEl = document.getElementById('googleSerpTitle');
+        const serpSnippetEl = document.getElementById('googleSerpSnippet');
+        const serpSlugEl = document.getElementById('serpSlug');
+
+        if (serpTitleEl) {
+            serpTitleEl.innerText = title.trim() || 'খবরের শিরোনাম';
+        }
+        if (serpSnippetEl) {
+            serpSnippetEl.innerText = metaDesc.trim() || (words.slice(0, 25).join(' ') + (words.length > 25 ? '...' : ''));
+        }
+        if (serpSlugEl) {
+            let slug = (primaryKeyword || title).toLowerCase().replace(/[^\w\u0980-\u09FF\s-]/g, '').trim().replace(/\s+/g, '-').substring(0, 40);
+            serpSlugEl.innerText = slug || 'article';
+        }
+    }
+
+    // ==========================================================
+    // 📝 EXTRACT META DESCRIPTION FROM LEAD PARAGRAPH
+    // ==========================================================
+    function extractMetaFromLead() {
+        let contentText = '';
+        if (tinymce.get('previewContent')) {
+            contentText = tinymce.get('previewContent').getContent({ format: 'text' });
+        } else if (document.getElementById('previewContent')) {
+            contentText = document.getElementById('previewContent').value;
+        }
+        contentText = contentText.replace(/\s+/g, ' ').trim();
+        if (!contentText) {
+            alert('কন্টেন্টে কোনো লেখা পাওয়া যায়নি!');
+            return;
+        }
+        
+        let lead = contentText.substring(0, 155);
+        let lastSpace = lead.lastIndexOf(' ');
+        if (lastSpace > 100) lead = lead.substring(0, lastSpace);
+        
+        const metaInput = document.getElementById('meta_description');
+        if (metaInput) {
+            metaInput.value = lead.trim();
+        }
+        calculateSEO();
+        syncSocialCardPreview();
+        if (window.showToast) {
+            window.showToast('📝 কন্টেন্টের শুরু থেকে মেটা ডেসক্রিপশন সেট করা হয়েছে', 'success');
+        }
+    }
+
+    // ==========================================================
+    // 🔗 ENTERPRISE INTERNAL LINK ENGINE (Multi-Framework)
+    // ==========================================================
+    function fetchRelatedLinks(customKeyword = null, isAuto = false) {
+        let keywordInput = document.getElementById('link-search-keyword');
+        let keyword = customKeyword !== null ? customKeyword : (keywordInput ? keywordInput.value.trim() : '');
+        let title = document.getElementById('previewTitle') ? document.getElementById('previewTitle').value.trim() : '';
+        let newsId = document.getElementById('previewNewsId') ? document.getElementById('previewNewsId').value : null;
+
+        const list = document.getElementById('link-suggestions');
+        const skeleton = document.getElementById('link-suggestions-skeleton');
+        const searchBtn = document.getElementById('btn-search-links');
+
+        if (skeleton) skeleton.classList.remove('hidden');
+        if (list) list.innerHTML = '';
+        if (searchBtn && !isAuto) searchBtn.disabled = true;
+
+        let queryParams = new URLSearchParams();
+        if (keyword) queryParams.append('keyword', keyword);
+        if (title) queryParams.append('title', title);
+        if (newsId) queryParams.append('news_id', newsId);
+
+        let focusKw = (typeof activeKeywords !== 'undefined' && activeKeywords.length > 0) 
+            ? activeKeywords.join(', ') 
+            : (document.getElementById('focus_keyword') ? document.getElementById('focus_keyword').value.trim() : '');
+        if (focusKw) queryParams.append('focus_keyword', focusKw);
+
+        fetch(`/news/suggest-links?${queryParams.toString()}`)
             .then(res => res.json())
             .then(data => {
-                btn.innerText = 'খুঁজুন';
-                let list = document.getElementById('link-suggestions');
-                list.innerHTML = '';
-                list.classList.remove('hidden');
-                
-                if(data.length === 0) {
-                    list.innerHTML = '<div class="text-xs text-red-500 p-2 bg-red-50 rounded">কোনো নিউজ পাওয়া যায়নি!</div>';
+                if (skeleton) skeleton.classList.add('hidden');
+                if (searchBtn) searchBtn.disabled = false;
+                if (!list) return;
+
+                if (!data || data.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                            <i class="fa-solid fa-link-slash text-slate-400 text-lg mb-1"></i>
+                            <p class="text-[11px] font-bold text-slate-500 m-0">কোনো প্রকাশিত নিউজ পাওয়া যায়নি!</p>
+                            <span class="text-[10px] text-slate-400">অন্য কোনো কী-ওয়ার্ড দিয়ে সার্চ করুন।</span>
+                        </div>
+                    `;
                     return;
                 }
 
-                data.forEach(news => {
-                    list.innerHTML += `
-                        <div class="flex flex-col gap-2 p-3 bg-white border border-indigo-100 rounded shadow-sm hover:bg-indigo-50 transition">
-                            <span class="text-xs font-bold text-gray-800 line-clamp-2" title="${news.title}">${news.title}</span>
-                            <div class="flex flex-wrap gap-2 justify-end mt-1">
-                                <button type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-[10px] font-bold transition flex-1 sm:flex-none text-center" onclick="insertLinkToEditor('${news.title}', '${news.live_url}')">🔗 Link</button>
-                                <button type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-[10px] font-bold transition flex-1 sm:flex-none text-center" onclick="insertReadMoreToEditor('${news.title}', '${news.live_url}')">📖 আরও পড়ুন</button>
+                list.innerHTML = data.map(news => {
+                    const safeTitle = (news.title || '').replace(/'/g, "\\'");
+                    const safeUrl = (news.live_url || '').replace(/'/g, "\\'");
+                    const safeImg = (news.thumbnail_url || '').replace(/'/g, "\\'");
+                    const timeBadge = news.time_ago ? `<span class="text-[9px] text-slate-400">${news.time_ago}</span>` : '';
+
+                    return `
+                        <div class="flex flex-col gap-2 p-2.5 bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xs hover:border-indigo-300 dark:hover:border-indigo-600 transition group/card">
+                            <div class="flex items-start gap-2">
+                                <img src="${news.thumbnail_url}" class="w-12 h-10 rounded-lg object-cover shrink-0 bg-slate-100 dark:bg-slate-700 border border-slate-100 dark:border-slate-700" alt="thumb" onerror="this.src='/images/placeholder.png'">
+                                <div class="flex-1 min-w-0">
+                                    <h6 class="text-xs font-bold text-slate-800 dark:text-slate-100 line-clamp-2 leading-tight font-bangla group-hover/card:text-indigo-600 dark:group-hover/card:text-indigo-400 transition cursor-pointer" onclick="insertLinkToEditor('${safeTitle}', '${safeUrl}')" title="${news.title}">
+                                        ${news.title}
+                                    </h6>
+                                    <div class="flex items-center gap-1.5 mt-1">
+                                        <span class="text-[9px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">Live</span>
+                                        ${timeBadge}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-1 pt-1 border-t border-slate-100 dark:border-slate-700/60 justify-end">
+                                <button type="button" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-600 dark:hover:text-white px-2 py-1 rounded text-[10px] font-black transition flex items-center gap-1 cursor-pointer" onclick="insertLinkToEditor('${safeTitle}', '${safeUrl}')" title="এডিটরে ইনলাইন লিঙ্ক হিসেবে যুক্ত করুন">
+                                    <i class="fa-solid fa-link text-[9px]"></i> Inline
+                                </button>
+                                <button type="button" class="bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-600 dark:hover:text-white px-2 py-1 rounded text-[10px] font-black transition flex items-center gap-1 cursor-pointer" onclick="insertReadMoreToEditor('${safeTitle}', '${safeUrl}')" title="আকর্ষণীয় 'আরও পড়ুন' বক্স হিসেবে যোগ করুন">
+                                    <i class="fa-solid fa-bookmark text-[9px]"></i> আরও পড়ুন
+                                </button>
+                                <button type="button" class="bg-slate-100 hover:bg-slate-800 hover:text-white dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 px-2 py-1 rounded text-[10px] font-bold transition flex items-center gap-1 cursor-pointer" onclick="insertRelatedMediaCard('${safeTitle}', '${safeUrl}', '${safeImg}')" title="ছোট ফটো কার্ড যুক্ত করুন">
+                                    <i class="fa-solid fa-id-card text-[9px]"></i> কার্ড
+                                </button>
                             </div>
                         </div>
                     `;
-                });
-            }).catch(() => { btn.innerText = 'খুঁজুন'; });
+                }).join('');
+            })
+            .catch(err => {
+                if (skeleton) skeleton.classList.add('hidden');
+                if (searchBtn) searchBtn.disabled = false;
+                console.error('Suggest links error:', err);
+            });
     }
 
     function addManualLink(type = 'normal') {
@@ -122,31 +581,66 @@
     }
 
     function insertLinkToEditor(text, url) {
-        let linkHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: blue; text-decoration: underline;"><strong>${text}</strong></a>&nbsp;`;
-        if (tinymce.get('previewContent')) {
-            tinymce.get('previewContent').execCommand('mceInsertContent', false, linkHtml);
-            calculateSEO(); 
-        } else {
+        if (!tinymce.get('previewContent')) {
             alert('Editor is not loaded yet!');
+            return;
         }
+
+        const editor = tinymce.get('previewContent');
+        const selectedText = editor.selection.getContent({ format: 'text' }).trim();
+        
+        let linkText = selectedText || text;
+        let linkHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline; font-weight: bold;">${linkText}</a>&nbsp;`;
+        
+        editor.execCommand('mceInsertContent', false, linkHtml);
+        calculateSEO();
+        if (window.showToast) window.showToast('🔗 ইনলাইন লিংক এডিটরে যুক্ত হয়েছে', 'success');
     }
 
     function insertReadMoreToEditor(text, url) {
-        let readMoreHtml = `
-            <p style="margin: 15px 0; padding: 10px; border-left: 4px solid #e11d48; background-color: #f8fafc;">
-                <strong style="color: #e11d48; font-size: 16px;">আরও পড়ুন: </strong>
-                <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; font-weight: bold; font-size: 16px; text-decoration: none;">
-                    ${text}
-                </a>
-            </p>
+        if (!tinymce.get('previewContent')) {
+            alert('Editor is not loaded yet!');
+            return;
+        }
+
+        const readMoreHtml = `
+            <div style="margin: 18px 0; padding: 12px 16px; border-left: 4px solid #e11d48; background: #fff1f2; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                <span style="color: #e11d48; font-size: 14px; font-weight: 800; text-transform: uppercase; margin-right: 6px;">📌 আরও পড়ুন:</span>
+                <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #1e40af; font-size: 15px; font-weight: bold; text-decoration: underline;">${text}</a>
+            </div>
             <p>&nbsp;</p>
         `;
-        if (tinymce.get('previewContent')) {
-            tinymce.get('previewContent').execCommand('mceInsertContent', false, readMoreHtml);
-            calculateSEO(); 
-        } else {
+
+        tinymce.get('previewContent').execCommand('mceInsertContent', false, readMoreHtml);
+        calculateSEO();
+        if (window.showToast) window.showToast('📌 "আরও পড়ুন" বক্স এডিটরে যুক্ত হয়েছে', 'success');
+    }
+
+    function insertRelatedMediaCard(text, url, imageUrl) {
+        if (!tinymce.get('previewContent')) {
             alert('Editor is not loaded yet!');
+            return;
         }
+
+        const imgTag = imageUrl && imageUrl !== '/images/placeholder.png' 
+            ? `<img src="${imageUrl}" alt="${text}" style="width: 80px; height: 60px; object-fit: cover; border-radius: 6px; margin-right: 12px; float: left;" />` 
+            : '';
+
+        const cardHtml = `
+            <div style="margin: 20px 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; overflow: hidden; display: flex; align-items: center;">
+                ${imgTag}
+                <div>
+                    <span style="font-size: 11px; color: #64748b; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 2px;">সম্পর্কিত খবর</span>
+                    <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #0f172a; font-size: 14px; font-weight: bold; text-decoration: none;">${text}</a>
+                </div>
+                <div style="clear: both;"></div>
+            </div>
+            <p>&nbsp;</p>
+        `;
+
+        tinymce.get('previewContent').execCommand('mceInsertContent', false, cardHtml);
+        calculateSEO();
+        if (window.showToast) window.showToast('🖼️ রিলেটেড কার্ড এডিটরে যুক্ত হয়েছে', 'success');
     }
 
     function previewSelectedImage(input) {
@@ -248,6 +742,12 @@
                     titleInput.value = data.title;
                     hashtagsInput.value = data.hashtags || ''; 
 
+                    // 🎯 Load Focus Keywords and Meta Description
+                    loadKeywordsFromInput(data.focus_keyword || data.tags || data.hashtags || '');
+                    if (document.getElementById('meta_description')) {
+                        document.getElementById('meta_description').value = data.meta_description || data.short_summary || '';
+                    }
+
                     if (tinymce.get('previewContent')) {
                         tinymce.get('previewContent').setContent(data.content);
                     } else {
@@ -303,6 +803,7 @@
                     setTimeout(() => {
                         calculateSEO();
                         syncSocialCardPreview();
+                        fetchRelatedLinks('', true);
                     }, 400);
                 } else {
                     if (tinymce.get('previewContent')) tinymce.get('previewContent').setContent("Error loading content.");
@@ -318,6 +819,8 @@
         
         formData.append('title', document.getElementById('previewTitle').value);
         formData.append('hashtags', document.getElementById('previewHashtags').value);
+        formData.append('focus_keyword', document.getElementById('focus_keyword') ? document.getElementById('focus_keyword').value : '');
+        formData.append('meta_description', document.getElementById('meta_description') ? document.getElementById('meta_description').value : '');
         
         let content = tinymce.get('previewContent') ? tinymce.get('previewContent').getContent() : document.getElementById('previewContent').value;
         formData.append('content', content);
@@ -382,6 +885,8 @@
         let formData = new FormData();
         formData.append('title', document.getElementById('previewTitle').value);
         formData.append('hashtags', document.getElementById('previewHashtags').value);
+        formData.append('focus_keyword', document.getElementById('focus_keyword') ? document.getElementById('focus_keyword').value : '');
+        formData.append('meta_description', document.getElementById('meta_description') ? document.getElementById('meta_description').value : '');
         
         let content = tinymce.get('previewContent') ? tinymce.get('previewContent').getContent() : document.getElementById('previewContent').value;
         formData.append('content', content);

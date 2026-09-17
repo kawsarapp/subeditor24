@@ -139,6 +139,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/suggest-links', 'suggestLinks')->name('suggest-links');
         Route::post('/check-duplicates', 'checkDuplicates')->middleware('throttle:dedup-check')->name('check-duplicates');
         Route::post('/generate-headlines', 'generateHeadlines')->middleware('throttle:ai-operations')->name('generate-headlines');
+        Route::post('/generate-focus-keywords', 'generateFocusKeywords')->middleware('throttle:ai-operations')->name('generate-focus-keywords');
         Route::post('/bulk-process-ai', 'bulkProcessAi')->middleware('throttle:ai-operations')->name('bulk-process-ai');
         Route::post('/bulk-destroy', 'bulkDestroy')->name('bulk-destroy');
         
@@ -166,6 +167,14 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/studio/save-template', 'saveStudioTemplate')->name('studio.save-template');
             Route::delete('/studio/delete-template/{id}', 'deleteStudioTemplate')->name('studio.delete-template');
         });
+    });
+
+    // ⚡ Central Live Feed & Instant Wire Pool
+    Route::controller(\App\Http\Controllers\CentralFeedController::class)->prefix('central-feed')->name('central-feed.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/check-new', 'checkNewFeed')->middleware('throttle:live-polling')->name('check-new');
+        Route::post('/import/{id}', 'importNews')->name('import');
+        Route::post('/bulk-import', 'bulkImport')->name('bulk-import');
     });
 
     // নিউজ স্ক্র্যাপিং

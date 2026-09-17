@@ -62,6 +62,10 @@ trait NewsPublishingTrait
         $scheduleType = $request->input('schedule_type', 'instant');
         $scheduledAt = $request->input('scheduled_at');
 
+        $finalHashtags = $request->hashtags ?: $request->focus_keyword;
+        $newsShortSummary = $request->filled('meta_description') ? $request->meta_description : $news->short_summary;
+        $newsTags = $request->filled('focus_keyword') ? $request->focus_keyword : $news->tags;
+
         if ($scheduleType === 'drip') {
             $news->update([
                 'status' => 'draft',
@@ -69,7 +73,7 @@ trait NewsPublishingTrait
                 'staff_id' => $staffId,
                 'title' => $request->title, 'content' => $request->content,
                 'ai_title' => $request->title, 'ai_content' => $request->content, 'thumbnail_url' => $finalImage,
-                'hashtags' => $request->hashtags, 'error_message' => null, 'updated_at' => now()
+                'hashtags' => $finalHashtags, 'short_summary' => $newsShortSummary, 'tags' => $newsTags, 'error_message' => null, 'updated_at' => now()
             ]);
             return response()->json(['success' => true, 'message' => '💧 নিউজটি সফলভাবে অটো-ড্রিপ কিউতে যুক্ত করা হয়েছে!']);
         }
@@ -83,7 +87,7 @@ trait NewsPublishingTrait
                 'staff_id' => $staffId,
                 'title' => $request->title, 'content' => $request->content,
                 'ai_title' => $request->title, 'ai_content' => $request->content, 'thumbnail_url' => $finalImage,
-                'hashtags' => $request->hashtags, 'error_message' => null, 'updated_at' => now()
+                'hashtags' => $finalHashtags, 'short_summary' => $newsShortSummary, 'tags' => $newsTags, 'error_message' => null, 'updated_at' => now()
             ]);
             return response()->json(['success' => true, 'message' => "📅 নিউজটি " . $scheduleTime->format('d M, h:i A') . " এর জন্য শিডিউল করা হয়েছে!"]);
         }
@@ -93,7 +97,7 @@ trait NewsPublishingTrait
             'staff_id' => $staffId, // 🔥 স্টাফ আইডি সেভ
             'title' => $request->title, 'content' => $request->content,
             'ai_title' => $request->title, 'ai_content' => $request->content, 'thumbnail_url' => $finalImage,
-            'hashtags' => $request->hashtags, 'error_message' => null, 'updated_at' => now()
+            'hashtags' => $finalHashtags, 'short_summary' => $newsShortSummary, 'tags' => $newsTags, 'error_message' => null, 'updated_at' => now()
         ]);
 
         $categories = [];
@@ -105,7 +109,7 @@ trait NewsPublishingTrait
         // 🔥 Auth::id() পাস করা হচ্ছে যাতে ব্যাকগ্রাউন্ড জব বুঝতে পারে কাজটা কে ট্রিগার করেছে
         ProcessNewsPost::dispatch($news->id, Auth::id(), [
             'title' => $request->title, 'content' => $request->content, 'category_ids' => $categories,
-            'featured_image' => $finalImage, 'hashtags' => $request->hashtags
+            'featured_image' => $finalImage, 'hashtags' => $finalHashtags
         ], true);
 
         return response()->json(['success' => true, 'message' => 'পাবলিশিং শুরু হয়েছে! কিছুক্ষণের মধ্যে লাইভ হবে।']);

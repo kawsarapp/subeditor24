@@ -79,9 +79,19 @@ class GenerateAIContent implements ShouldQueue
             // 🔥 পরিবর্তন: rewrite মেথডে $isRetry, $news->user_id এবং $targetLanguage প্যারামিটারটি পাস করা হচ্ছে
             $aiResponse = $aiWriter->rewrite($fullContext, $title, $isRetry, $news->user_id, $targetLanguage);
 
+            $cleanText = strip_tags($aiResponse['content']);
+            $cleanText = preg_replace('/\s+/', ' ', $cleanText);
+            $autoSummary = !empty($aiResponse['meta_description']) ? $aiResponse['meta_description'] : mb_substr(trim($cleanText), 0, 150);
+            
+            $focusKw = !empty($aiResponse['focus_keyword']) ? trim($aiResponse['focus_keyword']) : '';
+            $tagsList = (!empty($aiResponse['tags']) && is_array($aiResponse['tags'])) ? implode(', ', $aiResponse['tags']) : $focusKw;
+
             $news->update([
                 'ai_title' => $aiResponse['title'] ?? $news->title,
                 'ai_content' => $aiResponse['content'],
+                'short_summary' => $news->short_summary ?: $autoSummary,
+                'tags' => $news->tags ?: ($tagsList ?: $focusKw),
+                'hashtags' => $news->hashtags ?: ($tagsList ?: $focusKw),
                 'status' => 'draft',
                 'is_rewritten' => true,
                 'staff_id' => $staffId ?? $news->staff_id, // 🔥 স্টাফ আইডি সেভ করা হলো

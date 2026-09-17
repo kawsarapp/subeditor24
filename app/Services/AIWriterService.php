@@ -50,7 +50,10 @@ class AIWriterService
         Return ONLY a valid JSON object.
         {
             "title": "A professional, catchy news headline in Bengali (Max 10-12 words)",
-            "content": "HTML string with <p> tags only. No bold, no headings."
+            "content": "HTML string with <p> tags only. No bold, no headings.",
+            "meta_description": "A crisp, engaging SEO meta description in Bengali (120-150 characters)",
+            "focus_keyword": "Primary focus keyword in Bengali",
+            "tags": ["tag1", "tag2", "tag3"]
         }
         EOT;
     }
@@ -98,7 +101,10 @@ class AIWriterService
             Return ONLY a valid JSON object.
             {
                 "title": "A professional, catchy news headline in English (Max 10-12 words)",
-                "content": "HTML string with <p> tags only. No bold, no headings."
+                "content": "HTML string with <p> tags only. No bold, no headings.",
+                "meta_description": "A crisp, engaging SEO meta description in English (120-150 characters)",
+                "focus_keyword": "Primary focus keyword in English",
+                "tags": ["tag1", "tag2", "tag3"]
             }
             EOT;
         }
@@ -734,6 +740,65 @@ EOT;
             'informative' => $cleanTitle,
             'viral'       => $cleanTitle . ': বিস্তারিত যা জানা গেল',
             'breaking'    => 'ব্রেকিং: ' . \Illuminate\Support\Str::limit($cleanTitle, 45)
+        ];
+    }
+
+    /**
+     * 🔍 1-Click SEO Focus Keyword & Meta Extractor
+     */
+    public function extractFocusKeywords($title, $content = '', $userId = null, $targetLanguage = 'bn'): array
+    {
+        $langName = $targetLanguage === 'en' ? 'English' : 'Bengali';
+        
+        $systemPrompt = <<<EOT
+You are an expert News SEO Specialist and Sub-Editor for a top news portal.
+Analyze the given news headline and content, then extract the most effective SEO Focus Keywords, LSI Search terms, and Meta Description in {$langName}.
+
+Return ONLY valid JSON matching this schema:
+{
+    "primary_keyword": "Most important 2-3 word search query/entity (e.g. আবহাওয়া অধিদপ্তর)",
+    "keywords": ["Keyword 1", "Keyword 2", "Keyword 3", "Keyword 4", "Keyword 5", "Keyword 6"],
+    "meta_description": "Catchy, informative 130-150 character meta description summarizing the core news.",
+    "tags": ["Tag 1", "Tag 2", "Tag 3", "Tag 4"]
+}
+EOT;
+
+        $cleanContent = \Illuminate\Support\Str::limit(strip_tags($content), 1200);
+        $input = "Headline: " . $title . "\n\nContent:\n" . $cleanContent;
+
+        $settings = $userId ? \App\Models\UserSetting::where('user_id', $userId)->first() : null;
+        $primaryAi = ($settings && $settings->primary_ai) ? $settings->primary_ai : 'deepseek';
+
+        $providers = [$primaryAi, 'deepseek', 'gemini', 'openai', 'groq'];
+        $providers = array_unique($providers);
+
+        foreach ($providers as $provider) {
+            try {
+                $result = $this->callAiForJsonPrompt($provider, $systemPrompt, $input, $userId);
+                if ($result && !empty($result['keywords']) && is_array($result['keywords'])) {
+                    return [
+                        'primary_keyword'  => $result['primary_keyword'] ?? ($result['keywords'][0] ?? $title),
+                        'keywords'         => array_values(array_filter(array_map('trim', $result['keywords']))),
+                        'meta_description' => $result['meta_description'] ?? \Illuminate\Support\Str::limit(strip_tags($content), 150),
+                        'tags'             => !empty($result['tags']) && is_array($result['tags']) ? array_values(array_filter($result['tags'])) : []
+                    ];
+                }
+            } catch (\Exception $e) {
+                Log::warning("Keyword extraction with provider ({$provider}) failed: " . $e->getMessage());
+            }
+        }
+
+        // Programmatic Fallback Extraction
+        $words = preg_split('/[\s,\.\!\?\"\'\-–—\(\)\[\]\{\}]+/u', $title . ' ' . $cleanContent, -1, PREG_SPLIT_NO_EMPTY);
+        $stopWords = ['এবং', 'ও', 'কিন্তু', 'বা', 'না', 'হবে', 'হয়েছে', 'আছে', 'করে', 'থেকে', 'জন্য', 'নিয়ে', 'পর', 'এক', 'এই', 'যে', 'বলে', 'হয়', 'the', 'and', 'is', 'in', 'to', 'of', 'for', 'with', 'a', 'on'];
+        $filtered = array_filter($words, fn($w) => mb_strlen($w) > 3 && !in_array(mb_strtolower($w), $stopWords));
+        $freq = array_slice(array_keys(array_count_values($filtered)), 0, 6);
+
+        return [
+            'primary_keyword'  => $freq[0] ?? $title,
+            'keywords'         => !empty($freq) ? $freq : [$title],
+            'meta_description' => \Illuminate\Support\Str::limit(strip_tags($content ?: $title), 150),
+            'tags'             => array_slice($freq, 0, 4)
         ];
     }
 }

@@ -22,7 +22,17 @@ class Website extends Model
         'scraper_method',
         'use_scraping_api',
         'target_language',
+        'scrape_interval_minutes',
+        'is_central_active',
+        'last_scraped_at',
         'user_id', 
+    ];
+
+    protected $casts = [
+        'last_scraped_at' => 'datetime',
+        'is_central_active' => 'boolean',
+        'use_scraping_api' => 'boolean',
+        'scrape_interval_minutes' => 'integer',
     ];
 
     protected static function booted()

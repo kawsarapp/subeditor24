@@ -36,6 +36,12 @@
                             Feed
                         </a>
 
+                        {{-- 1.5 Central Live Wire Feed --}}
+                        <a href="{{ route('central-feed.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('central-feed.*') ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md scale-[1.02]' : 'text-indigo-700 hover:text-indigo-800 hover:bg-white/60' }}" title="স্বয়ংক্রিয় সেন্ট্রাল লাইভ ফিড">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            ⚡ Live Wire
+                        </a>
+
                         {{-- 2. Published --}}
                         <a href="{{ route('news.published') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('news.published') ? 'bg-white text-indigo-600 shadow-md border border-slate-200/60 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white/60' }}">
                             Published

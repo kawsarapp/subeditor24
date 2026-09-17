@@ -58,6 +58,7 @@ class WebsiteController extends Controller
             'selector_container' => 'nullable',
             'selector_title' => 'nullable',
             'target_language' => 'nullable|in:bn,en',
+            'scrape_interval_minutes' => 'nullable|integer|min:1|max:1440',
         ]);
 
         $data = $request->all();
@@ -65,6 +66,8 @@ class WebsiteController extends Controller
         $data['selector_container'] = $request->input('selector_container') ?: '.desktopSectionLead, .news-item, .post-item, article, .story-element, .news-card';
         $data['selector_title'] = $request->input('selector_title') ?: 'h1, h2, h3, .title, .heading';
         $data['use_scraping_api'] = $request->has('use_scraping_api') ? 1 : 0;
+        $data['is_central_active'] = $request->has('is_central_active') ? 1 : ($request->exists('is_central_active') ? 0 : 1);
+        $data['scrape_interval_minutes'] = (int) ($request->input('scrape_interval_minutes') ?: 5);
 
         Website::create($data);
 
@@ -161,10 +164,13 @@ class WebsiteController extends Controller
             'selector_container' => 'required',
             'selector_title' => 'required',
             'target_language' => 'nullable|in:bn,en',
+            'scrape_interval_minutes' => 'nullable|integer|min:1|max:1440',
         ]);
         
         $data = array_merge($request->all(), $data);
         $data['use_scraping_api'] = $request->has('use_scraping_api') ? 1 : 0;
+        $data['is_central_active'] = $request->has('is_central_active') ? 1 : 0;
+        $data['scrape_interval_minutes'] = (int) ($request->input('scrape_interval_minutes') ?: 5);
         
         $website->update($data);
         
