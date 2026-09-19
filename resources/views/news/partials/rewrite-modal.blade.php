@@ -368,40 +368,108 @@
                 </div>
 
                 @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_fact_check'))
-                {{-- 🔍 Fact Check & Uniqueness Card --}}
-                <div class="bg-white dark:bg-slate-900 border border-rose-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex-shrink-0">
-                    <div class="bg-gradient-to-r from-rose-600 to-pink-600 text-white px-4 py-3 flex justify-between items-center shadow-sm">
-                        <h5 class="m-0 font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-square-poll-horizontal text-sm"></i> Fact & Plagiarism</h5>
-                        <span id="factcheck-status-badge" class="bg-white text-rose-700 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider hidden shadow-sm">
-                            Verified
+                {{-- 🔍 Enterprise Fact Checking & Credibility Suite --}}
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex-shrink-0">
+                    <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-4 py-3 flex justify-between items-center shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-sm text-amber-300"></i>
+                            <h5 class="m-0 font-bold text-xs tracking-wide">AI Fact Checker & সত্যতা যাচাই</h5>
+                        </div>
+                        <span id="factcheck-status-badge" class="bg-white/90 text-slate-800 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider hidden shadow-sm">
+                            অযাচাইকৃত
                         </span>
                     </div>
+                    
                     <div class="p-4 space-y-4">
-                        <button type="button" id="btn-run-factcheck" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer" onclick="runFactCheckAndPlagiarism()">
-                            <i class="fa-solid fa-circle-check"></i> মৌলিকতা ও তথ্য যাচাই করুন
+                        {{-- Trigger Button --}}
+                        <button type="button" id="btn-run-factcheck" class="w-full bg-gradient-to-r from-slate-900 to-indigo-950 hover:from-slate-800 hover:to-indigo-900 text-white py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-md cursor-pointer group" onclick="runFactCheckAndPlagiarism()">
+                            <i class="fa-solid fa-magnifying-glass-chart text-indigo-400 group-hover:scale-110 transition-transform"></i>
+                            <span>রিয়েল-টাইম সত্যতা ও তথ্য যাচাই করুন</span>
                         </button>
 
+                        {{-- Skeleton Loader --}}
                         <div id="factcheck-skeleton" class="space-y-3 hidden">
-                            <div class="flex justify-between items-center">
-                                <div class="h-3 w-2/3 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
-                                <div class="h-3 w-10 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl space-y-2 border border-slate-200 dark:border-slate-700 animate-pulse">
+                                <div class="flex justify-between items-center">
+                                    <div class="h-3 w-1/2 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                    <div class="h-3 w-12 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                </div>
+                                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2"></div>
                             </div>
-                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 animate-pulse"></div>
+                            <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl space-y-2 border border-slate-200 dark:border-slate-700 animate-pulse">
+                                <div class="h-3 w-3/4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                <div class="h-10 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                            </div>
+                            <p class="text-[11px] text-center text-indigo-600 dark:text-indigo-400 font-bold animate-pulse">
+                                📡 গুগল ফ্যাক্ট চেক ডেটাবেজ ও মূলধারার সূত্রে তথ্য মিলিয়ে দেখা হচ্ছে...
+                            </p>
                         </div>
 
-                        <div id="factcheck-results" class="space-y-4 hidden">
-                            <div>
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Uniqueness (মৌলিকতা)</span>
-                                    <span id="uniqueness-score" class="text-xs font-bold text-emerald-600">100%</span>
+                        {{-- Results Container --}}
+                        <div id="factcheck-results" class="space-y-4 hidden font-bangla">
+                            
+                            {{-- Dual Meters: Credibility & Uniqueness --}}
+                            <div class="grid grid-cols-2 gap-2.5">
+                                {{-- Credibility Meter --}}
+                                <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300">Truth Score</span>
+                                        <span id="credibility-score-val" class="text-xs font-black text-emerald-600">--%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                                        <div id="credibility-progress" class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
                                 </div>
-                                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-200 dark:border-slate-700">
-                                    <div id="uniqueness-progress" class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: 100%"></div>
+
+                                {{-- Uniqueness Meter --}}
+                                <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300">মৌলিকতা</span>
+                                        <span id="uniqueness-score" class="text-xs font-black text-indigo-600">--%</span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                                        <div id="uniqueness-progress" class="bg-indigo-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                                <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">এআই রিপোর্ট (Report)</label>
-                                <p id="factcheck-report-text" class="text-[11px] text-slate-600 dark:text-slate-300 font-bangla leading-relaxed whitespace-pre-line"></p>
+
+                            {{-- Verdict & Summary Card --}}
+                            <div id="factcheck-verdict-card" class="p-3 rounded-xl border bg-slate-50 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 space-y-1.5">
+                                <div class="flex items-center gap-1.5">
+                                    <span id="factcheck-verdict-icon" class="text-sm">🔍</span>
+                                    <h6 id="factcheck-verdict-heading" class="text-xs font-black text-slate-900 dark:text-white leading-tight"></h6>
+                                </div>
+                                <p id="factcheck-report-text" class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+                            </div>
+
+                            {{-- Official Debunk / Fact Check Match Alert --}}
+                            <div id="official-factcheck-alert" class="hidden p-3 rounded-xl bg-rose-50 dark:bg-rose-950/70 border border-rose-300 dark:border-rose-800 space-y-2">
+                                <div class="flex items-center gap-2 text-rose-700 dark:text-rose-300 text-xs font-black">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    <span>অফিশিয়াল ফ্যাক্ট-চেকার ডেটাবেজ ম্যাচ (Google ClaimReview)</span>
+                                </div>
+                                <div id="official-factcheck-list" class="space-y-1.5 text-[11px]"></div>
+                            </div>
+
+                            {{-- Claim-by-Claim Breakdown --}}
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="text-[11px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider flex items-center gap-1.5">
+                                        <i class="fa-solid fa-list-check text-indigo-500"></i> তথ্যের দাবিভিত্তিক মূল্যায়ন
+                                    </label>
+                                    <span id="claims-count-badge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">০টি দাবি</span>
+                                </div>
+                                <div id="claims-breakdown-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                                    {{-- Dynamically populated via JS --}}
+                                </div>
+                            </div>
+
+                            {{-- Red Flags / Sensationalism Warnings --}}
+                            <div id="factcheck-redflags-box" class="hidden p-3 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 space-y-1.5">
+                                <span class="text-[11px] font-black text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-flag text-amber-600"></i> সতর্কতা ও অস্পষ্টতা
+                                </span>
+                                <ul id="factcheck-redflags-list" class="text-[11px] text-amber-800 dark:text-amber-300 list-disc pl-4 space-y-0.5"></ul>
                             </div>
                         </div>
                     </div>

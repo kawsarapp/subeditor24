@@ -637,7 +637,7 @@ EOT;
     {
         switch ($provider) {
             case 'gemini':
-                $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'smartproxy_api_token') ?? env('GEMINI_API_KEY');
+                $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'gemini_api_key') ?? \App\Models\UserSetting::getSettingWithFallback($userId, 'smartproxy_api_token') ?? env('GEMINI_API_KEY');
                 if (!$apiKey) throw new \Exception("Gemini Key Missing");
                 $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'gemini_model') ?? "gemini-1.5-flash";
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";

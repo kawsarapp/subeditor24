@@ -188,10 +188,11 @@ trait NewsDraftsTrait
         ]);
     }
 
-    public function analyzePlagiarism($id, Request $request, \App\Services\AIWriterService $aiWriter)
+    public function analyzePlagiarism($id, Request $request, \App\Services\AIWriterService $aiWriter, \App\Services\FactCheckService $factChecker)
     {
         $request->validate([
             'content' => 'required|string',
+            'title'   => 'nullable|string',
         ]);
 
         $user = Auth::user();
@@ -203,28 +204,55 @@ trait NewsDraftsTrait
         }
         $adminUser = $this->getEffectiveAdmin();
 
-        $news = NewsItem::whereIn('user_id', [$user->id, $adminUser->id])->findOrFail($id);
+        $news = NewsItem::withoutGlobalScopes()
+            ->whereIn('user_id', array_unique([$user->id, $adminUser->id]))
+            ->findOrFail($id);
 
         try {
-            $analysis = $aiWriter->analyzeFactAndPlagiarism($news->content, $request->content, $adminUser->id);
+            $title = $request->input('title') ?: ($news->ai_title ?: $news->title);
+            $editorContent = $request->input('content');
+            $originalContent = $news->content ?: '';
+
+            // Calculate textual similarity percentage with original content
+            $safeOriginal = mb_substr(strip_tags($originalContent), 0, 4000, 'UTF-8');
+            $safeRewritten = mb_substr(strip_tags($editorContent), 0, 4000, 'UTF-8');
+            similar_text($safeOriginal, $safeRewritten, $simPercent);
+            $plagiarismScore = min(100, max(0, round($simPercent)));
+            $uniquenessScore = max(0, 100 - $plagiarismScore);
+
+            // Run Enterprise Zero-Hallucination Fact Check
+            $verification = $factChecker->verifyNewsArticle($title, $editorContent, $adminUser->id, $originalContent);
+
+            $factStatus = $verification['overall_verdict'] ?? 'verified';
+            $factReport = $verification['summary_report'] ?? 'তথ্য যাচাই সম্পন্ন হয়েছে।';
 
             $news->update([
-                'plagiarism_score' => $analysis['similarity_score'],
-                'fact_check_status' => $analysis['fact_check_status'],
-                'fact_check_report' => $analysis['fact_check_report'],
+                'plagiarism_score' => $plagiarismScore,
+                'fact_check_status' => $factStatus,
+                'fact_check_report' => $factReport,
             ]);
 
             return response()->json([
-                'success' => true,
-                'plagiarism_score' => $analysis['similarity_score'],
-                'fact_check_status' => $analysis['fact_check_status'],
-                'fact_check_report' => $analysis['fact_check_report'],
+                'success'             => true,
+                'plagiarism_score'    => $plagiarismScore,
+                'uniqueness_score'    => $uniquenessScore,
+                'credibility_score'   => $verification['credibility_score'] ?? 85,
+                'overall_verdict'     => $factStatus,
+                'verdict_title'       => $verification['verdict_title'] ?? 'তথ্য যাচাই সম্পন্ন',
+                'fact_check_status'   => $factStatus,
+                'fact_check_report'   => $factReport,
+                'summary_report'      => $factReport,
+                'claims'              => $verification['claims'] ?? [],
+                'official_factchecks' => $verification['official_factchecks'] ?? [],
+                'pool_matches'        => $verification['pool_matches'] ?? [],
+                'red_flags'           => $verification['red_flags'] ?? [],
+                'has_official_debunk' => $verification['has_official_debunk'] ?? false,
             ]);
         } catch (\Exception $e) {
             Log::error("Fact check request failed: " . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'ফ্যাক্ট-চেক সম্পন্ন করা সম্ভব হয়নি। অনুগ্রহ করে পরে আবার চেষ্টা করুন।'
+                'message' => 'ফ্যাক্ট-চেক সম্পন্ন করা সম্ভব হয়নি: ' . $e->getMessage()
             ], 500);
         }
     }

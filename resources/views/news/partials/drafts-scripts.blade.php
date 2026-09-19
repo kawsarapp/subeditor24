@@ -799,7 +799,11 @@
                         }
                     }
                     
-                    displayFactCheckResults(data.plagiarism_score, data.fact_check_status, data.fact_check_report);
+                    if (data.fact_check_status && data.fact_check_report) {
+                        displayFactCheckResults(data.plagiarism_score, data.fact_check_status, data.fact_check_report);
+                    } else {
+                        displayFactCheckResults(null);
+                    }
                     setTimeout(() => {
                         calculateSEO();
                         syncSocialCardPreview();
@@ -998,61 +1002,222 @@
 
     setInterval(checkNewsStatus, 5000);
 
-    function displayFactCheckResults(plagiarismScore, status, report) {
+    function displayFactCheckResults(data, legacyStatus, legacyReport) {
         const resultsDiv = document.getElementById('factcheck-results');
         const skeletonDiv = document.getElementById('factcheck-skeleton');
         const badge = document.getElementById('factcheck-status-badge');
-        const scoreSpan = document.getElementById('uniqueness-score');
-        const progressBar = document.getElementById('uniqueness-progress');
-        const reportText = document.getElementById('factcheck-report-text');
         const checkBtn = document.getElementById('btn-run-factcheck');
+        
+        const uniquenessScoreSpan = document.getElementById('uniqueness-score');
+        const uniquenessProgressBar = document.getElementById('uniqueness-progress');
+        const credScoreSpan = document.getElementById('credibility-score-val');
+        const credProgressBar = document.getElementById('credibility-progress');
+        
+        const verdictHeading = document.getElementById('factcheck-verdict-heading');
+        const verdictIcon = document.getElementById('factcheck-verdict-icon');
+        const verdictCard = document.getElementById('factcheck-verdict-card');
+        const reportText = document.getElementById('factcheck-report-text');
+        
+        const officialAlert = document.getElementById('official-factcheck-alert');
+        const officialList = document.getElementById('official-factcheck-list');
+        
+        const claimsList = document.getElementById('claims-breakdown-list');
+        const claimsCountBadge = document.getElementById('claims-count-badge');
+        
+        const redflagsBox = document.getElementById('factcheck-redflags-box');
+        const redflagsList = document.getElementById('factcheck-redflags-list');
 
         if (!skeletonDiv) return;
-
         skeletonDiv.classList.add('hidden');
 
-        if (plagiarismScore === null || plagiarismScore === undefined) {
-            resultsDiv.classList.add('hidden');
-            badge.classList.add('hidden');
-            checkBtn.classList.remove('hidden');
-            checkBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> মৌলিকতা ও তথ্য যাচাই করুন';
+        // Normalize data
+        let res = null;
+        if (typeof data === 'object' && data !== null) {
+            res = data;
+        } else if (data !== null && data !== undefined) {
+            res = {
+                plagiarism_score: data,
+                uniqueness_score: 100 - parseInt(data || 0),
+                credibility_score: legacyStatus === 'verified' ? 90 : (legacyStatus === 'warning' ? 65 : 40),
+                overall_verdict: legacyStatus || 'unverified',
+                verdict_title: legacyStatus === 'verified' ? 'তথ্য যাচাই সম্পন্ন ও নির্ভরযোগ্য' : 'তথ্য যাচাইয়ে সতর্কতা',
+                summary_report: legacyReport || 'কোনো এআই রিপোর্ট পাওয়া যায়নি।',
+                claims: [],
+                official_factchecks: [],
+                red_flags: []
+            };
+        }
+
+        if (!res) {
+            if (resultsDiv) resultsDiv.classList.add('hidden');
+            if (badge) badge.classList.add('hidden');
+            if (checkBtn) {
+                checkBtn.classList.remove('hidden');
+                checkBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart text-indigo-400"></i> <span>রিয়েল-টাইম সত্যতা ও তথ্য যাচাই করুন</span>';
+            }
             return;
         }
 
-        resultsDiv.classList.remove('hidden');
-        badge.classList.remove('hidden');
-        checkBtn.classList.remove('hidden');
-        checkBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> পুনরায় যাচাই করুন';
-
-        // Calculate Uniqueness
-        const uniqueness = 100 - parseInt(plagiarismScore);
-        scoreSpan.innerText = uniqueness + '%';
-        progressBar.style.width = uniqueness + '%';
-
-        // Colors based on uniqueness score
-        if (uniqueness > 79) {
-            progressBar.className = 'bg-emerald-500 h-2 rounded-full transition-all duration-500';
-            scoreSpan.className = 'text-xs font-bold text-emerald-600';
-        } else if (uniqueness > 49) {
-            progressBar.className = 'bg-amber-500 h-2 rounded-full transition-all duration-500';
-            scoreSpan.className = 'text-xs font-bold text-amber-600';
-        } else {
-            progressBar.className = 'bg-rose-500 h-2 rounded-full transition-all duration-500';
-            scoreSpan.className = 'text-xs font-bold text-rose-600';
+        if (resultsDiv) resultsDiv.classList.remove('hidden');
+        if (badge) badge.classList.remove('hidden');
+        if (checkBtn) {
+            checkBtn.classList.remove('hidden');
+            checkBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> <span>পুনরায় যাচাই করুন</span>';
         }
 
-        // Status Badge Style
-        badge.innerText = status.toUpperCase();
-        if (status === 'verified') {
-            badge.className = 'bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shadow-sm';
-        } else if (status === 'warning') {
-            badge.className = 'bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shadow-sm';
-        } else {
-            badge.className = 'bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shadow-sm';
+        // 1. Uniqueness Meter
+        const uniqueness = res.uniqueness_score !== undefined ? parseInt(res.uniqueness_score) : (100 - parseInt(res.plagiarism_score || 0));
+        if (uniquenessScoreSpan && uniquenessProgressBar) {
+            uniquenessScoreSpan.innerText = uniqueness + '%';
+            uniquenessProgressBar.style.width = uniqueness + '%';
+            if (uniqueness > 79) {
+                uniquenessProgressBar.className = 'bg-emerald-500 h-2 rounded-full transition-all duration-500';
+                uniquenessScoreSpan.className = 'text-xs font-black text-emerald-600';
+            } else if (uniqueness > 49) {
+                uniquenessProgressBar.className = 'bg-amber-500 h-2 rounded-full transition-all duration-500';
+                uniquenessScoreSpan.className = 'text-xs font-black text-amber-600';
+            } else {
+                uniquenessProgressBar.className = 'bg-rose-500 h-2 rounded-full transition-all duration-500';
+                uniquenessScoreSpan.className = 'text-xs font-black text-rose-600';
+            }
         }
 
-        // Report Text
-        reportText.innerText = report || 'কোনো এআই রিপোর্ট পাওয়া যায়নি।';
+        // 2. Credibility & Truth Meter
+        const credScore = parseInt(res.credibility_score || 70);
+        if (credScoreSpan && credProgressBar) {
+            credScoreSpan.innerText = credScore + '%';
+            credProgressBar.style.width = credScore + '%';
+            if (credScore >= 80) {
+                credProgressBar.className = 'bg-emerald-500 h-2 rounded-full transition-all duration-500';
+                credScoreSpan.className = 'text-xs font-black text-emerald-600';
+            } else if (credScore >= 55) {
+                credProgressBar.className = 'bg-amber-500 h-2 rounded-full transition-all duration-500';
+                credScoreSpan.className = 'text-xs font-black text-amber-600';
+            } else {
+                credProgressBar.className = 'bg-rose-500 h-2 rounded-full transition-all duration-500';
+                credScoreSpan.className = 'text-xs font-black text-rose-600';
+            }
+        }
+
+        // 3. Verdict & Status Badge
+        const status = (res.overall_verdict || res.fact_check_status || 'unverified').toLowerCase();
+        if (badge) {
+            if (status === 'verified' || status === 'verified_true') {
+                badge.innerText = '🟢 সত্য ও প্রমাণিত';
+                badge.className = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-sm';
+            } else if (status === 'warning' || status === 'partially_true') {
+                badge.innerText = '🟡 আংশিক সত্য / সতর্কতা';
+                badge.className = 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-sm';
+            } else if (status === 'false') {
+                badge.innerText = '🔴 অসত্য / ভুয়া তথ্য';
+                badge.className = 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-sm';
+            } else {
+                badge.innerText = '⚪ যাচাই আবশ্যক';
+                badge.className = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-sm';
+            }
+        }
+
+        // 4. Verdict Card Heading & Report Text
+        if (verdictHeading) {
+            verdictHeading.innerText = res.verdict_title || (status === 'verified' ? 'তথ্য সম্পূর্ণ সঠিক ও প্রমাণিত' : 'তথ্য পর্যালোচনায় সতর্কতা প্রয়োজন');
+        }
+        if (verdictIcon) {
+            verdictIcon.innerText = (status === 'verified' ? '✅' : (status === 'false' ? '🚨' : (status === 'warning' ? '⚠️' : '🔍')));
+        }
+        if (reportText) {
+            reportText.innerText = res.summary_report || res.fact_check_report || 'কোনো এআই রিপোর্ট পাওয়া যায়নি।';
+        }
+
+        // 5. Official Fact-Checks (Google ClaimReview Matches)
+        if (officialAlert && officialList) {
+            const ofcs = res.official_factchecks || [];
+            if (ofcs.length > 0) {
+                officialAlert.classList.remove('hidden');
+                officialList.innerHTML = ofcs.map(item => `
+                    <div class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900 space-y-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-black text-rose-600 dark:text-rose-400 font-sans uppercase text-[10px]">${item.publisher || 'Fact Checker'}</span>
+                            <span class="px-1.5 py-0.2 text-[9px] font-black rounded bg-rose-100 text-rose-700">${item.rating}</span>
+                        </div>
+                        <p class="text-slate-800 dark:text-slate-200 text-xs font-semibold leading-snug">${item.text}</p>
+                        ${item.review_url ? `<a href="${item.review_url}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">ফ্যাক্ট-চেক রিপোর্ট দেখুন 🔗</a>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                officialAlert.classList.add('hidden');
+                officialList.innerHTML = '';
+            }
+        }
+
+        // 6. Claim-by-Claim Breakdown
+        if (claimsList && claimsCountBadge) {
+            const claims = res.claims || [];
+            claimsCountBadge.innerText = claims.length + 'টি দাবি';
+            
+            if (claims.length > 0) {
+                claimsList.innerHTML = claims.map((c, idx) => {
+                    const cStatus = (c.status || 'unverified').toLowerCase();
+                    let badgeClass = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+                    let badgeLabel = '⚪ অযাচাইকৃত';
+                    let borderClass = 'border-slate-200 dark:border-slate-800';
+
+                    if (cStatus.includes('true') || cStatus === 'verified') {
+                        badgeClass = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200';
+                        badgeLabel = '🟢 সত্য';
+                        borderClass = 'border-emerald-100 dark:border-emerald-900/40';
+                    } else if (cStatus.includes('partial') || cStatus === 'warning') {
+                        badgeClass = 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200';
+                        badgeLabel = '🟡 আংশিক সত্য';
+                        borderClass = 'border-amber-100 dark:border-amber-900/40';
+                    } else if (cStatus.includes('false')) {
+                        badgeClass = 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200';
+                        badgeLabel = '🔴 অসত্য';
+                        borderClass = 'border-rose-100 dark:border-rose-900/40';
+                    }
+
+                    return `
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border ${borderClass} space-y-1.5 transition-all text-xs">
+                            <div class="flex justify-between items-start gap-2">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-[10px] font-bold text-slate-400">#${idx + 1}</span>
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black border ${badgeClass}">${badgeLabel}</span>
+                                    ${c.type ? `<span class="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">(${c.type})</span>` : ''}
+                                </div>
+                                ${c.confidence ? `<span class="text-[10px] font-bold text-slate-400">${c.confidence}% নিশ্চিত</span>` : ''}
+                            </div>
+                            <p class="font-extrabold text-slate-900 dark:text-slate-100 leading-snug">${c.claim_text}</p>
+                            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">${c.explanation || ''}</p>
+                            ${c.source_hint ? `<div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1"><i class="fa-solid fa-link text-[8px]"></i> সূত্র: ${c.source_hint}</div>` : ''}
+                            ${c.suggested_correction ? `
+                                <div class="mt-1.5 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-[11px] text-emerald-900 dark:text-emerald-200 flex items-start justify-between gap-2">
+                                    <div>
+                                        <strong class="font-black text-emerald-800 dark:text-emerald-300 block mb-0.5">💡 সঠিক তথ্য:</strong>
+                                        <span>${c.suggested_correction}</span>
+                                    </div>
+                                    <button type="button" onclick="navigator.clipboard.writeText('${c.suggested_correction.replace(/'/g, "\\'")}'); showNotification('সংশোধিত তথ্য কপি হয়েছে!');" class="shrink-0 px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold cursor-pointer">
+                                        কপি
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                claimsList.innerHTML = '<div class="text-xs text-slate-400 p-2 text-center">কোনো পৃথক দাবির তালিকা পাওয়া যায়নি।</div>';
+            }
+        }
+
+        // 7. Red Flags & Sensationalism
+        if (redflagsBox && redflagsList) {
+            const rfs = res.red_flags || [];
+            if (rfs.length > 0) {
+                redflagsBox.classList.remove('hidden');
+                redflagsList.innerHTML = rfs.map(rf => `<li>${rf}</li>`).join('');
+            } else {
+                redflagsBox.classList.add('hidden');
+                redflagsList.innerHTML = '';
+            }
+        }
     }
 
     function runFactCheckAndPlagiarism() {
@@ -1061,6 +1226,7 @@
         const skeletonDiv = document.getElementById('factcheck-skeleton');
         const resultsDiv = document.getElementById('factcheck-results');
         const badge = document.getElementById('factcheck-status-badge');
+        const titleInput = document.getElementById('previewTitle');
 
         let currentContent = '';
         if (tinymce.get('previewContent')) {
@@ -1069,7 +1235,9 @@
             currentContent = document.getElementById('previewContent').value;
         }
 
-        if (!currentContent) return alert('কম্পেয়ার করার জন্য কোনো কন্টেন্ট নেই!');
+        const currentTitle = titleInput ? titleInput.value : '';
+
+        if (!currentContent && !currentTitle) return alert('যাচাই করার জন্য শিরোনাম বা কনটেন্ট নেই!');
 
         // Show skeletons, hide button & results
         checkBtn.classList.add('hidden');
@@ -1084,12 +1252,15 @@
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ content: currentContent })
+            body: JSON.stringify({
+                title: currentTitle,
+                content: currentContent
+            })
         })
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                displayFactCheckResults(data.plagiarism_score, data.fact_check_status, data.fact_check_report);
+                displayFactCheckResults(data);
             } else {
                 alert('❌ ' + (data.message || 'ভুল হয়েছে।'));
                 displayFactCheckResults(null);
