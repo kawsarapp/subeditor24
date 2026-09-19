@@ -17,6 +17,21 @@
                     calculateSEO();
                     syncSocialCardPreview();
                 });
+                editor.addShortcut('ctrl+enter', 'Publish Draft', function () {
+                    publishDraft();
+                });
+                editor.addShortcut('meta+enter', 'Publish Draft', function () {
+                    publishDraft();
+                });
+                editor.addShortcut('ctrl+s', 'Save Draft', function () {
+                    saveDraftOnly();
+                });
+                editor.addShortcut('meta+s', 'Save Draft', function () {
+                    saveDraftOnly();
+                });
+                editor.addShortcut('alt+f', 'Run Fact Check', function () {
+                    runFactCheckAndPlagiarism();
+                });
             }
         });
         loadCategoriesOnce();

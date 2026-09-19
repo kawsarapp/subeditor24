@@ -239,7 +239,75 @@
             return;
         }
 
-        // 'Ctrl + S' or 'Cmd + S' -> Save active form
+        // --- 📝 Active Draft Modal Hotkeys ---
+        const rewriteModal = document.getElementById('rewriteModal');
+        const isRewriteModalOpen = rewriteModal && !rewriteModal.classList.contains('hidden');
+
+        if (isRewriteModalOpen) {
+            // 'Alt + F' -> Run Fact Check
+            if (e.altKey && e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                if (typeof runFactCheckAndPlagiarism === 'function') {
+                    runFactCheckAndPlagiarism();
+                }
+                return;
+            }
+
+            // 'Alt + 1' -> Switch to Editor View
+            if (e.altKey && e.key === '1') {
+                e.preventDefault();
+                if (typeof switchModalView === 'function') switchModalView('editor');
+                return;
+            }
+
+            // 'Alt + 2' -> Switch to Side-by-Side View
+            if (e.altKey && e.key === '2') {
+                e.preventDefault();
+                if (typeof switchModalView === 'function') switchModalView('sidebyside');
+                return;
+            }
+
+            // 'Alt + 3' -> Switch to Social Preview View
+            if (e.altKey && e.key === '3') {
+                e.preventDefault();
+                if (typeof switchModalView === 'function') switchModalView('social');
+                return;
+            }
+
+            // 'Alt + H' -> Generate AI Headlines
+            if (e.altKey && e.key.toLowerCase() === 'h') {
+                e.preventDefault();
+                if (typeof generateViralHeadlinesModal === 'function') generateViralHeadlinesModal();
+                return;
+            }
+
+            // 'Alt + K' -> Generate AI Focus Keywords & Meta
+            if (e.altKey && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                if (typeof generateFocusKeywordsModal === 'function') generateFocusKeywordsModal();
+                return;
+            }
+
+            // 'Ctrl + S' or 'Cmd + S' in Draft Modal -> Save Draft Only
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                if (typeof saveDraftOnly === 'function') {
+                    saveDraftOnly();
+                }
+                return;
+            }
+
+            // 'Ctrl + Enter' or 'Cmd + Enter' in Draft Modal -> Publish Draft
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                if (typeof publishDraft === 'function') {
+                    publishDraft();
+                }
+                return;
+            }
+        }
+
+        // 'Ctrl + S' or 'Cmd + S' -> Save active form (Generic)
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
             const form = document.querySelector('form');
             if (form && !e.target.closest('div[contenteditable="true"]')) {
@@ -252,7 +320,7 @@
             return;
         }
 
-        // 'Ctrl + Enter' or 'Cmd + Enter' -> Quick Publish/Submit in modals or drafts
+        // 'Ctrl + Enter' or 'Cmd + Enter' -> Quick Publish/Submit in modals or drafts (Generic)
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             const openModal = document.querySelector('.fixed:not(.hidden)');
             if (openModal) {

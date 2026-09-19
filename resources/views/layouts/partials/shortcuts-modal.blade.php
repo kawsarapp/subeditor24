@@ -49,10 +49,67 @@
                 </div>
             </div>
 
-            {{-- Category 2: Quick Actions --}}
+            {{-- Category 2: Draft Editor & AI Power Shortcuts --}}
+            <div>
+                <h4 class="text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> ড্রাফট এডিটর ও এআই পাওয়ার শর্টকাট
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <span class="font-bold text-slate-700 dark:text-slate-300">🔍 রিয়েল-টাইম Fact Check</span>
+                        <div class="flex items-center gap-1">
+                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Alt</kbd>
+                            <span class="text-slate-400 font-black">+</span>
+                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">F</kbd>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <span class="font-bold text-slate-700 dark:text-slate-300">✨ ৩টি AI ভাইরাল শিরোনাম</span>
+                        <div class="flex items-center gap-1">
+                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Alt</kbd>
+                            <span class="text-slate-400 font-black">+</span>
+                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">H</kbd>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <span class="font-bold text-slate-700 dark:text-slate-300">🎯 SEO Focus Keywords & Meta</span>
+                        <div class="flex items-center gap-1">
+                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Alt</kbd>
+                            <span class="text-slate-400 font-black">+</span>
+                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">K</kbd>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <span class="font-bold text-slate-700 dark:text-slate-300">🔀 ভিউ মোড পরিবর্তন (Editor/Side/Social)</span>
+                        <div class="flex items-center gap-1">
+                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Alt</kbd>
+                            <span class="text-slate-400 font-black">+</span>
+                            <kbd class="px-1.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">1/2/3</kbd>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <span class="font-bold text-slate-700 dark:text-slate-300">🚀 সরাসরি পাবলিশ / সাবমিট</span>
+                        <div class="flex items-center gap-1">
+                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Ctrl</kbd>
+                            <span class="text-slate-400 font-black">+</span>
+                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Enter</kbd>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <span class="font-bold text-slate-700 dark:text-slate-300">💾 ড্রাফট সংরক্ষণ করুন</span>
+                        <div class="flex items-center gap-1">
+                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Ctrl</kbd>
+                            <span class="text-slate-400 font-black">+</span>
+                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">S</kbd>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Category 3: Quick Actions & Studio --}}
             <div>
                 <h4 class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-bolt text-xs"></i> দ্রুত অ্যাকশন ও এডিটিং
+                    <i class="fa-solid fa-bolt text-xs"></i> দ্রুত অ্যাকশন ও ফটোকার্ড স্টুডিও
                 </h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
@@ -64,25 +121,19 @@
                         <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">E</kbd>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">ড্রাফট পাবলিশ / সাবমিট</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">স্টুডিও অবজেক্ট Undo / Redo</span>
                         <div class="flex items-center gap-1">
-                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Ctrl</kbd>
-                            <span class="text-slate-400 font-black">+</span>
-                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Enter</kbd>
+                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Ctrl+Z / Y</kbd>
                         </div>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">ফরম / সেটিংস সেভ করুন</span>
-                        <div class="flex items-center gap-1">
-                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Ctrl</kbd>
-                            <span class="text-slate-400 font-black">+</span>
-                            <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">S</kbd>
-                        </div>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">স্টুডিও অবজেক্ট মুছে ফেলা</span>
+                        <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Del / Backspace</kbd>
                     </div>
                 </div>
             </div>
 
-            {{-- Category 3: System & View --}}
+            {{-- Category 4: System & View --}}
             <div>
                 <h4 class="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <i class="fa-solid fa-sliders text-xs"></i> সিস্টেম ও ইউটিলিটি
