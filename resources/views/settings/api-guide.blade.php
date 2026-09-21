@@ -592,28 +592,28 @@
                         <span class="w-7 h-7 flex-shrink-0 bg-emerald-500/15 border border-emerald-500/30 rounded-full flex items-center justify-center text-xs font-black text-emerald-400">1</span>
                         <div>
                             <p class="font-bold text-emerald-300 text-sm">Custom Category URL <span class="text-xs text-slate-500 font-normal ml-2">(if set in Settings)</span></p>
-                            <p class="text-xs text-slate-400 mt-1">Settings → <code class="code-font text-emerald-400">Custom Category Fetch URL</code> field এ আপনার নিজের URL দিলে এটা সবার আগে ব্যবহার হবে। Auth: <code class="code-font text-purple-300">Authorization: Bearer {token}</code> header পাঠানো হয়।</p>
+                            <p class="text-xs text-slate-400 mt-1">If specified in Settings → <code class="code-font text-emerald-400">Custom Category Fetch URL</code>, this endpoint takes top priority. Auth: Sent via <code class="code-font text-purple-300">Authorization: Bearer {token}</code> header.</p>
                         </div>
                     </div>
                     <div class="flex items-start gap-4 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl">
                         <span class="w-7 h-7 flex-shrink-0 bg-blue-500/15 border border-blue-500/30 rounded-full flex items-center justify-center text-xs font-black text-blue-400">2</span>
                         <div>
                             <p class="font-bold text-blue-300 text-sm">Default Laravel Category API <span class="text-xs text-slate-500 font-normal ml-2">(auto-built URL)</span></p>
-                            <p class="text-xs text-slate-400 mt-1">Custom URL না থাকলে, <code class="code-font text-blue-300">{laravel_site_url}/api/get-categories?token={api_token}</code> এ GET request পাঠানো হয়। এই endpoint টি আপনাকে নিজে তৈরি করতে হবে।</p>
+                            <p class="text-xs text-slate-400 mt-1">If no custom URL is configured, a GET request is sent to <code class="code-font text-blue-300">{laravel_site_url}/api/get-categories?token={api_token}</code>. You can build this endpoint easily in your Laravel app.</p>
                         </div>
                     </div>
                     <div class="flex items-start gap-4 p-4 bg-slate-700/30 border border-slate-600/30 rounded-xl">
                         <span class="w-7 h-7 flex-shrink-0 bg-slate-600/30 border border-slate-600/50 rounded-full flex items-center justify-center text-xs font-black text-slate-400">3</span>
                         <div>
                             <p class="font-bold text-slate-300 text-sm">WordPress Fallback</p>
-                            <p class="text-xs text-slate-400 mt-1">উপরের দুটো কাজ না করলে, WordPress API থেকে ক্যাটাগরি আনার চেষ্টা করা হয় (যদি WP credentials থাকে)।</p>
+                            <p class="text-xs text-slate-400 mt-1">If neither of the above succeeds, categories are retrieved via the standard WordPress REST API (if WP credentials are configured).</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="callout-info rounded-r-xl mt-5">
                     <p class="text-sm text-cyan-300 font-bold mb-1"><i class="fas fa-clock mr-1"></i> Cache: 24 Hours</p>
-                    <p class="text-sm text-cyan-200/80">Category list একবার fetch হলে <strong>24 ঘণ্টা cache</strong> হয়ে থাকে। Settings পেজে <strong>🔄 Refresh Categories</strong> বাটনে ক্লিক করলে cache clear হয়ে নতুন করে fetch হবে।</p>
+                    <p class="text-sm text-cyan-200/80">Once fetched, category lists are <strong>cached for 24 hours</strong>. Click <strong>🔄 Refresh Categories</strong> on the Settings page to clear the cache and refetch immediately.</p>
                 </div>
             </div>
         </section>
@@ -621,7 +621,7 @@
         <!-- ===== CUSTOM CATEGORY URL ===== -->
         <section id="category-custom-url">
             <h3 class="text-xl font-bold text-white mb-2">① Custom Category URL <span class="text-emerald-400">(Recommended)</span></h3>
-            <p class="text-slate-400 mb-5">আপনার নিজস্ব API endpoint দিয়ে category list পাঠান। Settings এর <strong class="text-slate-300">Custom Category Fetch URL</strong> ফিল্ডে URL দিন।</p>
+            <p class="text-slate-400 mb-5">Provide category lists via your custom API endpoint. Enter the endpoint URL into the <strong class="text-slate-300">Custom Category Fetch URL</strong> field in Settings.</p>
 
             <div class="glass-card rounded-2xl p-6 mb-5">
                 <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Request Details</p>
@@ -638,9 +638,9 @@
             </div>
 
             <div class="glass-card rounded-2xl p-6 mb-5">
-                <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">আপনার API যে Response দিতে হবে</p>
+                <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Expected API Response Format</p>
 
-                <p class="text-sm text-slate-400 mb-3">আমরা <strong class="text-white">দুটো format</strong> বুঝি:</p>
+                <p class="text-sm text-slate-400 mb-3">The system automatically parses <strong class="text-white">two formats</strong>:</p>
 
                 <div class="space-y-4">
                     <!-- Format 1: Nested data -->
@@ -652,11 +652,11 @@
   <span class="json-key">"data"</span><span class="text-white">: </span><span class="text-slate-500">[</span>
     <span class="text-slate-500">{</span>
       <span class="json-key">"CategoryID"</span><span class="text-white">: </span><span class="json-val">5</span><span class="text-white">,</span>        <span class="json-comment">// OR: "id": 5</span>
-      <span class="json-key">"CategoryName"</span><span class="text-white">: </span><span class="json-str">"রাজনীতি"</span>  <span class="json-comment">// OR: "name": "রাজনীতি"</span>
+      <span class="json-key">"CategoryName"</span><span class="text-white">: </span><span class="json-str">"Politics"</span>  <span class="json-comment">// OR: "name": "Politics"</span>
     <span class="text-slate-500">}</span><span class="text-white">,</span>
     <span class="text-slate-500">{</span>
       <span class="json-key">"CategoryID"</span><span class="text-white">: </span><span class="json-val">12</span><span class="text-white">,</span>
-      <span class="json-key">"CategoryName"</span><span class="text-white">: </span><span class="json-str">"খেলাধুলা"</span>
+      <span class="json-key">"CategoryName"</span><span class="text-white">: </span><span class="json-str">"Sports"</span>
     <span class="text-slate-500">}</span>
   <span class="text-slate-500">]</span>
 <span class="text-slate-500">}</span></code></pre>
@@ -670,8 +670,8 @@
                         <div class="relative">
                             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                             <pre><code><span class="text-slate-500">[</span>
-  <span class="text-slate-500">{</span> <span class="json-key">"id"</span><span class="text-white">: </span><span class="json-val">5</span><span class="text-white">,</span> <span class="json-key">"name"</span><span class="text-white">: </span><span class="json-str">"রাজনীতি"</span> <span class="text-slate-500">}</span><span class="text-white">,</span>
-  <span class="text-slate-500">{</span> <span class="json-key">"id"</span><span class="text-white">: </span><span class="json-val">12</span><span class="text-white">,</span> <span class="json-key">"name"</span><span class="text-white">: </span><span class="json-str">"খেলাধুলা"</span> <span class="text-slate-500">}</span>
+  <span class="text-slate-500">{</span> <span class="json-key">"id"</span><span class="text-white">: </span><span class="json-val">5</span><span class="text-white">,</span> <span class="json-key">"name"</span><span class="text-white">: </span><span class="json-str">"Politics"</span> <span class="text-slate-500">}</span><span class="text-white">,</span>
+  <span class="text-slate-500">{</span> <span class="json-key">"id"</span><span class="text-white">: </span><span class="json-val">12</span><span class="text-white">,</span> <span class="json-key">"name"</span><span class="text-white">: </span><span class="json-str">"Sports"</span> <span class="text-slate-500">}</span>
 <span class="text-slate-500">]</span></code></pre>
                         </div>
                         <p class="text-xs text-slate-500 mt-2">Also accepted. Must be a direct JSON array at the root level.</p>
@@ -680,15 +680,15 @@
             </div>
 
             <div class="callout-warn rounded-r-xl">
-                <p class="text-sm text-amber-300 font-bold mb-1"><i class="fas fa-triangle-exclamation mr-1"></i> Important: Condition for Custom URL</p>
-                <p class="text-sm text-amber-200/80">Custom Category URL শুধু তখনই কাজ করবে যখন Settings এ <strong class="text-white">"Enable Posting to Laravel"</strong> checkbox টি চেক করা থাকবে এবং <strong class="text-white">Laravel Site URL</strong> ও <strong class="text-white">API Token</strong> দেওয়া থাকবে।</p>
+                <p class="text-sm text-amber-300 font-bold mb-1"><i class="fas fa-triangle-exclamation mr-1"></i> Important: Requirements for Custom URL</p>
+                <p class="text-sm text-amber-200/80">Custom Category URL works when <strong class="text-white">"Enable Posting to Laravel"</strong> is enabled and both <strong class="text-white">Laravel Site URL</strong> and <strong class="text-white">API Token</strong> are filled in Settings.</p>
             </div>
         </section>
 
         <!-- ===== DEFAULT CATEGORY URL ===== -->
         <section id="category-default-url">
             <h3 class="text-xl font-bold text-white mb-2">② Default Laravel Category API</h3>
-            <p class="text-slate-400 mb-5">যদি Custom Category URL না দেওয়া হয়, তাহলে সিস্টেম নিজে থেকেই আপনার <code class="code-font text-indigo-300 bg-slate-800 px-1.5 py-0.5 rounded text-sm">{laravel_site_url}/api/get-categories</code> endpoint এ হিট করবে।</p>
+            <p class="text-slate-400 mb-5">If Custom Category URL is not set, the system automatically sends requests to your <code class="code-font text-indigo-300 bg-slate-800 px-1.5 py-0.5 rounded text-sm">{laravel_site_url}/api/get-categories</code> endpoint.</p>
 
             <div class="glass-card rounded-2xl p-6 mb-5">
                 <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Request Details</p>
@@ -704,22 +704,22 @@
                 </div>
 
                 <div class="callout-info rounded-r-xl mt-4">
-                    <p class="text-xs text-cyan-300"><i class="fas fa-info-circle mr-1"></i> এই endpoint টি <strong>আপনাকেই তৈরি করতে হবে</strong>। Token দিয়ে verify করুন, তারপর সব category এর list return করুন।</p>
+                    <p class="text-xs text-cyan-300"><i class="fas fa-info-circle mr-1"></i> You should define this endpoint on your Laravel server to verify the token and return all available categories.</p>
                 </div>
             </div>
 
             <!-- Laravel Sample Implementation -->
             <div class="glass-card rounded-2xl p-6">
-                <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">💡 Sample Laravel Route (আপনার সাইটে যোগ করুন)</p>
+                <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">💡 Sample Laravel Route (Add to your application)</p>
                 <div class="relative">
                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                     <pre><code><span class="json-comment">// routes/api.php</span>
 <span class="text-white">Route::</span><span class="json-key">get</span><span class="text-white">('/get-categories', function (Request </span><span class="json-val">$request</span><span class="text-white">) {</span>
-    <span class="json-comment">// Token verify করুন</span>
+    <span class="json-comment">// Verify Token</span>
     <span class="text-white">if (</span><span class="json-val">$request</span><span class="text-white">->token !== </span><span class="json-str">'your-secret-token'</span><span class="text-white">) {</span>
         <span class="text-white">return response()->json(['error' => 'Unauthorized'], 401);</span>
     <span class="text-white">}</span>
-    <span class="json-comment">// Category list return করুন</span>
+    <span class="json-comment">// Return category list</span>
     <span class="text-white">return response()->json(</span>
         Category::<span class="json-key">select</span><span class="text-white">('id', 'name')->get()</span>
     <span class="text-white">);</span>
@@ -731,15 +731,15 @@
         <!-- ===== CATEGORY RESPONSE FORMAT ===== -->
         <section id="category-response-format">
             <h3 class="text-xl font-bold text-white mb-2">Category Response — Field Name Reference</h3>
-            <p class="text-slate-400 mb-5">আমরা category response থেকে <code class="code-font text-emerald-300 bg-slate-800 px-1.5 py-0.5 rounded text-sm">id</code> এবং <code class="code-font text-emerald-300 bg-slate-800 px-1.5 py-0.5 rounded text-sm">name</code> বের করি। নিচের যেকোনো field name কাজ করবে:</p>
+            <p class="text-slate-400 mb-5">The system extracts <code class="code-font text-emerald-300 bg-slate-800 px-1.5 py-0.5 rounded text-sm">id</code> and <code class="code-font text-emerald-300 bg-slate-800 px-1.5 py-0.5 rounded text-sm">name</code> from the category response. Any of the following field combinations are supported:</p>
 
             <div class="overflow-hidden glass-card rounded-2xl mb-5">
                 <table>
                     <thead>
                         <tr>
-                            <th>আমরা যা খুঁজি (ID)</th>
-                            <th>আমরা যা খুঁজি (Name)</th>
-                            <th>কোথায় ব্যবহৃত</th>
+                            <th>Identifier (ID)</th>
+                            <th>Category Title (Name)</th>
+                            <th>Typical Source</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -759,7 +759,7 @@
 
             <div class="callout-success rounded-r-xl">
                 <p class="text-sm text-emerald-300 font-bold mb-1"><i class="fas fa-check-circle mr-1"></i> How it appears in Settings</p>
-                <p class="text-sm text-emerald-200/80">Fetch সফল হলে, Settings পেজের <strong>ক্যাটাগরি ম্যাপিং</strong> সেকশনে প্রতিটি row এর ড্রপডাউনে আপনার সাইটের category গুলো দেখাবে — <code class="code-font">রাজনীতি (ID: 5)</code> এই format এ। তখন বাম পাশে আমাদের system category এবং ডান পাশে আপনার সাইটের category select করতে পারবেন।</p>
+                <p class="text-sm text-emerald-200/80">Once successfully fetched, your site's categories appear in the dropdown in the <strong>Category Mapping</strong> section on the Settings page (e.g., <code class="code-font">Politics (ID: 5)</code>). You can then map system categories on the left to target categories on the right.</p>
             </div>
         </section>
 

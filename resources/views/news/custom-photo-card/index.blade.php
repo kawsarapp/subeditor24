@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
-<div class="fixed inset-0 bg-slate-900/5 z-50 flex flex-col font-bangla h-dvh select-none bg-slate-100">
+<div class="w-full bg-slate-100 rounded-3xl border border-slate-200 shadow-xl flex flex-col font-bangla h-[calc(100vh-7rem)] min-h-[650px] select-none overflow-hidden">
     
     {{-- ========================================================= --}}
     {{-- TOP NAVBAR --}}
@@ -25,14 +25,14 @@
         <div class="flex items-center gap-3">
             <a href="{{ route('news.index') }}" class="flex items-center gap-1 text-slate-500 hover:text-slate-900 transition font-bold text-xs bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-xl">
                 <i class="fa-solid fa-arrow-left"></i>
-                <span class="hidden sm:inline">ফিরে যান</span>
+                <span class="hidden sm:inline">Back</span>
             </a>
             <div class="flex items-center gap-2">
                 <h1 class="text-sm md:text-base font-black text-slate-800 flex items-center gap-1.5">
                     <span class="w-7 h-7 rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center text-white text-xs shadow-sm">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                     </span>
-                    <span>কাস্টম ফটো কার্ড</span>
+                    <span>Custom Photo Card</span>
                 </h1>
                 <span id="canvas-dimensions-badge" class="bg-indigo-50 text-indigo-700 border border-indigo-200/80 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
                     1080 × 1080 px
@@ -43,12 +43,12 @@
         {{-- Center: Credits & Limits --}}
         <div class="hidden lg:flex items-center gap-3 bg-slate-50 border border-slate-200/80 px-3 py-1 rounded-xl text-xs font-bold text-slate-600">
             <div class="flex items-center gap-1 text-amber-700">
-                <span>🪙 ক্রেডিট:</span>
+                <span>🪙 Credits:</span>
                 <span id="user-credits-display" class="font-black">{{ auth()->user()->credits ?? 0 }}</span>
             </div>
             <div class="w-[1px] h-3 bg-slate-300"></div>
             <div class="flex items-center gap-1 text-indigo-700">
-                <span>🪄 আজকের BG Remove:</span>
+                <span>🪄 Today's BG Removal:</span>
                 <span id="user-daily-bg-display" class="font-black">{{ $dailyUsed }}/{{ $dailyLimit }}</span>
             </div>
         </div>
@@ -66,24 +66,24 @@
             <div class="w-[1px] h-5 bg-slate-200 mx-1"></div>
 
             {{-- 1-Click Save Template --}}
-            <button type="button" onclick="openSaveTemplateModal()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-xs border border-emerald-300/80" title="বর্তমান ডিজাইনটি ভবিষ্যতে ব্যবহারের জন্য টেমপ্লেট হিসেবে সেভ রাখুন">
+            <button type="button" onclick="openSaveTemplateModal()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-xs border border-emerald-300/80" title="Save current layout as a reusable template">
                 <i class="fa-solid fa-floppy-disk"></i>
-                <span class="hidden sm:inline">সেভ টেমপ্লেট</span>
+                <span class="hidden sm:inline">Save Template</span>
             </button>
 
             @if(isset($facebookPages) && count($facebookPages) > 0)
             {{-- Direct Facebook Publish Button --}}
-            <button type="button" onclick="openDirectPublishModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-sm" title="সরাসরি ফেসবুক পেজে পোস্ট করুন">
+            <button type="button" onclick="openDirectPublishModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-sm" title="Publish directly to Facebook page">
                 <i class="fa-brands fa-facebook"></i>
-                <span class="hidden sm:inline">ফেসবুক পোস্ট</span>
+                <span class="hidden sm:inline">Facebook Post</span>
             </button>
             @endif
 
             @if(isset($newsItem) && $newsItem)
             {{-- Attach as News Featured Image --}}
-            <button type="button" onclick="window.customStudio.attachToNewsItem({{ $newsItem->id }})" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-sm" title="বর্তমান কার্ডটি নিউজের ফিচার্ড ইমেজ হিসেবে সেট করুন">
+            <button type="button" onclick="window.customStudio.attachToNewsItem({{ $newsItem->id }})" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-sm" title="Set this card as the news featured image">
                 <i class="fa-solid fa-newspaper"></i>
-                <span class="hidden sm:inline">নিউজে সেট</span>
+                <span class="hidden sm:inline">Set as Featured</span>
             </button>
             @endif
 
@@ -97,7 +97,7 @@
             <div class="relative inline-block text-left">
                 <button type="button" onclick="toggleDownloadDropdown(event)" class="bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-3.5 py-1.5 rounded-xl font-black text-xs shadow-md shadow-indigo-500/25 transition flex items-center gap-1.5">
                     <i class="fa-solid fa-download"></i>
-                    <span>ডাউনলোড</span>
+                    <span>Download</span>
                     <i class="fa-solid fa-chevron-down text-[9px] ml-0.5"></i>
                 </button>
 
@@ -141,7 +141,7 @@
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
                 </div>
                 <span id="canvas-preloader-text" class="text-white font-black text-sm bg-slate-900/80 px-4 py-1.5 rounded-full shadow-lg">
-                    লোড হচ্ছে...
+                    Loading...
                 </span>
             </div>
 
@@ -149,9 +149,9 @@
             <div id="floating-context-toolbar" class="absolute z-30 bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-xl rounded-2xl p-1.5 flex items-center gap-1.5 hidden select-none">
                 
                 {{-- Drag & Move Handle Button --}}
-                <div id="floating-drag-handle" class="cursor-move py-1 px-2.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition flex items-center gap-1.5 font-bold text-[11px] select-none border border-indigo-200/70 shadow-xs" title="চেপে ধরে ড্র্যাগ করে যেকোনো জায়গায় সরান (Move Element)">
+                <div id="floating-drag-handle" class="cursor-move py-1 px-2.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition flex items-center gap-1.5 font-bold text-[11px] select-none border border-indigo-200/70 shadow-xs" title="Click and drag to reposition (Move Element)">
                     <i class="fa-solid fa-up-down-left-right text-xs"></i>
-                    <span>মুভ</span>
+                    <span>Move</span>
                 </div>
 
                 <div class="w-[1px] h-4 bg-slate-200"></div>
@@ -165,9 +165,9 @@
 
                 {{-- Replace Image Button --}}
                 <button type="button" id="floating-replace-img-btn" onclick="window.customStudio.triggerReplaceActiveImage()" 
-                    class="px-2.5 py-1 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-black transition flex items-center gap-1 shadow-xs" title="বর্তমান ছবিটি নতুন ছবি দিয়ে পরিবর্তন করুন">
+                    class="px-2.5 py-1 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-black transition flex items-center gap-1 shadow-xs" title="Replace current photo">
                     <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
-                    <span>ছবি পরিবর্তন</span>
+                    <span>Replace Photo</span>
                 </button>
 
                 {{-- Text Quick Font --}}
@@ -181,12 +181,12 @@
                 <div class="w-[1px] h-4 bg-slate-200"></div>
 
                 {{-- Duplicate --}}
-                <button type="button" onclick="window.customStudio.duplicateActive()" class="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition" title="ডুপ্লিকেট (Ctrl+D)">
+                <button type="button" onclick="window.customStudio.duplicateActive()" class="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition" title="Duplicate (Ctrl+D)">
                     <i class="fa-regular fa-copy text-xs"></i>
                 </button>
 
                 {{-- Delete --}}
-                <button type="button" onclick="window.customStudio.deleteActive()" class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition" title="ডিলিট (Delete)">
+                <button type="button" onclick="window.customStudio.deleteActive()" class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition" title="Delete (Delete)">
                     <i class="fa-regular fa-trash-can text-xs"></i>
                 </button>
             </div>
@@ -196,19 +196,19 @@
                 {{-- Layer Ordering --}}
                 <div class="py-1">
                     <button type="button" onclick="window.customStudio.bringActiveToFront()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-between transition">
-                        <span class="flex items-center gap-2"><span>🔝</span> <span>একদম উপরে আনুন</span></span>
+                        <span class="flex items-center gap-2"><span>🔝</span> <span>Bring to Front</span></span>
                         <span class="text-[10px] text-slate-400 font-normal">Ctrl+]</span>
                     </button>
                     <button type="button" onclick="window.customStudio.bringActiveForward()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-between transition">
-                        <span class="flex items-center gap-2"><span>⬆️</span> <span>এক স্তর উপরে</span></span>
+                        <span class="flex items-center gap-2"><span>⬆️</span> <span>Bring Forward</span></span>
                         <span class="text-[10px] text-slate-400 font-normal">]</span>
                     </button>
                     <button type="button" onclick="window.customStudio.sendActiveBackward()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-between transition">
-                        <span class="flex items-center gap-2"><span>⬇️</span> <span>এক স্তর নিচে</span></span>
+                        <span class="flex items-center gap-2"><span>⬇️</span> <span>Send Backward</span></span>
                         <span class="text-[10px] text-slate-400 font-normal">[</span>
                     </button>
                     <button type="button" onclick="window.customStudio.sendActiveToBack()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-between transition">
-                        <span class="flex items-center gap-2"><span>🔻</span> <span>একদম নিচে পাঠান</span></span>
+                        <span class="flex items-center gap-2"><span>🔻</span> <span>Send to Back</span></span>
                         <span class="text-[10px] text-slate-400 font-normal">Ctrl+[</span>
                     </button>
                 </div>
@@ -216,14 +216,14 @@
                 {{-- Action Tools --}}
                 <div class="py-1">
                     <button type="button" onclick="window.customStudio.toggleLockActive()" class="w-full px-3 py-1.5 text-left hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2 transition">
-                        <i class="fa-solid fa-lock w-4 text-center text-amber-500"></i> <span>লক / আনলক</span>
+                        <i class="fa-solid fa-lock w-4 text-center text-amber-500"></i> <span>Lock / Unlock</span>
                     </button>
                     <button type="button" onclick="window.customStudio.duplicateActive()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-between transition">
-                        <span class="flex items-center gap-2"><i class="fa-regular fa-copy w-4 text-center"></i> <span>ডুপ্লিকেট</span></span>
+                        <span class="flex items-center gap-2"><i class="fa-regular fa-copy w-4 text-center"></i> <span>Duplicate</span></span>
                         <span class="text-[10px] text-slate-400 font-normal">Ctrl+D</span>
                     </button>
                     <button type="button" id="context-replace-btn" onclick="window.customStudio.triggerReplaceActiveImage()" class="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2 transition">
-                        <i class="fa-solid fa-arrows-rotate w-4 text-center text-indigo-500"></i> <span>ছবি পরিবর্তন (Replace)</span>
+                        <i class="fa-solid fa-arrows-rotate w-4 text-center text-indigo-500"></i> <span>Replace Photo</span>
                     </button>
                     <button type="button" id="context-bg-remove-btn" onclick="window.customStudio.removeBackgroundActive()" class="w-full px-3 py-1.5 text-left hover:bg-violet-50 hover:text-violet-600 flex items-center gap-2 transition">
                         <i class="fa-solid fa-scissors w-4 text-center text-violet-500"></i> <span>Background Remove</span>
@@ -233,7 +233,7 @@
                 {{-- Delete --}}
                 <div class="py-1">
                     <button type="button" onclick="window.customStudio.deleteActive()" class="w-full px-3 py-1.5 text-left hover:bg-red-50 text-red-600 flex items-center justify-between transition">
-                        <span class="flex items-center gap-2"><i class="fa-regular fa-trash-can w-4 text-center"></i> <span>মুছে ফেলুন</span></span>
+                        <span class="flex items-center gap-2"><i class="fa-regular fa-trash-can w-4 text-center"></i> <span>Delete</span></span>
                         <span class="text-[10px] text-red-400 font-normal">Delete</span>
                     </button>
                 </div>
@@ -268,27 +268,27 @@
                     <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm">
                         <i class="fa-solid fa-bookmark"></i>
                     </span>
-                    <span>কাস্টম টেমপ্লেট হিসেবে সংরক্ষণ করুন</span>
+                    <span>Save as Custom Template</span>
                 </h3>
                 <button type="button" onclick="closeSaveTemplateModal()" class="text-slate-400 hover:text-slate-700 text-lg">✕</button>
             </div>
 
             <p class="text-xs text-slate-500 leading-relaxed">
-                বর্তমান ক্যানভাসের সমস্ত লেআউট, টেক্সট স্টাইল, পজিশন ও উপাদান টেমপ্লেট হিসেবে সংরক্ষিত থাকবে যাতে পরবর্তীতে ১-ক্লিকে আবার ব্যবহার করতে পারেন।
+                Current layout, typography, positions, and styling will be saved as a reusable template.
             </p>
 
             <div>
-                <label class="text-xs font-bold text-slate-700 block mb-1.5">টেমপ্লেটের নাম লিখুন *</label>
-                <input type="text" id="save-template-name-input" placeholder="যেমন: ব্রেকিং নিউজ ১৬:৯" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 bg-slate-50 focus:bg-white">
+                <label class="text-xs font-bold text-slate-700 block mb-1.5">Template Name *</label>
+                <input type="text" id="save-template-name-input" placeholder="e.g. Breaking News 16:9" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 bg-slate-50 focus:bg-white">
             </div>
 
             <div class="flex items-center gap-2 pt-2">
                 <button type="button" onclick="closeSaveTemplateModal()" class="flex-1 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs rounded-xl transition">
-                    বাতিল
+                    Cancel
                 </button>
                 <button type="button" onclick="confirmSaveTemplate()" class="flex-1 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-check"></i>
-                    <span>সংরক্ষণ করুন</span>
+                    <span>Save Template</span>
                 </button>
             </div>
         </div>
@@ -302,17 +302,17 @@
                     <span class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-sm">
                         <i class="fa-brands fa-facebook"></i>
                     </span>
-                    <span>সরাসরি ফেসবুক পেজে পোস্ট করুন</span>
+                    <span>Publish Directly to Facebook Page</span>
                 </h3>
                 <button type="button" onclick="closeDirectPublishModal()" class="text-slate-400 hover:text-slate-700 text-lg">✕</button>
             </div>
 
             <p class="text-xs text-slate-500 leading-relaxed">
-                বর্তমান ফটো কার্ডটি আপনার নির্বাচিত ফেসবুক পেজে সরাসরি ফটো পোস্ট হিসেবে প্রকাশিত হবে।
+                The current photo card will be published directly as a photo post on your selected Facebook Page.
             </p>
 
             <div>
-                <label class="text-xs font-bold text-slate-700 block mb-1.5">ফেসবুক পেজ সিলেক্ট করুন *</label>
+                <label class="text-xs font-bold text-slate-700 block mb-1.5">Select Facebook Page *</label>
                 <select id="direct-publish-page-select" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-blue-500 bg-slate-50">
                     @if(isset($facebookPages))
                         @foreach($facebookPages as $page)
@@ -323,17 +323,17 @@
             </div>
 
             <div>
-                <label class="text-xs font-bold text-slate-700 block mb-1.5">পোস্ট ক্যাপশন (ঐচ্ছিক)</label>
-                <textarea id="direct-publish-caption-input" rows="3" placeholder="পোস্টের সাথে যে বার্তা দিতে চান..." class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 outline-none focus:border-blue-500 bg-slate-50"></textarea>
+                <label class="text-xs font-bold text-slate-700 block mb-1.5">Post Caption (Optional)</label>
+                <textarea id="direct-publish-caption-input" rows="3" placeholder="Message or caption for this post..." class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 outline-none focus:border-blue-500 bg-slate-50"></textarea>
             </div>
 
             <div class="flex items-center gap-2 pt-2">
                 <button type="button" onclick="closeDirectPublishModal()" class="flex-1 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs rounded-xl transition">
-                    বাতিল
+                    Cancel
                 </button>
                 <button type="button" onclick="confirmDirectPublishFacebook()" class="flex-1 py-2.5 bg-blue-600 text-white hover:bg-blue-700 font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-paper-plane"></i>
-                    <span>এখনই পোস্ট করুন</span>
+                    <span>Publish Now</span>
                 </button>
             </div>
         </div>
@@ -428,7 +428,7 @@
         formData.append('frame', file);
         formData.append('_token', "{{ csrf_token() }}");
 
-        if (window.customStudio) window.customStudio.showLoader("ফ্রেম আপলোড ও সাইজ ডিটেক্ট হচ্ছে...");
+        if (window.customStudio) window.customStudio.showLoader("Uploading frame & detecting dimensions...");
 
         try {
             const response = await fetch("{{ route('custom-photo-card.upload-frame') }}", {
@@ -440,12 +440,12 @@
             if (data.success && data.url) {
                 window.customStudio.applyFrame(data.url, true);
             } else {
-                alert(data.message || 'ফ্রেম আপলোড ব্যর্থ হয়েছে।');
+                alert(data.message || 'Frame upload failed.');
                 if (window.customStudio) window.customStudio.hideLoader();
             }
         } catch (e) {
             console.error(e);
-            alert('ফ্রেম আপলোড করতে সমস্যা হয়েছে।');
+            alert('Error uploading frame.');
             if (window.customStudio) window.customStudio.hideLoader();
         }
     }
@@ -597,7 +597,7 @@
     function confirmSaveTemplate() {
         const name = document.getElementById('save-template-name-input')?.value;
         if (!name || !name.trim()) {
-            alert('দয়া করে টেমপ্লেটের নাম লিখুন।');
+            alert('Please enter a template name.');
             return;
         }
         if (window.customStudio) {
@@ -647,7 +647,7 @@
         const photoInput = document.getElementById('quote-card-photo');
 
         if (!quote || !quote.trim()) {
-            alert('দয়া করে মূল বক্তব্য বা উক্তি লিখুন।');
+            alert('Please enter speaker quote text.');
             return;
         }
 

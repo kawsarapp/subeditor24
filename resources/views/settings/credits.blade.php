@@ -5,14 +5,14 @@
     
     <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white shadow-xl mb-8 flex justify-between items-center">
         <div>
-            <h1 class="text-3xl font-bold">💰 ক্রেডিট হিস্ট্রি</h1>
-            <p class="opacity-90 mt-2">আপনার খরচের বিবরণ এবং লিমিট</p>
+            <h1 class="text-3xl font-bold">💰 Credit History</h1>
+            <p class="opacity-90 mt-2">Usage breakdown and daily limits</p>
         </div>
         <div class="text-right">
             <div class="text-4xl font-bold">{{ $user->credits }}</div>
-            <div class="text-sm opacity-80 uppercase tracking-wider">বর্তমান ব্যালেন্স</div>
+            <div class="text-sm opacity-80 uppercase tracking-wider">Current Balance</div>
             <div class="mt-2 inline-block bg-white/20 px-3 py-1 rounded text-xs">
-                ডেইলি লিমিট: {{ $user->daily_post_limit }} টি
+                Daily Limit: {{ $user->daily_post_limit }}
             </div>
         </div>
     </div>
@@ -21,10 +21,10 @@
         <table class="w-full text-left">
             <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-bold">
                 <tr>
-                    <th class="px-6 py-4">বিবরণ</th>
-                    <th class="px-6 py-4">টাইপ</th>
-                    <th class="px-6 py-4 text-center">খরচ/আয়</th>
-                    <th class="px-6 py-4 text-right">সময়</th>
+                    <th class="px-6 py-4">Description</th>
+                    <th class="px-6 py-4">Type</th>
+                    <th class="px-6 py-4 text-center">Cost / Credit</th>
+                    <th class="px-6 py-4 text-right">Time</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">

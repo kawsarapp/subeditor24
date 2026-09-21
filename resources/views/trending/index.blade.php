@@ -13,7 +13,7 @@
                 <h4 class="font-extrabold text-xs text-rose-300 uppercase tracking-wider">High Viral Alert (90+ Score)</h4>
                 <p id="alertToastTitle" class="font-black text-sm text-white leading-snug mt-0.5"></p>
                 <div class="mt-2 flex items-center gap-2">
-                    <button onclick="dismissAlertToast()" class="bg-white/20 hover:bg-white/30 text-white text-[10px] font-bold px-3 py-1 rounded-lg">বন্ধ করুন</button>
+                    <button onclick="dismissAlertToast()" class="bg-white/20 hover:bg-white/30 text-white text-[10px] font-bold px-3 py-1 rounded-lg">Dismiss</button>
                     <span id="alertToastScore" class="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-md"></span>
                 </div>
             </div>
@@ -30,7 +30,7 @@
                 🌐 AI Viral Predictor & Social Buzz Engine
             </h1>
             <p class="text-xs sm:text-sm text-indigo-100 font-medium">
-                বাংলাদেশের ৩৫+ প্রধান নিউজ পোর্টাল (প্রথম আলো, বিডিনিউজ২৪, যমুনা টিভি, সময় টিভি ইত্যাদি) এবং সোশ্যাল মিডিয়া (Facebook Buzz, Twitter/X Trends, Google Search Spikes) এনালাইসিস করে ৩ ঘণ্টার ভাইরাল নিউজ স্পটার!
+                Spot next 3-hour viral trends by analyzing 35+ major news portals along with real-time Facebook Buzz, Twitter/X Trends, and Google Search Spikes.
             </p>
         </div>
 
@@ -38,7 +38,7 @@
         <div class="relative z-10 shrink-0">
             <button id="alertSoundToggleBtn" onclick="toggleAlertSound()" class="bg-white/10 hover:bg-white/20 text-white font-extrabold px-4 py-2.5 rounded-2xl text-xs flex items-center gap-2 border border-white/20 backdrop-blur-md shadow-md transition">
                 <i id="alertSoundIcon" class="fa-solid fa-bell text-amber-400"></i>
-                <span id="alertSoundText">🔔 অ্যালার্ট সাউন্ড: চালু</span>
+                <span id="alertSoundText">🔔 Alert Sound: On</span>
             </button>
         </div>
 
@@ -50,47 +50,47 @@
     {{-- TIMEFRAME & EXTERNAL LIVE FILTER BAR --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
         <h2 class="text-xs font-extrabold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
-            <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> সময়সীমা & উৎস:
+            <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> Timeframe & Source:
         </h2>
         <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
             <a href="{{ route('trending.index', ['timeframe' => 'external']) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all border shrink-0 flex items-center gap-1.5 {{ $timeframe == 'external' ? 'bg-rose-600 text-white border-rose-600 shadow-md animate-pulse' : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100' }}">
-                <i class="fa-solid fa-satellite-dish"></i> 📡 External Live Trends (ইন্টারনেট লাইভ)
+                <i class="fa-solid fa-satellite-dish"></i> 📡 External Live Trends (Internet Live)
             </a>
             <a href="{{ route('trending.index', ['timeframe' => 3]) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all border shrink-0 {{ $timeframe == '3' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100' }}">
-                ⚡ গত ৩ ঘণ্টা
+                ⚡ Past 3 Hours
             </a>
             <a href="{{ route('trending.index', ['timeframe' => 6]) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all border shrink-0 {{ $timeframe == '6' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100' }}">
-                🔥 গত ৬ ঘণ্টা
+                🔥 Past 6 Hours
             </a>
             <a href="{{ route('trending.index', ['timeframe' => 12]) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all border shrink-0 {{ $timeframe == '12' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100' }}">
-                📈 গত ১২ ঘণ্টা
+                📈 Past 12 Hours
             </a>
             <a href="{{ route('trending.index', ['timeframe' => 'all']) }}" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all border shrink-0 {{ $timeframe == 'all' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100' }}">
-                🌐 সব খবর (All)
+                🌐 All Feeds
             </a>
         </div>
     </div>
 
     {{-- TOPIC CATEGORY FILTER BAR --}}
     <div class="mb-6 bg-slate-100/80 p-2.5 rounded-2xl border border-slate-200/80 flex items-center gap-2 overflow-x-auto custom-scrollbar">
-        <span class="text-[11px] font-extrabold text-slate-500 uppercase px-2 shrink-0">বিট ফিল্টার:</span>
+        <span class="text-[11px] font-extrabold text-slate-500 uppercase px-2 shrink-0">Beat Filter:</span>
         <button onclick="filterCategory('all')" id="catBtn-all" class="cat-filter-btn px-3 py-1 rounded-xl text-xs font-extrabold transition-all bg-white text-indigo-700 shadow-sm border border-slate-200 shrink-0">
-            🌐 সব বিট (All)
+            🌐 All Beats
         </button>
         <button onclick="filterCategory('politics')" id="catBtn-politics" class="cat-filter-btn px-3 py-1 rounded-xl text-xs font-extrabold transition-all text-slate-700 hover:bg-white shrink-0">
-            🏛️ রাজনীতি
+            🏛️ Politics
         </button>
         <button onclick="filterCategory('crime')" id="catBtn-crime" class="cat-filter-btn px-3 py-1 rounded-xl text-xs font-extrabold transition-all text-slate-700 hover:bg-white shrink-0">
-            ⚖️ অপরাধ & আইন
+            ⚖️ Crime & Law
         </button>
         <button onclick="filterCategory('sports')" id="catBtn-sports" class="cat-filter-btn px-3 py-1 rounded-xl text-xs font-extrabold transition-all text-slate-700 hover:bg-white shrink-0">
-            🏏 খেলাধুলা
+            🏏 Sports
         </button>
         <button onclick="filterCategory('entertainment')" id="catBtn-entertainment" class="cat-filter-btn px-3 py-1 rounded-xl text-xs font-extrabold transition-all text-slate-700 hover:bg-white shrink-0">
-            🎬 বিনোদন
+            🎬 Entertainment
         </button>
         <button onclick="filterCategory('international')" id="catBtn-international" class="cat-filter-btn px-3 py-1 rounded-xl text-xs font-extrabold transition-all text-slate-700 hover:bg-white shrink-0">
-            🌍 আন্তর্জাতিক
+            🌍 International
         </button>
     </div>
 
@@ -114,7 +114,7 @@
                 <div class="mb-3 bg-indigo-50/60 p-2.5 rounded-2xl border border-indigo-100">
                     <div class="flex items-center justify-between text-[11px] font-bold text-slate-600 mb-1">
                         <span class="text-indigo-700 font-extrabold flex items-center gap-1">
-                            <i class="fa-solid {{ $item->category_icon ?? 'fa-newspaper' }} text-indigo-500"></i> {{ $item->category_label ?? 'সাধারণ' }}
+                            <i class="fa-solid {{ $item->category_icon ?? 'fa-newspaper' }} text-indigo-500"></i> {{ $item->category_label ?? 'General' }}
                         </span>
                         <span class="bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-md font-black text-[10px]">
                             {{ count($item->matching_portals ?? []) }} Sources
@@ -171,18 +171,18 @@
             {{-- Action Button --}}
             <div class="pt-4 border-t border-slate-100 mt-2">
                 <button onclick="generateViralScript('{{ $item->id ?? 'ext' }}', '{{ addslashes($item->title) }}', '{{ addslashes($item->description ?? $item->title) }}')" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-indigo-500/20 transition-all active:scale-95">
-                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> ⚡ ভাইরাল স্ক্রিপ্ট, ফটোকার্ড ও প্যাকেজ
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> ⚡ Viral Script, Photocard & Package
                 </button>
             </div>
         </div>
         @empty
         <div class="col-span-full luxe-card p-12 text-center rounded-3xl border border-slate-200">
             <i class="fa-solid fa-satellite-dish text-5xl text-rose-400 mb-3 animate-pulse"></i>
-            <h3 class="text-lg font-extrabold text-slate-700">লাইভ ট্রেন্ড ডাটা লোড হচ্ছে...</h3>
-            <p class="text-xs text-slate-500 mt-1">ইন্টারনেট লাইভ পোর্টাল অথবা ডাটাবেজ খবর দেখতে নিচের বাটনে চাপ দিন।</p>
+            <h3 class="text-lg font-extrabold text-slate-700">Loading Live Trend Data...</h3>
+            <p class="text-xs text-slate-500 mt-1">Click below to load internet live trends or existing database feeds.</p>
             <div class="mt-4 flex justify-center gap-3">
-                <a href="{{ route('trending.index', ['timeframe' => 'external']) }}" class="bg-rose-600 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md">📡 External Live Trends (ইন্টারনেট লাইভ)</a>
-                <a href="{{ route('trending.index', ['timeframe' => 'all']) }}" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md">🌐 সব খবর দেখুন</a>
+                <a href="{{ route('trending.index', ['timeframe' => 'external']) }}" class="bg-rose-600 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md">📡 External Live Trends (Internet Live)</a>
+                <a href="{{ route('trending.index', ['timeframe' => 'all']) }}" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md">🌐 View All Feeds</a>
             </div>
         </div>
         @endforelse
@@ -202,7 +202,7 @@
                 </div>
                 <div>
                     <h3 class="font-black text-slate-900 text-base">🔥 AI 3-Hour Viral Package</h3>
-                    <p class="text-[10px] font-bold text-indigo-600 uppercase">আগামী ৩ ঘণ্টার জন্য প্রস্তুতকৃত ভাইরাল কন্টেন্ট ও ফটোকার্ড</p>
+                    <p class="text-[10px] font-bold text-indigo-600 uppercase">Viral content & photocard package ready for the next 3 hours</p>
                 </div>
             </div>
             <button onclick="closeViralModal()" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 flex items-center justify-center hover:bg-slate-100">
@@ -215,7 +215,7 @@
             <div class="flex items-center justify-center py-10">
                 <div class="text-center">
                     <svg class="animate-spin h-8 w-8 text-indigo-600 mx-auto mb-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <p class="text-sm font-extrabold text-slate-800">AI সোশ্যাল মিডিয়া কন্টেন্ট ও ফটোকার্ড পাঞ্চলাইন তৈরি করছে...</p>
+                    <p class="text-sm font-extrabold text-slate-800">AI is generating social media content & photocard punchlines...</p>
                 </div>
             </div>
         </div>
@@ -223,16 +223,16 @@
         {{-- Modal Footer --}}
         <div class="p-4 border-t border-slate-100 bg-slate-50 rounded-b-3xl flex flex-wrap gap-2 justify-between items-center">
             <button onclick="closeViralModal()" class="px-4 py-2 rounded-xl text-xs font-extrabold text-slate-600 hover:bg-slate-200 transition">
-                বন্ধ করুন
+                Close
             </button>
             <div class="flex items-center gap-2">
                 @if(Route::has('admin.templates.index'))
                 <a id="cardStudioModalBtn" href="{{ route('admin.templates.index') }}" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-extrabold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20">
-                    🎨 ১-ক্লিকে ফটোকার্ড মেকার
+                    🎨 1-Click Photocard Maker
                 </a>
                 @endif
                 <a id="createPostModalBtn" href="{{ route('news.create') }}" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-indigo-500/20">
-                    ✍️ ১-ক্লিকে নিউজ তৈরি করুন
+                    ✍️ 1-Click Create News
                 </a>
             </div>
         </div>
@@ -249,10 +249,10 @@ function toggleAlertSound() {
     const btnText = document.getElementById('alertSoundText');
     const btnIcon = document.getElementById('alertSoundIcon');
     if (soundAlertEnabled) {
-        btnText.innerText = '🔔 অ্যালার্ট সাউন্ড: চালু';
+        btnText.innerText = '🔔 Alert Sound: On';
         btnIcon.className = 'fa-solid fa-bell text-amber-400';
     } else {
-        btnText.innerText = '🔕 অ্যালার্ট সাউন্ড: বন্ধ';
+        btnText.innerText = '🔕 Alert Sound: Off';
         btnIcon.className = 'fa-solid fa-bell-slash text-slate-400';
     }
 }
@@ -339,7 +339,7 @@ function generateViralScript(newsId, title, content) {
         <div class="flex items-center justify-center py-12">
             <div class="text-center">
                 <svg class="animate-spin h-9 w-9 text-indigo-600 mx-auto mb-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                <p class="text-sm font-extrabold text-slate-800">AI আগামী ৩ ঘণ্টার ভাইরাল স্ক্রিপ্ট, ফটোকার্ড পাঞ্চলাইন ও হেডলাইন প্রস্তুত করছে...</p>
+                <p class="text-sm font-extrabold text-slate-800">AI is preparing viral script, photocard punchline & headlines for the next 3 hours...</p>
             </div>
         </div>
     `;
@@ -366,7 +366,7 @@ function generateViralScript(newsId, title, content) {
         let headlinesHtml = (data.catchy_headlines || []).map((h) => `
             <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-2 mb-2">
                 <span class="text-xs font-extrabold text-slate-900">💥 ${h}</span>
-                <button onclick="navigator.clipboard.writeText('${h.replace(/'/g, "\\'")}')" class="text-[10px] bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-2.5 py-1 rounded-lg border border-indigo-200">কপি</button>
+                <button onclick="navigator.clipboard.writeText('${h.replace(/'/g, "\\'")}')" class="text-[10px] bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-2.5 py-1 rounded-lg border border-indigo-200">Copy</button>
             </div>
         `).join('');
 
@@ -374,7 +374,7 @@ function generateViralScript(newsId, title, content) {
             {{-- Viral Angle --}}
             <div class="p-4 bg-amber-50 border border-amber-200/80 rounded-2xl">
                 <h4 class="text-xs font-extrabold text-amber-900 uppercase mb-1 flex items-center gap-1.5">
-                    🎯 Viral Angle (কেন ভাইরাল হবে):
+                    🎯 Viral Angle (Why it goes viral):
                 </h4>
                 <p class="text-xs font-bold text-amber-950 leading-relaxed">${data.viral_angle}</p>
             </div>
@@ -383,9 +383,9 @@ function generateViralScript(newsId, title, content) {
             <div class="p-4 bg-indigo-900 text-white rounded-2xl border border-indigo-700 shadow-md">
                 <div class="flex justify-between items-center mb-1">
                     <h4 class="text-xs font-extrabold text-amber-300 uppercase flex items-center gap-1">
-                        🖼️ ফটোকার্ডের ১-লাইনার পাঞ্চলাইন:
+                        🖼️ Photocard 1-Liner Punchline:
                     </h4>
-                    <button onclick="navigator.clipboard.writeText('${(data.photocard_punchline || '').replace(/'/g, "\\'")}')" class="text-[10px] bg-white/20 hover:bg-white/30 text-white font-bold px-2.5 py-1 rounded-lg border border-white/20">কপি টেক্সট</button>
+                    <button onclick="navigator.clipboard.writeText('${(data.photocard_punchline || '').replace(/'/g, "\\'")}')" class="text-[10px] bg-white/20 hover:bg-white/30 text-white font-bold px-2.5 py-1 rounded-lg border border-white/20">Copy Text</button>
                 </div>
                 <p class="text-sm font-black text-white leading-snug">${data.photocard_punchline || ''}</p>
             </div>
@@ -400,7 +400,7 @@ function generateViralScript(newsId, title, content) {
             <div>
                 <div class="flex justify-between items-center mb-1">
                     <h4 class="text-xs font-extrabold text-slate-700 uppercase">📹 30-Second Reels/Shorts Script:</h4>
-                    <button onclick="navigator.clipboard.writeText(\`${(data.reels_script || '').replace(/`/g, "\\`")}\`)" class="text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1 rounded-lg border border-indigo-200">কপি স্ক্রিপ্ট</button>
+                    <button onclick="navigator.clipboard.writeText(\`${(data.reels_script || '').replace(/`/g, "\\`")}\`)" class="text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1 rounded-lg border border-indigo-200">Copy Script</button>
                 </div>
                 <div class="p-3.5 bg-slate-900 text-slate-100 rounded-2xl text-xs font-mono whitespace-pre-line leading-relaxed border border-slate-800">
                     ${data.reels_script}
@@ -411,7 +411,7 @@ function generateViralScript(newsId, title, content) {
             <div>
                 <div class="flex justify-between items-center mb-1">
                     <h4 class="text-xs font-extrabold text-slate-700 uppercase">💬 Facebook Caption & Engagement Hook:</h4>
-                    <button onclick="navigator.clipboard.writeText(\`${(data.facebook_caption || '').replace(/`/g, "\\`")}\`)" class="text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1 rounded-lg border border-indigo-200">কপি ক্যাপশন</button>
+                    <button onclick="navigator.clipboard.writeText(\`${(data.facebook_caption || '').replace(/`/g, "\\`")}\`)" class="text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1 rounded-lg border border-indigo-200">Copy Caption</button>
                 </div>
                 <div class="p-3.5 bg-slate-50 border border-slate-200 text-slate-800 rounded-2xl text-xs whitespace-pre-line leading-relaxed font-semibold">
                     ${data.facebook_caption}

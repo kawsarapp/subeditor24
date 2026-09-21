@@ -19,7 +19,7 @@
         </div>
         <div class="bg-blue-50 rounded-xl border border-blue-100 p-4 shadow-sm text-left">
             <div class="flex justify-between items-center mb-1">
-                <span class="text-xs font-bold text-blue-500 uppercase">আজকের রিপোর্ট</span>
+                <span class="text-xs font-bold text-blue-500 uppercase">Today's Report</span>
                 <span class="text-xl font-black text-blue-600">{{ $stats['today_total'] }}</span>
             </div>
             <div class="grid grid-cols-2 gap-1 text-[10px] font-semibold text-slate-600 mt-2">
@@ -37,12 +37,12 @@
                 <thead>
                     <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
                         <th class="px-4 py-3 font-bold">#</th>
-                        <th class="px-4 py-3 font-bold">শিরোনাম</th>
-                        <th class="px-4 py-3 font-bold">সোর্স/প্রেরক</th>
-                        <th class="px-4 py-3 font-bold">স্ট্যাটাস</th>
-                        <th class="px-4 py-3 font-bold">পোস্ট</th>
-                        <th class="px-4 py-3 font-bold">তারিখ</th>
-                        <th class="px-4 py-3 font-bold text-right">লিঙ্ক</th>
+                        <th class="px-4 py-3 font-bold">Title</th>
+                        <th class="px-4 py-3 font-bold">Source / Sender</th>
+                        <th class="px-4 py-3 font-bold">Status</th>
+                        <th class="px-4 py-3 font-bold">Post</th>
+                        <th class="px-4 py-3 font-bold">Date</th>
+                        <th class="px-4 py-3 font-bold text-right">Link</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -51,7 +51,7 @@
                         <td class="px-4 py-3 text-xs text-slate-400">{{ $news->firstItem() + $loop->index }}</td>
                         <td class="px-4 py-3 max-w-xs">
                             <p class="text-sm font-semibold text-slate-800 truncate" title="{{ $item->title }}">
-                                {{ $item->title ?? $item->ai_title ?? '(শিরোনাম নেই)' }}
+                                {{ $item->title ?? $item->ai_title ?? '(No Title)' }}
                             </p>
                             @if($item->is_rewritten)
                                 <span class="text-[10px] bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded font-bold">🤖 AI Rewritten</span>
@@ -109,8 +109,8 @@
                         <tr>
                             <td colspan="7" class="text-center py-16 text-slate-400">
                                 <i class="fa-solid fa-newspaper text-4xl mb-3 block text-slate-200"></i>
-                                <p class="font-bold">কোনো নিউজ পাওয়া যায়নি</p>
-                                <p class="text-xs mt-1">এই স্টাফ এখনো কোনো নিউজ তৈরি করেননি বা ফিল্টারের সাথে মিল নেই।</p>
+                                <p class="font-bold">No News Found</p>
+                                <p class="text-xs mt-1">This staff member has not created any news yet or no records match the filter.</p>
                             </td>
                         </tr>
                     @endforelse

@@ -2,10 +2,10 @@
 
 @section('content')
 
-{{-- ১. স্টাইল ফাইল ইমপোর্ট করা হলো --}}
+{{-- 1. Style file import --}}
 @include('partials.studio_styles')
 
-<div class="fixed inset-0 bg-gray-100 z-50 flex flex-col font-bangla h-dvh">
+<div class="w-full bg-white rounded-3xl border border-slate-200 shadow-xl flex flex-col font-bangla h-[calc(100vh-7rem)] min-h-[650px] overflow-hidden">
     
     {{-- Header Section --}}
     <div class="bg-white border-b border-gray-200 px-4 py-2 md:px-6 md:py-3 flex flex-col md:flex-row justify-between items-center shadow-sm z-30 shrink-0 gap-3 md:gap-0">
@@ -13,8 +13,7 @@
             <div class="flex items-center gap-3">
                 <a href="{{ route('news.index') }}" class="flex items-center gap-1 text-gray-500 hover:text-gray-800 transition font-bold text-sm bg-gray-100 px-2 py-1 rounded-lg">←</a>
                 <h1 class="text-lg md:text-xl font-bold text-gray-800 flex items-center gap-2 truncate">
-                    🎨 স্টুডিও <span class="hidden sm:inline">প্রো</span> 
-                    <span class="text-[10px] md:text-sm bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-normal">SaaS</span>
+                    Studio
                 </h1>
             </div>
         </div>
@@ -22,9 +21,9 @@
        <div class="flex flex-wrap justify-center md:justify-end gap-2 items-center w-full md:w-auto">
             <button type="button" onclick="restoreSavedDesign()" class="btn btn-warning text-white px-2 py-1.5 rounded-lg text-xs" title="Restore"><i class="fas fa-undo"></i></button>
             <button onclick="resetCanvas()" class="text-gray-500 hover:text-red-500 font-bold text-xs px-2 py-1.5 border border-gray-300 rounded-lg transition" title="Reset">↻</button>
-            <button onclick="saveCurrentDesign()" class="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-indigo-100 transition border border-indigo-200 shadow-sm" title="ডিফল্ট সেটিংস হিসেবে সেভ">💾 Default Save</button>
-            <button onclick="openSaveTemplateModal()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md transition flex items-center gap-1 cursor-pointer" title="নতুন কাস্টম টেমপ্লেট হিসেবে সেভ">
-                <i class="fa-solid fa-cloud-arrow-up text-xs"></i> <span>+ সেভ টেমপ্লেট</span>
+            <button onclick="saveCurrentDesign()" class="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-indigo-100 transition border border-indigo-200 shadow-sm" title="Save as default settings">💾 Default Save</button>
+            <button onclick="openSaveTemplateModal()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md transition flex items-center gap-1 cursor-pointer" title="Save as new custom template">
+                <i class="fa-solid fa-cloud-arrow-up text-xs"></i> <span>+ Save Template</span>
             </button>
             <button id="downloadBtn" onclick="downloadCard()" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md transition transform hover:-translate-y-0.5">📥 Down</button>
             
@@ -48,7 +47,7 @@
            
            {{-- 🔥 Preloader for Canvas --}}
            <div id="canvas-loader" class="absolute inset-0 flex items-center justify-center bg-gray-200 z-30 hidden">
-                <span class="text-indigo-600 font-bold animate-pulse">🖼️ লোড হচ্ছে...</span>
+                <span class="text-indigo-600 font-bold animate-pulse">🖼️ Loading...</span>
            </div>
 
            <div id="canvas-wrapper" class="shadow-2xl transition-transform duration-200 ease-out origin-center ring-4 md:ring-8 ring-white">
@@ -59,25 +58,25 @@
         {{-- Sidebar --}}
         <div class="order-2 md:order-1 w-full md:w-[400px] bg-white border-r border-gray-200 flex flex-col h-auto md:h-full z-20 shadow-xl font-bangla flex-1 md:flex-none overflow-hidden">
             <div class="flex border-b border-gray-200 bg-gray-50 shrink-0">
-                <button onclick="switchTab('design')" class="tab-btn active flex-1 py-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">ডিজাইন</button>
-                <button onclick="switchTab('text')" class="tab-btn flex-1 py-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">টেক্সট</button>
-                <button onclick="switchTab('image')" class="tab-btn flex-1 py-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">ইমেজ</button>
-                <button onclick="switchTab('layers')" class="tab-btn flex-1 py-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">লেয়ার</button>
+                <button onclick="switchTab('design')" class="tab-btn active flex-1 py-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">Design</button>
+                <button onclick="switchTab('text')" class="tab-btn flex-1 py-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">Text</button>
+                <button onclick="switchTab('image')" class="tab-btn flex-1 py-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">Image</button>
+                <button onclick="switchTab('layers')" class="tab-btn flex-1 py-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">Layers</button>
             </div>
 
             <div class="flex-1 overflow-y-auto custom-scrollbar p-4 pb-20 md:pb-5 bg-white">
                 {{-- Design Tab --}}
                 <div id="tab-design" class="space-y-6">
                     
-                    {{-- 📁 আমার সেভ করা টেমপ্লেট (Saved Templates) --}}
+                    {{-- Saved Templates --}}
                     <div>
                         <div class="flex items-center justify-between mb-2">
                             <label class="label-title !mb-0 flex items-center gap-1.5">
-                                <span>📁 আমার টেমপ্লেট</span>
+                                <span>📁 Saved Templates</span>
                                 <span id="myTemplatesCountBadge" class="text-[10px] bg-indigo-100 text-indigo-700 font-extrabold px-2 py-0.5 rounded-full">{{ count($mySavedTemplates ?? []) }}</span>
                             </label>
                             <button type="button" onclick="openSaveTemplateModal()" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1 cursor-pointer">
-                                <i class="fa-solid fa-plus-circle text-xs"></i> নতুন সেভ
+                                <i class="fa-solid fa-plus-circle text-xs"></i> Save New
                             </button>
                         </div>
                         
@@ -88,15 +87,15 @@
                                         <img src="{{ $myTpl['image'] }}" alt="{{ $myTpl['name'] }}" loading="lazy" class="w-full h-16 object-contain bg-slate-100 rounded-lg">
                                         <p class="text-[10px] text-center font-bold text-slate-700 truncate mt-1 group-hover:text-indigo-600">{{ $myTpl['name'] }}</p>
                                     </div>
-                                    <button type="button" onclick="deleteSavedTemplate({{ $myTpl['id'] }}, event)" class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-rose-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-md transition hover:scale-110 cursor-pointer" title="টেমপ্লেট মুছুন">
+                                    <button type="button" onclick="deleteSavedTemplate({{ $myTpl['id'] }}, event)" class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-rose-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-md transition hover:scale-110 cursor-pointer" title="Delete Template">
                                         <i class="fa-solid fa-xmark"></i>
                                     </button>
                                 </div>
                             @empty
                                 <div id="noSavedTemplatesMsg" class="col-span-2 py-4 text-center">
-                                    <p class="text-[11px] text-slate-400 font-semibold mb-1">কোনো সেভ করা টেমপ্লেট নেই</p>
+                                    <p class="text-[11px] text-slate-400 font-semibold mb-1">No saved templates</p>
                                     <button type="button" onclick="openSaveTemplateModal()" class="text-[10px] font-bold text-indigo-600 hover:underline">
-                                        + বর্তমান ডিজাইন সেভ করুন
+                                        + Save Current Design
                                     </button>
                                 </div>
                             @endforelse
@@ -104,11 +103,11 @@
                     </div>
 
                     <div>
-                        <label class="label-title">🎨 প্রিসেট ডিজাইন</label>
+                        <label class="label-title">🎨 Preset Designs</label>
                         <div class="grid grid-cols-3 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto custom-scrollbar p-1">
                             @foreach($availableTemplates as $template)
                                 @php
-                                    // DB dynamic template: frame_url আলাদা, thumbnail শুধু preview
+                                    // DB dynamic template frame_url & thumbnail preview
                                     $isDbTemplate = ($template['layout'] === 'dynamic');
                                     $clickFrameUrl = $isDbTemplate
                                         ? ($template['frame_url'] ?? '')
@@ -125,19 +124,19 @@
                     </div>
                     
                     <div class="border-t pt-4">
-                        <label class="label-title">🖼️ কাস্টমাইজ</label>
+                        <label class="label-title">🖼️ Customize</label>
                         <div class="grid grid-cols-2 gap-2 mb-3">
                             <label class="cursor-pointer bg-indigo-50 border border-dashed border-indigo-300 text-indigo-600 p-3 rounded-lg text-center font-bold text-xs hover:bg-indigo-100 transition flex flex-col items-center justify-center gap-1 h-20 md:h-24">
                                 <input type="file" class="hidden" accept="image/*" onchange="setBackgroundImage(this)">
-                                <span>🌄 ব্যাকগ্রাউন্ড</span>
+                                <span>🌄 Background</span>
                             </label>
                             <label class="cursor-pointer bg-purple-50 border border-dashed border-purple-300 text-purple-600 p-3 rounded-lg text-center font-bold text-xs hover:bg-purple-100 transition flex flex-col items-center justify-center gap-1 h-20 md:h-24">
                                 <input type="file" class="hidden" accept="image/png" onchange="addCustomFrame(this)">
-                                <span>🖼️ ফ্রেম (PNG)</span>
+                                <span>🖼️ Frame (PNG)</span>
                             </label>
                         </div>
                         <div class="flex items-center justify-between bg-gray-50 p-2 rounded border mt-2">
-                            <span class="text-xs text-gray-500">কালার:</span>
+                            <span class="text-xs text-gray-500">Color:</span>
                             <div class="flex items-center gap-2">
                                 <input type="color" class="w-8 h-8 rounded cursor-pointer border-0" oninput="setBackgroundColor(this.value)">
                                 <button onclick="removeFrame()" class="text-[10px] text-red-500 hover:underline">Remove Frame</button>
@@ -146,7 +145,7 @@
                         <div class="mt-3 flex gap-2">
                             <label class="flex-1 cursor-pointer bg-white border border-gray-200 text-gray-700 px-2 py-2 rounded text-xs font-bold hover:bg-gray-50 text-center">
                                 <input type="file" accept="image/*" onchange="uploadLogo(this)" class="hidden">
-                                📤 লোগো অ্যাড করুন
+                                📤 Upload Logo
                             </label>
                         </div>
                     </div>
@@ -154,7 +153,7 @@
                     {{-- 🔥 QR Code Overlay Option --}}
                     <div class="border-t pt-4 mt-3">
                         <label class="label-title flex justify-between items-center">
-                            <span>🔳 QR Code ওভারলে</span>
+                            <span>🔳 QR Code Overlay</span>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="qr-toggle-check" onchange="toggleQrCodeOnCanvas(this.checked)" class="sr-only peer" checked>
                                 <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
@@ -162,13 +161,13 @@
                         </label>
                         <div class="grid grid-cols-2 gap-2 mt-2">
                             <select id="qr-position-select" onchange="changeQrCodePosition(this.value)" class="w-full border border-gray-300 rounded p-1.5 text-xs font-bangla focus:ring-1 focus:ring-indigo-500">
-                                <option value="bottom-right" selected>নিচে-ডানে (Bottom-Right)</option>
-                                <option value="bottom-left">নিচে-বামে (Bottom-Left)</option>
-                                <option value="top-right">উপরে-ডানে (Top-Right)</option>
-                                <option value="top-left">উপরে-বামে (Top-Left)</option>
+                                <option value="bottom-right" selected>Bottom-Right</option>
+                                <option value="bottom-left">Bottom-Left</option>
+                                <option value="top-right">Top-Right</option>
+                                <option value="top-left">Top-Left</option>
                             </select>
                             <button type="button" onclick="regenerateQrCode()" class="bg-indigo-50 text-indigo-600 border border-indigo-200 rounded text-xs font-bold py-1.5 hover:bg-indigo-100 transition">
-                                🔄 রিফ্রেশ QR
+                                🔄 Refresh QR
                             </button>
                         </div>
                     </div>
@@ -182,9 +181,9 @@
                     </div>
                     
                     <div class="border-t pt-4 mt-2">
-                        <label class="label-title">🅰️ ফন্ট স্টাইল</label>
+                        <label class="label-title">🅰️ Font Style</label>
                         <select id="font-family" onchange="changeFont(this.value)" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm font-bangla focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <option value="" disabled selected>-- ফন্ট সিলেক্ট করুন --</option>
+                            <option value="" disabled selected>-- Select Font --</option>
                             
                             <optgroup label="🔥 Li Series (Stylish)">
                                 <option value="'Li Alinur Banglaborno'">Li Alinur Banglaborno</option>
@@ -218,15 +217,15 @@
 
                             <optgroup label="📰 Popular Bangla">
                                 <option value="'SolaimanLipi'">SolaimanLipi</option>
-                                <option value="'Hind Siliguri', sans-serif">হিন্দ শিলিগুড়ি</option>
-                                <option value="'Noto Sans Bengali', sans-serif">নোটো স্যান্স</option>
-                                <option value="'Baloo Da 2', cursive">বালু দা ২</option>
-                                <option value="'Galada', cursive">গলাদা</option>
-                                <option value="'Anek Bangla', sans-serif">অনেক বাংলা</option>
+                                <option value="'Hind Siliguri', sans-serif">Hind Siliguri</option>
+                                <option value="'Noto Sans Bengali', sans-serif">Noto Sans</option>
+                                <option value="'Baloo Da 2', cursive">Baloo Da 2</option>
+                                <option value="'Galada', cursive">Galada</option>
+                                <option value="'Anek Bangla', sans-serif">Anek Bangla</option>
                             </optgroup>
                         </select>
                         
-                        <label class="label-title mt-4">📝 এডিট টেক্সট</label>
+                        <label class="label-title mt-4">📝 Edit Text</label>
                         <textarea id="text-content" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm mb-3 font-bangla focus:ring-2 focus:ring-indigo-500 outline-none" rows="3" oninput="updateActiveProp('text', this.value)"></textarea>
                         
                         <div class="grid grid-cols-2 gap-3 mb-3">
@@ -263,10 +262,10 @@
                 <div id="tab-image" class="space-y-6 hidden">
                     <label class="w-full cursor-pointer bg-white border border-gray-300 text-gray-700 px-3 py-3 rounded-lg shadow-sm text-sm font-bold hover:bg-gray-50 text-center block">
                         <input type="file" accept="image/*" onchange="addImageOnCanvas(this)" class="hidden">
-                        📷 এক্সট্রা ইমেজ
+                        📷 Extra Image
                     </label>
                     <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                        <label class="label-title mb-3 text-center border-b pb-2 block">🖼️ মেইন ইমেজ</label>
+                        <label class="label-title mb-3 text-center border-b pb-2 block">🖼️ Main Image</label>
                         <div class="flex items-center justify-between mb-4 bg-white p-2 rounded shadow-sm">
                             <button onclick="controlMainImage('zoom', -0.05)" class="p-2 bg-red-50 text-red-600 font-bold">➖</button>
                             <span class="text-xs font-bold text-gray-500">ZOOM</span>
@@ -285,7 +284,7 @@
                         </div>
                     </div>
                     <div class="border-t pt-4">
-                         <label class="label-title">অপাসিটি</label>
+                         <label class="label-title">Opacity</label>
                          <div>
                             <input type="range" min="0" max="1" step="0.1" id="img-opacity" oninput="updateActiveProp('opacity', parseFloat(this.value))">
                          </div>
@@ -295,25 +294,25 @@
                 {{-- Layers Tab --}}
                 <div id="tab-layers" class="space-y-4 hidden">
                     <label class="label-title flex justify-between items-center">
-                        লেয়ার ম্যানেজমেন্ট
+                        Layer Management
                         <button onclick="renderLayerList()" class="text-[10px] text-blue-600 hover:underline">Refresh</button>
                     </label>
                     <div id="layer-list-container" class="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar p-1"></div>
                     <div class="grid grid-cols-2 gap-3">
-                         <button onclick="canvas.bringForward(canvas.getActiveObject())" class="layer-btn">⬆ এক ধাপ উপরে</button>
-                         <button onclick="canvas.sendBackwards(canvas.getActiveObject())" class="layer-btn">⬇ এক ধাপ নিচে</button>
-                         <button onclick="canvas.bringToFront(canvas.getActiveObject())" class="layer-btn font-bold text-indigo-600">🔝 সবার উপরে</button>
+                         <button onclick="canvas.bringForward(canvas.getActiveObject())" class="layer-btn">⬆ Bring Forward</button>
+                         <button onclick="canvas.sendBackwards(canvas.getActiveObject())" class="layer-btn">⬇ Send Backward</button>
+                         <button onclick="canvas.bringToFront(canvas.getActiveObject())" class="layer-btn font-bold text-indigo-600">🔝 Bring to Front</button>
                          <button onclick="canvas.sendToBack(canvas.getActiveObject())" class="layer-btn font-bold text-indigo-600">BOTTOM</button>
                     </div>
                     <div class="border-t pt-4 mt-2">
-                        <button onclick="deleteActive()" class="w-full bg-red-50 text-red-600 border border-red-200 py-2.5 rounded-lg font-bold text-sm hover:bg-red-100 transition">🗑️ ডিলিট করুন</button>
+                        <button onclick="deleteActive()" class="w-full bg-red-50 text-red-600 border border-red-200 py-2.5 rounded-lg font-bold text-sm hover:bg-red-100 transition">🗑️ Delete Layer</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- ২. Publish Modal ইমপোর্ট করা হলো --}}
+    {{-- 2. Publish Modal Import --}}
     @include('partials.studio_publish_modal')
 
     {{-- 💾 Save as Custom Template Modal --}}
@@ -321,7 +320,7 @@
         <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md p-6 font-bangla transform transition-all animate-in fade-in zoom-in-95">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
                 <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                    <i class="fa-solid fa-cloud-arrow-up text-indigo-600"></i> নতুন টেমপ্লেট হিসেবে সংরক্ষণ
+                    <i class="fa-solid fa-cloud-arrow-up text-indigo-600"></i> Save as New Template
                 </h3>
                 <button type="button" onclick="closeSaveTemplateModal()" class="text-slate-400 hover:text-slate-600 text-sm p-1">
                     <i class="fa-solid fa-xmark"></i>
@@ -329,21 +328,21 @@
             </div>
             
             <p class="text-xs text-slate-500 mb-4 leading-relaxed">
-                বর্তমান ফ্রেম, ফন্ট স্টাইল, কালার এবং হেডলাইনের অবস্থান একটি কাস্টম টেমপ্লেট হিসেবে সেভ হবে। পরবর্তীতে যেকোনো নিউজে এটি ১-ক্লিকে রিইউজ করতে পারবেন।
+                Saves the current frame, typography, colors, and headline layout as a reusable template.
             </p>
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5">টেমপ্লেটের নাম লিখুন *</label>
-                    <input type="text" id="studioTemplateNameInput" placeholder="যেমন: আমার ব্রেকিং নিউজ, স্পেশাল রিপোর্ট..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Template Name *</label>
+                    <input type="text" id="studioTemplateNameInput" placeholder="e.g. Breaking News 16:9, Special Report..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="closeSaveTemplateModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
-                        বাতিল
+                        Cancel
                     </button>
                     <button type="button" id="btnSubmitSaveTemplate" onclick="submitSaveTemplate()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-check"></i> সেভ করুন
+                        <i class="fa-solid fa-check"></i> Save Template
                     </button>
                 </div>
             </div>
@@ -355,7 +354,7 @@
 @include('news.studio.scripts')
 @include('news.studio.rtv-design')
 
-{{-- ৩. Extra Scripts ইমপোর্ট করা হলো --}}
+{{-- 3. Extra Scripts Import --}}
 @include('partials.studio_extra_scripts')
 
 @endsection

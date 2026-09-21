@@ -94,7 +94,7 @@
         document.getElementById('editName').value = name;
         document.getElementById('editEmail').value = email;
         
-        // 🔥 Staff Limit এর ভ্যালু সেট করা হচ্ছে (না থাকলে ডিফল্ট 0)
+        // Set staff limit value (defaults to 0)
         document.getElementById('editStaffLimit').value = staffLimit || 0; 
         
         document.getElementById('editUserForm').action = `/admin/users/${userId}/update`;

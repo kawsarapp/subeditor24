@@ -21,8 +21,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
                     </svg>
                 </div>
-                <h2 class="text-xl font-bold text-gray-800">পাসওয়ার্ড ভুলে গেছেন?</h2>
-                <p class="text-sm text-gray-500 mt-1">ইমেইল দিন, আমরা Reset Link পাঠাবো।</p>
+                <h2 class="text-xl font-bold text-gray-800">Forgot Password?</h2>
+                <p class="text-sm text-gray-500 mt-1">Enter your email and we'll send you a password reset link.</p>
             </div>
 
             @if (session('status'))
@@ -50,13 +50,13 @@
 
                 <button type="submit"
                         class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg">
-                    📧 Reset Link পাঠান
+                    📧 Send Reset Link
                 </button>
             </form>
 
             <div class="mt-5 text-center">
                 <a href="{{ route('login') }}" class="text-sm text-indigo-600 font-bold hover:underline">
-                    ← লগইন পেজে ফিরে যান
+                    ← Back to Login
                 </a>
             </div>
         </div>

@@ -63,6 +63,7 @@ class UserSetting extends Model
         'smartproxy_api_token',
         'photoroom_api_key',
         'target_language',
+        'custom_rewrite_prompt',
     ];
 
 

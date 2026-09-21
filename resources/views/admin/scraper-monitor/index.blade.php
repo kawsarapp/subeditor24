@@ -6,25 +6,25 @@
     {{-- Header Section --}}
     <div class="flex flex-col md:flex-row justify-between items-center mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-slate-800">📊 স্ক্র্যাপার মনিটর ড্যাশবোর্ড</h1>
-            <p class="text-slate-500 mt-1">সব সোর্সের লাইভ স্ক্র্যাপিং পারফরম্যান্স এবং এরর ট্র্যাকিং</p>
+            <h1 class="text-3xl font-bold text-slate-800">📊 Scraper Monitor Dashboard</h1>
+            <p class="text-slate-500 mt-1">Live scraping performance and error tracking across all sources</p>
         </div>
         <div class="mt-4 md:mt-0 flex flex-wrap items-center gap-3">
             {{-- Clear Failed Logs Only --}}
-            <form action="{{ route('admin.scraper-monitor.clear') }}" method="POST" onsubmit="return confirm('আপনি কি নিশ্চিত যে শুধুমাত্র ব্যর্থ (Failed) এরর লগগুলো মুছে ফেলতে চান?');">
+            <form action="{{ route('admin.scraper-monitor.clear') }}" method="POST" onsubmit="return confirm('Are you sure you want to clear failed error logs only?');">
                 @csrf
                 <input type="hidden" name="type" value="failed">
                 <button type="submit" class="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
-                    <span>🗑️</span> ব্যর্থ লগ ক্লিয়ার করুন
+                    <span>🗑️</span> Clear Failed Logs
                 </button>
             </form>
 
             {{-- Reset All Logs --}}
-            <form action="{{ route('admin.scraper-monitor.clear') }}" method="POST" onsubmit="return confirm('⚠️ আপনি কি নিশ্চিত যে সমস্ত স্ক্র্যাপার লগ রিসেট করতে চান? এতে মনিটরের সকল পুরনো রেকর্ড ও কাউন্টার শূন্য হয়ে যাবে।');">
+            <form action="{{ route('admin.scraper-monitor.clear') }}" method="POST" onsubmit="return confirm('⚠️ Are you sure you want to reset all scraper logs? This will reset all historical metrics and logs.');">
                 @csrf
                 <input type="hidden" name="type" value="all">
                 <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
-                    <span>♻️</span> সকল লগ রিসেট করুন
+                    <span>♻️</span> Reset All Logs
                 </button>
             </form>
 
@@ -50,7 +50,7 @@
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition">
             <div class="p-4 bg-blue-50 text-blue-600 rounded-xl text-2xl">🔄</div>
             <div>
-                <p class="text-slate-500 text-[10px] font-black uppercase tracking-wider">মোট রান (২৪ ঘণ্টা)</p>
+                <p class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Total Runs (24h)</p>
                 <h3 class="text-3xl font-bold text-slate-800">{{ $totalRunsToday }}</h3>
             </div>
         </div>
@@ -58,7 +58,7 @@
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition">
             <div class="p-4 bg-green-50 text-green-600 rounded-xl text-2xl">✅</div>
             <div>
-                <p class="text-slate-500 text-[10px] font-black uppercase tracking-wider">সফল স্ক্র্যাপ</p>
+                <p class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Successful Scrapes</p>
                 <h3 class="text-3xl font-bold text-slate-800 text-green-600">{{ $successRunsToday }}</h3>
             </div>
         </div>
@@ -66,7 +66,7 @@
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition">
             <div class="p-4 bg-rose-50 text-rose-600 rounded-xl text-2xl">❌</div>
             <div>
-                <p class="text-slate-500 text-[10px] font-black uppercase tracking-wider">ব্যর্থ স্ক্র্যাপ</p>
+                <p class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Failed Scrapes</p>
                 <h3 class="text-3xl font-bold text-slate-800 text-rose-600">{{ $failedRunsToday }}</h3>
             </div>
         </div>
@@ -74,7 +74,7 @@
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition">
             <div class="p-4 bg-indigo-50 text-indigo-600 rounded-xl text-2xl">📈</div>
             <div>
-                <p class="text-slate-500 text-[10px] font-black uppercase tracking-wider">সাকসেস রেট</p>
+                <p class="text-slate-500 text-[10px] font-black uppercase tracking-wider">Success Rate</p>
                 <h3 class="text-3xl font-bold text-slate-800 text-indigo-600">{{ $globalSuccessRate }}%</h3>
             </div>
         </div>
@@ -83,20 +83,20 @@
     {{-- Sources Performance List --}}
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-10">
         <div class="px-6 py-4 border-b border-slate-100 bg-slate-50">
-            <h2 class="text-lg font-bold text-slate-700">🌐 স্ক্র্যাপার সোর্স পারফরম্যান্স</h2>
+            <h2 class="text-lg font-bold text-slate-700">🌐 Scraper Sources Performance</h2>
         </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                        <th class="px-6 py-4 font-bold">সোর্সের নাম ও ইউআরএল</th>
-                        <th class="px-6 py-4 font-bold text-center">স্ট্যাটাস (৩ ঘণ্টা)</th>
-                        <th class="px-6 py-4 font-bold">২৪ ঘণ্টা সাকসেস রেট</th>
-                        <th class="px-6 py-4 font-bold text-center">মোট রান</th>
-                        <th class="px-6 py-4 font-bold text-center">ব্যর্থ</th>
-                        <th class="px-6 py-4 font-bold">শেষ সফল রান</th>
-                        <th class="px-6 py-4 font-bold">শেষ চেষ্টার সময়</th>
+                        <th class="px-6 py-4 font-bold">Source Name & URL</th>
+                        <th class="px-6 py-4 font-bold text-center">Status (3h)</th>
+                        <th class="px-6 py-4 font-bold">24h Success Rate</th>
+                        <th class="px-6 py-4 font-bold text-center">Total Runs</th>
+                        <th class="px-6 py-4 font-bold text-center">Failed</th>
+                        <th class="px-6 py-4 font-bold">Last Successful Run</th>
+                        <th class="px-6 py-4 font-bold">Last Attempt</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -159,20 +159,20 @@
     {{-- Error Log / Failed Jobs Details --}}
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 bg-slate-50">
-            <h2 class="text-lg font-bold text-slate-700">❌ ব্যর্থ স্ক্র্যাপ জবগুলোর বিস্তারিত এরর লগ (Recent Scraper Failures)</h2>
+            <h2 class="text-lg font-bold text-slate-700">❌ Recent Scraper Failure Logs</h2>
         </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                        <th class="px-6 py-4 font-bold">সোর্স</th>
-                        <th class="px-6 py-4 font-bold">টাইপ</th>
-                        <th class="px-6 py-4 font-bold">টার্গেট ইউআরএল</th>
-                        <th class="px-6 py-4 font-bold text-center">HTTP কোড</th>
-                        <th class="px-6 py-4 font-bold">ব্যবহৃত স্ট্র্যাটেজি</th>
-                        <th class="px-6 py-4 font-bold">ব্যর্থতার কারণ</th>
-                        <th class="px-6 py-4 font-bold">সময়</th>
+                        <th class="px-6 py-4 font-bold">Source</th>
+                        <th class="px-6 py-4 font-bold">Type</th>
+                        <th class="px-6 py-4 font-bold">Target URL</th>
+                        <th class="px-6 py-4 font-bold text-center">HTTP Code</th>
+                        <th class="px-6 py-4 font-bold">Strategy Used</th>
+                        <th class="px-6 py-4 font-bold">Failure Reason</th>
+                        <th class="px-6 py-4 font-bold">Time</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -214,7 +214,7 @@
                     @empty
                     <tr>
                         <td colspan="7" class="px-6 py-8 text-center text-slate-400 font-medium">
-                            কোনো ব্যর্থ স্ক্র্যাপ রেকর্ড পাওয়া যায়নি।
+                            No failed scrape logs recorded.
                         </td>
                     </tr>
                     @endforelse

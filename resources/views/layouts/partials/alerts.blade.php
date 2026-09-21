@@ -6,7 +6,7 @@
                 <i class="fa-solid fa-circle-check text-lg"></i>
             </div>
             <div class="flex-1">
-                <h4 class="font-extrabold text-xs tracking-wide uppercase text-emerald-200">সফল হয়েছে!</h4>
+                <h4 class="font-extrabold text-xs tracking-wide uppercase text-emerald-200">Success!</h4>
                 <p class="text-xs font-semibold text-white mt-0.5">{{ session('success') }}</p>
             </div>
             <button onclick="document.getElementById('flash-success').remove()" class="text-white/80 hover:text-white p-1 transition"><i class="fa-solid fa-xmark"></i></button>
@@ -19,7 +19,7 @@
                 <i class="fa-solid fa-triangle-exclamation text-lg"></i>
             </div>
             <div class="flex-1">
-                <h4 class="font-extrabold text-xs tracking-wide uppercase text-rose-200">ত্রুটি ঘটেছে!</h4>
+                <h4 class="font-extrabold text-xs tracking-wide uppercase text-rose-200">Error!</h4>
                 <p class="text-xs font-semibold text-white mt-0.5">{{ session('error') }}</p>
             </div>
             <button onclick="document.getElementById('flash-error').remove()" class="text-white/80 hover:text-white p-1 transition"><i class="fa-solid fa-xmark"></i></button>
@@ -32,7 +32,7 @@
                 <i class="fa-solid fa-circle-exclamation text-lg"></i>
             </div>
             <div class="flex-1">
-                <h4 class="font-extrabold text-xs tracking-wide uppercase text-amber-200">সতর্কতা!</h4>
+                <h4 class="font-extrabold text-xs tracking-wide uppercase text-amber-200">Warning!</h4>
                 <p class="text-xs font-semibold text-white mt-0.5">{{ session('warning') }}</p>
             </div>
             <button onclick="document.getElementById('flash-warning').remove()" class="text-white/80 hover:text-white p-1 transition"><i class="fa-solid fa-xmark"></i></button>
@@ -45,7 +45,7 @@
                 <i class="fa-solid fa-bug text-lg"></i>
             </div>
             <div class="flex-1">
-                <h4 class="font-extrabold text-xs tracking-wide uppercase text-rose-200">ভ্যালিডেশন এরর ({{ $errors->count() }}টি):</h4>
+                <h4 class="font-extrabold text-xs tracking-wide uppercase text-rose-200">Validation Errors ({{ $errors->count() }}):</h4>
                 <ul class="text-xs font-medium text-rose-100 list-disc pl-4 mt-1 space-y-0.5">
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>

@@ -9,21 +9,21 @@
                     <i class="fa-solid fa-pen-nib text-sm"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-black text-slate-900 dark:text-white font-bangla">নিউজ এডিট, তুলনা ও পাবলিশ</h3>
-                    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400" id="modalSourceBadge">সোর্স: লোড হচ্ছে...</p>
+                    <h3 class="text-base font-black text-slate-900 dark:text-white font-bangla">Edit, Compare & Publish News</h3>
+                    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400" id="modalSourceBadge">Source: Loading...</p>
                 </div>
             </div>
 
             {{-- View Switcher Buttons --}}
             <div class="flex items-center gap-1.5 bg-slate-200/70 dark:bg-slate-800 p-1 rounded-2xl border border-slate-300/60 dark:border-slate-700/60">
                 <button type="button" onclick="switchModalView('editor')" id="viewBtnEditor" class="modal-view-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition-all cursor-pointer">
-                    <i class="fa-solid fa-pen-to-square"></i> <span class="hidden md:inline">এডিটর</span>
+                    <i class="fa-solid fa-pen-to-square"></i> <span class="hidden md:inline">Editor</span>
                 </button>
                 <button type="button" onclick="switchModalView('sidebyside')" id="viewBtnSideBySide" class="modal-view-btn px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">
-                    <i class="fa-solid fa-columns"></i> <span class="hidden md:inline">পাশাপাশি তুলনা</span>
+                    <i class="fa-solid fa-columns"></i> <span class="hidden md:inline">Side-by-Side Compare</span>
                 </button>
                 <button type="button" onclick="switchModalView('social')" id="viewBtnSocial" class="modal-view-btn px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all cursor-pointer">
-                    <i class="fa-solid fa-share-nodes"></i> <span class="hidden md:inline">সোশ্যাল প্রিভিউ</span>
+                    <i class="fa-solid fa-share-nodes"></i> <span class="hidden md:inline">Social Preview</span>
                 </button>
             </div>
 
@@ -36,10 +36,10 @@
         <div id="modalDuplicateAlert" class="hidden px-6 py-3 bg-amber-50 dark:bg-amber-950/70 border-b border-amber-200 dark:border-amber-800/60 text-xs font-bold text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div class="flex items-center gap-2">
                 <i class="fa-solid fa-triangle-exclamation text-amber-600 dark:text-amber-400 text-sm"></i>
-                <span id="modalDuplicateAlertText">একই খবরের আরও তথ্য পাওয়া গেছে।</span>
+                <span id="modalDuplicateAlertText">Duplicate / related articles found.</span>
             </div>
             <button type="button" onclick="toggleDuplicateDetails()" class="text-indigo-700 dark:text-indigo-300 underline text-xs font-bold cursor-pointer">
-                তালিকা দেখুন ▾
+                View List ▾
             </button>
         </div>
         <div id="modalDuplicateDetailsList" class="hidden px-6 py-3 bg-amber-100/50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-800/40 space-y-1.5 text-xs font-semibold text-amber-900 dark:text-amber-300">
@@ -54,32 +54,32 @@
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                     <div class="flex items-center gap-2">
                         <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700" id="sideOriginalSourceTag">
-                            মূল সোর্স
+                            Original Source
                         </span>
-                        <h4 class="text-xs font-black text-slate-700 dark:text-slate-300 uppercase">মূল কাঁচা খবর (Original Raw)</h4>
+                        <h4 class="text-xs font-black text-slate-700 dark:text-slate-300 uppercase">Original Raw Content</h4>
                     </div>
                     <div class="flex items-center gap-2">
                         <a id="sideOriginalLinkBtn" href="#" target="_blank" class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
-                            সোর্স লিঙ্ক 🔗
+                            Source Link 🔗
                         </a>
-                        <button type="button" onclick="copyOriginalContent()" class="text-[11px] font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-300 transition cursor-pointer" title="কপি করুন">
-                            <i class="fa-solid fa-copy"></i> কপি
+                        <button type="button" onclick="copyOriginalContent()" class="text-[11px] font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-700 dark:text-slate-300 transition cursor-pointer" title="Copy to clipboard">
+                            <i class="fa-solid fa-copy"></i> Copy
                         </button>
-                        <button type="button" onclick="insertOriginalToEditor()" class="text-[11px] font-bold px-2 py-1 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 rounded-lg transition cursor-pointer" title="এডিটরে ইনসার্ট করুন">
-                            ➕ এডিটরে নিন
+                        <button type="button" onclick="insertOriginalToEditor()" class="text-[11px] font-bold px-2 py-1 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 rounded-lg transition cursor-pointer" title="Insert into editor">
+                            ➕ Insert to Editor
                         </button>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-black uppercase text-slate-400 mb-1">মূল শিরোনাম</label>
+                    <label class="block text-[11px] font-black uppercase text-slate-400 mb-1">Original Title</label>
                     <h3 id="sideOriginalTitle" class="text-base font-extrabold text-slate-900 dark:text-white leading-snug font-bangla"></h3>
                 </div>
 
                 <div class="flex-1 flex flex-col">
-                    <label class="block text-[11px] font-black uppercase text-slate-400 mb-1">মূল বিবরণ (Raw Article Text)</label>
+                    <label class="block text-[11px] font-black uppercase text-slate-400 mb-1">Raw Article Content / Source Body</label>
                     <div id="sideOriginalContent" class="flex-1 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm leading-relaxed overflow-y-auto max-h-[500px] whitespace-pre-line font-bangla select-text">
-                        লোড হচ্ছে...
+                        Loading...
                     </div>
                 </div>
             </div>
@@ -90,7 +90,7 @@
                 
                 {{-- Feature Image Card --}}
                 <div class="mb-5 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">Feature Image (ফিচার ছবি)</label>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">Featured Image</label>
                     <div class="flex gap-4 items-start">
                         <div class="w-24 h-24 flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 relative group">
                             <img id="previewImageDisplay" src="" class="w-full h-full object-cover">
@@ -98,7 +98,7 @@
                         </div>
                         <div class="flex-1 space-y-2">
                             <input type="file" id="newImageFile" onchange="previewSelectedImage(this)" accept="image/*" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 dark:file:bg-indigo-950 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 cursor-pointer">
-                            <div class="text-[10px] font-bold text-slate-400 text-center">- অথবা ছবির লিঙ্ক দিন -</div>
+                            <div class="text-[10px] font-bold text-slate-400 text-center">- Or enter image URL -</div>
                             <input type="url" id="newImageUrl" oninput="previewImageUrl(this.value)" placeholder="https://example.com/image.jpg" class="w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl p-2 text-xs focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-100">
                         </div>
                     </div>
@@ -107,9 +107,9 @@
                 {{-- Title --}}
                 <div class="mb-5">
                     <div class="flex items-center justify-between mb-2">
-                        <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">খবরের শিরোনাম (Title)</label>
+                        <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">News Title / Headline</label>
                         <button type="button" onclick="generateViralHeadlinesModal()" id="btnGenerateViralHeadlines" class="text-xs font-bold px-3 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition cursor-pointer">
-                            <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i> ✨ ৩টি AI ভাইরাল শিরোনাম
+                            <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i> ✨ 3 AI Viral Headlines
                         </button>
                     </div>
                     <input type="text" id="previewTitle" oninput="syncSocialCardPreview()" class="w-full border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5 focus:ring-2 focus:ring-indigo-500 font-bangla text-lg font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-900 shadow-sm transition">
@@ -118,7 +118,7 @@
                     <div id="viralHeadlineSuggestionsBox" class="hidden mt-3 p-4 bg-gradient-to-br from-indigo-50/90 to-purple-50/90 dark:from-slate-800 dark:to-slate-850 border border-indigo-200/70 dark:border-slate-700 rounded-2xl space-y-2.5 transition-all">
                         <div class="flex items-center justify-between pb-2 border-b border-indigo-100 dark:border-slate-700">
                             <span class="text-xs font-black text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
-                                <i class="fa-solid fa-sparkles text-indigo-600"></i> AI প্রস্তাবিত ভাইরাল শিরোনাম (১-ক্লিকে সিলেক্ট করুন):
+                                <i class="fa-solid fa-sparkles text-indigo-600"></i> AI Recommended Headlines (1-Click Selection):
                             </span>
                             <button type="button" onclick="document.getElementById('viralHeadlineSuggestionsBox').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer">✕</button>
                         </div>
@@ -130,7 +130,7 @@
 
                 {{-- News Content (TinyMCE) --}}
                 <div class="mb-5">
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">খবরের বিস্তারিত বিবরণ (Content)</label>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">Article Body & Full Content</label>
                     <textarea id="previewContent" rows="15" class="w-full border border-slate-200 dark:border-slate-700 rounded-2xl"></textarea>
                 </div>
             </div>
@@ -140,9 +140,9 @@
                 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
                     <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                         <h4 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-bullhorn text-indigo-500"></i> লাইভ সোশ্যাল কার্ড ও সার্চ প্রিভিউ
+                            <i class="fa-solid fa-bullhorn text-indigo-500"></i> Live Social Card & Search Preview
                         </h4>
-                        <span class="text-xs font-semibold text-slate-400">রিয়েলটাইম প্রিভিউ</span>
+                        <span class="text-xs font-semibold text-slate-400">Realtime Preview</span>
                     </div>
 
                     {{-- 📘 Facebook Preview Card --}}
@@ -157,20 +157,20 @@
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-1">
-                                        <span class="text-xs font-extrabold text-slate-900 dark:text-white">{{ optional(optional(auth()->user())->settings)->site_name ?? 'নিউজ পোর্টাল' }}</span>
+                                        <span class="text-xs font-extrabold text-slate-900 dark:text-white">{{ optional(optional(auth()->user())->settings)->site_name ?? 'News Portal' }}</span>
                                         <i class="fa-solid fa-circle-check text-blue-500 text-[10px]"></i>
                                     </div>
                                     <span class="text-[10px] text-slate-400">Just now · 🌐</span>
                                 </div>
                             </div>
-                            <p class="px-3.5 pb-2 text-xs font-semibold text-slate-800 dark:text-slate-100 line-clamp-2" id="fbPreviewPostText">খবরের বিবরণ লোড হচ্ছে...</p>
+                            <p class="px-3.5 pb-2 text-xs font-semibold text-slate-800 dark:text-slate-100 line-clamp-2" id="fbPreviewPostText">Loading article details...</p>
                             <div class="aspect-video w-full bg-slate-100 dark:bg-slate-700 overflow-hidden relative">
                                 <img id="fbPreviewImage" src="" class="w-full h-full object-cover">
                             </div>
                             <div class="p-3 bg-slate-50 dark:bg-slate-850 border-t border-slate-100 dark:border-slate-700/80">
                                 <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider" id="fbPreviewDomain">YOURSITE.COM</span>
-                                <h5 class="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug mt-0.5" id="fbPreviewTitle">খবরের শিরোনাম</h5>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5" id="fbPreviewDesc">খবরের সারসংক্ষেপ...</p>
+                                <h5 class="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug mt-0.5" id="fbPreviewTitle">Article Headline</h5>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5" id="fbPreviewDesc">Article summary and key takeaways...</p>
                             </div>
                         </div>
                     </div>
@@ -186,8 +186,8 @@
                                 <span class="absolute bottom-2 left-2 bg-black/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase" id="twitterPreviewDomain">yoursite.com</span>
                             </div>
                             <div class="p-3 bg-slate-950">
-                                <h5 class="text-xs font-bold line-clamp-1 leading-tight text-slate-100" id="twitterPreviewTitle">খবরের শিরোনাম</h5>
-                                <p class="text-[11px] text-slate-400 line-clamp-2 mt-1" id="twitterPreviewDesc">খবরের সারসংক্ষেপ...</p>
+                                <h5 class="text-xs font-bold line-clamp-1 leading-tight text-slate-100" id="twitterPreviewTitle">Article Headline</h5>
+                                <p class="text-[11px] text-slate-400 line-clamp-2 mt-1" id="twitterPreviewDesc">Article summary and key takeaways...</p>
                             </div>
                         </div>
                     </div>
@@ -203,10 +203,10 @@
                                 <span class="text-[11px]" id="googlePreviewUrl">https://yoursite.com › news › ...</span>
                             </div>
                             <h4 class="text-sm font-bold text-indigo-700 dark:text-indigo-400 hover:underline cursor-pointer line-clamp-1" id="googlePreviewTitle">
-                                খবরের শিরোনাম
+                                Article Headline
                             </h4>
                             <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2" id="googlePreviewDesc">
-                                খবরের মেটা বিবরণ এখানে প্রদর্শিত হবে...
+                                Article meta description will appear here...
                             </p>
                         </div>
                     </div>
@@ -244,7 +244,7 @@
                                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                                     🎯 Focus Keywords
                                 </label>
-                                <button type="button" id="btnAiKeywords" onclick="generateFocusKeywordsModal()" class="text-[10px] bg-gradient-to-r from-indigo-50 to-violet-50 hover:from-indigo-100 hover:to-violet-100 text-indigo-700 border border-indigo-200/80 px-2.5 py-1 rounded-lg font-black transition flex items-center gap-1 shadow-sm cursor-pointer" title="AI দিয়ে স্বয়ংক্রিয় কী-ওয়ার্ড বের করুন">
+                                <button type="button" id="btnAiKeywords" onclick="generateFocusKeywordsModal()" class="text-[10px] bg-gradient-to-r from-indigo-50 to-violet-50 hover:from-indigo-100 hover:to-violet-100 text-indigo-700 border border-indigo-200/80 px-2.5 py-1 rounded-lg font-black transition flex items-center gap-1 shadow-sm cursor-pointer" title="Automatically extract keywords with AI">
                                     <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i>
                                     <span>AI Auto Keywords</span>
                                 </button>
@@ -253,7 +253,7 @@
                             {{-- Interactive Keyword Tag Container --}}
                             <div id="keywordPillWrapper" onclick="document.getElementById('keywordTagInput').focus()" class="w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl p-2 min-h-[46px] flex flex-wrap items-center gap-1.5 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:bg-white dark:focus-within:bg-slate-900 transition cursor-text">
                                 <div id="keywordPillsList" class="flex flex-wrap items-center gap-1.5"></div>
-                                <input type="text" id="keywordTagInput" placeholder="কী-ওয়ার্ড লিখে Enter বা কমা দিন..." class="flex-1 min-w-[110px] bg-transparent text-xs text-slate-800 dark:text-slate-100 border-none outline-none focus:ring-0 p-1 font-semibold">
+                                <input type="text" id="keywordTagInput" placeholder="Type keyword and press Enter or comma..." class="flex-1 min-w-[110px] bg-transparent text-xs text-slate-800 dark:text-slate-100 border-none outline-none focus:ring-0 p-1 font-semibold">
                             </div>
                             {{-- Hidden input for form sync --}}
                             <input type="hidden" id="focus_keyword" name="focus_keyword" value="">
@@ -268,16 +268,16 @@
                             
                             <div class="space-y-1.5">
                                 <div id="seoCheckTitle" class="flex items-center gap-1.5 text-slate-500 transition-colors">
-                                    <span class="status-icon">⚪</span> <span>শিরোনামে মূল কী-ওয়ার্ড উপস্থিতি</span>
+                                    <span class="status-icon">⚪</span> <span>Focus keyword in headline</span>
                                 </div>
                                 <div id="seoCheckLead" class="flex items-center gap-1.5 text-slate-500 transition-colors">
-                                    <span class="status-icon">⚪</span> <span>প্রথম ১০০ শব্দের মধ্যে কী-ওয়ার্ড</span>
+                                    <span class="status-icon">⚪</span> <span>Focus keyword in first 100 words</span>
                                 </div>
                                 <div id="seoCheckMeta" class="flex items-center gap-1.5 text-slate-500 transition-colors">
-                                    <span class="status-icon">⚪</span> <span>মেটা ডেসক্রিপশনে কী-ওয়ার্ড</span>
+                                    <span class="status-icon">⚪</span> <span>Focus keyword in meta description</span>
                                 </div>
                                 <div id="seoCheckLength" class="flex items-center gap-1.5 text-slate-500 transition-colors">
-                                    <span class="status-icon">⚪</span> <span>কন্টেন্টের দৈর্ঘ্য (ন্যূনতম ৩০০ শব্দ)</span>
+                                    <span class="status-icon">⚪</span> <span>Content length (minimum 300 words)</span>
                                 </div>
                             </div>
                         </div>
@@ -289,20 +289,20 @@
                                     <span>📝 Meta Description</span>
                                 </label>
                                 <div class="flex items-center gap-1.5">
-                                    <button type="button" onclick="extractMetaFromLead()" class="text-[9px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-bold transition flex items-center gap-1 cursor-pointer" title="মূল কন্টেন্টের শুরু থেকে সারসংক্ষেপ তৈরি করুন">
-                                        <i class="fa-solid fa-align-left text-slate-500"></i> Lead থেকে
+                                    <button type="button" onclick="extractMetaFromLead()" class="text-[9px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-bold transition flex items-center gap-1 cursor-pointer" title="Generate summary from lead paragraph">
+                                        <i class="fa-solid fa-align-left text-slate-500"></i> From Lead
                                     </button>
-                                    <button type="button" id="btnAiMetaGen" onclick="generateFocusKeywordsModal()" class="text-[9px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded font-bold transition flex items-center gap-1 cursor-pointer" title="AI দিয়ে মেটা ডেসক্রিপশন তৈরি করুন">
+                                    <button type="button" id="btnAiMetaGen" onclick="generateFocusKeywordsModal()" class="text-[9px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded font-bold transition flex items-center gap-1 cursor-pointer" title="Generate meta description with AI">
                                         <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i> AI Gen
                                     </button>
                                 </div>
                             </div>
                             <div class="relative">
-                                <textarea id="meta_description" oninput="syncSocialCardPreview(); calculateSEO();" class="seo-input w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 text-xs focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 resize-none font-medium leading-relaxed" rows="3" maxlength="160" placeholder="গুগল সার্চ ও সোশ্যাল মিডিয়ার জন্য নিউজের আকর্ষণীয় সারসংক্ষেপ (১২০-১৬০ অক্ষর)..."></textarea>
+                                <textarea id="meta_description" oninput="syncSocialCardPreview(); calculateSEO();" class="seo-input w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 text-xs focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 resize-none font-medium leading-relaxed" rows="3" maxlength="160" placeholder="Engaging news summary for search engines and social media (120-160 chars)..."></textarea>
                             </div>
                             <div class="flex justify-between items-center text-[10px]">
-                                <span id="meta-length-status" class="font-bold text-slate-400">খালি</span>
-                                <span class="text-slate-400 font-bold"><span id="meta-count">0</span> / 160 অক্ষর</span>
+                                <span id="meta-length-status" class="font-bold text-slate-400">Empty</span>
+                                <span class="text-slate-400 font-bold"><span id="meta-count">0</span> / 160 chars</span>
                             </div>
                         </div>
 
@@ -321,10 +321,10 @@
                                     <span>› news › <span id="serpSlug" class="truncate text-slate-400">article</span></span>
                                 </div>
                                 <h4 id="googleSerpTitle" class="text-xs font-bold text-blue-700 dark:text-blue-400 hover:underline cursor-pointer line-clamp-1 mt-0.5 font-bangla">
-                                    খবরের শিরোনাম
+                                    Article Headline
                                 </h4>
                                 <p id="googleSerpSnippet" class="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 mt-0.5 leading-snug font-bangla">
-                                    মেটা ডেসক্রিপশন এখানে দেখা যাবে...
+                                    Meta description will be shown here...
                                 </p>
                             </div>
                         </div>
@@ -336,20 +336,20 @@
                             <div class="flex items-center justify-between">
                                 <h6 class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 m-0">
                                     <i class="fa-solid fa-link text-indigo-500"></i>
-                                    <span>🔗 ইন্টারনাল লিংক সাজেশন</span>
+                                    <span>🔗 Internal Link Suggestions</span>
                                 </h6>
-                                <button type="button" onclick="fetchRelatedLinks('', true)" class="text-[9px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded font-bold transition flex items-center gap-1 cursor-pointer" title="অটো-সাজেশন রিফ্রেশ করুন">
-                                    <i class="fa-solid fa-arrows-rotate text-[10px]"></i> রিফ্রেশ
+                                <button type="button" onclick="fetchRelatedLinks('', true)" class="text-[9px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded font-bold transition flex items-center gap-1 cursor-pointer" title="Refresh auto suggestions">
+                                    <i class="fa-solid fa-arrows-rotate text-[10px]"></i> Refresh
                                 </button>
                             </div>
 
                             <div class="flex gap-1.5">
                                 <div class="relative flex-1">
-                                    <input type="text" id="link-search-keyword" onkeydown="if(event.key==='Enter'){event.preventDefault();fetchRelatedLinks();}" class="w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-1.5 text-xs focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder:text-slate-400" placeholder="কী-ওয়ার্ড দিয়ে সার্চ করুন...">
+                                    <input type="text" id="link-search-keyword" onkeydown="if(event.key==='Enter'){event.preventDefault();fetchRelatedLinks();}" class="w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-1.5 text-xs focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder:text-slate-400" placeholder="Search by keywords...">
                                 </div>
                                 <button type="button" id="btn-search-links" class="bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0" onclick="fetchRelatedLinks()">
                                     <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
-                                    <span>খুঁজুন</span>
+                                    <span>Search</span>
                                 </button>
                             </div>
 
@@ -373,10 +373,10 @@
                     <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-4 py-3 flex justify-between items-center shadow-sm">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-shield-halved text-sm text-amber-300"></i>
-                            <h5 class="m-0 font-bold text-xs tracking-wide">AI Fact Checker & সত্যতা যাচাই</h5>
+                            <h5 class="m-0 font-bold text-xs tracking-wide">AI Fact Checker & Verification</h5>
                         </div>
                         <span id="factcheck-status-badge" class="bg-white/90 text-slate-800 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider hidden shadow-sm">
-                            অযাচাইকৃত
+                            Unverified
                         </span>
                     </div>
                     
@@ -384,7 +384,7 @@
                         {{-- Trigger Button --}}
                         <button type="button" id="btn-run-factcheck" class="w-full bg-gradient-to-r from-slate-900 to-indigo-950 hover:from-slate-800 hover:to-indigo-900 text-white py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-md cursor-pointer group" onclick="runFactCheckAndPlagiarism()">
                             <i class="fa-solid fa-magnifying-glass-chart text-indigo-400 group-hover:scale-110 transition-transform"></i>
-                            <span>রিয়েল-টাইম সত্যতা ও তথ্য যাচাই করুন</span>
+                            <span>Real-time Fact Checking & Verification</span>
                         </button>
 
                         {{-- Skeleton Loader --}}
@@ -401,7 +401,7 @@
                                 <div class="h-10 bg-slate-200 dark:bg-slate-700 rounded"></div>
                             </div>
                             <p class="text-[11px] text-center text-indigo-600 dark:text-indigo-400 font-bold animate-pulse">
-                                📡 গুগল ফ্যাক্ট চেক ডেটাবেজ ও মূলধারার সূত্রে তথ্য মিলিয়ে দেখা হচ্ছে...
+                                📡 Verifying claims against Google Fact Check Database and authoritative sources...
                             </p>
                         </div>
 
@@ -424,7 +424,7 @@
                                 {{-- Uniqueness Meter --}}
                                 <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
                                     <div class="flex justify-between items-center mb-1">
-                                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300">মৌলিকতা</span>
+                                        <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300">Originality</span>
                                         <span id="uniqueness-score" class="text-xs font-black text-indigo-600">--%</span>
                                     </div>
                                     <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
@@ -446,7 +446,7 @@
                             <div id="official-factcheck-alert" class="hidden p-3 rounded-xl bg-rose-50 dark:bg-rose-950/70 border border-rose-300 dark:border-rose-800 space-y-2">
                                 <div class="flex items-center gap-2 text-rose-700 dark:text-rose-300 text-xs font-black">
                                     <i class="fa-solid fa-triangle-exclamation"></i>
-                                    <span>অফিশিয়াল ফ্যাক্ট-চেকার ডেটাবেজ ম্যাচ (Google ClaimReview)</span>
+                                    <span>Official Fact-Checker Database Matches (Google ClaimReview)</span>
                                 </div>
                                 <div id="official-factcheck-list" class="space-y-1.5 text-[11px]"></div>
                             </div>
@@ -455,9 +455,9 @@
                             <div>
                                 <div class="flex items-center justify-between mb-2">
                                     <label class="text-[11px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider flex items-center gap-1.5">
-                                        <i class="fa-solid fa-list-check text-indigo-500"></i> তথ্যের দাবিভিত্তিক মূল্যায়ন
+                                        <i class="fa-solid fa-list-check text-indigo-500"></i> Claim-by-Claim Breakdown
                                     </label>
-                                    <span id="claims-count-badge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">০টি দাবি</span>
+                                    <span id="claims-count-badge" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">0 Claims</span>
                                 </div>
                                 <div id="claims-breakdown-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
                                     {{-- Dynamically populated via JS --}}
@@ -467,7 +467,7 @@
                             {{-- Red Flags / Sensationalism Warnings --}}
                             <div id="factcheck-redflags-box" class="hidden p-3 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 space-y-1.5">
                                 <span class="text-[11px] font-black text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-flag text-amber-600"></i> সতর্কতা ও অস্পষ্টতা
+                                    <i class="fa-solid fa-flag text-amber-600"></i> Flags & Disclaimers
                                 </span>
                                 <ul id="factcheck-redflags-list" class="text-[11px] text-amber-800 dark:text-amber-300 list-disc pl-4 space-y-0.5"></ul>
                             </div>
@@ -508,15 +508,15 @@
             <div class="flex flex-wrap items-center gap-2 bg-slate-50 dark:bg-slate-800/60 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
                 <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300 has-[:checked]:bg-white dark:has-[:checked]:bg-slate-900 has-[:checked]:text-indigo-600 dark:has-[:checked]:text-indigo-400 has-[:checked]:shadow-sm transition select-none">
                     <input type="radio" name="modal_schedule_type" value="instant" checked onchange="toggleModalScheduleInput(this.value)" class="hidden">
-                    <i class="fa-solid fa-bolt text-amber-500"></i> সরাসরি পাবলিশ
+                    <i class="fa-solid fa-bolt text-amber-500"></i> Publish Directly
                 </label>
                 <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300 has-[:checked]:bg-white dark:has-[:checked]:bg-slate-900 has-[:checked]:text-indigo-600 dark:has-[:checked]:text-indigo-400 has-[:checked]:shadow-sm transition select-none">
                     <input type="radio" name="modal_schedule_type" value="drip" onchange="toggleModalScheduleInput(this.value)" class="hidden">
-                    <i class="fa-solid fa-droplet text-blue-500"></i> অটো-ড্রিপ কিউ
+                    <i class="fa-solid fa-droplet text-blue-500"></i> Auto-Drip Queue
                 </label>
                 <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300 has-[:checked]:bg-white dark:has-[:checked]:bg-slate-900 has-[:checked]:text-indigo-600 dark:has-[:checked]:text-indigo-400 has-[:checked]:shadow-sm transition select-none">
                     <input type="radio" name="modal_schedule_type" value="custom" onchange="toggleModalScheduleInput(this.value)" class="hidden">
-                    <i class="fa-solid fa-calendar-days text-purple-500"></i> শিডিউল টাইম
+                    <i class="fa-solid fa-calendar-days text-purple-500"></i> Scheduled Time
                 </label>
                 
                 <input type="datetime-local" id="modalScheduledAtInput" class="hidden px-2.5 py-1 text-xs border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500">

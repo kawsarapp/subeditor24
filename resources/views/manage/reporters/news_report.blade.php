@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-{{-- ১. স্ক্রিপ্ট ও ফন্ট --}}
+{{-- 1. Scripts & Fonts --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -14,7 +14,7 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     .img-zoom:hover { transform: scale(1.05); transition: all 0.4s ease-in-out; cursor: zoom-in; }
     
-    /* মোবাইল টেবিল ফিক্স */
+    /* Mobile table fix */
     @media (max-width: 640px) {
         .mobile-table-card thead { display: none; }
         .mobile-table-card tr { display: block; margin-bottom: 1rem; border: 1px solid #f1f5f9; border-radius: 1.5rem; background: #fff; padding: 1rem; }
@@ -29,13 +29,13 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
         <div>
             <h2 class="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-                <i class="fa-solid fa-chart-pie text-indigo-600"></i> রিপোর্টার নিউজ রিপোর্ট
+                <i class="fa-solid fa-chart-pie text-indigo-600"></i> Reporter News Submissions
             </h2>
-            <p class="text-slate-500 mt-1 text-sm font-medium">প্রতিনিধিদের পাঠানো খবরের গ্যালারি ও পাবলিশিং কন্ট্রোল</p>
+            <p class="text-slate-500 mt-1 text-sm font-medium">Correspondent submission gallery and editorial publishing workflow</p>
         </div>
         <div class="bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-slate-100 w-full sm:w-auto text-center flex items-center justify-between sm:justify-center gap-3">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">মোট নিউজ: <span class="text-indigo-600 text-lg">{{ $news->total() }}</span></span>
+            <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Total News: <span class="text-indigo-600 text-lg">{{ $news->total() }}</span></span>
         </div>
     </div>
 
@@ -45,10 +45,10 @@
             <table class="w-full text-left border-collapse mobile-table-card">
                 <thead>
                     <tr class="bg-slate-50/80 border-b border-slate-100">
-                        <th class="px-6 py-5 text-xs font-bold uppercase text-slate-400">থাম্বনেইল</th>
-                        <th class="px-6 py-5 text-xs font-bold uppercase text-slate-400">প্রেরক ও সময়</th>
-                        <th class="px-6 py-5 text-xs font-bold uppercase text-slate-400">শিরোনাম ও তথ্য</th>
-                        <th class="px-6 py-5 text-xs font-bold uppercase text-slate-400 text-center">অ্যাকশন</th>
+                        <th class="px-6 py-5 text-xs font-bold uppercase text-slate-400">Thumbnail</th>
+                        <th class="px-6 py-5 text-xs font-bold uppercase text-slate-400">Sender & Time</th>
+                        <th class="px-6 py-5 text-xs font-bold uppercase text-slate-400">Title & Info</th>
+                        <th class="px-6 py-5 text-xs font-bold uppercase text-slate-400 text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -59,7 +59,7 @@
                     @endphp
 
                     <tr class="transition-colors duration-300 {{ $isProcessed ? 'bg-emerald-50/10' : 'hover:bg-slate-50/80' }}">
-                        <td class="px-6 py-4" data-label="থাম্বনেইল">
+                        <td class="px-6 py-4" data-label="Thumbnail">
                             <div class="relative w-20 h-14 sm:w-28 sm:h-20 rounded-xl overflow-hidden shadow-sm border border-slate-200 group">
                                 <img src="{{ $item->thumbnail_url }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                                 @if(is_array($extraImages) && count($extraImages) > 0)
@@ -70,7 +70,7 @@
                             </div>
                         </td>
 
-                        <td class="px-6 py-4" data-label="প্রেরক">
+                        <td class="px-6 py-4" data-label="Sender">
                             <div class="font-bold text-sm flex items-center gap-2 {{ $isProcessed ? 'text-slate-400' : 'text-slate-700' }}">
                                 <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px]"><i class="fa-solid fa-user"></i></div>
                                 {{ $item->reporter->name ?? $item->reporter_name_manual }}
@@ -80,42 +80,42 @@
                             </div>
                         </td>
                         
-                        <td class="px-6 py-4" data-label="নিউজ">
+                        <td class="px-6 py-4" data-label="News">
                             <div class="font-bold text-base sm:text-lg leading-snug line-clamp-2 mb-2 {{ $isProcessed ? 'text-slate-400 line-through decoration-slate-300' : 'text-slate-800' }}">
                                 {{ $item->title }}
                             </div>
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-lg font-bold border border-slate-200">
-                                    <i class="fa-solid fa-location-dot mr-1 text-rose-400"></i> {{ $item->location ?? 'লোকেশন নেই' }}
+                                    <i class="fa-solid fa-location-dot mr-1 text-rose-400"></i> {{ $item->location ?? 'No Location' }}
                                 </span>
                                 @if($isProcessed)
                                     <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg font-bold flex items-center gap-1 border border-emerald-200 shadow-sm">
-                                        <i class="fa-solid fa-circle-check"></i> সম্পন্ন
+                                        <i class="fa-solid fa-circle-check"></i> Completed
                                     </span>
                                 @else
                                     <span class="text-[10px] bg-amber-50 text-amber-600 px-2 py-1 rounded-lg font-bold flex items-center gap-1 border border-amber-200">
-                                        <i class="fa-solid fa-hourglass-half"></i> অপেক্ষমান
+                                        <i class="fa-solid fa-hourglass-half"></i> Pending
                                     </span>
                                 @endif
                             </div>
                         </td>
 
-                        <td class="px-6 py-4 text-center" data-label="অ্যাকশন">
+                        <td class="px-6 py-4 text-center" data-label="Actions">
                             <div class="flex flex-wrap justify-center sm:justify-center gap-2">
                                 @if($isProcessed)
                                     <a href="{{ route('news.drafts') }}" class="w-full sm:w-auto px-5 py-2.5 bg-slate-800 text-white rounded-xl font-bold text-xs hover:bg-black hover:shadow-lg hover:-translate-y-0.5 transition-all text-center flex items-center justify-center gap-2">
-                                        <i class="fa-solid fa-folder-open"></i> ড্রাফটে দেখুন
+                                        <i class="fa-solid fa-folder-open"></i> View in Drafts
                                     </a>
                                 @elseif($item->locked_by_user_id)
                                     <button disabled class="w-full sm:w-auto px-5 py-2.5 bg-slate-100 text-slate-400 rounded-xl font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed border border-slate-200">
-                                        <i class="fa-solid fa-lock text-[10px]"></i> ব্যস্ত
+                                        <i class="fa-solid fa-lock text-[10px]"></i> Busy
                                     </button>
                                 @else
                                     <button onclick="openEditModal('{{ $item->id }}')" class="w-full sm:w-auto px-5 py-2.5 bg-amber-50 text-amber-600 rounded-xl font-bold text-xs hover:bg-amber-100 border border-amber-200 transition-all shadow-sm hover:-translate-y-0.5 flex items-center justify-center gap-1.5">
-                                        <i class="fa-solid fa-pen-to-square"></i> রিভিউ
+                                        <i class="fa-solid fa-pen-to-square"></i> Review
                                     </button>
                                     <a href="{{ route('news.studio', $item->id) }}" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl font-bold text-xs hover:bg-indigo-100 border border-indigo-200 transition-all shadow-sm hover:-translate-y-0.5 text-center flex items-center justify-center gap-1.5">
-                                        <i class="fa-solid fa-palette"></i> ডিজাইন
+                                        <i class="fa-solid fa-palette"></i> Design
                                     </a>
                                 @endif
                             </div>
@@ -126,8 +126,8 @@
                         <td colspan="4" class="py-16 text-center">
                             <div class="flex flex-col items-center justify-center text-slate-400">
                                 <i class="fa-regular fa-folder-open text-5xl mb-4 opacity-30"></i>
-                                <p class="text-lg font-bold text-slate-600">কোনো নিউজ পাওয়া যায়নি!</p>
-                                <p class="text-sm font-medium mt-1">প্রতিনিধিরা এখনও কোনো নিউজ পাঠাননি।</p>
+                                <p class="text-lg font-bold text-slate-600">No News Found!</p>
+                                <p class="text-sm font-medium mt-1">No correspondents have submitted news yet.</p>
                             </div>
                         </td>
                     </tr>
@@ -144,7 +144,7 @@
     </div>
 </div>
 
-{{-- ৩. নিউজ এডিট ও গ্যালারি মোডাল --}}
+{{-- 3. News Edit & Gallery Modal --}}
 <div id="editModal" class="fixed inset-0 bg-slate-900/90 hidden items-center justify-center z-[100] backdrop-blur-md px-2 sm:px-4">
     <div class="bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl w-full max-w-6xl max-h-[96vh] overflow-hidden flex flex-col transform transition-all duration-300 scale-95 opacity-0 modal-container border border-slate-200">
         
@@ -153,9 +153,9 @@
             <div>
                 <h3 class="font-black text-xl sm:text-2xl text-slate-800 flex items-center gap-2">
                     <span class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm"><i class="fa-solid fa-pen-clip"></i></span>
-                    নিউজ রিভিউ প্যানেল
+                    News Review Panel
                 </h3>
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 hidden sm:block ml-10">রিপোর্টারের তথ্য যাচাই করুন</p>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 hidden sm:block ml-10">Verify correspondent submission details</p>
             </div>
             <button onclick="closeEditModal()" class="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-rose-100 hover:text-rose-600 hover:rotate-90 transition-all text-xl shadow-sm"><i class="fa-solid fa-xmark"></i></button>
         </div>
@@ -164,10 +164,10 @@
         <div class="overflow-y-auto p-5 sm:p-10 flex-grow custom-scrollbar bg-white">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
                 
-                {{-- বাম পাশ: গ্যালারি ও তথ্য --}}
+                {{-- Left: Gallery & Info --}}
                 <div class="lg:col-span-5 space-y-6">
                     <div class="group">
-                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-regular fa-images"></i> সংবাদ গ্যালারি</label>
+                        <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fa-regular fa-images"></i> News Gallery</label>
                         <div class="relative aspect-video rounded-3xl overflow-hidden bg-slate-100 border border-slate-200 shadow-md group-hover:shadow-indigo-100 transition-all">
                             <img id="modalMainImg" src="" class="w-full h-full object-cover img-zoom" onclick="window.open(this.src)">
                         </div>
@@ -176,19 +176,19 @@
 
                     <div class="p-6 bg-slate-50 rounded-[2rem] border border-slate-200 space-y-4 shadow-inner">
                         <div class="flex justify-between items-center border-b border-slate-200 pb-4">
-                            <span class="text-xs font-bold text-slate-500 flex items-center gap-1"><i class="fa-solid fa-location-dot text-slate-300"></i> লোকেশন:</span>
+                            <span class="text-xs font-bold text-slate-500 flex items-center gap-1"><i class="fa-solid fa-location-dot text-slate-300"></i> Location:</span>
                             <span class="text-sm font-black text-slate-700 bg-white px-3 py-1 rounded-lg shadow-sm border border-slate-100" id="infoLocation">--</span>
                         </div>
                         <div class="flex justify-between items-center pt-2">
-                            <span class="text-xs font-bold text-slate-500 flex items-center gap-1"><i class="fa-solid fa-link text-slate-300"></i> সোর্স লিংক:</span>
+                            <span class="text-xs font-bold text-slate-500 flex items-center gap-1"><i class="fa-solid fa-link text-slate-300"></i> Source Link:</span>
                             <a href="#" id="infoSource" target="_blank" class="text-xs font-black text-indigo-600 truncate max-w-[150px] hover:text-indigo-800 hover:underline flex items-center gap-1 bg-indigo-50 px-3 py-1 rounded-lg">
-                                সোর্স দেখুন <i class="fa-solid fa-external-link text-[10px]"></i>
+                                View Source <i class="fa-solid fa-external-link text-[10px]"></i>
                             </a>
                         </div>
                     </div>
                 </div>
 
-                {{-- ডান পাশ: এডিটর --}}
+                {{-- Right: Editor --}}
                 <div class="lg:col-span-7 space-y-6">
                     <form id="editForm">
                         @csrf
@@ -196,27 +196,27 @@
                         <div class="space-y-6">
                             <div class="group relative">
                                 <div class="flex justify-between items-end mb-3">
-                                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest transition-colors group-focus-within:text-indigo-600">শিরোনাম</label>
+                                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest transition-colors group-focus-within:text-indigo-600">Title</label>
                                     <span id="titleCount" class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">0 / 255</span>
                                 </div>
-                                <input type="text" id="editTitle" class="w-full border-2 border-slate-100 rounded-2xl p-4 sm:p-5 outline-none font-bold text-slate-800 text-lg sm:text-xl shadow-sm bg-slate-50 focus:border-indigo-500 focus:bg-white transition-all" placeholder="খবরের শিরোনাম লিখুন...">
+                                <input type="text" id="editTitle" class="w-full border-2 border-slate-100 rounded-2xl p-4 sm:p-5 outline-none font-bold text-slate-800 text-lg sm:text-xl shadow-sm bg-slate-50 focus:border-indigo-500 focus:bg-white transition-all" placeholder="Enter news headline...">
                             </div>
 
                             <div class="p-4 sm:p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
                                 <div class="flex items-center gap-3">
                                     <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-50"><i class="fa-solid fa-robot text-xl"></i></div>
                                     <div class="text-center sm:text-left">
-                                        <p class="text-sm font-black text-indigo-900">AI স্মার্ট রাইটার</p>
-                                        <p class="text-[11px] text-indigo-500 font-bold mt-0.5">এক ক্লিকেই নিউজ প্রফেশনালভাবে রিরাইট করুন</p>
+                                        <p class="text-sm font-black text-indigo-900">AI Smart Writer</p>
+                                        <p class="text-[11px] text-indigo-500 font-bold mt-0.5">Professionally rewrite the news with 1 click</p>
                                     </div>
                                 </div>
                                 <button type="button" onclick="triggerAI()" id="aiBtn" class="w-full sm:w-auto bg-indigo-600 text-white px-6 py-3.5 rounded-xl font-black text-xs hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 transition-all active:scale-95 flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>রিরাইট করুন</span>
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Rewrite News</span>
                                 </button>
                             </div>
 
                             <div class="group">
-                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 transition-colors group-focus-within:text-indigo-600">বিস্তারিত খবর</label>
+                                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 transition-colors group-focus-within:text-indigo-600">News Content</label>
                                 <div class="rounded-2xl overflow-hidden border-2 border-slate-100 focus-within:border-indigo-500 transition-all shadow-sm">
                                     <textarea id="editContent"></textarea>
                                 </div>
@@ -224,17 +224,17 @@
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                 <div class="group">
-                                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">ক্যাটাগরি</label>
+                                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Category</label>
                                     <div class="relative">
                                         <select id="editCategory" class="w-full border-2 border-slate-100 rounded-2xl p-4 bg-slate-50 outline-none font-bold text-slate-700 shadow-sm appearance-none focus:border-indigo-500 focus:bg-white transition-all cursor-pointer"></select>
                                         <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                                     </div>
                                 </div>
                                 <div class="group">
-                                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">ট্যাগস</label>
+                                    <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Tags</label>
                                     <div class="relative">
                                         <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-300"><i class="fa-solid fa-hashtag"></i></span>
-                                        <input type="text" id="editTags" class="w-full border-2 border-slate-100 rounded-2xl p-4 pl-10 bg-slate-50 outline-none font-bold text-slate-700 shadow-sm focus:border-indigo-500 focus:bg-white transition-all" placeholder="কমা দিয়ে লিখুন (যেমন: ঢাকা, খেলা)">
+                                        <input type="text" id="editTags" class="w-full border-2 border-slate-100 rounded-2xl p-4 pl-10 bg-slate-50 outline-none font-bold text-slate-700 shadow-sm focus:border-indigo-500 focus:bg-white transition-all" placeholder="Comma separated (e.g. National, Sports)">
                                     </div>
                                 </div>
                             </div>
@@ -246,19 +246,19 @@
 
         {{-- Modal Footer --}}
         <div class="px-6 py-5 sm:px-10 sm:py-6 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 sticky bottom-0 z-20">
-            <button onclick="closeEditModal()" class="w-full sm:w-auto px-8 py-3.5 text-slate-500 font-black text-sm hover:bg-slate-200 hover:text-slate-700 border border-slate-200 hover:border-slate-300 rounded-2xl transition-all order-3 sm:order-1">বাতিল করুন</button>
+            <button onclick="closeEditModal()" class="w-full sm:w-auto px-8 py-3.5 text-slate-500 font-black text-sm hover:bg-slate-200 hover:text-slate-700 border border-slate-200 hover:border-slate-300 rounded-2xl transition-all order-3 sm:order-1">Cancel</button>
             <button onclick="saveDraftOnly()" id="draftBtn" class="w-full sm:w-auto px-8 py-3.5 bg-slate-700 text-white font-black text-sm rounded-2xl hover:bg-slate-800 hover:shadow-lg transition-all flex items-center justify-center gap-2 order-2">
-                <i class="fa-solid fa-floppy-disk"></i> ড্রাফটে সেভ
+                <i class="fa-solid fa-floppy-disk"></i> Save to Drafts
             </button>
             <button onclick="submitFinalPublish()" id="publishBtn" class="w-full sm:w-auto px-10 py-3.5 bg-emerald-600 text-white font-black text-sm rounded-2xl hover:bg-emerald-700 shadow-xl shadow-emerald-200 transition-all flex items-center justify-center gap-2 order-1 sm:order-3">
-                <i class="fa-solid fa-paper-plane"></i> পাবলিশ করুন
+                <i class="fa-solid fa-paper-plane"></i> Publish News
             </button>
         </div>
     </div>
 </div>
 
 <script>
-    // ১. TinyMCE সেটআপ
+    // 1. TinyMCE Setup
     tinymce.init({
         selector: '#editContent',
         height: 350,
@@ -274,7 +274,7 @@
         content_style: "@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri&display=swap'); body { font-family: 'Hind Siliguri', sans-serif; font-size: 16px; padding: 15px; color: #334155; }"
     });
 
-    // টাইটেল ক্যারেক্টার কাউন্টার
+    // Title character counter
     document.getElementById('editTitle').addEventListener('input', function() {
         document.getElementById('titleCount').innerText = this.value.length + " / 255";
         if(this.value.length > 255) {
@@ -286,7 +286,7 @@
         }
     });
 
-    // ২. মোডাল কন্ট্রোল ফাংশন
+    // 2. Modal control functions
     function openEditModal(newsId) {
         const modal = document.getElementById('editModal');
         const container = modal.querySelector('.modal-container');
@@ -300,8 +300,8 @@
         }, 10);
         
         // Loader While Fetching
-        document.getElementById('editTitle').value = "ডেটা লোড হচ্ছে...";
-        if (tinymce.get('editContent')) tinymce.get('editContent').setContent("<p>অপেক্ষা করুন...</p>");
+        document.getElementById('editTitle').value = "Loading data...";
+        if (tinymce.get('editContent')) tinymce.get('editContent').setContent("<p>Please wait...</p>");
 
         fetch(`/news/${newsId}/get-draft`)
         .then(res => res.json())
@@ -316,10 +316,10 @@
                 }
 
                 document.getElementById('modalMainImg').src = data.image_url || 'https://placehold.co/600x400?text=No+Image';
-                document.getElementById('infoLocation').innerText = data.location || 'লোকেশন নেই';
+                document.getElementById('infoLocation').innerText = data.location || 'No Location';
                 document.getElementById('infoSource').href = data.original_link || '#';
                 
-                // 🔥 BUG FIX: Backend পাঠায় data.hashtags
+                // Backend sends data.hashtags
                 document.getElementById('editTags').value = data.hashtags || '';
 
                 const extraGrid = document.getElementById('extraImagesGrid');
@@ -334,19 +334,19 @@
                 }
 
                 const catSelect = document.getElementById('editCategory');
-                catSelect.innerHTML = '<option value="">ক্যাটাগরি সিলেক্ট করুন</option>';
+                catSelect.innerHTML = '<option value="">Select Category</option>';
                 if (data.categories) {
                     Object.entries(data.categories).forEach(([name, id]) => {
                         catSelect.innerHTML += `<option value="${id}">${name}</option>`;
                     });
                 }
             } else {
-                Swal.fire('দুঃখিত!', data.message, 'error');
+                Swal.fire('Error!', data.message, 'error');
                 closeEditModal();
             }
         })
         .catch(err => {
-            Swal.fire('সার্ভার এরর!', 'ডেটা লোড করতে সমস্যা হয়েছে।', 'error');
+            Swal.fire('Server Error!', 'Failed to load data.', 'error');
             closeEditModal();
         });
     }
@@ -369,17 +369,17 @@
         }, 300);
     }
 
-    // ৩. AI রিরাইট ফাংশন (উন্নত UX)
+    // 3. AI Rewrite function
     function triggerAI() {
         Swal.fire({
-            title: 'আপনি কি নিশ্চিত?',
-            text: "AI দিয়ে রিরাইট করলে আপনার ১ ক্রেডিট কাটা হবে।",
+            title: 'Are you sure?',
+            text: "Rewriting with AI will use 1 credit.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#4f46e5',
             cancelButtonColor: '#94a3b8',
-            confirmButtonText: 'হ্যাঁ, রিরাইট করুন!',
-            cancelButtonText: 'বাতিল'
+            confirmButtonText: 'Yes, Rewrite!',
+            cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 const id = document.getElementById('editNewsId').value;
@@ -387,34 +387,34 @@
                 
                 btn.disabled = true;
                 btn.classList.add('opacity-70', 'cursor-not-allowed');
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> প্রসেসিং...';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
 
                 fetch(`/news/${id}/process-ai`, {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                 })
                 .then(res => {
-                    // লারাভেল back() রিটার্ন করে, তাই সাকসেস হলে জাস্ট রিলোড
+                    // Laravel returns back(), reload on success
                     Swal.fire({
                         icon: 'success',
-                        title: 'প্রসেসিং শুরু হয়েছে!',
-                        text: 'অটোমেটিক রিলোড হচ্ছে...',
+                        title: 'Processing Started!',
+                        text: 'Reloading automatically...',
                         showConfirmButton: false,
                         timer: 2000
                     }).then(() => location.reload());
                 })
                 .catch(err => {
-                    Swal.fire('ভুল হয়েছে!', 'সার্ভারে কানেক্ট করা যায়নি।', 'error');
+                    Swal.fire('Error!', 'Could not connect to server.', 'error');
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> <span>রিরাইট করুন</span>';
+                    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> <span>Rewrite News</span>';
                 });
             }
         });
     }
 
-    // ৪. ড্রাফট এবং পাবলিশ ফাংশন
-    function saveDraftOnly() { sendPostRequest(`/news/${document.getElementById('editNewsId').value}/update-draft`, 'draftBtn', 'ড্রাফটে সেভ করা হয়েছে!'); }
-    function submitFinalPublish() { sendPostRequest(`/news/${document.getElementById('editNewsId').value}/manual-publish`, 'publishBtn', 'পাবলিশিং কিউতে পাঠানো হয়েছে!'); }
+    // 4. Draft & Publish functions
+    function saveDraftOnly() { sendPostRequest(`/news/${document.getElementById('editNewsId').value}/update-draft`, 'draftBtn', 'Saved to Drafts successfully!'); }
+    function submitFinalPublish() { sendPostRequest(`/news/${document.getElementById('editNewsId').value}/manual-publish`, 'publishBtn', 'Sent to Publishing Queue!'); }
 
     function sendPostRequest(url, btnId, successMsg) {
         const btn = document.getElementById(btnId);
@@ -430,7 +430,7 @@
         formData.append('hashtags', document.getElementById('editTags').value);
 
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> প্রসেসিং...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
 
         fetch(url, { method: 'POST', body: formData })
         .then(res => res.json())
@@ -438,19 +438,19 @@
             if(data.success) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'সফল!',
+                    title: 'Success!',
                     text: successMsg,
                     showConfirmButton: false,
                     timer: 1500
                 }).then(() => location.reload());
             } else {
-                Swal.fire('ভুল হয়েছে!', data.message, 'error');
+                Swal.fire('Error!', data.message, 'error');
                 btn.disabled = false;
                 btn.innerHTML = originalText;
             }
         })
         .catch(err => {
-            Swal.fire('সার্ভার এরর!', 'যোগাযোগ করা সম্ভব হয়নি।', 'error');
+            Swal.fire('Server Error!', 'Could not communicate with server.', 'error');
             btn.disabled = false;
             btn.innerHTML = originalText;
         });

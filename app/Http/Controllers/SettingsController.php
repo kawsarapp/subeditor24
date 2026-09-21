@@ -89,6 +89,7 @@ class SettingsController extends Controller
             'huggingface_model'    => 'nullable|string',
             'photoroom_api_key'    => 'nullable|string',
             'target_language'      => 'nullable|in:bn,en',
+            'custom_rewrite_prompt'=> 'nullable|string|max:10000',
         ]);
         
         $settings = UserSetting::firstOrCreate(['user_id' => Auth::id()]);
@@ -166,24 +167,29 @@ class SettingsController extends Controller
             }
         }
 
-        // 🤖 AI Configuration
-        if ($isSuperAdmin || $user->hasPermission('can_settings_ai')) {
-            if ($request->filled('primary_ai')) {
+        // 🤖 AI Configuration & Custom Prompt
+        if ($isSuperAdmin || $user->hasPermission('can_settings_ai') || $user->hasPermission('can_settings_ai_prompt')) {
+            if ($request->filled('primary_ai') && ($isSuperAdmin || $user->hasPermission('can_settings_ai'))) {
                 $settings->primary_ai = $request->primary_ai;
             }
-            if ($request->has('openai_api_key')) $settings->openai_api_key   = $request->openai_api_key;
-            if ($request->has('openai_model')) $settings->openai_model     = $request->openai_model;
-            if ($request->has('gemini_api_key')) $settings->gemini_api_key   = $request->gemini_api_key;
-            if ($request->has('gemini_model')) $settings->gemini_model     = $request->gemini_model;
-            if ($request->has('deepseek_api_key')) $settings->deepseek_api_key = $request->deepseek_api_key;
-            if ($request->has('deepseek_model')) $settings->deepseek_model   = $request->deepseek_model;
-            if ($request->has('groq_api_key')) $settings->groq_api_key     = $request->groq_api_key;
-            if ($request->has('groq_model')) $settings->groq_model       = $request->groq_model;
-            if ($request->has('qwen_api_key')) $settings->qwen_api_key     = $request->qwen_api_key;
-            if ($request->has('qwen_model')) $settings->qwen_model       = $request->qwen_model;
-            if ($request->has('huggingface_api_key')) $settings->huggingface_api_key = $request->huggingface_api_key;
-            if ($request->has('huggingface_model')) $settings->huggingface_model   = $request->huggingface_model;
-            if ($request->has('photoroom_api_key')) $settings->photoroom_api_key = $request->photoroom_api_key;
+            if ($isSuperAdmin || $user->hasPermission('can_settings_ai')) {
+                if ($request->has('openai_api_key')) $settings->openai_api_key   = $request->openai_api_key;
+                if ($request->has('openai_model')) $settings->openai_model     = $request->openai_model;
+                if ($request->has('gemini_api_key')) $settings->gemini_api_key   = $request->gemini_api_key;
+                if ($request->has('gemini_model')) $settings->gemini_model     = $request->gemini_model;
+                if ($request->has('deepseek_api_key')) $settings->deepseek_api_key = $request->deepseek_api_key;
+                if ($request->has('deepseek_model')) $settings->deepseek_model   = $request->deepseek_model;
+                if ($request->has('groq_api_key')) $settings->groq_api_key     = $request->groq_api_key;
+                if ($request->has('groq_model')) $settings->groq_model       = $request->groq_model;
+                if ($request->has('qwen_api_key')) $settings->qwen_api_key     = $request->qwen_api_key;
+                if ($request->has('qwen_model')) $settings->qwen_model       = $request->qwen_model;
+                if ($request->has('huggingface_api_key')) $settings->huggingface_api_key = $request->huggingface_api_key;
+                if ($request->has('huggingface_model')) $settings->huggingface_model   = $request->huggingface_model;
+                if ($request->has('photoroom_api_key')) $settings->photoroom_api_key = $request->photoroom_api_key;
+            }
+            if ($request->has('custom_rewrite_prompt')) {
+                $settings->custom_rewrite_prompt = $request->custom_rewrite_prompt;
+            }
         }
 
         // 💰 ROI Config

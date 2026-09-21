@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-{{-- TinyMCE লাইব্রেরি --}}
+{{-- TinyMCE Library --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js"></script>
 
 <style>
@@ -12,8 +12,8 @@
 
 <div class="max-w-7xl mx-auto py-6">
     <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 font-bangla flex items-center gap-2">
-            📢 প্রকাশিত নিউজসমূহ
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            📢 Published Articles
             <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full border border-emerald-200">{{ $published->total() }}</span>
         </h2>
     </div>
@@ -38,11 +38,11 @@
        
         {{-- Body --}}
         <div class="p-5 flex flex-col flex-1">
-            <h3 class="text-[16px] font-bold leading-snug mb-2 font-bangla line-clamp-2 text-slate-800 group-hover:text-indigo-600 transition-colors">
+            <h3 class="text-[16px] font-bold leading-snug mb-2 line-clamp-2 text-slate-800 group-hover:text-indigo-600 transition-colors">
                 {{ $item->title }}
             </h3>
             
-            <p class="text-xs text-slate-500 mb-4 line-clamp-3 font-bangla leading-relaxed">
+            <p class="text-xs text-slate-500 mb-4 line-clamp-3 leading-relaxed">
                 {{ Str::limit(strip_tags($item->content), 100) }}
             </p>
 
@@ -55,14 +55,14 @@
             {{-- Action Buttons --}}
             <div class="space-y-2 pt-4 border-t border-dashed border-slate-100">
                 
-                {{-- 🔥 ১. Open Studio Button (Added Here) --}}
+                {{-- 1. Open Studio Button --}}
                 <a href="{{ route('news.studio', $item->id) }}" 
                    class="w-full bg-slate-50 hover:bg-white text-slate-600 border border-slate-200 hover:border-purple-300 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 group/studio hover:shadow-sm">
                     <svg class="w-4 h-4 text-purple-500 group-hover/studio:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
                     DESIGN STUDIO
                 </a>
 
-                {{-- ২. Live Link --}}
+                {{-- 2. Live Link --}}
                 @if($item->live_url)
                     <a href="{{ $item->live_url }}" target="_blank" class="block w-full text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-600 py-2.5 rounded-xl text-xs font-bold border border-indigo-100 transition flex items-center justify-center gap-1.5">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
@@ -70,8 +70,8 @@
                     </a>
                 @endif
                 
-                {{-- ৩. Edit Button --}}
-                <button onclick="if(confirm('সতর্কতা: এটি আপডেট করলে ১ ক্রেডিট কাটা হবে। আপনি কি নিশ্চিত?')) fetchDraftContent({{ $item->id }}, '{{ $item->thumbnail_url }}')" 
+                {{-- 3. Edit Button --}}
+                <button onclick="if(confirm('Warning: Updating this post will deduct 1 credit. Do you want to proceed?')) fetchDraftContent({{ $item->id }}, '{{ $item->thumbnail_url }}')" 
                         class="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-slate-200 hover:shadow-slate-300 flex items-center justify-center gap-1.5">
                     <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     Edit & Update
@@ -205,7 +205,7 @@
         })
         .then(res => res.json())
         .then(data => {
-            alert(data.success ? "✅ আপডেট সফল হয়েছে! কিছুক্ষণের মধ্যে লাইভ হবে।" : "❌ " + data.message);
+            alert(data.success ? "✅ Update successful! It will be live shortly." : "❌ " + data.message);
             if(data.success) window.location.reload();
         })
         .catch(() => alert("Failed to update."))

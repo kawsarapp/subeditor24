@@ -23,10 +23,10 @@
                 @if(auth()->user()->role === 'reporter')
                     <div class="flex items-center bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 gap-1.5 shadow-inner">
                         <a href="{{ route('reporter.news.create') }}" class="flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('reporter.news.create') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white' }}">
-                            <i class="fa-solid fa-pen-to-square"></i> খবর পাঠান
+                            <i class="fa-solid fa-pen-to-square"></i> Submit News
                         </a>
                         <a href="{{ route('reporter.news.index') }}" class="flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('reporter.news.index') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white' }}">
-                            <i class="fa-solid fa-list-check"></i> আমার খবরসমূহ
+                            <i class="fa-solid fa-list-check"></i> My Articles
                         </a>
                     </div>
                 @else
@@ -37,7 +37,7 @@
                         </a>
 
                         {{-- 1.5 Central Live Wire Feed --}}
-                        <a href="{{ route('central-feed.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('central-feed.*') ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md scale-[1.02]' : 'text-indigo-700 hover:text-indigo-800 hover:bg-white/60' }}" title="স্বয়ংক্রিয় সেন্ট্রাল লাইভ ফিড">
+                        <a href="{{ route('central-feed.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('central-feed.*') ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md scale-[1.02]' : 'text-indigo-700 hover:text-indigo-800 hover:bg-white/60' }}" title="Automated Central Live Feed">
                             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                             ⚡ Live Wire
                         </a>
@@ -67,6 +67,11 @@
                             Observe
                         </a>
                         @endif
+
+                        {{-- 5.5 Free Photo Card --}}
+                        <a href="{{ route('free-photocard.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('free-photocard.*') ? 'bg-white text-indigo-600 shadow-md border border-slate-200/60 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white/60' }}">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Photo Card
+                        </a>
 
                         {{-- VERTICAL DIVIDER --}}
                         <div class="w-[1px] h-4 bg-slate-300 mx-1"></div>
@@ -112,6 +117,12 @@
                                 <a href="{{ route('custom-photo-card.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-violet-50 hover:text-violet-700 transition-colors">
                                     <i class="fa-solid fa-wand-magic-sparkles text-violet-500 w-4 text-center"></i>
                                     <span>Custom Photo Card (AI)</span>
+                                </a>
+
+                                {{-- ⚡ Free Photo Card Generator --}}
+                                <a href="{{ route('free-photocard.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">
+                                    <i class="fa-solid fa-bolt text-amber-500 w-4 text-center"></i>
+                                    <span>Free Photo Card (Link-to-Card)</span>
                                 </a>
 
                                 {{-- 3. Analytics & ROI --}}
@@ -164,6 +175,12 @@
                                     <span>Scraper Monitor</span>
                                 </a>
                                 @endif
+
+                                {{-- 7. Community Feedback & Roadmap --}}
+                                <a href="{{ route('feedback.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+                                    <i class="fa-solid fa-lightbulb text-emerald-500 w-4 text-center"></i>
+                                    <span>Feature Requests & Roadmap</span>
+                                </a>
                             </div>
                         </div>
 
@@ -179,27 +196,30 @@
                     @php
                         $todayPosts = auth()->user()->todays_post_count ?? 0;
                         $dailyTarget = auth()->user()->daily_post_limit ?? 20;
-                        $percent = min(100, round(($todayPosts / max($dailyTarget, 1)) * 100));
+                        $isUnlimited = $dailyTarget >= 9999;
+                        $percent = $isUnlimited ? 100 : min(100, round(($todayPosts / max($dailyTarget, 1)) * 100));
                     @endphp
-                    <div class="hidden xl:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 px-3 py-1.5 rounded-2xl shadow-sm transition-all" title="দৈনিক পোস্টের লক্ষ্যমাত্রা ও অগ্রগতি">
+                    <div class="hidden xl:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 px-3 py-1.5 rounded-xl shadow-sm transition-all" title="Daily Posts & Target Progress">
                         <div class="flex flex-col gap-0.5">
-                            <div class="flex items-center justify-between gap-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                <span class="flex items-center gap-1"><i class="fa-solid fa-bullseye text-indigo-500"></i> আজকের গোল</span>
-                                <span class="text-indigo-600 dark:text-indigo-400 font-black">{{ $todayPosts }}/{{ $dailyTarget }} ({{ $percent }}%)</span>
+                            <div class="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-bullseye text-indigo-500"></i> Today's Posts</span>
+                                <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">{{ $todayPosts }} @if(!$isUnlimited)/ {{ $dailyTarget }} ({{ $percent }}%)@endif</span>
                             </div>
+                            @if(!$isUnlimited)
                             <div class="w-28 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                                 <div class="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-500" style="width: {{ $percent }}%"></div>
                             </div>
+                            @endif
                         </div>
                     </div>
 
                     {{-- 🌙 Dark Mode Toggle Button --}}
-                    <button type="button" onclick="toggleDarkMode()" id="darkModeToggleBtn" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-amber-400 flex items-center justify-center text-xs transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm" title="ডার্ক / লাইট মোড পরিবর্তন">
+                    <button type="button" onclick="toggleDarkMode()" id="darkModeToggleBtn" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-amber-400 flex items-center justify-center text-xs transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm" title="Toggle Dark / Light Mode">
                         <i id="darkModeIcon" class="fa-solid fa-moon"></i>
                     </button>
 
                     {{-- ⌨️ Keyboard Shortcuts Button --}}
-                    <button type="button" onclick="openShortcutsModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-center text-xs transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm" title="কিবোর্ড শর্টকাট (?)">
+                    <button type="button" onclick="openShortcutsModal()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-center text-xs transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm" title="Keyboard Shortcuts (?)">
                         <i class="fa-solid fa-keyboard"></i>
                     </button>
 
@@ -244,6 +264,10 @@
                                     <i class="fa-solid fa-gear text-slate-500 w-4"></i> System Settings
                                 </a>
                                 @endif
+
+                                <a href="{{ route('feedback.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+                                    <i class="fa-solid fa-lightbulb text-emerald-500 w-4"></i> Feature Requests & Roadmap
+                                </a>
                             </div>
 
                             <div class="border-t border-slate-100 pt-1 mt-1">

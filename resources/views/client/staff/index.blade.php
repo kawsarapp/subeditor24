@@ -18,7 +18,7 @@
     <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-800">👥 Employee Analytics & Management</h1>
-            <p class="text-sm text-slate-500 mt-1">আপনার কর্মকর্তা ও কর্মচারীদের কাজের হিসাব ও পারফরম্যান্স</p>
+            <p class="text-sm text-slate-500 mt-1">Employee workload, activity, and performance overview</p>
         </div>
         
         <div class="flex items-center gap-4">
@@ -41,10 +41,10 @@
     <div class="border-b border-slate-200 mb-6 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
         <nav class="-mb-px flex space-x-6" aria-label="Tabs">
             <button onclick="switchTab('staff-list')" id="tab-staff-list" class="border-indigo-600 text-indigo-600 whitespace-nowrap py-3 px-4 border-b-2 font-bold text-sm flex items-center gap-2 outline-none">
-                👥 Employee Directory (কর্মচারী তালিকা)
+                👥 Employee Directory
             </button>
             <button onclick="switchTab('dept-desg')" id="tab-dept-desg" class="border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-3 px-4 border-b-2 font-bold text-sm flex items-center gap-2 outline-none">
-                🏢 Departments & Designations (বিভাগ ও পদবী)
+                🏢 Departments & Designations
             </button>
         </nav>
     </div>
@@ -55,26 +55,26 @@
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
         <form action="" method="GET" class="flex flex-col md:flex-row w-full gap-3">
             <div class="flex-1">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="🔍 স্টাফের নাম বা ইমেইল খুঁজুন..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-indigo-500 outline-none">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="🔍 Search staff by name or email..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-indigo-500 outline-none">
             </div>
             <div class="w-full md:w-48">
                 <select name="date_filter" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-indigo-500 outline-none">
-                    <option value="all" {{ request('date_filter') == 'all' ? 'selected' : '' }}>সব সময়ের ডেটা</option>
-                    <option value="today" {{ request('date_filter') == 'today' ? 'selected' : '' }}>আজকের (24h)</option>
-                    <option value="7days" {{ request('date_filter') == '7days' ? 'selected' : '' }}>গত ৭ দিন</option>
-                    <option value="month" {{ request('date_filter') == 'month' ? 'selected' : '' }}>এই মাস</option>
+                    <option value="all" {{ request('date_filter') == 'all' ? 'selected' : '' }}>All Time</option>
+                    <option value="today" {{ request('date_filter') == 'today' ? 'selected' : '' }}>Today (24h)</option>
+                    <option value="7days" {{ request('date_filter') == '7days' ? 'selected' : '' }}>Last 7 Days</option>
+                    <option value="month" {{ request('date_filter') == 'month' ? 'selected' : '' }}>This Month</option>
                 </select>
             </div>
             <button type="submit" class="bg-slate-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-slate-900 transition">
-                ফিল্টার করুন
+                Filter
             </button>
             @if(request()->has('search') || request()->has('date_filter'))
-                <a href="{{ url()->current() }}" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-lg text-sm font-bold border border-red-200 hover:bg-red-100 text-center">ক্লিয়ার</a>
+                <a href="{{ url()->current() }}" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-lg text-sm font-bold border border-red-200 hover:bg-red-100 text-center">Clear</a>
             @endif
         </form>
     </div>
 
-    {{-- 📊 স্টাফদের পারফরম্যান্স গ্রিড --}}
+    {{-- 📊 Staff Performance Grid --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         @forelse($staffs as $staff)
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden stat-card flex flex-col">
@@ -168,7 +168,7 @@
                         </button>
                         
                         <div class="border-t border-slate-50 my-1"></div>
-                        <form action="{{ route('client.staff.destroy', $staff->id) }}" method="POST" onsubmit="return confirm('সত্যিই ডিলিট করতে চান?');">
+                        <form action="{{ route('client.staff.destroy', $staff->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this staff member?');">
                             @csrf @method('DELETE')
                             <button type="submit" class="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 border-t border-slate-100 mt-1">
                                 <i class="fa-solid fa-trash-can w-5"></i> Delete Staff
@@ -184,7 +184,7 @@
                     <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Performance Summary</h4>
                     {{-- 🔥 NEW: 24h Badge --}}
                     <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md font-bold border border-emerald-200">
-                        ⏳ গত ২৪ ঘণ্টায়: {{ $staff->published_24h ?? 0 }} টি
+                        ⏳ Last 24 Hours: {{ $staff->published_24h ?? 0 }}
                     </span>
                 </div>
 
@@ -260,8 +260,8 @@
             <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto text-indigo-300 mb-4">
                 <i class="fa-solid fa-users text-3xl"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-1">কোনো ডাটা পাওয়া যায়নি</h3>
-            <p class="text-sm text-slate-500">আপনার প্যানেলে এখনো কোনো স্টাফ যুক্ত করা হয়নি অথবা ফিল্টারের সাথে মিল নেই।</p>
+            <h3 class="text-lg font-bold text-slate-800 mb-1">No Data Found</h3>
+            <p class="text-sm text-slate-500">No staff members found or none match the selected filter.</p>
         </div>
         @endforelse
     </div>
@@ -273,12 +273,12 @@
             
             {{-- Department Management Card --}}
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">🏢 Manage Departments (বিভাগসমূহ)</h3>
+                <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">🏢 Manage Departments</h3>
                 
                 {{-- Add Department Form --}}
                 <form action="{{ route('client.departments.store') }}" method="POST" class="mb-6 flex gap-3">
                     @csrf
-                    <input type="text" name="name" placeholder="যেমন: Mojo Reporting, Editorial, IT" class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-indigo-500 outline-none" required>
+                    <input type="text" name="name" placeholder="e.g. Mojo Reporting, Editorial, IT" class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-indigo-500 outline-none" required>
                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition">
                         Add
                     </button>
@@ -289,7 +289,7 @@
                     @forelse($departments as $dept)
                         <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200/60 rounded-xl hover:bg-slate-100/80 transition">
                             <span class="font-bold text-sm text-slate-700">{{ $dept->name }}</span>
-                            <form action="{{ route('client.departments.destroy', $dept->id) }}" method="POST" onsubmit="return confirm('এই বিভাগটি মুছলে এর আওতাধীন সব পদবীও ডিলিট হয়ে যাবে। নিশ্চিত?');">
+                            <form action="{{ route('client.departments.destroy', $dept->id) }}" method="POST" onsubmit="return confirm('Deleting this department will also delete all associated designations. Are you sure?');">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-rose-500 hover:text-rose-700 p-1">
                                     <i class="fa-solid fa-trash-can text-sm"></i>
@@ -297,14 +297,14 @@
                             </form>
                         </div>
                     @empty
-                        <p class="text-slate-400 text-sm text-center py-8 border border-dashed rounded-xl">কোনো বিভাগ যুক্ত করা হয়নি।</p>
+                        <p class="text-slate-400 text-sm text-center py-8 border border-dashed rounded-xl">No departments added yet.</p>
                     @endforelse
                 </div>
             </div>
 
             {{-- Designation Management Card --}}
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">🎖 Manage Designations (পদবীসমূহ)</h3>
+                <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">🎖 Manage Designations</h3>
                 
                 {{-- Add Designation Form --}}
                 <form action="{{ route('client.designations.store') }}" method="POST" class="mb-6 space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-200/50">
@@ -321,7 +321,7 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-500 mb-1">Designation Name</label>
                         <div class="flex gap-3">
-                            <input type="text" name="name" placeholder="যেমন: Mojo Reporter, Editor, Video Editor" class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-indigo-500 outline-none bg-white" required>
+                            <input type="text" name="name" placeholder="e.g. Mojo Reporter, Editor, Video Editor" class="flex-1 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-indigo-500 outline-none bg-white" required>
                             <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition">
                                 Add
                             </button>
@@ -341,7 +341,7 @@
                                     @foreach($dept->designations as $desg)
                                         <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200/50 rounded-lg hover:bg-slate-100 transition">
                                             <span class="text-xs font-bold text-slate-700">{{ $desg->name }}</span>
-                                            <form action="{{ route('client.designations.destroy', $desg->id) }}" method="POST" onsubmit="return confirm('পদবীটি মুছে ফেলতে চান?');">
+                                            <form action="{{ route('client.designations.destroy', $desg->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this designation?');">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="text-rose-500 hover:text-rose-700 p-0.5">
                                                     <i class="fa-solid fa-trash-can text-xs"></i>
@@ -354,7 +354,7 @@
                         @endif
                     @endforeach
                     @if(!$hasDesignations)
-                        <p class="text-slate-400 text-sm text-center py-8 border border-dashed rounded-xl">কোনো পদবী যুক্ত করা হয়নি।</p>
+                        <p class="text-slate-400 text-sm text-center py-8 border border-dashed rounded-xl">No designations added yet.</p>
                     @endif
                 </div>
             </div>
@@ -406,35 +406,35 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">District (জেলা)</label>
-                        <input type="text" name="district" placeholder="যেমন: ঢাকা, বগুড়া" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">District</label>
+                        <input type="text" name="district" placeholder="e.g. Dhaka, Bogura" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Upazila (উপজেলা)</label>
-                        <input type="text" name="upazila" placeholder="যেমন: মিরপুর, শিবগঞ্জ" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Upazila / Sub-district</label>
+                        <input type="text" name="upazila" placeholder="e.g. Mirpur, Shibganj" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1">Working Location (কাজের স্থান)</label>
-                    <input type="text" name="working_location" placeholder="যেমন: ঢাকা অফিস, ব্যুরো অফিস" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Working Location</label>
+                    <input type="text" name="working_location" placeholder="e.g. Dhaka Bureau, Head Office" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Phone Number (মোবাইল নম্বর)</label>
-                        <input type="text" name="phone" placeholder="যেমন: 017xxxxxxxx" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Phone Number</label>
+                        <input type="text" name="phone" placeholder="e.g. +88017xxxxxxxx" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Emergency Contact (জরুরী নম্বর)</label>
-                        <input type="text" name="emergency_contact" placeholder="যেমন: 018xxxxxxxx" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Emergency Contact</label>
+                        <input type="text" name="emergency_contact" placeholder="e.g. +88018xxxxxxxx" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">NID Number (জাতীয় পরিচয়পত্র)</label>
-                        <input type="text" name="nid" placeholder="NID নম্বর" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">NID Number</label>
+                        <input type="text" name="nid" placeholder="NID Number" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Blood Group (রক্তের গ্রুপ)</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Blood Group</label>
                         <select name="blood_group" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none">
                             <option value="">-- Select --</option>
                             <option value="A+">A+</option>
@@ -450,12 +450,12 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Present Address (বর্তমান ঠিকানা)</label>
-                        <textarea name="present_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none" placeholder="বর্তমান ঠিকানা"></textarea>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Present Address</label>
+                        <textarea name="present_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none" placeholder="Present Address"></textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Permanent Address (স্থায়ী ঠিকানা)</label>
-                        <textarea name="permanent_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none" placeholder="স্থায়ী ঠিকানা"></textarea>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Permanent Address</label>
+                        <textarea name="permanent_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none" placeholder="Permanent Address"></textarea>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -517,35 +517,35 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">District (জেলা)</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">District</label>
                         <input type="text" name="district" id="edit_district" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Upazila (উপজেলা)</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Upazila / Sub-district</label>
                         <input type="text" name="upazila" id="edit_upazila" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1">Working Location (কাজের স্থান)</label>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Working Location</label>
                     <input type="text" name="working_location" id="edit_working_location" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Phone Number (মোবাইল নম্বর)</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Phone Number</label>
                         <input type="text" name="phone" id="edit_phone" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Emergency Contact (জরুরী নম্বর)</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Emergency Contact</label>
                         <input type="text" name="emergency_contact" id="edit_emergency_contact" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">NID Number (জাতীয় পরিচয়পত্র)</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">NID Number</label>
                         <input type="text" name="nid" id="edit_nid" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Blood Group (রক্তের গ্রুপ)</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Blood Group</label>
                         <select name="blood_group" id="edit_blood_group" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none">
                             <option value="">-- Select --</option>
                             <option value="A+">A+</option>
@@ -561,11 +561,11 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Present Address (বর্তমান ঠিকানা)</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Present Address</label>
                         <textarea name="present_address" id="edit_present_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none"></textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Permanent Address (স্থায়ী ঠিকানা)</label>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Permanent Address</label>
                         <textarea name="permanent_address" id="edit_permanent_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none"></textarea>
                     </div>
                 </div>
@@ -605,6 +605,7 @@
                         'can_settings_branding' => '🎨 Branding Settings',
                         'can_settings_proxy'    => '🌐 Proxy & Scraper Settings',
                         'can_settings_ai'       => '🤖 AI API Settings',
+                        'can_settings_ai_prompt' => '✍️ Custom AI Rewrite Prompt Settings',
                         'can_settings_wp_laravel' => '🔗 WordPress & Laravel API',
                         'can_settings_social'   => '📱 Social Media (FB, X, Telegram)',
                         'can_settings_category' => '📂 Category Mapping',
@@ -678,7 +679,7 @@
         </div>
         <form id="templateForm" method="POST" class="p-6">
             @csrf @method('PUT')
-            <p class="text-xs text-gray-500 mb-4 bg-yellow-50 p-2 rounded">⚠️ শুধু আপনার access আছে এমন templates এখানে দেখাচ্ছে।</p>
+            <p class="text-xs text-gray-500 mb-4 bg-yellow-50 p-2 rounded">⚠️ Only templates you have access to are shown here.</p>
             
             <div class="mb-4">
                 <label class="block text-sm font-bold text-gray-700 mb-2">Default Template</label>
@@ -731,7 +732,7 @@
                 @endif
 
                 @if(empty($adminTemplates))
-                    <p class="text-sm text-red-500 font-bold text-center py-4">আপনার কোনো template access নেই।</p>
+                    <p class="text-sm text-red-500 font-bold text-center py-4">You do not have access to any templates.</p>
                 @endif
             </div>
             
@@ -754,15 +755,15 @@
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-1">Author Signature Text</label>
                 <input type="text" name="author_signature" id="authorSignatureInput"
-                    placeholder="যেমন: আরটিভি/এসকে বা Daily Star/K.H"
+                    placeholder="e.g. Daily Star/K.H or Bureau/Staff"
                     class="w-full border rounded-lg p-2.5 focus:ring-orange-500 outline-none text-sm">
-                <p class="text-[10px] text-gray-400 mt-1">খালি রাখলে নিউজে কোনো সিগনেচার যোগ হবে না।</p>
+                <p class="text-[10px] text-gray-400 mt-1">Leave blank if no signature is needed in news articles.</p>
             </div>
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-1">Placement</label>
                 <select name="signature_placement" id="signaturePlacementSelect" class="w-full border rounded-lg p-2.5 focus:ring-orange-500 outline-none text-sm">
-                    <option value="bottom">📌 নিউজের শেষে (Bottom)</option>
-                    <option value="top">📌 নিউজের শুরুতে (Top)</option>
+                    <option value="bottom">📌 Bottom of the News</option>
+                    <option value="top">📌 Top of the News</option>
                 </select>
             </div>
             <div class="flex justify-end pt-2">

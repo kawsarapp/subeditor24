@@ -3,10 +3,10 @@
 @section('content')
 <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
     
-    {{-- 🔥 PAGE HEADER --}}
+    {{-- PAGE HEADER --}}
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            📜 পাবলিশড নিউজ <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded-full">{{ $allPosts->total() }}</span>
+            📜 Published News <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded-full">{{ $allPosts->total() }}</span>
         </h1>
     </div>
 
@@ -132,7 +132,7 @@
 										<i class="fab fa-facebook"></i> ✅
 									</span>
 								@elseif($post->fb_status == 'failed')
-									{{-- 🔥🔥 FIX: গ্রুপ হোভার এবং ফুল মেসেজ --}}
+									{{-- Group hover and full error message tooltip --}}
 									<div class="relative group">
 										<span class="text-red-500 text-lg cursor-help">
 											<i class="fab fa-facebook"></i> ❌
@@ -141,7 +141,6 @@
 										{{-- Tooltip Container --}}
 										<div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block z-50 w-64">
 											<div class="bg-slate-800 text-white text-xs rounded p-2 shadow-xl border border-slate-600">
-												{{-- এখানে পুরো এরর মেসেজ দেখানো হবে --}}
 												<strong>FB Error:</strong> <br>
 												{{ $post->fb_error }}
 											</div>

@@ -67,6 +67,19 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/trending', [\App\Http\Controllers\TrendingController::class, 'index'])->name('trending.index');
     Route::post('/trending/generate-script', [\App\Http\Controllers\TrendingController::class, 'generateScript'])->middleware('throttle:ai-operations')->name('trending.generate-script');
 
+    // 💡 Feature Requests, Bugs & Community Feedback Board
+    Route::get('/feedback', [\App\Http\Controllers\FeedbackController::class, 'index'])->name('feedback.index');
+    Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store'])->name('feedback.store');
+    Route::post('/feedback/{id}/vote', [\App\Http\Controllers\FeedbackController::class, 'toggleVote'])->name('feedback.vote');
+    Route::put('/feedback/{id}/status', [\App\Http\Controllers\FeedbackController::class, 'updateStatus'])->name('feedback.update-status');
+    Route::delete('/feedback/{id}', [\App\Http\Controllers\FeedbackController::class, 'destroy'])->name('feedback.destroy');
+
+    // 🎨 Free Photo Card Generator (Link to Photo Card)
+    Route::get('/free-photocard', [\App\Http\Controllers\FreePhotocardController::class, 'index'])->name('free-photocard.index');
+    Route::post('/free-photocard/fetch-url', [\App\Http\Controllers\FreePhotocardController::class, 'fetchUrl'])->name('free-photocard.fetch-url');
+    Route::post('/free-photocard/template', [\App\Http\Controllers\FreePhotocardController::class, 'saveTemplate'])->name('free-photocard.save-template');
+    Route::delete('/free-photocard/template/{id}', [\App\Http\Controllers\FreePhotocardController::class, 'deleteTemplate'])->name('free-photocard.delete-template');
+
     // প্রোফাইল ও ক্রেডিট
     Route::get('/credits', [SettingsController::class, 'credits'])->name('credits.index');
     Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.update-profile');

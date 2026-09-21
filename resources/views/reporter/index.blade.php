@@ -6,7 +6,7 @@
     @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700;800&display=swap');
     .font-bangla { font-family: 'Hind Siliguri', sans-serif; }
     
-    /* 📱 মোবাইল ভিউ এর জন্য কার্ড লেআউট ফিক্স */
+    /* 📱 Mobile view card layout fix */
     @media (max-width: 768px) {
         .responsive-table thead { display: none; }
         .responsive-table tr { 
@@ -40,14 +40,14 @@
                 <span class="p-3 bg-indigo-100 text-indigo-600 rounded-2xl shadow-sm">
                     <i class="fa-solid fa-folder-open"></i>
                 </span>
-                আমার খবরসমূহ
+                My News Articles
             </h1>
-            <p class="text-slate-500 text-sm mt-2 font-medium">আপনার পাঠানো সকল খবরের তালিকা এবং বর্তমান স্ট্যাটাস</p>
+            <p class="text-slate-500 text-sm mt-2 font-medium">List of all submitted news articles and their current status</p>
         </div>
         
         <a href="{{ route('reporter.news.create') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-3.5 rounded-2xl font-black hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all transform hover:-translate-y-1 active:scale-95 group">
             <i class="fa-solid fa-feather-pointed group-hover:rotate-12 transition-transform"></i>
-            নতুন খবর তৈরি করুন
+            Create New Article
         </a>
     </div>
 
@@ -57,8 +57,8 @@
             <div class="absolute -right-4 -top-4 w-16 h-16 bg-slate-50 rounded-full opacity-50 group-hover:scale-150 transition-transform"></div>
             <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-inner border border-blue-100 relative z-10"><i class="fa-solid fa-layer-group"></i></div>
             <div class="relative z-10">
-                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">মোট খবর</p>
-                <h3 class="text-2xl font-black text-slate-800 leading-none">{{ collect(method_exists($news, 'items') ? $news->items() : $news)->count() }} <span class="text-sm text-slate-400 font-bold">টি</span></h3>
+                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Total News</p>
+                <h3 class="text-2xl font-black text-slate-800 leading-none">{{ collect(method_exists($news, 'items') ? $news->items() : $news)->count() }} <span class="text-sm text-slate-400 font-bold"></span></h3>
             </div>
         </div>
         
@@ -66,8 +66,8 @@
             <div class="absolute -right-4 -top-4 w-16 h-16 bg-amber-50 rounded-full opacity-50 group-hover:scale-150 transition-transform"></div>
             <div class="w-14 h-14 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center text-2xl shadow-inner border border-amber-100 relative z-10"><i class="fa-solid fa-hourglass-half fa-spin-pulse" style="--fa-animation-duration: 3s;"></i></div>
             <div class="relative z-10">
-                <p class="text-amber-500/70 text-[10px] font-black uppercase tracking-widest mb-1">অপেক্ষমান</p>
-                <h3 class="text-2xl font-black text-slate-800 leading-none">{{ collect(method_exists($news, 'items') ? $news->items() : $news)->where('is_posted', false)->count() }} <span class="text-sm text-slate-400 font-bold">টি</span></h3>
+                <p class="text-amber-500/70 text-[10px] font-black uppercase tracking-widest mb-1">Pending</p>
+                <h3 class="text-2xl font-black text-slate-800 leading-none">{{ collect(method_exists($news, 'items') ? $news->items() : $news)->where('is_posted', false)->count() }} <span class="text-sm text-slate-400 font-bold"></span></h3>
             </div>
         </div>
 
@@ -75,8 +75,8 @@
             <div class="absolute -right-4 -top-4 w-16 h-16 bg-emerald-50 rounded-full opacity-50 group-hover:scale-150 transition-transform"></div>
             <div class="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center text-2xl shadow-inner border border-emerald-100 relative z-10"><i class="fa-solid fa-circle-check"></i></div>
             <div class="relative z-10">
-                <p class="text-emerald-500/70 text-[10px] font-black uppercase tracking-widest mb-1">পাবলিশড</p>
-                <h3 class="text-2xl font-black text-slate-800 leading-none">{{ collect(method_exists($news, 'items') ? $news->items() : $news)->where('is_posted', true)->count() }} <span class="text-sm text-slate-400 font-bold">টি</span></h3>
+                <p class="text-emerald-500/70 text-[10px] font-black uppercase tracking-widest mb-1">Published</p>
+                <h3 class="text-2xl font-black text-slate-800 leading-none">{{ collect(method_exists($news, 'items') ? $news->items() : $news)->where('is_posted', true)->count() }} <span class="text-sm text-slate-400 font-bold"></span></h3>
             </div>
         </div>
     </div>
@@ -87,11 +87,11 @@
             <table class="w-full text-left border-collapse responsive-table">
                 <thead>
                     <tr class="bg-slate-50/80 border-b border-slate-100">
-                        <th class="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">সংবাদ ও ছবি</th>
-                        <th class="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">লোকেশন</th>
-                        <th class="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">সময়কাল</th>
-                        <th class="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">বর্তমান অবস্থা</th>
-                        <th class="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">অ্যাকশন</th>
+                        <th class="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">News & Image</th>
+                        <th class="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Location</th>
+                        <th class="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Timeline</th>
+                        <th class="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Current Status</th>
+                        <th class="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50" id="news-table-body">
@@ -99,7 +99,7 @@
                         <tr class="hover:bg-slate-50/80 transition-colors group" data-news-id="{{ $item->id }}" data-status="{{ $item->is_posted ? 'published' : ($item->status === 'failed' ? 'failed' : 'pending') }}">
                             
                             {{-- Thumbnail & Title --}}
-                            <td class="px-8 py-5" data-label="সংবাদ">
+                            <td class="px-8 py-5" data-label="News">
                                 <div class="flex items-center gap-4">
                                     <div class="w-20 h-14 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative group-hover:shadow-md transition-shadow">
                                         <img src="{{ $item->thumbnail_url }}" alt="Thumbnail" class="w-full h-full object-cover">
@@ -121,15 +121,15 @@
                             </td>
                             
                             {{-- Location --}}
-                            <td class="px-6 py-5" data-label="লোকেশন">
+                            <td class="px-6 py-5" data-label="Location">
                                 <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200 flex items-center gap-1.5 w-fit">
                                     <i class="fa-solid fa-location-dot text-rose-400"></i>
-                                    {{ $item->location ?? 'লোকেশন নেই' }}
+                                    {{ $item->location ?? 'No Location' }}
                                 </span>
                             </td>
                             
                             {{-- Date --}}
-                            <td class="px-6 py-5" data-label="সময়কাল">
+                            <td class="px-6 py-5" data-label="Timeline">
                                 <div class="flex flex-col">
                                     <span class="text-xs font-bold text-slate-700">{{ $item->created_at->format('d M, Y') }}</span>
                                     <span class="text-[10px] font-medium text-slate-400 mt-0.5 flex items-center gap-1">
@@ -139,36 +139,36 @@
                             </td>
                             
                             {{-- Status Column --}}
-                            <td class="px-6 py-5 text-center status-container" data-label="অবস্থা">
+                            <td class="px-6 py-5 text-center status-container" data-label="Status">
                                 @if($item->is_posted && $item->live_url)
                                     <div class="inline-flex flex-col items-center">
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest border border-emerald-200 shadow-sm">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                            পাবলিশড
+                                            Published
                                         </span>
                                     </div>
                                 @elseif($item->status === 'failed')
                                     <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-widest border border-rose-200" title="{{ $item->error_message }}">
                                         <i class="fa-solid fa-triangle-exclamation"></i>
-                                        ফেইলড
+                                        Failed
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-200" title="অ্যাডমিন রিভিউ করছেন">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-200" title="Under Admin Review">
                                         <i class="fa-solid fa-hourglass-half fa-spin-pulse" style="--fa-animation-duration: 2s;"></i>
-                                        অপেক্ষমান
+                                        Pending
                                     </span>
                                 @endif
                             </td>
                             
                             {{-- Action Column --}}
-                            <td class="px-8 py-5 text-right action-container action-cell" data-label="অ্যাকশন">
+                            <td class="px-8 py-5 text-right action-container action-cell" data-label="Actions">
                                 <div class="flex justify-end gap-2">
                                     @if($item->is_posted && $item->live_url)
-                                        <button onclick="copyToClipboard('{{ $item->live_url }}')" class="w-9 h-9 flex items-center justify-center bg-white text-slate-500 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm border border-slate-200 hover:border-indigo-200 tooltip" title="লিঙ্ক কপি করুন">
+                                        <button onclick="copyToClipboard('{{ $item->live_url }}')" class="w-9 h-9 flex items-center justify-center bg-white text-slate-500 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm border border-slate-200 hover:border-indigo-200 tooltip" title="Copy Link">
                                             <i class="fa-solid fa-copy"></i>
                                         </button>
 
-                                        <a href="{{ $item->live_url }}" target="_blank" class="w-9 h-9 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100 hover:shadow-emerald-200 tooltip" title="লাইভ দেখুন">
+                                        <a href="{{ $item->live_url }}" target="_blank" class="w-9 h-9 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100 hover:shadow-emerald-200 tooltip" title="View Live">
                                             <i class="fa-solid fa-arrow-up-right-from-square"></i>
                                         </a>
                                     @else
@@ -184,8 +184,8 @@
                                     <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 border-4 border-white shadow-sm">
                                         <i class="fa-solid fa-box-open text-3xl text-slate-300"></i>
                                     </div>
-                                    <h4 class="text-lg font-black text-slate-700 mb-1">কোনো খবর পাওয়া যায়নি!</h4>
-                                    <p class="text-sm font-medium text-slate-400 max-w-xs">আপনি এখনও কোনো খবর তৈরি করেননি। নতুন খবর পাঠাতে উপরের বাটনটি ব্যবহার করুন।</p>
+                                    <h4 class="text-lg font-black text-slate-700 mb-1">No News Found!</h4>
+                                    <p class="text-sm font-medium text-slate-400 max-w-xs">You have not submitted any news articles yet. Use the button above to submit your first article.</p>
                                 </div>
                             </td>
                         </tr>
@@ -217,7 +217,7 @@ function copyToClipboard(text) {
                 toast.onmouseleave = Swal.resumeTimer;
             }
         });
-        Toast.fire({ icon: 'success', title: '<span style="font-family: \'Hind Siliguri\'; font-weight: bold;">লাইভ লিঙ্ক কপি করা হয়েছে!</span>' });
+        Toast.fire({ icon: 'success', title: '<span>Live link copied to clipboard!</span>' });
     }).catch(err => console.error('Failed to copy: ', err));
 }
 
@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="inline-flex flex-col items-center">
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest border border-emerald-200 shadow-sm">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        পাবলিশড
+                                        Published
                                     </span>
                                 </div>
                             `;
@@ -265,10 +265,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Update Action Buttons
                             let actionHtml = `
                                 <div class="flex justify-end gap-2">
-                                    <button onclick="copyToClipboard('${news.live_url}')" class="w-9 h-9 flex items-center justify-center bg-white text-slate-500 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm border border-slate-200 hover:border-indigo-200 tooltip" title="লিঙ্ক কপি করুন">
+                                    <button onclick="copyToClipboard('${news.live_url}')" class="w-9 h-9 flex items-center justify-center bg-white text-slate-500 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm border border-slate-200 hover:border-indigo-200 tooltip" title="Copy Link">
                                         <i class="fa-solid fa-copy"></i>
                                     </button>
-                                    <a href="${news.live_url}" target="_blank" class="w-9 h-9 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100 hover:shadow-emerald-200 tooltip" title="লাইভ দেখুন">
+                                    <a href="${news.live_url}" target="_blank" class="w-9 h-9 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100 hover:shadow-emerald-200 tooltip" title="View Live">
                                         <i class="fa-solid fa-arrow-up-right-from-square"></i>
                                     </a>
                                 </div>

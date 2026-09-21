@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn" class="scroll-smooth">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -46,8 +46,8 @@
         <div class="bg-white p-6 sm:p-10 rounded-3xl shadow-2xl shadow-slate-950/10 w-full max-w-[420px] border border-slate-200/90 relative overflow-hidden">
             
             <div class="text-center mb-6">
-                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">স্বাগতম! 👋</h2>
-                <p class="text-xs font-semibold text-slate-500 mt-1">আপনার সাব-এডিটর অ্যাকাউন্টে প্রবেশ করুন</p>
+                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Welcome Back! 👋</h2>
+                <p class="text-xs font-semibold text-slate-500 mt-1">Sign in to your Subeditor24 account</p>
             </div>
 
             {{-- INTERACTIVE AVATAR --}}
@@ -108,7 +108,7 @@
 
                 <div class="text-center pt-2">
                     <a href="{{ route('password.request') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold hover:underline">
-                        🔐 পাসওয়ার্ড ভুলে গেছেন?
+                        🔐 Forgot Password?
                     </a>
                 </div>
             </form>

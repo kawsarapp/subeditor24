@@ -5,12 +5,12 @@
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">🎨 Template Manager</h1>
-            <p class="text-sm text-gray-500 mt-1">Dashboard থেকে নতুন Studio template যোগ ও ম্যানেজ করুন</p>
+            <p class="text-sm text-gray-500 mt-1">Add and manage Studio templates from the dashboard</p>
         </div>
         <div class="flex items-center gap-3">
             <a href="{{ route('settings.index') }}" class="text-sm text-gray-500 hover:text-gray-800 border border-gray-300 px-4 py-2 rounded-lg transition">← Settings</a>
             <a href="{{ route('admin.templates.create') }}" class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700 transition shadow-sm">
-                + নতুন Template
+                + New Template
             </a>
         </div>
     </div>
@@ -28,18 +28,18 @@
 
     {{-- Info box --}}
     <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-sm text-blue-800">
-        <strong>📌 কীভাবে কাজ করে:</strong>
-        এখানে template যোগ করলে Studio পেজে automatically দেখাবে।
-        <strong>Frame URL</strong> = আসল blank frame PNG (1080×1080px) |
-        <strong>Thumbnail</strong> = sidebar preview ছবি |
-        Position values সব 1080×1080 canvas এর coordinate অনুযায়ী।
+        <strong>📌 How it works:</strong>
+        Templates added here will automatically appear in the Design Studio.
+        <strong>Frame URL</strong> = blank frame PNG (1080×1080px) |
+        <strong>Thumbnail</strong> = sidebar preview image |
+        Position coordinates are scaled to a 1080×1080 canvas.
     </div>
 
     @if($templates->isEmpty())
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-16 text-center">
             <p class="text-5xl mb-4">🖼️</p>
-            <p class="text-gray-500 font-medium">এখনো কোনো DB template নেই।</p>
-            <a href="{{ route('admin.templates.create') }}" class="mt-4 inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700 transition">+ প্রথম template যোগ করুন</a>
+            <p class="text-gray-500 font-medium">No DB templates configured yet.</p>
+            <a href="{{ route('admin.templates.create') }}" class="mt-4 inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700 transition">+ Add First Template</a>
         </div>
     @else
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -87,7 +87,7 @@
                                 </button>
                             </form>
                             <form action="{{ route('admin.templates.destroy', $template->id) }}" method="POST"
-                                  onsubmit="return confirm('Delete করতে চান?')">
+                                  onsubmit="return confirm('Do you want to delete this template?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-xs font-bold border border-red-200 text-red-500 py-1.5 px-2.5 rounded-lg hover:bg-red-50 transition">

@@ -34,7 +34,7 @@
 <div id="centralToast" class="fixed bottom-6 right-6 z-[110] hidden transition-all duration-300 transform translate-y-4">
     <div class="bg-slate-900/95 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700/80 flex items-center gap-3 backdrop-blur-md">
         <span id="toastIcon" class="text-emerald-400 text-lg">✓</span>
-        <span id="toastMessage" class="text-xs sm:text-sm font-bold font-bangla">নোটিফিকেশন বার্তা</span>
+        <span id="toastMessage" class="text-xs sm:text-sm font-bold font-bangla">Notification Message</span>
     </div>
 </div>
 
@@ -48,28 +48,28 @@
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
                     <span class="w-2 h-2 rounded-full bg-emerald-400"></span> LIVE WIRE POOL
                 </span>
-                <span class="text-xs text-slate-300 font-semibold">১০০% রিয়েলটাইম (AJAX Auto-Sync)</span>
+                <span class="text-xs text-slate-300 font-semibold">100% Real-time (AJAX Auto-Sync)</span>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold font-bangla tracking-tight flex items-center gap-3">
-                ⚡ সেন্ট্রাল লাইভ ফিড (Central News Pool)
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-3">
+                ⚡ Central Live Feed (Live Wire Pool)
             </h1>
-            <p class="text-slate-300 text-xs sm:text-sm font-medium mt-1.5 max-w-2xl">
-                কোনো রিলোড বা স্ক্র্যাপিং লোডিং ছাড়াই রিয়েল-টাইমে ৬০+ সাইটের তাজা খবর দেখুন ও ১-ক্লিকে AI রিরাইট করে নিজের প্যানেলে নিন।
+            <p class="text-slate-300 text-xs sm:text-sm font-medium mt-1.5 max-w-2xl leading-relaxed">
+                Monitor real-time breaking news across 60+ sources with zero page reload, and 1-click AI rewrite to your dashboard.
             </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3 relative z-10 w-full md:w-auto justify-between md:justify-end">
             <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/10 text-xs font-bold">
                 <span class="text-emerald-400 font-black text-sm" id="statToday">{{ $stats['total_today'] }}</span>
-                <span class="text-slate-300">আজকের খবর</span>
+                <span class="text-slate-300">Today's Feed</span>
             </div>
             <div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/10 text-xs font-bold">
                 <span class="text-indigo-300 font-black text-sm">{{ $stats['active_sources'] }}</span>
-                <span class="text-slate-300">সক্রিয় সোর্স</span>
+                <span class="text-slate-300">Active Sources</span>
             </div>
             <button onclick="fetchCentralFeedAjax()" class="bg-white hover:bg-slate-100 text-slate-900 px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 shadow-md transition transform hover:scale-105 cursor-pointer" id="manualRefreshBtn">
                 <span id="refreshSpinner" class="hidden animate-spin">🔄</span>
-                <span>🔄 রিফ্রেশ</span>
+                <span>🔄 Refresh</span>
             </button>
         </div>
     </div>
@@ -82,7 +82,7 @@
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <i class="fa-solid fa-magnifying-glass text-sm"></i>
                 </span>
-                <input type="text" id="feedSearchInput" placeholder="খবরের শিরোনাম বা কিওয়ার্ড দিয়ে তাৎক্ষণিক খুঁজুন (Instant Search)..." 
+                <input type="text" id="feedSearchInput" placeholder="Search headlines or keywords (Instant Search)..." 
                     oninput="debounceFeedSearch()"
                     class="w-full pl-10 pr-10 py-2.5 rounded-2xl border border-slate-200 bg-slate-50 text-slate-800 placeholder-slate-400 text-sm font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
                 <button type="button" id="clearSearchBtn" onclick="clearFeedSearch()" class="hidden absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
@@ -93,7 +93,7 @@
             {{-- Website Source Filter --}}
             <div class="md:col-span-3">
                 <select id="feedWebsiteFilter" class="w-full py-2.5 px-3.5 rounded-2xl border border-slate-200 bg-slate-50 text-slate-800 text-sm font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition cursor-pointer" onchange="fetchCentralFeedAjax()">
-                    <option value="">🌐 সকল সোর্স ({{ $websites->count() }}টি সাইট)</option>
+                    <option value="">🌐 All Sources ({{ $websites->count() }} Sites)</option>
                     @foreach($websites as $site)
                         <option value="{{ $site->id }}">{{ $site->name }}</option>
                     @endforeach
@@ -103,12 +103,12 @@
             {{-- Time Filter --}}
             <div class="md:col-span-3">
                 <select id="feedHoursFilter" class="w-full py-2.5 px-3.5 rounded-2xl border border-slate-200 bg-slate-50 text-slate-800 text-sm font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition cursor-pointer" onchange="fetchCentralFeedAjax()">
-                    <option value="">⏱️ সব সময় (৪৮ ঘণ্টা)</option>
-                    <option value="1">বিগত ১ ঘণ্টা</option>
-                    <option value="3">বিগত ৩ ঘণ্টা</option>
-                    <option value="6">বিগত ৬ ঘণ্টা</option>
-                    <option value="12">বিগত ১২ ঘণ্টা</option>
-                    <option value="24">বিগত ২৪ ঘণ্টা</option>
+                    <option value="">⏱️ All Time (48 Hours)</option>
+                    <option value="1">Past 1 Hour</option>
+                    <option value="3">Past 3 Hours</option>
+                    <option value="6">Past 6 Hours</option>
+                    <option value="12">Past 12 Hours</option>
+                    <option value="24">Past 24 Hours</option>
                 </select>
             </div>
         </div>
@@ -118,16 +118,16 @@
             <div class="flex items-center gap-3">
                 <label class="inline-flex items-center gap-2 cursor-pointer select-none">
                     <input type="checkbox" id="selectAllFeed" onchange="toggleSelectAllFeed(this)" class="rounded border-slate-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 w-4 h-4">
-                    <span class="text-slate-700">সব সিলেক্ট করুন</span>
+                    <span class="text-slate-700">Select All</span>
                 </label>
-                <span id="selectedFeedCount" class="text-indigo-600 font-black hidden">(<span id="selectedCountNum">0</span>টি নির্বাচিত)</span>
+                <span id="selectedFeedCount" class="text-indigo-600 font-black hidden">(<span id="selectedCountNum">0</span> selected)</span>
             </div>
 
             <div class="flex items-center gap-2">
                 <button type="button" id="bulkImportBtn" onclick="executeBulkImport()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition items-center gap-1.5 cursor-pointer">
-                    📥 নির্বাচিত খবর ড্রাফটে নিন
+                    📥 Import Selected to Drafts
                 </button>
-                <span class="text-slate-400">মোট পুল খবর: <strong class="text-slate-700" id="totalFeedCount">{{ $newsItems->total() }}</strong>টি</span>
+                <span class="text-slate-400">Total Pool Feed: <strong class="text-slate-700" id="totalFeedCount">{{ $newsItems->total() }}</strong> articles</span>
             </div>
         </div>
     </div>
@@ -230,7 +230,7 @@
     function handleFeedAction(id, action, btn) {
         const originalHtml = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '⏳ লোড হচ্ছে...';
+        btn.innerHTML = '⏳ Loading...';
 
         fetch(`/central-feed/import/${id}`, {
             method: 'POST',
@@ -252,23 +252,23 @@
                 if (action === 'draft') {
                     btn.classList.remove('bg-slate-100', 'text-slate-700', 'hover:bg-slate-200');
                     btn.classList.add('bg-emerald-50', 'text-emerald-700', 'border', 'border-emerald-200');
-                    btn.innerHTML = '✅ ড্রাফটে যুক্ত';
+                    btn.innerHTML = '✅ In Drafts';
                 } else if (action === 'ai') {
                     btn.classList.remove('from-indigo-600', 'to-violet-600');
                     btn.classList.add('bg-emerald-600', 'text-white');
-                    btn.innerHTML = '⚡ AI প্রসেসিং শুরু হয়েছে!';
-                    showToast('⚡ AI রিরাইট শুরু হয়েছে! আপনার ফিডে যোগ হয়েছে।');
+                    btn.innerHTML = '⚡ AI Processing Started!';
+                    showToast('⚡ AI Rewrite queued! Added to your dashboard feed.');
                 } else if (action === 'studio' && data.studio_url) {
                     window.location.href = data.studio_url;
                 }
             } else {
-                showToast(data.message || 'ব্যর্থ হয়েছে।', true);
+                showToast(data.message || 'Action failed.', true);
             }
         })
         .catch(err => {
             btn.disabled = false;
             btn.innerHTML = originalHtml;
-            showToast('নেটওয়ার্ক এরর ঘটেছে।', true);
+            showToast('Network error occurred.', true);
         });
     }
 
@@ -303,13 +303,13 @@
     function executeBulkImport() {
         const checked = Array.from(document.querySelectorAll('.feed-checkbox:checked')).map(cb => cb.value);
         if (checked.length === 0) {
-            showToast('অনুগ্রহ করে অন্তত একটি খবর সিলেক্ট করুন।', true);
+            showToast('Please select at least one news item.', true);
             return;
         }
 
         const btn = document.getElementById('bulkImportBtn');
         btn.disabled = true;
-        btn.innerText = '⏳ ইম্পোর্ট হচ্ছে...';
+        btn.innerText = '⏳ Importing...';
 
         fetch("{{ route('central-feed.bulk-import') }}", {
             method: 'POST',
@@ -323,7 +323,7 @@
         .then(res => res.json())
         .then(data => {
             btn.disabled = false;
-            btn.innerText = '📥 নির্বাচিত খবর ড্রাফটে নিন';
+            btn.innerText = '📥 Import Selected to Drafts';
             if (data.success) {
                 showToast(data.message);
                 // Reset checkboxes
@@ -333,20 +333,20 @@
                     if (card) {
                         const draftBtn = card.querySelector(`.btn-draft-${cb.value}`);
                         if (draftBtn) {
-                            draftBtn.innerHTML = '✅ ড্রাফটে যুক্ত';
+                            draftBtn.innerHTML = '✅ In Drafts';
                             draftBtn.classList.add('bg-emerald-50', 'text-emerald-700');
                         }
                     }
                 });
                 updateSelectedFeedCount();
             } else {
-                showToast(data.message || 'ইম্পোর্ট ব্যর্থ হয়েছে।', true);
+                showToast(data.message || 'Import failed.', true);
             }
         })
         .catch(err => {
             btn.disabled = false;
-            btn.innerText = '📥 নির্বাচিত খবর ড্রাফটে নিন';
-            showToast('নেটওয়ার্ক এরর ঘটেছে।', true);
+            btn.innerText = '📥 Import Selected to Drafts';
+            showToast('Network error occurred.', true);
         });
     }
 
@@ -385,7 +385,7 @@
                         const grid = document.getElementById('centralFeedGrid');
                         if (grid) {
                             grid.insertAdjacentHTML('afterbegin', data.html);
-                            showToast(`⚡ ${data.new_count}টি নতুন খবর স্বয়ংক্রিয়ভাবে সেন্ট্রাল ফিডে যুক্ত হয়েছে!`);
+                            showToast(`⚡ ${data.new_count} new articles automatically added to Central Feed!`);
                         }
                         if (data.latest_id) {
                             metaLastId.setAttribute('content', data.latest_id);

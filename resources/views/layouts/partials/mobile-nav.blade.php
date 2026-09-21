@@ -6,7 +6,7 @@
     </a>
     @auth
     <div class="flex items-center gap-2">
-        <button type="button" onclick="toggleDarkMode()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-amber-400 flex items-center justify-center text-xs border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer" title="ডার্ক মোড">
+        <button type="button" onclick="toggleDarkMode()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-amber-400 flex items-center justify-center text-xs border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer" title="Dark Mode">
             <i class="fa-solid fa-moon"></i>
         </button>
         @if(auth()->user()->role !== 'reporter')
@@ -27,17 +27,17 @@
     @if(auth()->user()->role === 'reporter')
     <div class="glass-sheet grid grid-cols-3 items-center h-16 border-t border-slate-200/80 shadow-[0_-8px_25px_rgba(0,0,0,0.06)] px-2">
         <a href="{{ route('reporter.news.index') }}" class="flex flex-col items-center justify-center h-full gap-1 transition-all {{ request()->routeIs('reporter.news.index') ? 'text-indigo-600 transform -translate-y-1 font-bold' : 'text-slate-500 hover:text-slate-700' }}">
-            <i class="fa-solid fa-list-check text-xl"></i><span class="text-[10px] font-bold">আমার খবর</span>
+            <i class="fa-solid fa-list-check text-xl"></i><span class="text-[10px] font-bold">My News</span>
             @if(request()->routeIs('reporter.news.index')) <div class="w-1 h-1 bg-indigo-600 rounded-full absolute bottom-1"></div> @endif
         </a>
         <div class="relative flex justify-center h-full items-center">
             <a href="{{ route('reporter.news.create') }}" class="absolute -top-6 bg-gradient-to-tr from-indigo-600 to-violet-600 text-white w-[3.5rem] h-[3.5rem] rounded-full flex items-center justify-center shadow-[0_8px_20px_rgba(79,70,229,0.35)] border-4 border-slate-50 active:scale-95 transition-all font-black">
                 <i class="fa-solid fa-plus text-2xl"></i>
             </a>
-            <span class="absolute bottom-1 text-[10px] font-bold text-slate-600">পাঠান</span>
+            <span class="absolute bottom-1 text-[10px] font-bold text-slate-600">Submit</span>
         </div>
         <button onclick="toggleMobileDrawer(event)" class="flex flex-col items-center justify-center h-full gap-1 text-slate-500 hover:text-slate-700 transition-colors relative cursor-pointer">
-            <i class="fa-solid fa-bars-staggered text-xl"></i><span class="text-[10px] font-bold">মেনু</span>
+            <i class="fa-solid fa-bars-staggered text-xl"></i><span class="text-[10px] font-bold">Menu</span>
         </button>
     </div>
     @else
@@ -148,6 +148,11 @@
                 <i class="fa-solid fa-wand-magic-sparkles text-violet-500 w-5 text-center text-sm"></i> Custom Photo Card (AI)
             </a>
 
+            {{-- ⚡ Free Photo Card Generator --}}
+            <a href="{{ route('free-photocard.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('free-photocard.*') ? 'bg-indigo-600 text-white' : 'text-amber-700 bg-amber-50 hover:bg-amber-100' }}">
+                <i class="fa-solid fa-bolt text-amber-500 w-5 text-center text-sm"></i> Free Photo Card (Link-to-Card)
+            </a>
+
             @php
                 $userPerms = is_array(auth()->user()->permissions) ? auth()->user()->permissions : (json_decode(auth()->user()->permissions, true) ?? []);
                 $canStaff = in_array('can_manage_staff', $userPerms) || auth()->user()->role === 'super_admin' || auth()->user()->role === 'client';
@@ -203,6 +208,9 @@
             <div class="border-t border-slate-100 my-2"></div>
             <a href="{{ route('settings.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('settings.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-sliders text-slate-500 w-5 text-center text-sm"></i> Settings & API
+            </a>
+            <a href="{{ route('feedback.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('feedback.*') ? 'bg-emerald-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
+                <i class="fa-solid fa-lightbulb text-emerald-500 w-5 text-center text-sm"></i> Feature Requests & Roadmap
             </a>
         </div>
     </div>

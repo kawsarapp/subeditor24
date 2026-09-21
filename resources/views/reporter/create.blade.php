@@ -27,9 +27,9 @@
                 <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-sm">
                     <i class="fa-solid fa-paper-plane text-white text-lg"></i>
                 </div>
-                নতুন সংবাদ তৈরি করুন
+                Create New News Article
             </h2>
-            <p class="text-indigo-100 text-sm mt-2 font-medium relative z-10">সঠিক তথ্য ও ছবি দিয়ে ফর্মটি পূরণ করুন</p>
+            <p class="text-indigo-100 text-sm mt-2 font-medium relative z-10">Fill out the form with accurate details and images</p>
         </div>
 
         {{-- 💾 Auto-Save Recovery Alert Banner --}}
@@ -37,16 +37,16 @@
             <div class="flex items-center gap-3">
                 <i class="fa-solid fa-clock-rotate-left text-amber-600 dark:text-amber-400 text-lg"></i>
                 <div>
-                    <h4 class="text-xs font-extrabold text-amber-900 dark:text-amber-200 uppercase">পূর্বে অসম্পূর্ণ ড্রাফট পাওয়া গেছে</h4>
-                    <p class="text-xs text-amber-800 dark:text-amber-300 font-semibold" id="reporterAutoSaveInfo">আপনি কি এটি পুনরুদ্ধার করতে চান?</p>
+                    <h4 class="text-xs font-extrabold text-amber-900 dark:text-amber-200 uppercase">Unsaved Draft Found</h4>
+                    <p class="text-xs text-amber-800 dark:text-amber-300 font-semibold" id="reporterAutoSaveInfo">Would you like to restore your previous draft?</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
                 <button type="button" onclick="restoreReporterDraft()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer">
-                    📂 রিকভার করুন
+                    📂 Restore Draft
                 </button>
                 <button type="button" onclick="discardReporterDraft()" class="px-3.5 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition cursor-pointer">
-                    ✕ মুছুন
+                    ✕ Discard
                 </button>
             </div>
         </div>
@@ -56,28 +56,28 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                 
-                {{-- শিরোনাম --}}
+                {{-- Title --}}
                 <div class="md:col-span-2 input-focus-effect">
-                    <label class="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide">খবরের শিরোনাম <span class="text-rose-500">*</span></label>
+                    <label class="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide">News Title <span class="text-rose-500">*</span></label>
                     <input type="text" name="title" id="reporterNewsTitle" value="{{ old('title') }}" required 
                             class="w-full border-2 border-slate-200 rounded-2xl p-4 sm:p-5 outline-none focus:border-indigo-500 bg-slate-50 focus:bg-white transition-all text-lg font-bold text-slate-800 placeholder-slate-400" 
-                            placeholder="আকর্ষণীয় একটি শিরোনাম লিখুন...">
+                            placeholder="Enter an engaging headline...">
                 </div>
 
-                {{-- লোকেশন --}}
+                {{-- Location --}}
                 <div class="input-focus-effect">
-                    <label class="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide">ঘটনার স্থান / লোকেশন</label>
+                    <label class="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide">Event Location</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><i class="fa-solid fa-location-dot"></i></span>
                         <input type="text" name="location" value="{{ old('location') }}" 
                                class="w-full border-2 border-slate-200 rounded-2xl p-4 pl-11 outline-none focus:border-indigo-500 bg-slate-50 focus:bg-white transition-all font-semibold text-slate-700 placeholder-slate-400" 
-                               placeholder="যেমন: ঢাকা, মিরপুর">
+                               placeholder="e.g. Dhaka, Mirpur">
                     </div>
                 </div>
 
-                {{-- প্রতিনিধির নাম --}}
+                {{-- Reporter Name --}}
                 <div>
-                    <label class="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide">প্রতিনিধির নাম</label>
+                    <label class="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wide">Reporter Name</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><i class="fa-solid fa-user-check"></i></span>
                         <input type="text" value="{{ auth()->user()->name }}" 
@@ -87,9 +87,9 @@
                 </div>
             </div>
 
-            {{-- 🖼️ মেইন ইমেজ আপলোড সেকশন (স্মুথ ডিজাইন) --}}
+            {{-- 🖼️ Main Image Upload --}}
             <div class="bg-slate-50/50 p-6 sm:p-8 rounded-[2rem] border border-slate-100 input-focus-effect">
-                <label class="block text-sm font-black text-slate-700 mb-4 uppercase tracking-wide">প্রধান ছবি (সর্বোচ্চ ৩ মেগাবাইট) <span class="text-rose-500">*</span></label>
+                <label class="block text-sm font-black text-slate-700 mb-4 uppercase tracking-wide">Featured Image (Max 3MB) <span class="text-rose-500">*</span></label>
                 
                 <div class="relative w-full md:w-2/3 lg:w-1/2 aspect-video border-2 border-dashed border-indigo-300 hover:border-indigo-500 rounded-[2rem] overflow-hidden bg-white hover:bg-indigo-50/30 transition-all group cursor-pointer mx-auto md:mx-0 shadow-sm hover:shadow-md">
                     
@@ -100,7 +100,7 @@
                         <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
                         </div>
-                        <span class="text-sm font-bold">ছবি আপলোড করতে ক্লিক করুন</span>
+                        <span class="text-sm font-bold">Click to upload image</span>
                         <span class="text-[10px] font-medium text-slate-400 mt-1">JPEG, PNG, WEBP (Max: 3MB)</span>
                     </div>
 
@@ -109,7 +109,7 @@
                 </div>
             </div>
 
-            {{-- 🚫 এক্সট্রা ইমেজসমূহ (আপাতত হাইড করে রাখা হয়েছে) --}}
+            {{-- Extra Images --}}
             <div class="hidden">
                 @for($i = 1; $i <= 4; $i++)
                     <input type="file" name="extra_image_{{ $i }}" class="img-input" data-preview="preview_extra_{{ $i }}">
@@ -117,9 +117,9 @@
                 @endfor
             </div>
 
-            {{-- বিস্তারিত খবর (TinyMCE) --}}
+            {{-- News Details --}}
             <div class="input-focus-effect">
-                <label class="block text-sm font-black text-slate-700 mb-3 uppercase tracking-wide">বিস্তারিত খবর লিখুন <span class="text-rose-500">*</span></label>
+                <label class="block text-sm font-black text-slate-700 mb-3 uppercase tracking-wide">News Content / Article Body <span class="text-rose-500">*</span></label>
                 <div class="rounded-2xl overflow-hidden border-2 border-slate-200 focus-within:border-indigo-500 transition-all shadow-sm">
                     <textarea name="content" id="news_content" rows="12" class="w-full">{{ old('content') }}</textarea>
                 </div>
@@ -127,7 +127,7 @@
 
             <div class="pt-4">
                 <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white py-5 rounded-[1.5rem] font-black text-lg shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-3">
-                    <i class="fa-solid fa-paper-plane"></i> নিউজটি জমা দিন
+                    <i class="fa-solid fa-paper-plane"></i> Submit News Article
                 </button>
             </div>
         </form>
@@ -159,8 +159,8 @@
                 if (file.size > 3 * 1024 * 1024) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'ফাইল অনেক বড়!',
-                        text: 'দয়া করে ৩ মেগাবাইটের চেয়ে ছোট ছবি আপলোড করুন।',
+                        title: 'File is too large!',
+                        text: 'Please upload an image smaller than 3MB.',
                         confirmButtonColor: '#4f46e5'
                     });
                     this.value = '';
@@ -187,7 +187,7 @@
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
         btn.classList.add('cursor-not-allowed', 'opacity-80');
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> আপলোড হচ্ছে... দয়া করে অপেক্ষা করুন';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading... Please wait';
     };
 
     // ==========================================================
@@ -215,7 +215,7 @@
                 const alertEl = document.getElementById('reporterAutoSaveRecoveryAlert');
                 const infoEl = document.getElementById('reporterAutoSaveInfo');
                 if (alertEl) {
-                    if (infoEl) infoEl.innerText = `সংরক্ষিত শিরোনাম: "${(draft.title || 'শিরোনামবিহীন').substring(0, 35)}..." (${draft.time || 'পূর্বে'})`;
+                    if (infoEl) infoEl.innerText = `Saved Title: "${(draft.title || 'Untitled').substring(0, 35)}..." (${draft.time || 'earlier'})`;
                     alertEl.classList.remove('hidden');
                 }
             }
@@ -235,14 +235,14 @@
             }
 
             document.getElementById('reporterAutoSaveRecoveryAlert').classList.add('hidden');
-            if (window.showToast) window.showToast('✅ ড্রাফট পুনরুদ্ধার করা হয়েছে!', 'success');
+            if (window.showToast) window.showToast('✅ Draft restored successfully!', 'success');
         } catch (e) { console.error(e); }
     }
 
     function discardReporterDraft() {
         localStorage.removeItem(REPORTER_AUTOSAVE_KEY);
         document.getElementById('reporterAutoSaveRecoveryAlert').classList.add('hidden');
-        if (window.showToast) window.showToast('ড্রাফট মুছে ফেলা হয়েছে', 'info');
+        if (window.showToast) window.showToast('Draft discarded', 'info');
     }
 
     function performReporterAutoSave() {

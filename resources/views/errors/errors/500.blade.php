@@ -12,14 +12,14 @@
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-600 text-white px-2 text-sm rounded rotate-12">
             Server Error
         </div>
-        <h3 class="text-2xl font-bold text-gray-800 mt-4">ওহো! সার্ভারে কিছু সমস্যা হয়েছে।</h3>
-        <p class="text-gray-500 mt-2 mb-6">আমাদের টেকনিক্যাল টিম বিষয়টি দেখছে। দয়া করে কিছুক্ষণ পর চেষ্টা করুন।</p>
+        <h3 class="text-2xl font-bold text-gray-800 mt-4">Oops! Internal Server Error.</h3>
+        <p class="text-gray-500 mt-2 mb-6">Our technical team has been notified. Please try again shortly.</p>
         
         <a href="{{ url('/') }}" class="px-6 py-3 bg-gray-800 text-white rounded-lg font-bold hover:bg-black transition">
-            🏠 হোমপেজে ফিরে যান
+            🏠 Back to Homepage
         </a>
         <button onclick="location.reload()" class="ml-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-bold hover:bg-gray-100 transition">
-            🔄 রিফ্রেশ করুন
+            🔄 Refresh Page
         </button>
     </div>
 </body>

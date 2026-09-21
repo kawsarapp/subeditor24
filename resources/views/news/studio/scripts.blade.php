@@ -5,13 +5,13 @@
 
 <script>
     // ==========================================
-    // ⚙️ ১. কনফিগারেশন (partials ফোল্ডার থেকে লোড হচ্ছে)
+    // 1. Configuration (loaded from partials)
     // ==========================================
     @include('partials.studio_fonts')
     @include('partials.studio_templates')
 
     // ==========================================
-    // 🌍 ২. গ্লোবাল ভেরিয়েবল
+    // 2. Global variables
     // ==========================================
     var canvas, mainImageObj = null, frameObj = null, currentLayout = null; 
     let history = [], historyStep = -1, isHistoryProcessing = false, currentZoom = 1;
@@ -20,7 +20,7 @@
     try { savedPrefs = JSON.parse(localStorage.getItem('studio_prefs')) || {}; } catch (e) {}
     var dbPrefs = {!! json_encode($settings->design_preferences ?? null) !!};
 
-    // 🔥 DB Templates এর layout_data ইনজেক্ট (key = 'custom_db_5' format)
+    // DB Templates layout_data injection
     window.DB_LAYOUTS = {};
     window.DB_FONT_URLS = {}; // 🔤 Custom font URLs for DB templates
     @foreach($availableTemplates as $template)
@@ -54,7 +54,7 @@
     window.qrTargetUrl = "{{ !empty($newsItem->original_link) ? $newsItem->original_link : route('news.public-preview', $newsItem->id) }}";
 
     // ==========================================
-    // 🚀 ৩. ক্যানভাস ইনিশিয়ালাইজেশন ও কোর ফাংশন
+    // 3. Canvas initialization & core functions
     // ==========================================
     document.addEventListener("DOMContentLoaded", function() { initCanvas(); });
 
@@ -224,7 +224,7 @@
 
     window.controlMainImage = function(action, value) {
         let img = canvas.getObjects().find(o => o.isMainImage);
-        if (!img) { alert("❌ কোনো নিউজ ইমেজ পাওয়া যায়নি!"); return; }
+        if (!img) { alert("❌ No news image found!"); return; }
         switch (action) {
             case 'zoom': let newScale = img.scaleX + value; if (newScale > 0.1) img.set({ scaleX: newScale, scaleY: newScale }); break;
             case 'moveX': img.set('left', img.left + value); break;
@@ -235,7 +235,7 @@
     };
 
     // ==========================================
-    // 🎨 ৪. টেমপ্লেট ও ডিজাইন অ্যাপ্লাই লজিক
+    // 4. Template & design application logic
     // ==========================================
     window.applyAdminTemplate = function(imageUrl, layoutName, isRestore = false, templateKey = null) {
         console.log("🚀 Applying Template:", layoutName, templateKey);
@@ -280,12 +280,12 @@
             if(titleObj) canvas.bringToFront(titleObj);
             if(dateObj) canvas.bringToFront(dateObj);
 
-            // 🔥 Dynamic (DB) template: DB_LAYOUTS থেকে layout নাও, fallback = bottom
+            // Dynamic (DB) template fallback to bottom
             let targetLayout;
             if (layoutName === 'dynamic' && templateKey && window.DB_LAYOUTS[templateKey]) {
                 targetLayout = window.DB_LAYOUTS[templateKey];
 
-                // 🔤 এই DB template এ custom font_url আছে কিনা চেক করো → auto-load
+                // Check for custom font_url in DB template
                 const dbFontUrl = window.DB_FONT_URLS && window.DB_FONT_URLS[templateKey];
                 if (dbFontUrl) {
                     applyCustomFont('CustomFont', dbFontUrl);
@@ -369,10 +369,10 @@
             titlePos: titleObj ? { left: titleObj.left, top: titleObj.top, width: titleObj.width, textAlign: titleObj.textAlign, originX: titleObj.originX, fill: titleObj.fill, fontFamily: titleObj.fontFamily } : null, 
             datePos: dateObj ? { left: dateObj.left, top: dateObj.top, originX: dateObj.originX } : null, 
             layout: currentLayout || userSettings.layout,
-            templateKey: userSettings.templateKey || null   // 🔥 DB template key সেভ
+            templateKey: userSettings.templateKey || null   // Save DB template key
         };
         fetch("{{ route('settings.save-design') }}", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') }, body: JSON.stringify({ preferences }) })
-        .then(res => res.json()).then(data => { if (data.success) { alert("✅ ডিফল্ট ডিজাইন সেভ হয়েছে!"); localStorage.setItem('studio_prefs', JSON.stringify(preferences)); Object.assign(userSettings, preferences); } });
+        .then(res => res.json()).then(data => { if (data.success) { alert("✅ Default design preferences saved!"); localStorage.setItem('studio_prefs', JSON.stringify(preferences)); Object.assign(userSettings, preferences); } });
     }
 
     // ==========================================
@@ -385,7 +385,7 @@
             const input = document.getElementById('studioTemplateNameInput');
             if (input) {
                 const count = document.querySelectorAll('#mySavedTemplatesGrid > div[id^="my-template-card-"]').length;
-                input.value = 'আমার টেমপ্লেট #' + (count + 1);
+                input.value = 'Custom Template #' + (count + 1);
                 setTimeout(() => input.focus(), 50);
             }
         }
@@ -400,7 +400,7 @@
         const nameInput = document.getElementById('studioTemplateNameInput');
         const name = (nameInput?.value || '').trim();
         if (!name) {
-            alert('⚠️ অনুগ্রহ করে টেমপ্লেটের একটি নাম লিখুন!');
+            alert('⚠️ Please enter a template name!');
             nameInput?.focus();
             return;
         }
@@ -462,7 +462,7 @@
 
         const btn = document.getElementById('btnSubmitSaveTemplate');
         const origText = btn ? btn.innerHTML : '';
-        if (btn) { btn.innerHTML = '⏳ সেভ হচ্ছে...'; btn.disabled = true; }
+        if (btn) { btn.innerHTML = '⏳ Saving...'; btn.disabled = true; }
 
         const payload = {
             name: name,
@@ -501,7 +501,7 @@
                             <img src="${tpl.thumbnail_url || tpl.frame_url}" alt="${tpl.name}" loading="lazy" class="w-full h-16 object-contain bg-slate-100 rounded-lg">
                             <p class="text-[10px] text-center font-bold text-slate-700 truncate mt-1 group-hover:text-indigo-600">${tpl.name}</p>
                         </div>
-                        <button type="button" onclick="deleteSavedTemplate(${tpl.id}, event)" class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-rose-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-md transition hover:scale-110 cursor-pointer" title="টেমপ্লেট মুছুন">
+                        <button type="button" onclick="deleteSavedTemplate(${tpl.id}, event)" class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-rose-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow-md transition hover:scale-110 cursor-pointer" title="Delete Template">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>
@@ -518,14 +518,14 @@
                 }
 
                 closeSaveTemplateModal();
-                alert(`✅ "${tpl.name}" টেমপ্লেট সফলভাবে সংরক্ষিত হয়েছে! এখন যেকোনো নিউজে ১-ক্লিকে রিইউজ করতে পারবেন।`);
+                alert(`✅ "${tpl.name}" template saved successfully! Ready to reuse with 1 click.`);
             } else {
-                alert("❌ " + (data.message || 'টেমপ্লেট সেভ করতে সমস্যা হয়েছে'));
+                alert("❌ " + (data.message || 'Failed to save template'));
             }
         })
         .catch(err => {
             console.error("Save Template Error:", err);
-            alert("❌ সেভ করতে ত্রুটি হয়েছে!");
+            alert("❌ Error saving template!");
         })
         .finally(() => {
             if (btn) { btn.innerHTML = origText; btn.disabled = false; }
@@ -534,7 +534,7 @@
 
     window.deleteSavedTemplate = function(templateId, e) {
         if (e) e.stopPropagation();
-        if (!confirm('আপনি কি নিশ্চিতভাবে এই টেমপ্লেটটি মুছে ফেলতে চান?')) return;
+        if (!confirm('Are you sure you want to delete this template?')) return;
 
         fetch(`/news/studio/delete-template/${templateId}`, {
             method: "DELETE",
@@ -557,23 +557,23 @@
                     if (grid) {
                         grid.innerHTML = `
                             <div id="noSavedTemplatesMsg" class="col-span-2 py-4 text-center">
-                                <p class="text-[11px] text-slate-400 font-semibold mb-1">কোনো সেভ করা টেমপ্লেট নেই</p>
+                                <p class="text-[11px] text-slate-400 font-semibold mb-1">No saved templates</p>
                                 <button type="button" onclick="openSaveTemplateModal()" class="text-[10px] font-bold text-indigo-600 hover:underline">
-                                    + বর্তমান ডিজাইন সেভ করুন
+                                    + Save Current Design
                                 </button>
                             </div>
                         `;
                     }
                 }
             } else {
-                alert("❌ " + (data.message || 'ডিলিট করতে ব্যর্থ হয়েছে'));
+                alert("❌ " + (data.message || 'Failed to delete'));
             }
         })
-        .catch(err => alert("❌ ডিলিট করতে সমস্যা হয়েছে"));
+        .catch(err => alert("❌ Error deleting template"));
     };
 
     // ==========================================
-    // 🔤 ৫. ফন্ট ম্যানেজমেন্ট
+    // 5. Font Management
     // ==========================================
     // ==========================================
     function smartLoadFont(fontName, callback) {
@@ -615,8 +615,8 @@
                 const fontName = file.name.split('.')[0]; 
                 const fontUrl = e.target.result;
                 applyCustomFont(fontName, fontUrl);
-                try { localStorage.setItem('custom_font_name', fontName); localStorage.setItem('custom_font_url', fontUrl); alert(`✅ ফন্ট '${fontName}' সেভ হয়েছে!`); } 
-                catch (err) { alert("⚠️ ফন্টটি বড় হওয়ায় ব্রাউজারে সেভ করা যায়নি, তবে এখন ব্যবহার করতে পারবেন।"); }
+                try { localStorage.setItem('custom_font_name', fontName); localStorage.setItem('custom_font_url', fontUrl); alert(`✅ Font '${fontName}' saved!`); } 
+                catch (err) { alert("⚠️ Font is large; loaded for current session."); }
             };
             reader.readAsDataURL(file);
         }
@@ -650,13 +650,13 @@
     }
 
     // ==========================================
-    // 📑 ৬. লেয়ার ম্যানেজমেন্ট
+    // 6. Layer Management
     // ==========================================
     window.renderLayerList = function() {
         const container = document.getElementById('layer-list-container');
         if (!container) return; container.innerHTML = '';
         const objects = canvas.getObjects().slice().reverse();
-        if (objects.length === 0) { container.innerHTML = '<p class="text-xs text-gray-400 text-center">কোনো লেয়ার নেই</p>'; return; }
+        if (objects.length === 0) { container.innerHTML = '<p class="text-xs text-gray-400 text-center">No layers</p>'; return; }
 
         objects.forEach((obj, index) => {
             const realIndex = objects.length - 1 - index;
@@ -670,11 +670,11 @@
     window.selectLayer = function(index) { const obj = canvas.item(index); if (obj) { canvas.setActiveObject(obj); canvas.renderAll(); renderLayerList(); } };
     window.toggleVisibility = function(e, index) { e.stopPropagation(); const obj = canvas.item(index); if (obj) { obj.visible = !obj.visible; if (!obj.visible) canvas.discardActiveObject(); canvas.renderAll(); renderLayerList(); } };
     window.toggleLock = function(e, index) { e.stopPropagation(); const obj = canvas.item(index); if (obj) { const isLocked = !obj.lockMovementX; obj.set({ lockMovementX: isLocked, lockMovementY: isLocked, lockScalingX: isLocked, lockScalingY: isLocked, lockRotation: isLocked, selectable: !isLocked }); canvas.renderAll(); renderLayerList(); } };
-    window.deleteLayer = function(e, index) { e.stopPropagation(); if(confirm('ডিলিট করতে চান?')) { canvas.remove(canvas.item(index)); saveHistory(); renderLayerList(); } };
+    window.deleteLayer = function(e, index) { e.stopPropagation(); if(confirm('Delete this layer?')) { canvas.remove(canvas.item(index)); saveHistory(); renderLayerList(); } };
     window.moveLayer = function(direction) { const obj = canvas.getActiveObject(); if(!obj) return; if(direction === 'up') canvas.bringForward(obj); if(direction === 'down') canvas.sendBackwards(obj); if(direction === 'top') canvas.bringToFront(obj); if(direction === 'bottom') canvas.sendToBack(obj); canvas.renderAll(); saveHistory(); renderLayerList(); };
 
     // ==========================================
-    // 🌐 ৭. এপিআই এবং পোস্টিং (Web & Social)
+    // 7. API and Publishing (Web & Social)
     // ==========================================
     function dataURLToBlob(dataURL) {
         var arr = dataURL.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
@@ -684,15 +684,15 @@
 
     function postDirectFromStudio() {
         const isSocialOnly = document.getElementById('socialOnlyCheck').checked;
-        if (!confirm(isSocialOnly ? "⚠️ 'Only Social' সিলেক্ট করেছেন। নিশ্চিত?" : "সরাসরি পোস্ট করতে চান?")) return;
+        if (!confirm(isSocialOnly ? "⚠️ 'Only Social' selected. Confirm?" : "Publish directly?")) return;
         const btn = document.querySelector('button[onclick="postDirectFromStudio()"]'); const originalText = btn.innerHTML; btn.innerHTML = "⏳ Uploading..."; btn.disabled = true;
         canvas.discardActiveObject(); canvas.renderAll();
         try {
             const formData = new FormData(); formData.append('design_image', dataURLToBlob(canvas.toDataURL({ format: 'png', multiplier: 1.5, quality: 1.0 })), 'studio-final.png');
             if (isSocialOnly) formData.append('social_only', '1');
             fetch("{{ route('news.publish-studio', $newsItem->id) }}", { method: "POST", headers: { "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content') }, body: formData })
-            .then(res => res.json()).then(data => { if (data.success) { alert("✅ পাঠানো হয়েছে!"); window.location.href = "{{ route('news.index') }}"; } else { alert("❌ " + data.message); btn.innerHTML = originalText; btn.disabled = false; } });
-        } catch (error) { alert("❌ ক্যানভাস এরর।"); btn.innerHTML = originalText; btn.disabled = false; }
+            .then(res => res.json()).then(data => { if (data.success) { alert("✅ Submitted successfully!"); window.location.href = "{{ route('news.index') }}"; } else { alert("❌ " + data.message); btn.innerHTML = originalText; btn.disabled = false; } });
+        } catch (error) { alert("❌ Canvas rendering error."); btn.innerHTML = originalText; btn.disabled = false; }
     }
 
     function toggleAllFbPages(checked) {
@@ -714,7 +714,7 @@
 
     function confirmStudioPost() {
         const isSocialOnly = document.getElementById('modalSocialOnly').checked, categoryId = document.getElementById('modalCategory').value, caption = document.getElementById('modalCaption').value;
-        if (!isSocialOnly && !categoryId) { alert("⚠️ ওয়েবসাইটে পোস্ট করার জন্য ক্যাটাগরি সিলেক্ট করুন।"); return; }
+        if (!isSocialOnly && !categoryId) { alert("⚠️ Please select a category to post to website."); return; }
         
         const checkedFbPages = Array.from(document.querySelectorAll('.fb-page-checkbox:checked')).map(cb => cb.value);
         
@@ -735,8 +735,8 @@
             }
             
             fetch("{{ route('news.publish-studio', $newsItem->id) }}", { method: "POST", headers: { "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content') }, body: formData })
-            .then(res => res.json()).then(data => { if (data.success) { alert("✅ পাবলিশিং শুরু হয়েছে!"); window.location.href = "{{ route('news.index') }}"; } else { alert("❌ " + data.message); btn.innerHTML = originalText; btn.disabled = false; } });
-        } catch (error) { alert("❌ ক্যানভাস এরর।"); btn.innerHTML = originalText; btn.disabled = false; }
+            .then(res => res.json()).then(data => { if (data.success) { alert("✅ Publishing queued successfully!"); window.location.href = "{{ route('news.index') }}"; } else { alert("❌ " + data.message); btn.innerHTML = originalText; btn.disabled = false; } });
+        } catch (error) { alert("❌ Canvas rendering error."); btn.innerHTML = originalText; btn.disabled = false; }
     }
 
     function refreshStudioCategories() {
@@ -746,13 +746,13 @@
             if (data.error) alert('❌ ' + data.error);
             else {
                 select.innerHTML = '<option value="">-- Select Category --</option>';
-                if (Array.isArray(data) && data.length > 0) { data.forEach(cat => select.innerHTML += `<option value="${cat.id}">${cat.name} (ID: ${cat.id})</option>`); select.innerHTML += `<option value="1">Uncategorized</option>`; alert("✅ আপডেট হয়েছে!"); } else alert("⚠️ ক্যাটাগরি নেই।");
+                if (Array.isArray(data) && data.length > 0) { data.forEach(cat => select.innerHTML += `<option value="${cat.id}">${cat.name} (ID: ${cat.id})</option>`); select.innerHTML += `<option value="1">Uncategorized</option>`; alert("✅ Updated successfully!"); } else alert("⚠️ No categories found.");
             }
         }).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
     }
 
     // ==========================================
-    // 🛠️ ৮. ইউটিলিটি ও হিস্ট্রি (Undo/Redo, UI)
+    // 8. Utility & History (Undo/Redo, UI)
     // ==========================================
     function openPublishModal() { document.getElementById('studioPublishModal').classList.remove('hidden'); document.getElementById('studioPublishModal').classList.add('flex'); }
     function closePublishModal() { document.getElementById('studioPublishModal').classList.add('hidden'); document.getElementById('studioPublishModal').classList.remove('flex'); }
@@ -781,7 +781,7 @@
             } 
         }).catch(err => console.error("Download tracking failed", err));
     }
-    function resetCanvas() { if (confirm('রিসেট করতে চান?')) { localStorage.removeItem('studio_prefs'); localStorage.removeItem('custom_font_url'); location.reload(); } }
+    function resetCanvas() { if (confirm('Reset canvas to defaults?')) { localStorage.removeItem('studio_prefs'); localStorage.removeItem('custom_font_url'); location.reload(); } }
     function saveHistory() { if (isHistoryProcessing || !canvas) return; const json = JSON.stringify(canvas); if (historyStep >= 0 && history[historyStep] === json) return; historyStep++; history = history.slice(0, historyStep); history.push(json); }
     function undo() { if (historyStep > 0) { isHistoryProcessing = true; historyStep--; canvas.loadFromJSON(history[historyStep], function () { canvas.renderAll(); isHistoryProcessing = false; }); } }
     function redo() { if (historyStep < history.length - 1) { isHistoryProcessing = true; historyStep++; canvas.loadFromJSON(history[historyStep], function () { canvas.renderAll(); isHistoryProcessing = false; }); } }

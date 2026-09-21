@@ -5,16 +5,16 @@
     
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
         <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 flex items-center gap-3 tracking-tight">
-            🌐 নিউজ সোর্স <span class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200/80 px-3.5 py-1 rounded-full font-bold shadow-sm">{{ $websites->count() }}টি সক্রিয়</span>
+            🌐 News Sources <span class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200/80 px-3.5 py-1 rounded-full font-bold shadow-sm">{{ $websites->count() }} Active</span>
         </h1>
     </div>
 
-    {{-- 🔥 SUPER ADMIN ONLY: ADD NEW WEBSITE FORM --}}
+    {{-- SUPER ADMIN ONLY: ADD NEW WEBSITE FORM --}}
     @if(auth()->user()->role === 'super_admin')
     <div class="luxe-card p-5 sm:p-8 rounded-3xl border border-slate-200/90 mb-8 sm:mb-10">
         <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 mb-6 border-b border-slate-100 pb-3 flex items-center gap-2">
             <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm border border-indigo-200/60 font-bold">➕</span> 
-            নতুন সোর্স যুক্ত করুন
+            Add New Source
         </h2>
         <form action="{{ route('websites.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             @csrf
@@ -178,11 +178,11 @@
                         <td class="px-4 md:px-6 py-4 text-right">
                             <div class="flex justify-end gap-2">
                                 <button onclick='openEditModal(@json($site))' 
-                                        class="bg-blue-100 text-blue-700 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-[10px] md:text-xs font-bold hover:bg-blue-200" title="সম্পাদনা">
+                                        class="bg-blue-100 text-blue-700 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-[10px] md:text-xs font-bold hover:bg-blue-200" title="Edit">
                                     ✏️
                                 </button>
                                 <button onclick="openDeleteModal('{{ $site->id }}', '{{ addslashes($site->name) }}')" 
-                                        class="bg-red-100 text-red-700 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-[10px] md:text-xs font-bold hover:bg-red-200" title="ডিলিট করুন">
+                                        class="bg-red-100 text-red-700 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-[10px] md:text-xs font-bold hover:bg-red-200" title="Delete">
                                     🗑️
                                 </button>
                                 <a href="{{ route('websites.scrape', $site->id) }}" 
@@ -361,7 +361,7 @@
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
         <div class="bg-red-50 border-b border-red-100 px-6 py-4 flex justify-between items-center">
             <h3 class="font-bold text-lg text-red-800 flex items-center gap-2">
-                ⚠️ সোর্স ডিলিট কনফার্মেশন
+                ⚠️ Delete Source Confirmation
             </h3>
             <button onclick="closeDeleteModal()" class="text-gray-400 hover:text-red-500 text-2xl font-bold">&times;</button>
         </div>
@@ -371,24 +371,24 @@
             @method('DELETE')
             
             <p class="text-sm text-gray-700 mb-3">
-                আপনি কি নিশ্চিত যে <strong id="deleteSiteName" class="text-red-600"></strong> নিউজ সোর্সটি মুছে ফেলতে চান?
+                Are you sure you want to delete <strong id="deleteSiteName" class="text-red-600"></strong>?
             </p>
 
             <div class="bg-amber-50 border-l-4 border-amber-500 p-3 rounded text-xs text-amber-800 font-medium mb-4">
-                🚨 <strong>সতর্কতা:</strong> ভুলবশত সোর্স মুছে ফেলা রোধ করতে নিচে স্পষ্টভাবে <strong>DELETE</strong> শব্দটি টাইপ করুন।
+                🚨 <strong>Warning:</strong> To prevent accidental deletion, please type <strong>DELETE</strong> below to confirm.
             </div>
 
             <div class="mb-4">
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">নিশ্চিত করতে "DELETE" টাইপ করুন:</label>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Type "DELETE" to confirm:</label>
                 <input type="text" name="confirm_text" id="deleteConfirmInput" oninput="checkDeleteInput(this)" class="w-full border-gray-300 rounded-lg p-2.5 text-sm font-mono focus:ring-red-500 uppercase" placeholder="DELETE" required autocomplete="off">
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
                 <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200">
-                    বাতিল
+                    Cancel
                 </button>
                 <button type="submit" id="confirmDeleteBtn" disabled class="px-5 py-2 bg-red-400 text-white rounded-lg text-xs font-bold shadow-md cursor-not-allowed opacity-60 transition">
-                    🗑️ হ্যাঁ, মুছে ফেলুন
+                    🗑️ Yes, Delete Source
                 </button>
             </div>
         </form>
@@ -398,10 +398,14 @@
 <script>
     function openDeleteModal(id, name) {
         document.getElementById('deleteForm').action = '/websites/' + id;
-        document.getElementById('deleteSiteName').innerText = name;
-        const input = document.getElementById('deleteConfirmInput');
-        input.value = '';
-        checkDeleteInput(input);
+        document.getElementById('deleteSiteName').innerText = '"' + name + '"';
+        document.getElementById('deleteConfirmInput').value = '';
+        
+        const btn = document.getElementById('confirmDeleteBtn');
+        btn.disabled = true;
+        btn.classList.add('bg-red-400', 'cursor-not-allowed', 'opacity-60');
+        btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'opacity-100');
+
         document.getElementById('deleteModal').classList.remove('hidden');
         document.getElementById('deleteModal').classList.add('flex');
     }
@@ -416,11 +420,11 @@
         if (input.value.trim().toUpperCase() === 'DELETE') {
             btn.disabled = false;
             btn.classList.remove('bg-red-400', 'cursor-not-allowed', 'opacity-60');
-            btn.classList.add('bg-red-600', 'hover:bg-red-700', 'cursor-pointer');
+            btn.classList.add('bg-red-600', 'hover:bg-red-700', 'opacity-100');
         } else {
             btn.disabled = true;
             btn.classList.add('bg-red-400', 'cursor-not-allowed', 'opacity-60');
-            btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'cursor-pointer');
+            btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'opacity-100');
         }
     }
 </script>
@@ -494,15 +498,15 @@
         const discoverNotice = document.getElementById('discoverNotice');
 
         if (!urlInput || !urlInput.value) {
-            alert('❌ অনুগ্রহ করে প্রথমে একটি সঠিক URL দিন (Ex: https://prothomalo.com)');
+            alert('❌ Please enter a valid URL first (Ex: https://prothomalo.com)');
             return;
         }
 
-        discoverBtn.innerText = '⏳ খতিয়ে দেখা হচ্ছে...';
+        discoverBtn.innerText = '⏳ Discovering...';
         discoverBtn.disabled = true;
         discoverNotice.classList.remove('hidden', 'text-green-600', 'text-red-600');
         discoverNotice.classList.add('text-indigo-600');
-        discoverNotice.innerText = '🔍 RSS Feed, Sitemap এবং CSS Selectors স্ক্যান করা হচ্ছে...';
+        discoverNotice.innerText = '🔍 Scanning RSS Feed, Sitemap, and CSS Selectors...';
 
         fetch('{{ route("websites.discover") }}', {
             method: 'POST',
@@ -521,7 +525,7 @@
                 discoverNotice.classList.remove('text-indigo-600');
                 discoverNotice.classList.add('text-green-600');
                 let infoMsg = '✅ ' + data.message;
-                if (data.rss_feed) infoMsg += ' [RSS Feed পাওয়া গেছে]';
+                if (data.rss_feed) infoMsg += ' [RSS Feed Found]';
                 discoverNotice.innerText = infoMsg;
 
                 if (data.container) document.querySelector('input[name="selector_container"]').value = data.container;
@@ -539,7 +543,7 @@
             discoverBtn.disabled = false;
             discoverNotice.classList.remove('text-indigo-600');
             discoverNotice.classList.add('text-red-600');
-            discoverNotice.innerText = '❌ নেটওয়ার্ক বা সার্ভার এরর ঘটেছে।';
+            discoverNotice.innerText = '❌ Network or server error occurred.';
         });
     }
 </script>

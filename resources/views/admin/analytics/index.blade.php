@@ -8,7 +8,7 @@
             <h1 class="text-3xl font-bold text-gray-800 flex items-center justify-center md:justify-start gap-2">
                 📊 Analytics & ROI Dashboard
             </h1>
-            <p class="text-gray-500 mt-1">আপনার স্টাফ এবং সাব-এডিটরদের কাজের বিস্তারিত রিপোর্ট।</p>
+            <p class="text-gray-500 mt-1">Detailed productivity and work reports for your staff and sub-editors.</p>
         </div>
         <div>
             <form id="days-filter-form" action="{{ route('admin.analytics.index') }}" method="GET" class="flex items-center gap-2">

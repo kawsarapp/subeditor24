@@ -1,5 +1,5 @@
 // ==========================================
-// 🎨 টেমপ্লেট কনফিগারেশন (নতুন টেমপ্লেট এখানে অ্যাড করুন)
+// 🎨 Template Configuration (Add new templates here)
 // ==========================================
 const T_DEFAULTS = { fontFamily: "'Hind Siliguri', 'sans-serif', 'SolaimanLipi', 'Noto Serif Cond SemiBold'", fill: '#000000', backgroundColor: '', fontSize: 60 };
 

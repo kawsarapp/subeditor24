@@ -102,9 +102,9 @@
             (type === 'error' ? 'fa-triangle-exclamation text-rose-200' : 
             (type === 'warning' ? 'fa-circle-exclamation text-amber-200' : 'fa-info-circle text-indigo-200'));
 
-        const titleText = type === 'success' ? 'সফল হয়েছে!' : 
-            (type === 'error' ? 'ত্রুটি!' : 
-            (type === 'warning' ? 'সতর্কতা!' : 'তথ্য'));
+        const titleText = type === 'success' ? 'Success!' : 
+            (type === 'error' ? 'Error!' : 
+            (type === 'warning' ? 'Warning!' : 'Info'));
 
         toast.innerHTML = `
             <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
@@ -137,7 +137,7 @@
     // ==========================================================
     // 📋 ONE-CLICK COPY TO CLIPBOARD HELPER
     // ==========================================================
-    window.copyToClipboard = function(text, successMsg = 'ক্লিপবোর্ডে কপি করা হয়েছে!') {
+    window.copyToClipboard = function(text, successMsg = 'Copied to clipboard!') {
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(text).then(() => {
                 window.showToast(successMsg, 'success');
@@ -160,7 +160,7 @@
             document.execCommand('copy');
             window.showToast(successMsg, 'success');
         } catch (err) {
-            window.showToast('কপি করতে ব্যর্থ হয়েছে!', 'error');
+            window.showToast('Failed to copy!', 'error');
         }
         document.body.removeChild(textarea);
     }
@@ -312,7 +312,7 @@
             const form = document.querySelector('form');
             if (form && !e.target.closest('div[contenteditable="true"]')) {
                 e.preventDefault();
-                window.showToast('সংরক্ষণ করা হচ্ছে...', 'info', 1500);
+                window.showToast('Saving...', 'info', 1500);
                 const submitBtn = form.querySelector('button[type="submit"]');
                 if (submitBtn) submitBtn.click();
                 else form.submit();
@@ -370,10 +370,10 @@
             const card = cards[focusedCardIndex];
             const rewriteBtn = card.querySelector('button[onclick*="startAiProcess"], button[onclick*="processAi"], button[onclick*="aiRewrite"]');
             if (rewriteBtn) {
-                window.showToast('🤖 AI Rewrite শুরু হচ্ছে...', 'info', 1500);
+                window.showToast('🤖 Starting AI Rewrite...', 'info', 1500);
                 rewriteBtn.click();
             } else {
-                window.showToast('এই কার্ডের জন্য AI Rewrite বাটন পাওয়া যায়নি', 'warning', 2000);
+                window.showToast('AI Rewrite button not found for this card', 'warning', 2000);
             }
         }
 
@@ -408,10 +408,10 @@
         const isDark = document.documentElement.classList.toggle('dark');
         if (isDark) {
             localStorage.setItem('theme', 'dark');
-            window.showToast('🌙 ডার্ক মোড চালু করা হয়েছে!', 'info', 2000);
+            window.showToast('🌙 Dark mode enabled!', 'info', 2000);
         } else {
             localStorage.setItem('theme', 'light');
-            window.showToast('☀️ লাইট মোড চালু করা হয়েছে!', 'info', 2000);
+            window.showToast('☀️ Light mode enabled!', 'info', 2000);
         }
         syncDarkModeIcons();
     }

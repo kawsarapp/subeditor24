@@ -13,14 +13,14 @@
                 🔍 1-Click Website Connect & Full SEO Intelligence
             </h1>
             <p class="text-xs sm:text-sm text-slate-300 font-medium">
-                Google Top 1-3 Rankings, Orphan News, Broken Links, GSC, GA4, Core Web Vitals & AI Agent — সম্পূর্ণ ওয়ান-স্টপ এসইও প্ল্যাটফর্ম।
+                Google Top 1-3 Rankings, Orphan News, Broken Links, GSC, GA4, Core Web Vitals & AI Agent — Complete one-stop SEO intelligence platform.
             </p>
         </div>
 
         {{-- ACTION BUTTONS --}}
         <div class="relative z-10 shrink-0 flex flex-wrap items-center gap-2">
             <button onclick="openHowItHelpsModal()" class="bg-amber-500 hover:bg-amber-600 text-white font-extrabold px-4 py-3 rounded-2xl text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition">
-                <i class="fa-solid fa-circle-question"></i> ❓ এটি আপনাকে কীভাবে সাহায্য করবে?
+                <i class="fa-solid fa-circle-question"></i> ❓ How This Helps You
             </button>
             <a href="{{ route('seo.guide') }}" class="bg-white/10 hover:bg-white/20 text-white font-extrabold px-4 py-3 rounded-2xl text-xs flex items-center gap-1.5 border border-white/20 backdrop-blur-md transition">
                 <i class="fa-solid fa-book-open text-amber-400"></i> SEO Guide
@@ -35,7 +35,7 @@
     @if(isset($websites) && count($websites) > 0)
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
         <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
-            <span class="text-xs font-extrabold text-slate-500 uppercase px-2 shrink-0">সংযুক্ত ওয়েবসাইট:</span>
+            <span class="text-xs font-extrabold text-slate-500 uppercase px-2 shrink-0">Connected Website:</span>
             @foreach($websites as $web)
             <a href="{{ route('seo.index', ['website_id' => $web->id]) }}" class="px-4 py-2 rounded-xl text-xs font-extrabold transition-all border shrink-0 flex items-center gap-2 {{ ($activeWebsite?->id == $web->id) ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100' }}">
                 <span>🌐 {{ $web->domain }}</span>
@@ -51,7 +51,7 @@
             <button onclick="triggerSiteCrawl('{{ $activeWebsite->id }}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold px-4 py-2 rounded-xl text-xs border border-indigo-200 flex items-center gap-1.5 transition">
                 <i class="fa-solid fa-rotate text-indigo-500"></i> Re-Crawl & Audit
             </button>
-            <form action="{{ route('seo.connect.destroy', $activeWebsite->id) }}" method="POST" onsubmit="return confirm('আপনি কি নিশ্চিত যে এই সাইটটি মুছে ফেলতে চান?')">
+            <form action="{{ route('seo.connect.destroy', $activeWebsite->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this website?')">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold px-3 py-2 rounded-xl text-xs border border-rose-200">
@@ -133,13 +133,13 @@
                         <h4 class="font-extrabold text-xs text-indigo-900 mb-1 flex items-center gap-1.5">
                             <i class="fa-solid fa-trophy text-amber-500"></i> Google Top 1-3 Rankings:
                         </h4>
-                        <p class="text-xs text-slate-700 font-medium">যেসব সংবাদ গুগলের ১, ২ ও ৩ নম্বর পজিশনে র‍্যাঙ্ক করে সবচেয়ে বেশি ভিজিটর আনছে।</p>
+                        <p class="text-xs text-slate-700 font-medium">Articles ranking in positions 1, 2, and 3 driving top organic reader traffic.</p>
                     </div>
                     <div class="p-4 bg-rose-50/60 rounded-2xl border border-rose-100">
                         <h4 class="font-extrabold text-xs text-rose-900 mb-1 flex items-center gap-1.5">
                             <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Orphan & Broken Links Alert:
                         </h4>
-                        <p class="text-xs text-slate-700 font-medium">যেসব খবরে কোনো ইন্টারনাল লিংক নেই (Orphan) বা লিঙ্ক ভেঙে গেছে (404 Error)।</p>
+                        <p class="text-xs text-slate-700 font-medium">Articles with zero internal links (Orphan) or broken 404 dead links.</p>
                     </div>
                 </div>
             </div>
@@ -261,7 +261,7 @@
                 🏆 SERP Champions
             </span>
         </div>
-        <p class="text-xs text-slate-600 mb-4 font-medium">যেসব সংবাদ বর্তমানে গুগলের সার্চ ফলাফলে ১, ২ এবং ৩ নম্বর পজিশনে থেকে <strong>{{ $activeWebsite->domain }}</strong> ওয়েবসাইটে সবচেয়ে বেশি ভিজিটর নিয়ে আসছে:</p>
+        <p class="text-xs text-slate-600 mb-4 font-medium">Overview of articles ranking in positions 1, 2, and 3 bringing top search visitors to <strong>{{ $activeWebsite->domain }}</strong>:</p>
 
         @php 
             $topKeywords = $activeWebsite ? $activeWebsite->keywordMetrics->filter(fn($k) => $k->avg_position <= 3) : collect();
@@ -342,7 +342,7 @@
                             <div class="max-w-md mx-auto">
                                 <i class="fa-brands fa-google text-rose-500 text-3xl mb-2"></i>
                                 <h4 class="font-extrabold text-slate-800 text-sm mb-1">Google Search Console Data Not Connected Yet</h4>
-                                <p class="text-xs text-slate-500 font-medium mb-3"><strong>{{ $activeWebsite->domain }}</strong> ডোমেইনের গুগলের ১-৩ নম্বরে থাকা রিয়েল কিউওয়ার্ড ডাটা দেখতে ওপরে থাকা <strong>"Connect Google Account"</strong> বাটনে ক্লিক করে জিমেইল কানেক্ট করুন।</p>
+                                <p class="text-xs text-slate-500 font-medium mb-3"><strong>{{ $activeWebsite->domain }}</strong> Connect your Google account using the button above to view live Top 1-3 keyword ranking data.</p>
                                 <button onclick="openGoogleConnectModal()" class="bg-gradient-to-r from-rose-600 to-amber-600 text-white font-extrabold px-4 py-2 rounded-xl text-xs shadow-sm">
                                     🔗 Connect Google Account
                                 </button>
@@ -365,7 +365,7 @@
                 ⚡ 15-Second Fast Push
             </span>
         </div>
-        <p class="text-xs text-slate-600 mb-4 font-medium">নতুন সংবাদ প্রকাশের সাথে সাথেই গুগলের **Google Webmaster Indexing API** এবং **Bing IndexNow Protocol**-এ পুশ পাঠিয়ে ১৫ সেকেন্ডে ইনডেক্স নিশ্চিত করুন:</p>
+        <p class="text-xs text-slate-600 mb-4 font-medium">Notify Google Webmaster Indexing API and Bing IndexNow Protocol within 15 seconds of publication to ensure fast search discovery:</p>
 
         {{-- API CONNECTION WORKING STATUS BANNER --}}
         @if($activeWebsite)
@@ -441,11 +441,11 @@
 
                 {{-- Status Filter --}}
                 <select name="status" id="filterStatus" class="border border-slate-300 rounded-xl p-2 text-xs font-bold text-slate-700 bg-white" onchange="applyInstantIndexingFilter()">
-                    <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>All Statuses (সকল স্ট্যাটাস)</option>
+                    <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>All Statuses</option>
                     <option value="indexed" {{ request('status') === 'indexed' ? 'selected' : '' }}>🟢 Google & IndexNow Indexed</option>
                     <option value="indexnow_submitted" {{ request('status') === 'indexnow_submitted' ? 'selected' : '' }}>🟢 IndexNow Submitted (17 Engines)</option>
-                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>⏳ Pending (পেন্ডিং)</option>
-                    <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>❌ Failed (ব্যর্থ)</option>
+                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>⏳ Pending</option>
+                    <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>❌ Failed</option>
                 </select>
 
                 {{-- Month Filter --}}
@@ -456,7 +456,7 @@
             </div>
 
             <button type="button" onclick="resetInstantIndexingFilter()" class="text-xs font-extrabold text-rose-600 hover:underline">
-                ❌ Filter Reset করুন
+                ❌ Reset Filters
             </button>
         </form>
 
@@ -508,7 +508,7 @@
                             <div class="max-w-md mx-auto">
                                 <i class="fa-solid fa-bolt text-violet-500 text-3xl mb-2"></i>
                                 <h4 class="font-extrabold text-slate-800 text-sm mb-1">No Indexing Push Logs Recorded</h4>
-                                <p class="text-xs text-slate-500 font-medium mb-3"><strong>{{ $activeWebsite->domain }}</strong> ডোমেইনের সংবাদের ইউআরএল ইনপুট বক্সে বসিয়ে <strong>"Push Instant Indexing"</strong> চাপলে পুশের ইতিহাস ও ক্যালেন্ডার লগে ডাটা জমা হবে।</p>
+                                <p class="text-xs text-slate-500 font-medium mb-3"><strong>{{ $activeWebsite->domain }}</strong> Enter article URL and click <strong>"Push Instant Indexing"</strong> to dispatch indexing pings and record history logs.</p>
                             </div>
                         </td>
                     </tr>
@@ -528,7 +528,7 @@
                 📰 Discover Feed Champions
             </span>
         </div>
-        <p class="text-xs text-slate-600 mb-5 font-medium">সংবাদটি গুগল নিউজে (Google News) এবং গুগলের **Discover Feed**-এ লাখ লাখ পাঠকের নিকট জায়গা পাওয়ার উপযুক্ত কি না তা স্ক্যান ও হাই-সিটিআর টাইটেল জেনারেট:</p>
+        <p class="text-xs text-slate-600 mb-5 font-medium">Scan articles for Google News and Google Discover eligibility and generate high-CTR headlines:</p>
 
         @php
             $discoverScore = $discoverAudit['discover_score'] ?? 0;
@@ -559,10 +559,10 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <div>
                     <h4 class="font-extrabold text-xs uppercase tracking-wider text-amber-400">🔥 AI Discover High-CTR Headline Generator:</h4>
-                    <p class="text-[11px] text-slate-400 font-medium">যেকোনো খবরের মূল শিরোনাম দিলে গুগল ডিসকভার অ্যালগরিদমবান্ধব ভাইরাল টাইটেল তৈরি হবে:</p>
+                    <p class="text-[11px] text-slate-400 font-medium">Enter any news headline to generate algorithm-friendly viral Discover headlines:</p>
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <input type="text" id="discoverInputTitle" value="{{ $firstAudit->title ?? 'কালিয়াকৈরে শিক্ষার মানোন্নয়নে ইউএনও এর পরিদর্শন' }}" placeholder="সংবাদের শিরোনাম লিখুন..." class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-400 w-full sm:w-72 focus:outline-none focus:border-amber-400 font-medium">
+                    <input type="text" id="discoverInputTitle" value="{{ $firstAudit->title ?? 'National Education Quality Development Program Inspection' }}" placeholder="Enter news headline..." class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-400 w-full sm:w-72 focus:outline-none focus:border-amber-400 font-medium">
                     <button onclick="generateDiscoverHeadlines('{{ $activeWebsite?->id }}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shrink-0 shadow-md transition flex items-center gap-1">
                         <i class="fa-solid fa-bolt"></i> Generate
                     </button>
@@ -623,7 +623,7 @@
                 🛡️ Human Approval Guard Active
             </span>
         </div>
-        <p class="text-xs text-slate-600 mb-4 font-medium">যেসব সংবাদের পাতায় অন্য কোনো খবর থেকে লিঙ্ক নেই। এআই উপযুক্ত লিঙ্ক সাজেস্ট করবে— **মানুষ (Human Admin) অনুমোদন (Approve) দিলে তবেই লিঙ্ক যুক্ত হবে:**</p>
+        <p class="text-xs text-slate-600 mb-4 font-medium">Articles lacking internal inbound links. AI suggests contextual cross-links — **links are only applied upon Human Admin approval:**</p>
 
 
         <div class="space-y-3">
@@ -650,7 +650,7 @@
             @empty
                 <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs font-bold text-emerald-800 flex items-center gap-2">
                     <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
-                    <span>✅ {{ $activeWebsite->domain }} এর সকল সংবাদের পাতায় চমৎকার ইন্টারনাল লিংক কানেক্টিভিটি বজায় আছে। কোনো অনাথ পেজ (Orphan News) নেই!</span>
+                    <span>✅ {{ $activeWebsite->domain }} All article pages maintain excellent internal link connectivity. Zero orphan news found!</span>
                 </div>
             @endforelse
         </div>
@@ -662,7 +662,7 @@
             <h3 class="font-extrabold text-slate-800 text-base flex items-center gap-2">
                 <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Broken Links & 404 Pages Detector ({{ $activeWebsite->domain }})
             </h3>
-            <input type="text" id="brokenLinksSearchInput" onkeyup="filterBrokenLinksTable()" placeholder="🔍 ৪-০-৪ বা ভাঙা ইউআরএল সার্চ করুন..." class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 w-full sm:w-64 focus:outline-none focus:border-rose-600">
+            <input type="text" id="brokenLinksSearchInput" onkeyup="filterBrokenLinksTable()" placeholder="🔍 Search 404 or broken URLs..." class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 w-full sm:w-64 focus:outline-none focus:border-rose-600">
         </div>
 
         @php 
@@ -735,18 +735,18 @@
                 📱 Real-Time Social Visitor Analytics
             </span>
         </div>
-        <p class="text-xs text-slate-600 mb-6 font-medium">ফেসবুক, এক্স (টুইটার), ইউটিউব, ইনস্টাগ্রাম, হোয়াটসঅ্যাপ এবং টেলিগ্রাম থেকে <strong>{{ $activeWebsite->domain }}</strong> ওয়েবসাইটে কতজন ভিজিটর এসেছে তার প্ল্যাটফর্মভিত্তিক হিসাব:</p>
+        <p class="text-xs text-slate-600 mb-6 font-medium">Breakdown of incoming visitors to <strong>{{ $activeWebsite->domain }}</strong> from Facebook, X (Twitter), YouTube, Instagram, WhatsApp, and Telegram:</p>
 
         {{-- INTERACTIVE SMART UTM BUILDER TOOL --}}
         <div class="p-5 bg-indigo-900 text-white rounded-2xl mb-6">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-3">
                 <div>
                     <h4 class="font-extrabold text-xs uppercase tracking-wider text-emerald-400">🔗 Smart UTM Campaign Builder (1-Click Social Share Link):</h4>
-                    <p class="text-[11px] text-indigo-200 font-medium">যেকোনো খবরের লিঙ্ক সোশ্যাল মিডিয়ায় দেওয়ার আগে UTM ট্র্যাকড লিংক বানিয়ে ট্রাফিক ট্রাক করুন:</p>
+                    <p class="text-[11px] text-indigo-200 font-medium">Generate UTM tracked links before sharing news stories across social channels:</p>
                 </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                <input type="text" id="utmTargetUrl" value="{{ $activeWebsite->target_url }}" placeholder="সংবাদের ইউআরএল দিন..." class="sm:col-span-6 px-3 py-2 bg-indigo-950 border border-indigo-700 rounded-xl text-xs text-white placeholder-indigo-400 focus:outline-none focus:border-emerald-400">
+                <input type="text" id="utmTargetUrl" value="{{ $activeWebsite->target_url }}" placeholder="Enter news URL..." class="sm:col-span-6 px-3 py-2 bg-indigo-950 border border-indigo-700 rounded-xl text-xs text-white placeholder-indigo-400 focus:outline-none focus:border-emerald-400">
                 <select id="utmPlatform" class="sm:col-span-3 px-3 py-2 bg-indigo-950 border border-indigo-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-400">
                     <option value="facebook">📘 Facebook</option>
                     <option value="whatsapp">💬 WhatsApp</option>
@@ -815,7 +815,7 @@
         </div>
 
         {{-- TOP SHARED NEWS TABLE --}}
-        <h4 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider mb-3">🔥 {{ $activeWebsite->domain }} এর সামাজিক ট্রাফিকের শীর্ষ সংবাদসমূহ:</h4>
+        <h4 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider mb-3">🔥 {{ $activeWebsite->domain }} Top Social Traffic News Stories:</h4>
         <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left text-xs text-slate-700 border border-slate-200 rounded-2xl overflow-hidden">
                 <thead class="bg-slate-100 text-slate-800 uppercase text-[10px] font-black border-b border-slate-200">
@@ -829,7 +829,7 @@
                 <tbody class="divide-y divide-slate-100 font-medium">
                     @forelse($activeWebsite->pageAudits->take(5) as $idx => $p)
                     <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-extrabold text-slate-900">{{ $p->title ?? ($activeWebsite->domain . ' - সংবাদ শেয়ার #' . ($idx+1)) }}</td>
+                        <td class="p-3 font-extrabold text-slate-900">{{ $p->title ?? ($activeWebsite->domain . ' - Shared News #' . ($idx+1)) }}</td>
                         <td class="p-3"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-bold text-[10px]">📘 Facebook, WhatsApp & X</span></td>
                         <td class="p-3 font-mono font-black text-indigo-600">UTM Tracking Enabled</td>
                         <td class="p-3 text-right"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-black text-[10px]">🔥 Live Referral Active</span></td>
@@ -840,7 +840,7 @@
                             <div class="max-w-md mx-auto">
                                 <i class="fa-solid fa-share-nodes text-indigo-500 text-3xl mb-2"></i>
                                 <h4 class="font-extrabold text-slate-800 text-sm mb-1">Social Referral Traffic Waiting for Visitor Clicks</h4>
-                                <p class="text-xs text-slate-500 font-medium mb-3"><strong>{{ $activeWebsite->domain }}</strong> ওয়েবসাইটের সংবাদগুলো ফেসবুক, টুইটার বা টেলিগ্রামে শেয়ার করলে ভিজিটর আসার সাথে সাথে লাইভ ক্লিকে ডাটা যুক্ত হবে।</p>
+                                <p class="text-xs text-slate-500 font-medium mb-3"><strong>{{ $activeWebsite->domain }}</strong> When articles are shared on Facebook, Twitter, or Telegram, visitor click data will sync in real time.</p>
                             </div>
                         </td>
                     </tr>
@@ -856,7 +856,7 @@
             <h3 class="font-extrabold text-slate-800 text-base flex items-center gap-2">
                 <i class="fa-solid fa-bug text-rose-500"></i> Technical SEO Audit & Issue Detector ({{ $activeWebsite->domain }})
             </h3>
-            <input type="text" id="techAuditSearchInput" onkeyup="filterTechAuditTable()" placeholder="🔍 পেজ বা ইস্যু সার্চ করুন..." class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 w-full sm:w-64 focus:outline-none focus:border-indigo-600">
+            <input type="text" id="techAuditSearchInput" onkeyup="filterTechAuditTable()" placeholder="🔍 Search page or issue..." class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 w-full sm:w-64 focus:outline-none focus:border-indigo-600">
         </div>
 
         @php
@@ -945,7 +945,7 @@
                 🎯 Top 3 Ranking Candidates
             </span>
         </div>
-        <p class="text-xs text-slate-600 mb-4 font-medium">যেসব কিউওয়ার্ড বর্তমানে গুগলে ৪ থেকে ১৫ পজিশনে রয়েছে, সামান্য অপটিমাইজেশন করলেই সেগুলোর Top 3-এ যাওয়ার সম্ভাবনা সবচেয়ে বেশি:</p>
+        <p class="text-xs text-slate-600 mb-4 font-medium">Keywords currently ranking in Google positions 4-15 with high conversion potential to reach Top 3 with minor optimizations:</p>
 
         @php 
             $quickWins = $activeWebsite ? $activeWebsite->keywordMetrics->filter(fn($k) => $k->avg_position >= 4 && $k->avg_position <= 15) : collect();
@@ -1010,7 +1010,7 @@
                             <div class="max-w-md mx-auto">
                                 <i class="fa-solid fa-bullseye text-indigo-500 text-3xl mb-2"></i>
                                 <h4 class="font-extrabold text-slate-800 text-sm mb-1">GSC Quick Win Data Not Connected Yet</h4>
-                                <p class="text-xs text-slate-500 font-medium mb-3"><strong>{{ $activeWebsite->domain }}</strong> ডোমেইনের পজিশন ৪-১৫ এর মধ্যে থাকা কুইক-উইন কিউওয়ার্ড ডাটা দেখতে গুগলের Search Console অ্যাকাউন্ট কানেক্ট করুন।</p>
+                                <p class="text-xs text-slate-500 font-medium mb-3"><strong>{{ $activeWebsite->domain }}</strong> Connect your Google Search Console account to view quick-win keywords ranking in positions 4-15.</p>
                                 <button onclick="openGoogleConnectModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-4 py-2 rounded-xl text-xs shadow-sm">
                                     🔗 Connect Google Account
                                 </button>
@@ -1033,7 +1033,7 @@
                 📉 Content Revival Detector
             </span>
         </div>
-        <p class="text-xs text-slate-600 mb-5 font-medium">যেসব পুরাতন বা ছোট সংবাদের ভিজিটর কমে যাচ্ছে এবং গুগল রেঙ্কিং হারাচ্ছে। এআই সাজেস্টেড তথ্য যোগ করে সংবাদগুলো পুনরুজ্জীবিত করুন:</p>
+        <p class="text-xs text-slate-600 mb-5 font-medium">Evergreen or older articles losing organic search traffic and ranking. Refresh with AI-assisted insights and updated context:</p>
 
 
         {{-- CONTENT DECAY DETECTOR TABLE --}}
@@ -1068,7 +1068,7 @@
                     @empty
                     <tr>
                         <td colspan="4" class="p-6 text-center text-emerald-600 font-extrabold">
-                            ✅ {{ $activeWebsite->domain }} এর কোনো সংবাদে কন্টেন্ট ক্ষয়ের ঝুকি নেই। সব কভারেজ পর্যাপ্ত বড় ও নিয়মিত আপডেট আছে!
+                            ✅ {{ $activeWebsite->domain }} Zero content decay risk detected across all published coverage. Content volume and updates remain healthy!
                         </td>
                     </tr>
                     @endforelse
@@ -1082,7 +1082,7 @@
                 <i class="fa-solid fa-chart-line text-emerald-600 text-2xl"></i>
                 <div>
                     <h4 class="font-extrabold text-slate-800 text-xs">Google Analytics 4 (GA4) Property Integration</h4>
-                    <p class="text-[11px] text-slate-500 font-medium">ডাইরেক্ট জিএ-৪ অর্গানিক ভিজিটর এঙ্গেজমেন্ট সিঙ্ক করতে গুগল অ্যাকাউন্ট কানেক্ট করুন।</p>
+                    <p class="text-[11px] text-slate-500 font-medium">Connect Google account to synchronize GA4 organic visitor engagement metrics directly.</p>
                 </div>
             </div>
             <button onclick="openGoogleConnectModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-4 py-2 rounded-xl text-xs shadow-sm shrink-0">
@@ -1101,7 +1101,7 @@
                 <i class="fa-solid fa-gauge-high"></i> Run Speed Audit
             </button>
         </div>
-        <p class="text-xs text-slate-600 mb-5 font-medium">গুগলের সাম্প্রতিক অ্যালগরিদম অনুযায়ী সাইটের গতি ও পারফরম্যান্স মেট্রিক্সের আসল ল্যাব পরিমাপের ডাটা:</p>
+        <p class="text-xs text-slate-600 mb-5 font-medium">Lab metrics and field performance diagnostics based on Google Core Web Vitals algorithms:</p>
 
         @php 
             $cwv = $activeWebsite?->coreWebVitals?->first(); 
@@ -1173,9 +1173,9 @@
         <div class="p-5 bg-amber-50 border border-amber-200 rounded-2xl">
             <h4 class="font-extrabold text-xs uppercase tracking-wider text-amber-900 mb-2">⚡ Actionable PageSpeed Optimization Advice:</h4>
             <div class="space-y-1.5 text-xs text-amber-800 font-bold">
-                <p>• 🖼️ <strong>WebP/AVIF Image Compression:</strong> সংবাদের ছবিগুলো WebP ফরম্যাটে কনভার্ট করলে LCP সময় ৫০% কমে আসবে।</p>
-                <p>• 📦 <strong>Browser & Server Caching:</strong> Nginx/Litespeed সার্ভারে স্ট্যাটিক অ্যাসেট ক্যাশিং অন রাখুন (TTFB < 800ms)।</p>
-                <p>• ⚡ <strong>Defer Unused JavaScript:</strong> অতিরিক্ত থার্ড-পার্টি স্ক্রিপ্ট async/defer লোড করলে INP স্কোপ ভালো থাকবে।</p>
+                <p>• 🖼️ <strong>WebP/AVIF Image Compression:</strong> Converting news images to WebP reduces LCP load time by up to 50%.</p>
+                <p>• 📦 <strong>Browser & Server Caching:</strong> Enable static asset caching on Nginx/LiteSpeed (TTFB < 800ms).</p>
+                <p>• ⚡ <strong>Defer Unused JavaScript:</strong> Load third-party scripts with async/defer attributes to optimize INP responsiveness.</p>
             </div>
         </div>
     </div>
@@ -1190,7 +1190,7 @@
                 <i class="fa-solid fa-wand-magic-sparkles"></i> AI Schema Generator
             </button>
         </div>
-        <p class="text-xs text-slate-600 mb-5 font-medium">পোর্টালে গুগল নিউজ ও সার্চের জন্য থাকা JSON-LD স্ট্রাকচার্ড ডাটা স্কিমার রিয়েল অডিট ডাটা:</p>
+        <p class="text-xs text-slate-600 mb-5 font-medium">Real-time structured data schema audit for Google News and search visibility:</p>
 
 
 
@@ -1253,7 +1253,7 @@
         </div>
 
         <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl text-xs font-bold text-indigo-900 mb-4">
-            🆚 আপনার সংবাদের ডোমেইন <strong>({{ $activeWebsite->domain }})</strong> এর সাথে প্রতিদ্বন্দ্বী নিউজ পোর্টালের কিউওয়ার্ড গ্যাপ তুলনা করুন।
+            🆚 Compare keyword ranking gaps between your domain <strong>({{ $activeWebsite->domain }})</strong> and competing news portals.
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2 mb-6">
@@ -1284,7 +1284,7 @@
             </div>
 
             {{-- MISSING KEYWORDS TABLE --}}
-            <h4 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider mb-3">🔥 {{ $gapData['competitor_domain'] ?? 'প্রতিদ্বন্দ্বী ডোমেইন' }} র‍্যাঙ্কিংয়ে এগিয়ে থাকা মিসিং কিউওয়ার্ডসমূহ:</h4>
+            <h4 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider mb-3">🔥 {{ $gapData['competitor_domain'] ?? 'Competitor Domain' }} Top ranking competitor keyword opportunities:</h4>
             <div class="overflow-x-auto custom-scrollbar">
                 <table class="w-full text-left text-xs text-slate-700 border border-slate-200 rounded-2xl overflow-hidden">
                     <thead class="bg-slate-100 text-slate-800 uppercase text-[10px] font-black border-b border-slate-200">
@@ -1361,7 +1361,7 @@
                 </div>
                 <div>
                     <h4 class="text-xs font-extrabold text-white">Telegram Bot Instant Emergency Downtime Alert Setup</h4>
-                    <p class="text-[11px] text-slate-400 font-medium">সাইট ৩ সেকেন্ডের জন্য ডাউন হলে সাথে সাথে টেলিগ্রাম চ্যানেলে এমার্জেন্সি সাইরেন নোটিফিকেশন যাবে।</p>
+                    <p class="text-[11px] text-slate-400 font-medium">Emergency notifications dispatched to your Telegram channel within seconds of any server disruption.</p>
                 </div>
             </div>
 
@@ -1395,7 +1395,7 @@
                 <i class="fa-solid fa-paper-plane"></i> Ping Googlebot Sitemap
             </button>
         </div>
-        <p class="text-xs text-slate-600 mb-5 font-medium">গুগল ও সার্চ ইঞ্জিনের কাস্টম ক্রলিং ফাইলের রিয়েল-টাইম লাইভ টেস্ট ডাটা:</p>
+        <p class="text-xs text-slate-600 mb-5 font-medium">Real-time validation diagnostics for robots.txt directives and Google News XML sitemaps:</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {{-- XML SITEMAP CARD --}}
@@ -1448,7 +1448,7 @@
                 🖼️ Google Discover Large Image Guard
             </span>
         </div>
-        <p class="text-xs text-slate-600 mb-5 font-medium">সংবাদের ছবিতে ALT ট্যাগ এবং বড় রেজোলিউশন (১২০০px+ width) ব্যবহার করলে গুগল ডিসকভার ও সার্চে ভিজিটর বহুগুণ বৃদ্ধি পায়:</p>
+        <p class="text-xs text-slate-600 mb-5 font-medium">High-resolution images (1200px+ width) with descriptive ALT text maximize visibility across Google Discover and Image search:</p>
 
 
 
@@ -1516,7 +1516,7 @@
                     <span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-black text-[9px]">{{ $missingDescCount }} Pages Affected</span>
                 </div>
                 <h4 class="font-extrabold text-xs text-rose-900 mb-1">Fix Missing Meta Descriptions & Headlines</h4>
-                <p class="text-[11px] text-rose-800 font-medium mb-3">যেসব পেজে মেটা ডেসক্রিপশন অনুপস্থিত, সেগুলোর CTR ৩০% পর্যন্ত বৃদ্ধি করতে এআই কভারেজ অপটিমাইজ করুন।</p>
+                <p class="text-[11px] text-rose-800 font-medium mb-3">Optimize missing meta descriptions with AI to increase search click-through rates by up to 30%.</p>
                 <button onclick="openAiFixModal('{{ $activeWebsite->target_url }}', '{{ $activeWebsite->domain }}')" class="bg-rose-600 hover:bg-rose-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-xs shadow-xs transition">
                     🤖 Auto-Fix Missing Meta Tags
                 </button>
@@ -1528,7 +1528,7 @@
                     <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded font-black text-[9px]">CTR Booster</span>
                 </div>
                 <h4 class="font-extrabold text-xs text-indigo-900 mb-1">Generate High-CTR Google Discover Headlines</h4>
-                <p class="text-[11px] text-indigo-800 font-medium mb-3">আজকের ব্রেকিং নিউজের জন্য আকর্ষণীয় ও ভাইরাল ডিসকভার টাইটেল তৈরি করতে এআই হেল্প নিন।</p>
+                <p class="text-[11px] text-indigo-800 font-medium mb-3">Use AI recommendations to craft high-CTR headlines for breaking news coverage.</p>
                 <button onclick="generateDiscoverHeadlines()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-xs shadow-xs transition">
                     🔥 Generate Viral Discover Titles
                 </button>
@@ -1543,12 +1543,12 @@
                 </div>
                 <div>
                     <h4 class="text-xs font-extrabold text-white">Ask AI SEO Assistant Agent Anything</h4>
-                    <p class="text-[11px] text-slate-400 font-medium">বাংলায় আপনার নিউজরুমের যেকোনো সংবাদ বা এসইও প্রশ্ন জিজ্ঞেস করুন:</p>
+                    <p class="text-[11px] text-slate-400 font-medium">Ask any editorial, indexing, or technical SEO questions for your newsroom:</p>
                 </div>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-2 mb-3">
-                <input type="text" id="aiAgentCustomPrompt" placeholder="যেমন: আজকের জাতীয় বাজেট সংবাদের জন্য সেরা ৫টি ডিসকভার হেডিং দাও..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-xs text-white placeholder-slate-500 font-medium focus:outline-none focus:border-amber-500">
+                <input type="text" id="aiAgentCustomPrompt" placeholder="e.g. Generate 5 high-CTR Discover headlines for today's national budget coverage..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-xs text-white placeholder-slate-500 font-medium focus:outline-none focus:border-amber-500">
                 <button onclick="sendPromptToAiAgent()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-xl text-xs shadow-md shrink-0 transition flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-paper-plane"></i> Ask AI Agent
                 </button>
@@ -1557,9 +1557,9 @@
             {{-- QUICK PROMPTS BADGES --}}
             <div class="flex flex-wrap items-center gap-2 text-[10px] font-extrabold text-slate-400">
                 <span>Quick Prompts:</span>
-                <button onclick="setAiPrompt('সংবাদের ছবিগুলোর জন্য সেরা বাংলা ALT টেক্সট বানিয়ে দাও')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg border border-slate-700 transition">🖼️ Generate ALT Text</button>
-                <button onclick="setAiPrompt('সংবাদে নতুন কিউওয়ার্ড যোগ করার জন্য ৩টি H2 সাবহেডিং দাও')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg border border-slate-700 transition">📌 H2 Subheadings</button>
-                <button onclick="setAiPrompt('পুরাতন খবরের কন্টেন্ট রিফ্রেশ করার জন্য ৩টি নতুন পয়েন্ট দাও')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg border border-slate-700 transition">📉 Refresh Plan</button>
+                <button onclick="setAiPrompt('Generate descriptive ALT text for news images')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg border border-slate-700 transition">🖼️ Generate ALT Text</button>
+                <button onclick="setAiPrompt('Suggest 3 H2 subheadings to target new keywords')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg border border-slate-700 transition">📌 H2 Subheadings</button>
+                <button onclick="setAiPrompt('Provide 3 updated bullet points to refresh older news articles')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg border border-slate-700 transition">📉 Refresh Plan</button>
             </div>
         </div>
     </div>
@@ -1567,8 +1567,8 @@
     @else
     <div class="luxe-card p-12 text-center rounded-3xl border border-slate-200 bg-white">
         <i class="fa-solid fa-chart-pie text-5xl text-indigo-400 mb-3 animate-bounce"></i>
-        <h3 class="text-lg font-extrabold text-slate-800">কোনো কানেক্টেড ওয়েবসাইট পাওয়া যায়নি</h3>
-        <p class="text-xs text-slate-500 mt-1">আপনার ওয়েবসাইট এসইও ট্র্যাকিং এবং টেকনিক্যাল অডিটের জন্য যুক্ত করুন।</p>
+        <h3 class="text-lg font-extrabold text-slate-800">No Connected Website Found</h3>
+        <p class="text-xs text-slate-500 mt-1">Connect your website to enable technical audits, indexing automation, and search tracking.</p>
         <button onclick="openConnectModal()" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs shadow-md">
             🚀 1-Click Connect Website
         </button>
@@ -1591,9 +1591,9 @@
 
         <div class="space-y-4 text-xs text-slate-700 font-medium">
             <div class="p-4 bg-rose-50/80 rounded-2xl border border-rose-200">
-                <h4 class="font-black text-rose-900 text-xs mb-1">📧 কোন Gmail অ্যাকাউন্টটি বেছে নেবেন?</h4>
+                <h4 class="font-black text-rose-900 text-xs mb-1">📧 Which Google Account Should You Connect?</h4>
                 <p class="text-xs text-rose-950 leading-relaxed font-bold">
-                    যে Gmail অ্যাকাউন্টটিতে আপনার সংবাদের সংবাদের <strong>Google Search Console (GSC)</strong> এবং <strong>GA4 Analytics</strong> এর Admin বা Owner অ্যাক্সেস আছে—সেই জিমেইল দিয়ে কানেক্ট করুন।
+                    Connect the Google Account that has Admin or Owner access to your <strong>Google Search Console (GSC)</strong> and <strong>GA4 Analytics</strong> properties.
                 </p>
             </div>
 
@@ -1609,11 +1609,11 @@
                 </div>
 
                 <div class="p-3 bg-indigo-50/80 rounded-xl border border-indigo-100 text-[11px] font-bold text-indigo-900">
-                    💡 "Sign in with Google" বাটনে চাপ দিলে সিস্টেম অটোমেটিক আপনার জিমেইলের সার্চ কনসোল ও এনালিটিক্স সিঙ্ক করে নিবে।
+                    💡 Clicking "Sign in with Google" will automatically authorize and sync Search Console and Analytics.
                 </div>
 
                 <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end gap-2">
-                    <button type="button" onclick="closeGoogleConnectModal()" class="px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-600 bg-slate-100 hover:bg-slate-200">বাতিল</button>
+                    <button type="button" onclick="closeGoogleConnectModal()" class="px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-600 bg-slate-100 hover:bg-slate-200">Cancel</button>
                     <button type="submit" class="bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs shadow-md flex items-center gap-2">
                         <i class="fa-brands fa-google text-sm"></i> Sign in with Google (Connect GSC & GA4)
                     </button>
@@ -1641,11 +1641,11 @@
             </div>
 
             <div class="p-3 bg-indigo-50 text-indigo-900 rounded-xl text-xs font-medium mb-4 border border-indigo-100">
-                💡 ওয়ান-ক্লিক কানেক্ট বাটনে চাপ দিলে সিস্টেম অটোমেটিক সাইট ট্র্যাকিং ও টেকনিক্যাল অডিট শুরু করবে।
+                💡 Clicking 1-Click Connect starts automated crawling, indexing monitoring, and technical diagnostics.
             </div>
 
             <div class="flex justify-end gap-2">
-                <button type="button" onclick="closeConnectModal()" class="px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-600 bg-slate-100 hover:bg-slate-200">বাতিল</button>
+                <button type="button" onclick="closeConnectModal()" class="px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-600 bg-slate-100 hover:bg-slate-200">Cancel</button>
                 <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-5 py-2 rounded-xl text-xs shadow-md">Connect & Audit</button>
             </div>
         </form>
@@ -1657,7 +1657,7 @@
     <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[85vh] overflow-y-auto custom-scrollbar p-6">
         <div class="flex justify-between items-center mb-4 border-b pb-3 border-slate-100">
             <h3 class="font-black text-slate-900 text-base flex items-center gap-2">
-                <i class="fa-solid fa-circle-question text-amber-500 text-xl"></i> এটি আপনাকে কীভাবে সাহায্য করবে? (How This Helps You)
+                <i class="fa-solid fa-circle-question text-amber-500 text-xl"></i> How This Engine Helps Your Newsroom (Strategic Guide)
             </h3>
             <button onclick="closeHowItHelpsModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200">
                 <i class="fa-solid fa-xmark text-sm"></i>
@@ -1666,29 +1666,29 @@
 
         <div class="space-y-4 text-xs text-slate-700 font-medium">
             <div class="p-3.5 bg-indigo-50 rounded-2xl border border-indigo-100">
-                <h4 class="font-extrabold text-indigo-900 text-xs mb-1">🎯 ১. গুগলে দ্রুত ৩ নম্বরের মধ্যে স্থান করে নেওয়া (Quick Wins):</h4>
-                <p>আমাদের সিস্টেম আপনার যেসব কিউওয়ার্ড ৪-১৫ পজিশনে আছে তা খুঁজে বের করে দেয়। সামান্য মেটা ও হেডিং অপটিমাইজ করলেই খবরগুলো গুগল সার্চের একদম ৩ নম্বরের মধ্যে র্যাঙ্ক করে ১০ গুণ বেশি ভিজিটর আনে!</p>
+                <h4 class="font-extrabold text-indigo-900 text-xs mb-1">🎯 1. Fast-Track into Top 3 Google Search Rankings (Quick Wins):</h4>
+                <p>Identifies high-impression keywords ranking in positions 4-15. Targeted headline and lead paragraph tweaks can elevate these stories into the Top 3 positions to multiply organic reader traffic.</p>
             </div>
 
             <div class="p-3.5 bg-rose-50 rounded-2xl border border-rose-100">
-                <h4 class="font-extrabold text-rose-900 text-xs mb-1">⚠️ ২. ট্রাফিক কমে যাওয়া আটকানো (Content Decay Detection):</h4>
-                <p>কোনো পুরানো জনপ্রিয় খবরের গুগল সার্চ ক্লিক হঠাৎ কমে গেলে এআই আপনাকে অ্যালার্ট পাঠায়, যাতে আপনি খবরটি আপডেট করে অর্গানিক ট্রাফিক হারিয়ে যাওয়া থেকে রক্ষা করতে পারেন।</p>
+                <h4 class="font-extrabold text-rose-900 text-xs mb-1">⚠️ 2. Protect Decaying Traffic (Content Decay Detection):</h4>
+                <p>Detects traffic drops on historical high-volume articles, notifying you to refresh content before rankings decline permanently.</p>
             </div>
 
             <div class="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-100">
-                <h4 class="font-extrabold text-emerald-900 text-xs mb-1">🤖 ৩. ১-ক্লিকে AI মেটা জেনারেটর (No Manual Work):</h4>
-                <p>আপনার সংবাদে মেটা টাইটেল বা ডেসক্রিপশন মিসিং থাকলে ফটোশপ বা এসইও এক্সপার্ট ছাড়াই ১-ক্লিকে এআই দিয়ে আকর্ষনীয় মেটা তৈরি করে নিতে পারবেন।</p>
+                <h4 class="font-extrabold text-emerald-900 text-xs mb-1">🤖 3. 1-Click AI Meta & Discover Optimization (Automated Workflow):</h4>
+                <p>Instantly generate Google Discover-ready meta titles, summaries, and ALT tags directly within your editorial workflow.</p>
             </div>
 
             <div class="p-3.5 bg-amber-50 rounded-2xl border border-amber-100">
-                <h4 class="font-extrabold text-amber-900 text-xs mb-1">⚡ ৪. সাইটের স্পিড ও টেকনিক্যাল ভুল সংশোধন (Technical Audit):</h4>
-                <p>Broken Link, 404 Error, Slow Load Time বা Missing H1 Tag-এর মতো টেকনিক্যাল ভুলগুলো শুধরে গুগলে পেনাল্টি পাওয়া থেকে সাইটকে সুরক্ষিত রাখে।</p>
+                <h4 class="font-extrabold text-amber-900 text-xs mb-1">⚡ 4. Technical Diagnostics & Speed Fixes (Prevent Crawl Penalties):</h4>
+                <p>Eliminates broken links, crawl errors, and slow render latencies to ensure clean search indexing and prevent crawler penalties.</p>
             </div>
         </div>
 
         <div class="mt-6 pt-3 border-t border-slate-100 flex justify-between items-center">
-            <a href="{{ route('seo.guide') }}" class="text-indigo-600 font-bold hover:underline text-xs">📖 সম্পূর্ণ ডকুমেন্টেশন গাইড দেখুন →</a>
-            <button onclick="closeHowItHelpsModal()" class="bg-indigo-600 text-white font-extrabold px-5 py-2 rounded-xl text-xs">ঠিক আছে, বুঝেছি</button>
+            <a href="{{ route('seo.guide') }}" class="text-indigo-600 font-bold hover:underline text-xs">📖 View Complete Operational Guide →</a>
+            <button onclick="closeHowItHelpsModal()" class="bg-indigo-600 text-white font-extrabold px-5 py-2 rounded-xl text-xs">Got it, Dismiss</button>
         </div>
     </div>
 </div>
@@ -1701,7 +1701,7 @@
         </div>
 
         <h3 class="font-extrabold text-slate-900 text-lg mb-1">🔍 Real-Time SEO Audit Progress</h3>
-        <p id="seoProgressStepText" class="text-xs font-bold text-slate-500 mb-6">সাইট স্ক্যানিং ও এসইও অডিট শুরু হচ্ছে...</p>
+        <p id="seoProgressStepText" class="text-xs font-bold text-slate-500 mb-6">Starting site scan and SEO intelligence audit...</p>
 
         {{-- PROGRESS BAR --}}
         <div class="w-full bg-slate-100 rounded-full h-5 mb-3 overflow-hidden p-1 border border-slate-200">
@@ -1709,7 +1709,7 @@
         </div>
 
         <div class="flex justify-between items-center text-xs font-extrabold text-slate-700">
-            <span>কমিটমেন্ট ও অডিট স্ট্যাটাস</span>
+            <span>Audit & Compliance Status</span>
             <span id="seoProgressPercentText" class="text-indigo-600 font-black text-sm">0%</span>
         </div>
     </div>
@@ -1754,17 +1754,17 @@ function setAiPrompt(prompt) {
 function sendPromptToAiAgent() {
     const prompt = document.getElementById('aiAgentCustomPrompt')?.value || '';
     if (!prompt) {
-        alert('⚠️ অনুগ্রহ করে ইনপুট বক্সে আপনার এআই এসইও প্রশ্ন লিখুন।');
+        alert('⚠️ Please enter an SEO query in the input box.');
         return;
     }
-    alert(`🤖 AI SEO Assistant Agent Answer:\n\n• Question: "${prompt}"\n\n📌 Recommended Solution:\n১. প্রধান কিউওয়ার্ডটি খবরের প্রথম ৫০ শব্দের মধ্যে যুক্ত করুন।\n২. ২টি আকর্ষণীয় সাবহেডিং (H2) এবং প্রাসঙ্গিক বাংলা ALT যুক্ত করে পাবলিশ করুন।`);
+    alert(`🤖 AI SEO Assistant Agent Answer:\n\n• Question: "${prompt}"\n\n📌 Recommended Solution:\n1. Include target keyword within the first 50 words.\n2. Add 2 descriptive H2 subheadings and optimized ALT tags before publishing.`);
 }
 
 function openSchemaGeneratorModal(title) {
     const jsonLd = {
         "@@context": "https://schema.org",
         "@@type": "NewsArticle",
-        "headline": title || "সংবাদ শিরোনাম",
+        "headline": title || "News Headline",
         "publisher": {
             "@@type": "Organization",
             "name": "{{ $activeWebsite?->domain ?? '' }}",
@@ -1795,7 +1795,7 @@ function syncGscData(siteId) {
 }
 
 function openAiGenerateAltTextModal(title) {
-    const altText = title ? (title + " - সংবাদের বিশেষ মূল ছবি ও ফিচারড কভারেজ") : "সংবাদের বিশেষ ফিচারড কভারেজ ছবি";
+    const altText = title ? (title + " - Featured coverage and main image") : "Featured news coverage image";
     alert(`🤖 AI Generated Image ALT Text:\n\n• Proposed ALT Tag: "${altText}"\n\n📌 Usage: Copy this ALT tag and place it inside the HTML <img alt="..."> tag for Google Images & Discover ranking!`);
 }
 
@@ -1835,7 +1835,7 @@ function testTelegramAlert(siteId) {
 
 function triggerInstantIndexing(siteId, targetUrl) {
     if (!targetUrl) {
-        alert('⚠️ অনুগ্রহ করে ইনপুট বক্সে সংবাদের ইউআরএল দিন।');
+        alert('⚠️ Please enter article URL in the input box.');
         return;
     }
     fetch(`/seo/instant-index/${siteId}`, {
@@ -1878,7 +1878,7 @@ function applyInstantIndexingFilter() {
                         <div class="max-w-md mx-auto">
                             <i class="fa-solid fa-filter text-violet-400 text-3xl mb-2"></i>
                             <h4 class="font-extrabold text-slate-800 text-sm mb-1">No Matching Push Logs Found</h4>
-                            <p class="text-xs text-slate-500 font-medium">নির্বাচিত ফিল্টার বা ক্যালেন্ডার তারিখে কোনো ইনডেক্সিং পুশ ডাটা পাওয়া যায়নি।</p>
+                            <p class="text-xs text-slate-500 font-medium">No indexing push history found for the selected timeframe or date.</p>
                         </div>
                     </td>
                 </tr>
@@ -1923,7 +1923,7 @@ function applyInstantIndexingFilter() {
 }
 
 function openAiContentRefreshModal(title) {
-    alert(`🤖 AI Content Refresh Plan for Decaying Article:\n\n• Target Article: "${title || 'পুরাতন সংবাদ'}"\n\n📌 Recommended Action Plan to restore organic traffic:\n1. Expand news body with 3 new bullet points detailing recent developments.\n2. Update the publishing/modified date header in HTML.\n3. Re-submit URL to Google Instant Indexing API.`);
+    alert(`🤖 AI Content Refresh Plan for Decaying Article:\n\n• Target Article: "${title || 'Archived Article'}"\n\n📌 Recommended Action Plan to restore organic traffic:\n1. Expand news body with 3 new bullet points detailing recent developments.\n2. Update the publishing/modified date header in HTML.\n3. Re-submit URL to Google Instant Indexing API.`);
 }
 
 function openQuickWinAiAdvice(keyword, position) {
@@ -1944,8 +1944,8 @@ function filterTechAuditTable() {
 }
 
 function openAiFixModal(url, title) {
-    const desc = "সর্বশেষ তথ্য ও ঘটনার মূল বিবরণ দেখতে পড়ুন " + (title || "সংবাদটি") + " সংক্রান্ত আমাদের বিশেষ বিস্তারিত প্রতিবেদন।";
-    alert(`🤖 AI Meta & Title Fix Recommendations:\n\n• Target Page: ${url}\n• Optimized Meta Title: "${title || 'বিশেষ অনলাইন বুলেটিন'}"\n• Generated Meta Description: "${desc}"\n\nAI Recommendations ready to apply to page header!`);
+    const desc = "Read our comprehensive in-depth report on " + (title || "this story") + " for latest updates, background, and expert analysis.";
+    alert(`🤖 AI Meta & Title Fix Recommendations:\n\n• Target Page: ${url}\n• Optimized Meta Title: "${title || 'Special Online Bulletin'}"\n• Generated Meta Description: "${desc}"\n\nAI Recommendations ready to apply to page header!`);
 }
 
 function resetInstantIndexingFilter() {
@@ -2008,7 +2008,7 @@ function set301Redirect(auditId, brokenUrl) {
 }
 
 function generateDiscoverHeadlines(siteId) {
-    const inputTitle = document.getElementById('discoverInputTitle')?.value || 'আজকের বিশেষ খবর';
+    const inputTitle = document.getElementById('discoverInputTitle')?.value || 'Breaking News Coverage';
     fetch(`/seo/discover-check/${siteId}`, {
         method: 'POST',
         headers: {
@@ -2157,7 +2157,7 @@ function downloadPdfReport() {
 }
 
 function generateAiSeoMeta(title) {
-    alert('🤖 AI Meta Recommendation for: "' + (title || 'News Article') + '"\n\nGenerated Description: "সর্বশেষ লাইভ বুলেটিন ও বিশ্লেষণ পেতে পড়ুন ' + (title || 'সংবাদটি') + ' সংক্রান্ত আমাদের বিশেষ প্রতিবেদন।"');
+    alert('🤖 AI Meta Recommendation for: "' + (title || 'News Article') + '"\n\nGenerated Description: "Read our special coverage and live updates on ' + (title || 'this news story') + '."');
 }
 
 // Pagination state tracking
@@ -2237,7 +2237,7 @@ function loadAuditTableData(siteId, type, page) {
             const rows = data.data;
             if (rows.length === 0) {
                 let noDataMsg = "No audit records found.";
-                if (type === 'broken') noDataMsg = "✅ ডোমেইনের কোনো Broken Link (404 Error) পাওয়া যায়নি। সব লিংক সক্রিয় আছে!";
+                if (type === 'broken') noDataMsg = "✅ Zero broken links (404 errors) found on domain. All hyperlinks are active and healthy!";
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="10" class="p-6 text-center text-emerald-600 font-bold bg-slate-50/50">
@@ -2355,7 +2355,7 @@ function loadAuditTableData(siteId, type, page) {
                                 </span>
                             </td>
                             <td class="p-3 text-right">
-                                <button onclick="openSchemaGeneratorModal('${escapeHtml(audit.title ?? 'সংবাদ শিরোনাম')}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-3 py-1 rounded-xl text-[10px] shadow-xs transition">
+                                <button onclick="openSchemaGeneratorModal('${escapeHtml(audit.title ?? 'News Headline')}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-3 py-1 rounded-xl text-[10px] shadow-xs transition">
                                     ⚡ Generate
                                 </button>
                             </td>

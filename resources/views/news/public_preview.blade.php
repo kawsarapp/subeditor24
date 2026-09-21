@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>নিউজ প্রিভিউ - সাব-এডিটর বিডি</title>
+    <title>News Preview - Newsmanage24</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 	
 	<style>
@@ -15,7 +15,7 @@
         font-family: 'SolaimanLipi', Arial, sans-serif; 
     }
 
-    /* অন্যান্য স্টাইল অপরিবর্তিত রাখা হয়েছে */
+    /* Other styles preserved */
     @keyframes shimmer { 
         0% { background-position: -200% 0; } 
         100% { background-position: 200% 0; } 
@@ -43,7 +43,7 @@
         @endif
 
         <div class="text-center mb-4">
-            <span class="badge bg-secondary">নিউজ ড্রাফট প্রিভিউ (অপ্রকাশিত)</span>
+            <span class="badge bg-secondary">News Draft Preview (Unpublished)</span>
         </div>
 
         <h1 class="fw-bold mb-4">{{ $news->ai_title ?? $news->title }}</h1>
@@ -55,23 +55,23 @@
 
         <hr>
         <div class="feedback-section py-4 text-center">
-            <h5 class="mb-3 fw-bold">এই নিউজটি কি পাবলিশ করা যাবে?</h5>
+            <h5 class="mb-3 fw-bold">Is this article ready for publication?</h5>
             <div class="d-flex justify-content-center gap-3">
                 <form action="{{ route('news.preview-feedback', $news->id) }}" method="POST">
                     @csrf
                     <input type="hidden" name="status" value="approved">
-                    <button type="submit" class="btn btn-success btn-lg px-5 shadow">✅ হ্যাঁ, ঠিক আছে</button>
+                    <button type="submit" class="btn btn-success btn-lg px-5 shadow">✅ Yes, Approve & Publish</button>
                 </form>
 
-                <button class="btn btn-danger btn-lg px-5 shadow" data-bs-toggle="collapse" data-bs-target="#rejectNote">❌ না, পরিবর্তন লাগবে</button>
+                <button class="btn btn-danger btn-lg px-5 shadow" data-bs-toggle="collapse" data-bs-target="#rejectNote">❌ No, Needs Revision</button>
             </div>
 
             <div class="collapse mt-4" id="rejectNote">
                 <form action="{{ route('news.preview-feedback', $news->id) }}" method="POST">
                     @csrf
                     <input type="hidden" name="status" value="rejected">
-                    <textarea name="note" class="form-control mb-2" placeholder="কী পরিবর্তন করতে হবে এখানে লিখুন..." required></textarea>
-                    <button type="submit" class="btn btn-dark w-100">ফিডব্যাক পাঠান</button>
+                    <textarea name="note" class="form-control mb-2" placeholder="Explain what needs to be changed here..." required></textarea>
+                    <button type="submit" class="btn btn-dark w-100">Send Feedback</button>
                 </form>
             </div>
         </div>

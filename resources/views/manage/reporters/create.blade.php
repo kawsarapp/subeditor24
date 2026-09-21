@@ -13,10 +13,10 @@
                 <div class="relative z-10 text-center sm:text-left">
                     <h2 class="text-xl sm:text-2xl font-extrabold text-white flex items-center justify-center sm:justify-start gap-3">
                         <i class="fa-solid fa-paper-plane text-indigo-200 animate-pulse"></i>
-                        প্রতিনিধি প্যানেল: নতুন খবর পাঠান
+                        Reporter Panel: Submit News Article
                     </h2>
                     <p class="text-indigo-100 text-xs sm:text-sm mt-2 font-medium opacity-90 italic">
-                        সবগুলো তথ্য নির্ভুলভাবে পূরণ করে সাবমিট করুন।
+                        Please fill in all details accurately before submitting.
                     </p>
                 </div>
             </div>
@@ -28,29 +28,29 @@
                     {{-- Title - Full Width on all screens --}}
                     <div class="md:col-span-2 group">
                         <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">
-                            খবরের শিরোনাম <span class="text-red-500">*</span>
+                            News Title <span class="text-red-500">*</span>
                         </label>
                         <input type="text" name="title" required 
                                class="w-full border-2 border-gray-100 rounded-2xl p-3.5 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 bg-gray-50/30 text-gray-800 placeholder:text-gray-400" 
-                               placeholder="আকর্ষণীয় শিরোনাম লিখুন...">
+                               placeholder="Enter an engaging headline...">
                     </div>
 
                     {{-- Location --}}
                     <div class="group">
-                        <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">আপনার এলাকা/লোকেশন</label>
+                        <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">Your Area / Location</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
                                 <i class="fa-solid fa-location-dot"></i>
                             </span>
                             <input type="text" name="location" 
                                    class="w-full border-2 border-gray-100 rounded-2xl p-3.5 pl-11 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 bg-gray-50/30 text-gray-800" 
-                                   placeholder="যেমন: ঢাকা, মিরপুর">
+                                   placeholder="e.g. Dhaka, Mirpur">
                         </div>
                     </div>
 
                     {{-- Reporter Name (Read Only) --}}
                     <div>
-                        <label class="block text-sm font-bold text-gray-800 mb-2">প্রতিনিধির নাম</label>
+                        <label class="block text-sm font-bold text-gray-800 mb-2">Reporter Name</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
                                 <i class="fa-solid fa-user-check"></i>
@@ -64,7 +64,7 @@
                     {{-- Image Upload --}}
                     <div class="group">
                         <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">
-                            খবরের প্রধান ছবি (Max 10MB) <span class="text-red-500">*</span>
+                            Featured Image (Max 10MB) <span class="text-red-500">*</span>
                         </label>
                         <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-200 border-dashed rounded-2xl bg-gray-50/50 hover:bg-indigo-50/30 transition-colors">
                             <div class="space-y-1 text-center">
@@ -73,7 +73,7 @@
                                 </svg>
                                 <div class="flex text-sm text-gray-600">
                                     <label class="relative cursor-pointer bg-white rounded-md font-bold text-indigo-600 hover:text-indigo-500">
-                                        <span>ছবি আপলোড করুন</span>
+                                        <span>Upload Image</span>
                                         <input type="file" name="image_file" required class="sr-only">
                                     </label>
                                 </div>
@@ -81,39 +81,39 @@
                             </div>
                         </div>
                         <p class="text-[10px] text-gray-400 mt-2 italic text-center sm:text-left leading-relaxed">
-                             ইমেজ কম্প্রেস করা হবে না, সরাসরি অরিজিনাল ফাইল সেভ হবে।
+                             Image will not be compressed; original file is saved directly.
                         </p>
                     </div>
 
                     {{-- Image Caption --}}
                     <div class="group">
-                        <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">ছবির ক্যাপশন</label>
+                        <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">Image Caption</label>
                         <textarea name="image_caption" rows="4" 
                                   class="w-full border-2 border-gray-100 rounded-2xl p-3.5 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 bg-gray-50/30 text-gray-800" 
-                                  placeholder="ছবির বিস্তারিত বিবরণ..."></textarea>
+                                  placeholder="Detailed description of the image..."></textarea>
                     </div>
                 </div>
 
                 {{-- Short Summary --}}
                 <div class="group">
-                    <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">সংক্ষিপ্ত সারসংক্ষেপ (Short Summary)</label>
+                    <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">Short Summary</label>
                     <textarea name="short_summary" rows="2" 
                               class="w-full border-2 border-gray-100 rounded-2xl p-3.5 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 bg-gray-50/30 text-gray-800" 
-                              placeholder="খবরটি সংক্ষেপে ২-৩ লাইনে লিখুন..."></textarea>
+                              placeholder="Write a concise summary in 2-3 lines..."></textarea>
                 </div>
 
                 {{-- Body Content --}}
                 <div class="group">
-                    <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">বিস্তারিত খবর লিখুন <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">Full Article Content <span class="text-red-500">*</span></label>
                     <textarea name="content" rows="10" required 
                               class="w-full border-2 border-gray-100 rounded-2xl p-4 sm:p-6 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 bg-gray-50/30 text-gray-800 text-base leading-relaxed" 
-                              placeholder="খবরের বিস্তারিত এখানে টাইপ করুন..."></textarea>
+                              placeholder="Type the detailed article content here..."></textarea>
                 </div>
 
                 {{-- Footer Section --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-100 pt-8">
                     <div class="group">
-                        <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">সোর্স লিংক (যদি থাকে)</label>
+                        <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">Source URL (Optional)</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
                                 <i class="fa-solid fa-link"></i>
@@ -124,14 +124,14 @@
                         </div>
                     </div>
                     <div class="group">
-                        <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">ট্যাগস (কমা দিয়ে লিখুন)</label>
+                        <label class="block text-sm font-bold text-gray-800 mb-2 transition-colors group-focus-within:text-indigo-600">Tags (Comma separated)</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
                                 <i class="fa-solid fa-tags"></i>
                             </span>
                             <input type="text" name="tags" 
                                    class="w-full border-2 border-gray-100 rounded-2xl p-3.5 pl-11 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 bg-gray-50/30 text-gray-800" 
-                                   placeholder="তাজা খবর, রাজনীতি, বিনোদন">
+                                   placeholder="Breaking News, Politics, Entertainment">
                         </div>
                     </div>
                 </div>
@@ -141,13 +141,13 @@
                     <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl">
                         <p class="text-xs sm:text-sm text-amber-800 font-medium italic">
                             <i class="fa-solid fa-circle-info mr-1"></i>
-                            সাবমিট করার পর এটি ড্রাফট হিসেবে জমা হবে এবং আপনার অ্যাডমিন তা পাবলিশ করবেন।
+                            Upon submission, this will be saved as a draft for editorial review before publication.
                         </p>
                     </div>
                     
                     <button type="submit" 
                             class="w-full bg-indigo-600 text-white py-4 sm:py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 hover:shadow-2xl hover:shadow-indigo-200 transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-3 shadow-lg shadow-indigo-100">
-                        নিউজটি জমা দিন 
+                        Submit News Article 
                         <i class="fa-solid fa-paper-plane text-sm"></i>
                     </button>
                 </div>

@@ -125,12 +125,12 @@
             <div class="mb-4">
                 <label class="block text-sm font-bold text-gray-600 mb-2">Site Cooldown (Minutes)</label>
                 <input type="number" name="scrape_cooldown_minutes" id="cooldownMinutesInput" min="1" max="1440" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 outline-none text-sm bg-white" required>
-                <p class="text-[10px] text-gray-400 mt-1">একটি সাইট কত মিনিট পর পর পুনরায় স্ক্র্যাপ করতে পারবে।</p>
+                <p class="text-[10px] text-gray-400 mt-1">Cooldown duration in minutes before re-scraping the same website.</p>
             </div>
             <div class="mb-6">
                 <label class="block text-sm font-bold text-gray-600 mb-2">Concurrent Scrapes Limit (5 Mins)</label>
                 <input type="number" name="scrape_concurrent_limit" id="concurrentLimitInput" min="1" max="100" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 outline-none text-sm bg-white" required>
-                <p class="text-[10px] text-gray-400 mt-1">৫ মিনিটে সর্বোচ্চ কয়টি সাইট একসাথে স্ক্র্যাপ করতে পারবে।</p>
+                <p class="text-[10px] text-gray-400 mt-1">Maximum number of concurrent scrapes allowed per 5 minutes.</p>
             </div>
             <div class="flex justify-end gap-3">
                 <button type="button" onclick="closeScraperModal()" class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-bold hover:bg-gray-200 transition text-sm">Cancel</button>
@@ -171,11 +171,11 @@
                     <input type="number" name="daily_post_limit" value="10" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500">
                 </div>
             </div>
-            {{-- 🔥 Staff Limit Input (Create) --}}
+            {{-- Staff Limit Input (Create) --}}
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-1">Max Staff Limit</label>
                 <input type="number" name="staff_limit" value="0" min="0" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-blue-500">
-                <p class="text-[10px] text-gray-400 mt-1">এই ক্লায়েন্ট সর্বোচ্চ কয়জন ইউজার/স্টাফ বানাতে পারবে (0 দিলে পারবে না)।</p>
+                <p class="text-[10px] text-gray-400 mt-1">Maximum number of staff/sub-users this client can create (0 to disable).</p>
             </div>
             <div class="flex justify-end pt-2">
                 <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-md w-full">Create User</button>
@@ -245,6 +245,7 @@
                     'can_settings_proxy' => '🌐 Proxy & Scraper Settings',
                     'can_settings_target_language' => '🌍 Target Language Settings',
                     'can_settings_ai'    => '🤖 AI API Settings',
+                    'can_settings_ai_prompt' => '✍️ Custom AI Rewrite Prompt Settings',
                     'can_settings_wp_laravel' => '🔗 WordPress & Laravel API',
                     'can_settings_social'=> '📱 Social Media (FB, X, Telegram)',
                     'can_settings_category' => '📂 Category Mapping',

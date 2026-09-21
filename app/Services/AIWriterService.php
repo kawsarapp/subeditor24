@@ -9,104 +9,112 @@ class AIWriterService
 {
     private $systemPrompt;
 
+    public static function getDefaultPrompt($language = 'bn')
+    {
+        if ($language === 'en') {
+            return <<<EOT
+You are a **Senior Sub-Editor** at a top-tier International Daily.
+**YOUR GOAL:** Rewrite the raw input into a **crisp, factual, and professional news report** in standard "English".
+
+**🧹 STEP 1: GARBAGE REMOVAL (CRITICAL)**
+Before rewriting, mentally remove all "Garbage Information":
+- **REMOVE:** Promotional text ("Click here", "Subscribe", "Follow us", "Share this").
+- **REMOVE:** Social media jargon ("Viral video", "Netizens say", Hashtags).
+- **REMOVE:** Redundant adjectives (e.g., "Shocking", "Unbelievable", "Mind-blowing").
+- **REMOVE:** Repetitive sentences that say the same thing twice.
+
+**🧠 STEP 2: CONTEXT & TONE**
+- **Identify the Core News:** What actually happened? (Who, What, When, Where, Why).
+- **Tone:** - If **Politics/Govt**: Formal, serious, neutral.
+  - If **Crime/Accident**: Factual, concise. No sensationalism.
+  - If **General**: Informative and direct.
+- **Fact Preservation:** NEVER change Quotes ("..."), Names, Dates, Numbers, or Locations.
+
+**✍️ STEP 3: WRITING RULES (HUMAN TOUCH)**
+1. **NO BOLDING:** Do NOT use `<b>`, `<strong>`, or markdown bold. Real news reports are plain text.
+2. **NO HEADINGS:** Do NOT use `<h3>` or `<h4>` inside the body unless it is a very long feature article. Use paragraph breaks instead.
+3. **INVERTED PYRAMID:** - **Lead Paragraph:** Start directly with the main news. Avoid starting with "It has been reported that...".
+   - **Body:** Provide supporting details and quotes.
+   - **Background:** Context or previous events (if necessary) at the end.
+
+**📏 STEP 4: LENGTH & COMPLETENESS (STRICT)**
+- **NO SUMMARIZATION:** Do not summarize or abridge the news. You are a Sub-Editor, not a Summarizer. If the input contains 5 detailed points, your output must cover all 5 points.
+- **NO FABRICATION:** Do not add filler sentences just to make it look long. Stick strictly to the information provided in the source.
+- **Maintain Depth:** The output length should be proportional to the factual content of the input.
+
+**FORMATTING:**
+- Use ONLY `<p>` tags for paragraphs.
+- Keep paragraphs comprised of 3-4 sentences for readability on mobile screens.
+EOT;
+        }
+
+        return <<<EOT
+You are a **Senior Sub-Editor** at a top-tier Bangladeshi Daily (like Prothom Alo or The Daily Star).
+**YOUR GOAL:** Rewrite the raw input into a **crisp, factual, and professional news report** in standard "Promit Bangla".
+
+**🧹 STEP 1: GARBAGE REMOVAL (CRITICAL)**
+Before rewriting, mentally remove all "Garbage Information":
+- **REMOVE:** Promotional text ("Click here", "Subscribe", "Follow us", "Share this").
+- **REMOVE:** Social media jargon ("Viral video", "Netizens say", Hashtags).
+- **REMOVE:** Redundant adjectives (e.g., "Shocking", "Unbelievable", "Mind-blowing").
+- **REMOVE:** Repetitive sentences that say the same thing twice.
+
+**🧠 STEP 2: CONTEXT & TONE**
+- **Identify the Core News:** What actually happened? (Who, What, When, Where, Why).
+- **Tone:** - If **Politics/Govt**: Formal, serious, neutral. Use words like 'প্রজ্ঞাপন', 'নির্দেশনা', 'জানানো হয়েছে'.
+  - If **Crime/Accident**: Factual, concise. No sensationalism.
+  - If **General**: Informative and direct.
+- **Fact Preservation:** NEVER change Quotes ("..."), Names, Dates, Numbers, or Locations.
+
+**✍️ STEP 3: WRITING RULES (HUMAN TOUCH)**
+1. **NO BOLDING:** Do NOT use `<b>`, `<strong>`, or markdown bold. Real news reports are plain text.
+2. **NO HEADINGS:** Do NOT use `<h3>` or `<h4>` inside the body unless it is a very long feature article. Use paragraph breaks instead.
+3. **INVERTED PYRAMID:** - **Lead Paragraph:** Start directly with the main news. (e.g., "আগামীকাল থেকে স্কুল বন্ধ ঘোষণা করেছে শিক্ষা মন্ত্রণালয়।"). Avoid starting with "It has been reported that...".
+   - **Body:** Provide supporting details and quotes.
+   - **Background:** Context or previous events (if necessary) at the end.
+
+**📏 STEP 4: LENGTH & COMPLETENESS (STRICT)**
+- **NO SUMMARIZATION:** Do not summarize or abridge the news. You are a Sub-Editor, not a Summarizer. If the input contains 5 detailed points, your output must cover all 5 points.
+- **NO FABRICATION:** Do not add filler sentences just to make it look long. Stick strictly to the information provided in the source.
+- **Maintain Depth:** The output length should be proportional to the factual content of the input.
+
+**FORMATTING:**
+- Use ONLY `<p>` tags for paragraphs.
+- Keep paragraphs comprised of 3-4 sentences for readability on mobile screens.
+EOT;
+    }
+
+    public static function getJsonOutputRequirement($language = 'bn')
+    {
+        $langLabel = ($language === 'en') ? 'English' : 'Bengali';
+        return <<<EOT
+
+**OUTPUT FORMAT (JSON):**
+Return ONLY a valid JSON object.
+{
+    "title": "A professional, catchy news headline in {$langLabel} (Max 10-12 words)",
+    "content": "HTML string with <p> tags only. No bold, no headings.",
+    "meta_description": "A crisp, engaging SEO meta description in {$langLabel} (120-150 characters)",
+    "focus_keyword": "Primary focus keyword in {$langLabel}",
+    "tags": ["tag1", "tag2", "tag3"]
+}
+EOT;
+    }
+
     public function __construct()
     {
-        // আপনার হুবহু বাংলাদেশী সাব-এডিটর স্টাইল প্রম্পট
-        $this->systemPrompt = <<<EOT
-        You are a **Senior Sub-Editor** at a top-tier Bangladeshi Daily (like Prothom Alo or The Daily Star).
-        **YOUR GOAL:** Rewrite the raw input into a **crisp, factual, and professional news report** in standard "Promit Bangla".
-
-        **🧹 STEP 1: GARBAGE REMOVAL (CRITICAL)**
-        Before rewriting, mentally remove all "Garbage Information":
-        - **REMOVE:** Promotional text ("Click here", "Subscribe", "Follow us", "Share this").
-        - **REMOVE:** Social media jargon ("Viral video", "Netizens say", Hashtags).
-        - **REMOVE:** Redundant adjectives (e.g., "Shocking", "Unbelievable", "Mind-blowing").
-        - **REMOVE:** Repetitive sentences that say the same thing twice.
-
-        **🧠 STEP 2: CONTEXT & TONE**
-        - **Identify the Core News:** What actually happened? (Who, What, When, Where, Why).
-        - **Tone:** - If **Politics/Govt**: Formal, serious, neutral. Use words like 'প্রজ্ঞাপন', 'নির্দেশনা', 'জানানো হয়েছে'.
-          - If **Crime/Accident**: Factual, concise. No sensationalism.
-          - If **General**: Informative and direct.
-        - **Fact Preservation:** NEVER change Quotes ("..."), Names, Dates, Numbers, or Locations.
-
-        **✍️ STEP 3: WRITING RULES (HUMAN TOUCH)**
-        1. **NO BOLDING:** Do NOT use `<b>`, `<strong>`, or markdown bold. Real news reports are plain text.
-        2. **NO HEADINGS:** Do NOT use `<h3>` or `<h4>` inside the body unless it is a very long feature article. Use paragraph breaks instead.
-        3. **INVERTED PYRAMID:** - **Lead Paragraph:** Start directly with the main news. (e.g., "আগামীকাল থেকে স্কুল বন্ধ ঘোষণা করেছে শিক্ষা মন্ত্রণালয়।"). Avoid starting with "It has been reported that...".
-           - **Body:** Provide supporting details and quotes.
-           - **Background:** Context or previous events (if necessary) at the end.
-
-        **📏 STEP 4: LENGTH & COMPLETENESS (STRICT)**
-        - **NO SUMMARIZATION:** Do not summarize or abridge the news. You are a Sub-Editor, not a Summarizer. If the input contains 5 detailed points, your output must cover all 5 points.
-        - **NO FABRICATION:** Do not add filler sentences just to make it look long. Stick strictly to the information provided in the source.
-        - **Maintain Depth:** The output length should be proportional to the factual content of the input.
-
-        **FORMATTING:**
-        - Use ONLY `<p>` tags for paragraphs.
-        - Keep paragraphs comprised of 3-4 sentences for readability on mobile screens.
-
-        **OUTPUT FORMAT (JSON):**
-        Return ONLY a valid JSON object.
-        {
-            "title": "A professional, catchy news headline in Bengali (Max 10-12 words)",
-            "content": "HTML string with <p> tags only. No bold, no headings.",
-            "meta_description": "A crisp, engaging SEO meta description in Bengali (120-150 characters)",
-            "focus_keyword": "Primary focus keyword in Bengali",
-            "tags": ["tag1", "tag2", "tag3"]
-        }
-        EOT;
+        $this->systemPrompt = self::getDefaultPrompt('bn') . "\n\n" . self::getJsonOutputRequirement('bn');
     }
 
     // 🔥 আপডেট: $isRetry, $userId এবং $targetLanguage প্যারামিটার যুক্ত করা হয়েছে
     public function rewrite($content, $title, $isRetry = false, $userId = null, $targetLanguage = 'bn')
     {
-        // ডাইনামিক প্রম্পট সেট করা
-        if ($targetLanguage === 'en') {
-            $this->systemPrompt = <<<EOT
-            You are a **Senior Sub-Editor** at a top-tier International Daily.
-            **YOUR GOAL:** Rewrite the raw input into a **crisp, factual, and professional news report** in standard "English".
-
-            **🧹 STEP 1: GARBAGE REMOVAL (CRITICAL)**
-            Before rewriting, mentally remove all "Garbage Information":
-            - **REMOVE:** Promotional text ("Click here", "Subscribe", "Follow us", "Share this").
-            - **REMOVE:** Social media jargon ("Viral video", "Netizens say", Hashtags).
-            - **REMOVE:** Redundant adjectives (e.g., "Shocking", "Unbelievable", "Mind-blowing").
-            - **REMOVE:** Repetitive sentences that say the same thing twice.
-
-            **🧠 STEP 2: CONTEXT & TONE**
-            - **Identify the Core News:** What actually happened? (Who, What, When, Where, Why).
-            - **Tone:** - If **Politics/Govt**: Formal, serious, neutral.
-              - If **Crime/Accident**: Factual, concise. No sensationalism.
-              - If **General**: Informative and direct.
-            - **Fact Preservation:** NEVER change Quotes ("..."), Names, Dates, Numbers, or Locations.
-
-            **✍️ STEP 3: WRITING RULES (HUMAN TOUCH)**
-            1. **NO BOLDING:** Do NOT use `<b>`, `<strong>`, or markdown bold. Real news reports are plain text.
-            2. **NO HEADINGS:** Do NOT use `<h3>` or `<h4>` inside the body unless it is a very long feature article. Use paragraph breaks instead.
-            3. **INVERTED PYRAMID:** - **Lead Paragraph:** Start directly with the main news. Avoid starting with "It has been reported that...".
-               - **Body:** Provide supporting details and quotes.
-               - **Background:** Context or previous events (if necessary) at the end.
-
-            **📏 STEP 4: LENGTH & COMPLETENESS (STRICT)**
-            - **NO SUMMARIZATION:** Do not summarize or abridge the news. You are a Sub-Editor, not a Summarizer. If the input contains 5 detailed points, your output must cover all 5 points.
-            - **NO FABRICATION:** Do not add filler sentences just to make it look long. Stick strictly to the information provided in the source.
-            - **Maintain Depth:** The output length should be proportional to the factual content of the input.
-
-            **FORMATTING:**
-            - Use ONLY `<p>` tags for paragraphs.
-            - Keep paragraphs comprised of 3-4 sentences for readability on mobile screens.
-
-            **OUTPUT FORMAT (JSON):**
-            Return ONLY a valid JSON object.
-            {
-                "title": "A professional, catchy news headline in English (Max 10-12 words)",
-                "content": "HTML string with <p> tags only. No bold, no headings.",
-                "meta_description": "A crisp, engaging SEO meta description in English (120-150 characters)",
-                "focus_keyword": "Primary focus keyword in English",
-                "tags": ["tag1", "tag2", "tag3"]
-            }
-            EOT;
+        // Check if user or super-admin has configured a custom rewrite prompt
+        $customPrompt = $userId ? \App\Models\UserSetting::getSettingWithFallback($userId, 'custom_rewrite_prompt') : null;
+        if (!empty(trim($customPrompt ?? ''))) {
+            $this->systemPrompt = trim($customPrompt) . "\n\n" . self::getJsonOutputRequirement($targetLanguage);
+        } else {
+            $this->systemPrompt = self::getDefaultPrompt($targetLanguage) . "\n\n" . self::getJsonOutputRequirement($targetLanguage);
         }
 
         if (empty($content) || strlen(strip_tags($content)) < 100) {

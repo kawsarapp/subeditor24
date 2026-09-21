@@ -14,7 +14,7 @@
         align-items: center; 
         justify-content: center; 
         background-color: #555;
-        overflow: auto; /* স্ক্রলবার আসবে যদি জুম অনেক বেশি হয় */
+        overflow: auto; /* Scrollbars appear if zoom is high */
         position: relative;
     }
     
@@ -32,7 +32,7 @@
 <div class="container-fluid p-0 builder-container">
     <div class="row g-0 h-100">
         
-        {{-- বাম পাশ: টুলবক্স --}}
+        {{-- Left: Toolbox --}}
         <div class="col-lg-3 col-md-4 sidebar-panel p-4 shadow-sm z-1">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-bold text-dark m-0">🛠️ Builder</h5>
@@ -96,7 +96,7 @@
             </div>
         </div>
 
-        {{-- ডান পাশ: ক্যানভাস --}}
+        {{-- Right: Canvas --}}
         <div class="col-lg-9 col-md-8 canvas-area bg-dark">
             
             {{-- Zoom Controls --}}
@@ -121,10 +121,9 @@
     const canvas = new fabric.Canvas('builderCanvas');
     let frameFile = null;
 
-    // 🔥 ১. পারফেক্ট জুম সেটআপ (ডিফল্ট ছোট স্ক্রিনে ফিট হওয়ার জন্য)
+    // 1. Zoom Setup
     function initZoom() {
         const containerWidth = document.querySelector('.canvas-area').clientWidth;
-        // ডিফল্ট জুম এমন হবে যাতে ১০৮০ পিক্সেল ক্যানভাস স্ক্রিনে ধরে
         let initialZoom = (containerWidth - 60) / 1080; 
         if(initialZoom > 1) initialZoom = 1;
         setZoom(initialZoom);
@@ -137,12 +136,12 @@
         canvas.renderAll();
     }
 
-    // উইন্ডো লোড হলে জুম ঠিক করবে
+    // Set zoom on load
     setTimeout(initZoom, 200);
     window.addEventListener('resize', initZoom);
 
 
-    // --- ২. ফ্রেম আপলোড (অটোমেটিক জুম রিসেট সহ) ---
+    // --- 2. Frame Upload ---
     document.getElementById('frameUpload').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(!file) return;
@@ -151,9 +150,7 @@
         const reader = new FileReader();
         reader.onload = function(f) {
             fabric.Image.fromURL(f.target.result, function(img) {
-                // ক্যানভাসের আসল সাইজ সবসময় ১০৮০x১০৮০ থাকবে
-                // আমরা শুধু দেখার জন্য জুম ইন/আউট করব
-                
+                // Canvas remains 1080x1080
                 canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
                     scaleX: 1080 / img.width,
                     scaleY: 1080 / img.height,
@@ -165,11 +162,11 @@
     });
 
 
-    // --- ৩. এলিমেন্ট যোগ করা ---
+    // --- 3. Add Elements ---
     window.addPlaceholder = function(type) {
         let obj;
         
-        // ডিফল্ট সেন্টার পজিশন (১০৮০ এর হিসেবে)
+        // Default center position (for 1080)
         const centerX = 540;
         const centerY = 540;
 
@@ -206,7 +203,7 @@
     }
 
 
-    // --- ৪. প্রপার্টি প্যানেল লজিক ---
+    // --- 4. Properties Panel Logic ---
     canvas.on('selection:created', showProperties);
     canvas.on('selection:updated', showProperties);
     canvas.on('selection:cleared', () => { document.getElementById('properties-panel').style.display = 'none'; });
@@ -218,7 +215,7 @@
         if(obj.fill) document.getElementById('propColor').value = obj.fill;
         
         if(obj.type === 'rect') {
-            // ইমেজের ক্ষেত্রে সাইজ মানে স্কেল
+            // For images, size maps to scale
             document.getElementById('propSize').value = (obj.width * obj.scaleX) / 10; 
         } else {
             document.getElementById('propSize').value = obj.fontSize;
@@ -233,7 +230,6 @@
             obj.set('fill', val);
         } else if (key === 'size') {
             if(obj.type === 'rect') {
-                // ইমেজের সাইজ বাড়ালে width না বাড়িয়ে scale বাড়াচ্ছি
                 const newScale = (parseInt(val) * 10) / obj.width;
                 obj.scale(newScale);
             } else {
@@ -261,15 +257,15 @@
     }
 
 
-    // --- ৫. সেভ টেমপ্লেট (ERROR FIX) ---
+    // --- 5. Save Template ---
     window.saveTemplate = function() {
         const name = document.getElementById('templateName').value;
         if(!name || !frameFile) {
-            alert('❌ নাম লিখুন এবং ফ্রেম আপলোড করুন।');
+            alert('❌ Please enter a template name and upload a frame.');
             return;
         }
 
-        // লেআউট ডাটা তৈরি (জুম ফ্যাক্টর বাদ দিয়ে আসল কোর্ডিনেট নেওয়া)
+        // Build layout data
         const currentZoom = canvas.getZoom();
         const layoutData = [];
         
@@ -277,7 +273,6 @@
             if(obj.data && obj.data.type) {
                 layoutData.push({
                     type: obj.data.type,
-                    // জুম বাদে অরিজিনাল পজিশন সেভ করা হচ্ছে
                     left: obj.left, 
                     top: obj.top,
                     width: obj.width * obj.scaleX,
@@ -292,27 +287,26 @@
         });
 
         if(layoutData.length === 0) {
-            alert("⚠️ কমপক্ষে একটি এলিমেন্ট (Title/Image) যোগ করুন।");
+            alert("⚠️ Please add at least one element (Title/Image).");
             return;
         }
 
-        // থাম্বনেইল তৈরি (অরিজিনাল সাইজ থেকে ছোট করে)
-        // জুম ১ এ নিয়ে স্ন্যাপশট নেওয়া, তারপর আবার আগের জুমে ফেরত আসা
+        // Build thumbnail
         canvas.setZoom(1);
         canvas.setWidth(1080);
         canvas.setHeight(1080);
         const thumbBase64 = canvas.toDataURL({ format: 'png', multiplier: 0.2 });
-        // জুম রিস্টোর
+        // Restore zoom
         setZoom(currentZoom);
 
-        // ডাটা পাঠানো
+        // Send data
         const formData = new FormData();
         formData.append('name', name);
         formData.append('frame_image', frameFile);
         formData.append('layout_data', JSON.stringify(layoutData));
         formData.append('thumbnail_base64', thumbBase64);
         
-        // 🔥 CSRF টোকেন ফিক্স
+        // CSRF Token
         const csrfToken = document.querySelector('meta[name="csrf-token"]');
         if(csrfToken) {
             formData.append('_token', csrfToken.content);

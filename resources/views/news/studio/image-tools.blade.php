@@ -1,5 +1,5 @@
 <script>
-    // 1. মেইন ইমেজ সেটআপ
+    // 1. Main image setup
     window.setupMainImage = function(img) {
         if (typeof mainImageObj !== 'undefined' && mainImageObj) canvas.remove(mainImageObj);
         
@@ -23,12 +23,12 @@
         });
     };
 
-    // 2. কাস্টম ফ্রেম আপলোড (SERVER UPLOAD ADDED)
+    // 2. Custom frame upload (Server upload)
     window.addCustomFrame = function(input) {
         if (input.files && input.files[0]) {
             const file = input.files[0];
 
-            // A. তাৎক্ষণিক প্রিভিউ (Local Reader) - যাতে ইউজার ওয়েট না করে
+            // A. Instant preview (Local Reader) - zero wait time
             const r = new FileReader();
             r.onload = function (e) {
                 fabric.Image.fromURL(e.target.result, function(img) {
@@ -37,7 +37,7 @@
             };
             r.readAsDataURL(file);
 
-            // B. সার্ভারে আপলোড (Background Process)
+            // B. Upload to server (Background process)
             const formData = new FormData();
             formData.append('frame', file);
             
@@ -54,23 +54,23 @@
                 if (data.success) {
                     console.log("✅ Frame Uploaded to Server:", data.url);
                     
-                    // গ্লোবাল ভেরিয়েবল আপডেট (যাতে রিস্টোর করলে পায়)
+                    // Update global variables for persistence
                     window.userSettings.frameUrl = data.url;
                     
-                    // লোকাল স্টোরেজ আপডেট
+                    // Update local storage
                     if(typeof window.savePreference === 'function') {
                         window.savePreference('frameUrl', data.url);
                     }
-                    alert("✅ ফ্রেম সেভ হয়েছে! পরবর্তী বার এটি অটোমেটিক লোড হবে।");
+                    alert("✅ Frame saved! It will load automatically next time.");
                 } else {
-                    alert("⚠️ সার্ভারে সেভ হয়নি: " + data.message);
+                    alert("⚠️ Failed to save to server: " + data.message);
                 }
             })
             .catch(err => console.error("Upload Error:", err));
         }
     };
 
-    // Helper: ফ্রেম ক্যানভাসে বসানো
+    // Helper: Apply frame to canvas
     window.setupFrameObj = function(img) {
         if (typeof frameObj !== 'undefined' && frameObj) canvas.remove(frameObj);
         
@@ -86,14 +86,14 @@
         canvas.add(img); 
         canvas.bringToFront(img);
         
-        // টাইটেল উপরে আনা
+        // Bring title to front
         const title = canvas.getObjects().find(o => o.isHeadline);
         if (title) title.bringToFront();
         
         if(typeof window.saveHistory === 'function') window.saveHistory();
     };
 
-    // অন্যান্য টুলস...
+    // Other tools...
     window.addImageOnCanvas = function(input) {
         if (input.files && input.files[0]) {
             const r = new FileReader();
@@ -146,16 +146,16 @@
         window.frameObj = null;
     }
     
-    // সেটিংস থেকে ফ্রেম রিমুভ করা
+    // Remove frame from settings
     window.userSettings.frameUrl = null;
     if(typeof window.savePreference === 'function') {
         window.savePreference('frameUrl', null);
     }
 
-    // ডাটাবেস আপডেট (অপশনাল, তবে ভালো প্র্যাকটিস)
-    // আপনি চাইলে এখানেও একটি fetch request পাঠিয়ে DB থেকে রিমুভ করতে পারেন
+    // Update database (optional)
+    // Remove from DB via fetch request
     
-    alert("ফ্রেম রিমুভ করা হয়েছে!");
+    alert("Frame removed successfully!");
     if(typeof window.saveHistory === 'function') window.saveHistory();
 };
 

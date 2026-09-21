@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <style>
@@ -20,18 +20,18 @@
             <h1>🔐 Subeditor24</h1>
         </div>
         <div class="body">
-            <p>হ্যালো <strong>{{ $user->name ?? 'User' }}</strong>,</p>
-            <p>আপনি পাসওয়ার্ড রিসেটের জন্য অনুরোধ করেছেন। নিচের বোতামে ক্লিক করে নতুন পাসওয়ার্ড সেট করুন:</p>
+            <p>Hello <strong>{{ $user->name ?? 'User' }}</strong>,</p>
+            <p>You recently requested to reset your password. Click the button below to set a new password:</p>
 
-            <a href="{{ $resetLink }}" class="btn">🔑 পাসওয়ার্ড রিসেট করুন</a>
+            <a href="{{ $resetLink }}" class="btn">🔑 Reset Password</a>
 
             <div class="note">
-                ⏰ এই লিংকটি <strong>৬০ মিনিট</strong> পর্যন্ত কার্যকর থাকবে।<br>
-                যদি আপনি এই অনুরোধ না করে থাকেন, তাহলে এই ইমেইলটি উপেক্ষা করুন।
+                ⏰ This link will expire in <strong>60 minutes</strong>.<br>
+                If you did not request this password reset, please ignore this email.
             </div>
 
             <p style="margin-top:20px; font-size:13px; color:#6B7280; word-break:break-all;">
-                বোতাম কাজ না করলে এই লিংকটি কপি করুন:<br>
+                If the button above does not work, copy and paste the following URL into your browser:<br>
                 <a href="{{ $resetLink }}" style="color:#4F46E5;">{{ $resetLink }}</a>
             </p>
         </div>

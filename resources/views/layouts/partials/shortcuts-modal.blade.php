@@ -9,8 +9,8 @@
                     <i class="fa-solid fa-keyboard"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-extrabold text-slate-900 dark:text-white">কিবোর্ড শর্টকাটস (Power User Shortcuts)</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">দ্রুত কাজ সম্পাদনের জন্য কীবোর্ড কমান্ড তালিকা</p>
+                    <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Keyboard Shortcuts (Power User Shortcuts)</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">List of keyboard commands for quick navigation & actions</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
@@ -27,23 +27,23 @@
             {{-- Category 1: News Navigation --}}
             <div>
                 <h4 class="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-arrows-up-down-left-right text-xs"></i> নিউজ ফিড ও কার্ড নেভিগেশন
+                    <i class="fa-solid fa-arrows-up-down-left-right text-xs"></i> News Feed & Card Navigation
                 </h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">পরবর্তী নিউজ কার্ডে যাওয়া</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">Navigate to Next Card</span>
                         <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">J</kbd>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">পূর্ববর্তী নিউজ কার্ডে যাওয়া</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">Navigate to Previous Card</span>
                         <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">K</kbd>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">কার্ড নির্বাচন / সিলেক্ট টগল</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">Toggle Card Selection</span>
                         <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">X</kbd>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">সিলেকশন ফোকাস বাতিল</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">Cancel Selection Focus</span>
                         <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Esc</kbd>
                     </div>
                 </div>
@@ -52,11 +52,11 @@
             {{-- Category 2: Draft Editor & AI Power Shortcuts --}}
             <div>
                 <h4 class="text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> ড্রাফট এডিটর ও এআই পাওয়ার শর্টকাট
+                    <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> Draft Editor & AI Power Shortcuts
                 </h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">🔍 রিয়েল-টাইম Fact Check</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">🔍 Real-time Fact Check</span>
                         <div class="flex items-center gap-1">
                             <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Alt</kbd>
                             <span class="text-slate-400 font-black">+</span>
@@ -64,7 +64,7 @@
                         </div>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">✨ ৩টি AI ভাইরাল শিরোনাম</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">✨ 3 AI Viral Headlines</span>
                         <div class="flex items-center gap-1">
                             <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Alt</kbd>
                             <span class="text-slate-400 font-black">+</span>
@@ -80,7 +80,7 @@
                         </div>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">🔀 ভিউ মোড পরিবর্তন (Editor/Side/Social)</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">🔀 Switch View Mode (Editor/Side/Social)</span>
                         <div class="flex items-center gap-1">
                             <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Alt</kbd>
                             <span class="text-slate-400 font-black">+</span>
@@ -88,7 +88,7 @@
                         </div>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">🚀 সরাসরি পাবলিশ / সাবমিট</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">🚀 Direct Publish / Submit</span>
                         <div class="flex items-center gap-1">
                             <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Ctrl</kbd>
                             <span class="text-slate-400 font-black">+</span>
@@ -96,7 +96,7 @@
                         </div>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">💾 ড্রাফট সংরক্ষণ করুন</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">💾 Save Draft</span>
                         <div class="flex items-center gap-1">
                             <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Ctrl</kbd>
                             <span class="text-slate-400 font-black">+</span>
@@ -109,25 +109,25 @@
             {{-- Category 3: Quick Actions & Studio --}}
             <div>
                 <h4 class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-bolt text-xs"></i> দ্রুত অ্যাকশন ও ফটোকার্ড স্টুডিও
+                    <i class="fa-solid fa-bolt text-xs"></i> Quick Actions & Studio
                 </h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">সিলেক্টেড নিউজ AI Rewrite</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">AI Rewrite Selected News</span>
                         <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">R</kbd>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">নিউজ ম্যানুয়াল এডিট / স্টুডিও</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">Manual News Edit / Studio</span>
                         <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">E</kbd>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">স্টুডিও অবজেক্ট Undo / Redo</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">Studio Object Undo / Redo</span>
                         <div class="flex items-center gap-1">
                             <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Ctrl+Z / Y</kbd>
                         </div>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">স্টুডিও অবজেক্ট মুছে ফেলা</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">Delete Studio Object</span>
                         <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Del / Backspace</kbd>
                     </div>
                 </div>
@@ -136,15 +136,15 @@
             {{-- Category 4: System & View --}}
             <div>
                 <h4 class="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-xs"></i> সিস্টেম ও ইউটিলিটি
+                    <i class="fa-solid fa-sliders text-xs"></i> System & Utility
                 </h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">কিবোর্ড শর্টকাট হেল্প</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">Keyboard Shortcuts Help</span>
                         <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">?</kbd>
                     </div>
                     <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <span class="font-bold text-slate-700 dark:text-slate-300">ডার্ক / লাইট মোড টগল</span>
+                        <span class="font-bold text-slate-700 dark:text-slate-300">Toggle Dark / Light Mode</span>
                         <div class="flex items-center gap-1">
                             <kbd class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-black text-slate-800 dark:text-slate-200 shadow-sm text-xs">Alt</kbd>
                             <span class="text-slate-400 font-black">+</span>
@@ -158,9 +158,9 @@
 
         {{-- Footer --}}
         <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 font-semibold">
-            <span>💡 যেকোনো ইনপুট ফিল্ডে লেখার সময় নেভিগেশন শর্টকাট নিষ্ক্রিয় থাকে।</span>
+            <span>💡 Shortcuts are disabled while typing inside input or textarea fields.</span>
             <button type="button" onclick="closeShortcutsModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-sm cursor-pointer">
-                বুঝেছি (Got It)
+                Got It
             </button>
         </div>
 

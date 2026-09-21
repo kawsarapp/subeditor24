@@ -84,15 +84,15 @@
         const obj = canvas.getActiveObject();
         if (!obj) return;
 
-        // ক্যানভাসের একদম মাঝখানে নিয়ে আসবে
+        // Center element precisely on canvas
         obj.set({
             left: canvas.width / 2,
             originX: 'center',
             textAlign: 'center'
         });
         
-        // যদি তাও মনে হয় বামে সরে আছে, তবে ম্যানুয়ালি একটু ডানে ঠেলে দিন
-        // obj.set('left', (canvas.width / 2) + 10); // ১০ পিক্সেল ডানে
+        // Manual right offset adjustment if needed
+        // obj.set('left', (canvas.width / 2) + 10); // 10px right offset
 
         obj.setCoords();
         canvas.requestRenderAll();

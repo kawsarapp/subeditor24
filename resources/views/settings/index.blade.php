@@ -7,12 +7,12 @@
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <div>
             <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2.5">
-                ⚙️ প্রোফাইল ও সেটিংস
+                ⚙️ Profile & Settings
             </h1>
-            <p class="text-gray-500 mt-1 text-sm">আপনার নিউজ কার্ড, AI ইন্টিগ্রেশন, প্রক্সি এবং অটোমেশন কনফিগারেশন</p>
+            <p class="text-gray-500 mt-1 text-sm">News card customization, AI integrations, proxies, and automation settings</p>
         </div>
         <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl shadow-lg text-center">
-            <p class="text-xs opacity-80 uppercase tracking-wider">বর্তমান ব্যালেন্স</p>
+            <p class="text-xs opacity-80 uppercase tracking-wider">Current Balance</p>
             <p class="text-2xl font-bold">{{ auth()->user()->credits }} <span class="text-sm font-normal">Credits</span></p>
         </div>
     </div>
@@ -21,17 +21,17 @@
     <div class="flex flex-wrap justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm mb-6 gap-3">
         <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-slate-400 font-semibold">
             <i class="fas fa-layer-group text-indigo-600 text-sm"></i>
-            <span>সেটিংস সেকশনগুলো ডিফল্টভাবে ফোল্ড করা (Collapsed) রয়েছে।</span>
+            <span>Settings sections are collapsed by default.</span>
         </div>
         <div class="flex items-center gap-2">
             <button type="button" onclick="runDiagnosticsModal()" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition cursor-pointer">
-                <i class="fa-solid fa-heart-pulse animate-pulse"></i> 🩺 ১-ক্লিক হেলথ চেক
+                <i class="fa-solid fa-heart-pulse animate-pulse"></i> 🩺 1-Click Health Check
             </button>
             <button type="button" onclick="expandAllSettings()" class="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 flex items-center gap-1.5 transition cursor-pointer shadow-sm">
-                <i class="fas fa-expand-alt"></i> সব খুলুন
+                <i class="fas fa-expand-alt"></i> Expand All
             </button>
             <button type="button" onclick="collapseAllSettings()" class="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg border border-gray-300 flex items-center gap-1.5 transition cursor-pointer shadow-sm">
-                <i class="fas fa-compress-alt"></i> সব বন্ধ করুন
+                <i class="fas fa-compress-alt"></i> Collapse All
             </button>
         </div>
     </div>
@@ -53,7 +53,7 @@
         </div>
     @endif
     
-    {{-- ১. প্রোফাইল আপডেট সেকশন (Collapsible) --}}
+    {{-- 1. Profile Update Section (Collapsible) --}}
     <form action="{{ route('settings.update-profile') }}" method="POST" class="mb-6">
         @csrf
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
@@ -64,49 +64,49 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            👤 আমার প্রোফাইল ও পাসওয়ার্ড
+                            👤 My Profile & Password
                         </h2>
-                        <p class="text-xs text-gray-500">নাম, ইমেইল এবং পাসওয়ার্ড পরিবর্তন করুন</p>
+                        <p class="text-xs text-gray-500">Change your name, email, and password</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs text-indigo-600 font-semibold hidden sm:inline">খুলতে ক্লিক করুন</span>
+                    <span class="text-xs text-indigo-600 font-semibold hidden sm:inline">Click to expand</span>
                     <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
                 </div>
             </div>
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">আপনার নাম</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Your Name</label>
                         <input type="text" name="name" value="{{ old('name', auth()->user()->name) }}" 
                                class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">ইমেইল (লগিন ইউজারনেম)</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Email Address (Login Username)</label>
                         <input type="email" name="email" value="{{ old('email', auth()->user()->email) }}" 
                                class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">নতুন পাসওয়ার্ড</label>
-                        <input type="password" name="password" placeholder="পরিবর্তন করতে চাইলে লিখুন..." 
+                        <label class="block text-sm font-bold text-gray-700 mb-1">New Password</label>
+                        <input type="password" name="password" placeholder="Leave blank to keep unchanged..." 
                                class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">পাসওয়ার্ড নিশ্চিত করুন</label>
-                        <input type="password" name="password_confirmation" placeholder="একই পাসওয়ার্ড আবার লিখুন" 
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Confirm Password</label>
+                        <input type="password" name="password_confirmation" placeholder="Re-enter your new password" 
                                class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
                     </div>
                 </div>
                 <div class="mt-5 text-right">
                     <button type="submit" class="bg-gray-800 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-gray-900 transition shadow cursor-pointer text-sm">
-                        প্রোফাইল আপডেট করুন
+                        Update Profile
                     </button>
                 </div>
             </div>
         </div>
     </form>
 
-    {{-- ২. মূল সেটিংস ফর্ম শুরু --}}
+    {{-- 2. Main Settings Form Start --}}
     <form action="{{ route('settings.update') }}" method="POST" class="space-y-6">
         @csrf
 
@@ -120,9 +120,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🌐 স্ক্র্যাপার ও প্রক্সি সেটিংস (Decodo Universal API)
+                            🌐 Scraper & Proxy Settings (Decodo Universal API)
                         </h2>
-                        <p class="text-xs text-gray-500">Decodo Universal API, Puppeteer Proxy ও Auto Clean</p>
+                        <p class="text-xs text-gray-500">Decodo Universal API, Puppeteer Proxy, and Auto Clean</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -133,7 +133,7 @@
             
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
-                    <p class="text-xs text-gray-600 font-medium">নিউজ স্ক্র্যাপ করার জন্য নিজস্ব প্রক্সি এবং Decodo Universal Scraping API কনফিগারেশন। এগুলো খালি রাখলে গ্লোবাল সিস্টেমের (Super Admin) বা .env এর মান ব্যবহার করা হবে।</p>
+                    <p class="text-xs text-gray-600 font-medium">Configure custom proxies and Decodo Universal Scraping API for scraping news. Leave empty to use system defaults.</p>
                     <button type="button" onclick="testDecodoProxy()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-lg transition font-bold shadow-sm flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
                         <i class="fas fa-vial"></i> <span>⚡ Test Connection</span>
                     </button>
@@ -170,11 +170,11 @@
                     <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-between">
                         <div>
                             <h3 class="font-bold text-blue-700 mb-3 border-b pb-1">🚀 Decodo / SmartProxy Universal API</h3>
-                            <p class="text-xs mb-3 text-gray-500">কঠিন সাইট (যমুনা টিভি, প্রথম আলো, Cloudflare-যুক্ত সাইট) স্ক্র্যাপ করার শক্তিশালী API টোকেন।</p>
+                            <p class="text-xs mb-3 text-gray-500">Powerful API token for scraping Cloudflare-protected news portals and protected sources.</p>
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 mb-1">Decodo API Token (Basic Auth Token)</label>
                                 <input type="password" id="smartproxy_api_token" name="smartproxy_api_token" value="{{ old('smartproxy_api_token', $settings->smartproxy_api_token ?? '') }}" placeholder="Basic VTAwM..." class="w-full border-gray-300 rounded shadow-sm focus:border-blue-500 focus:ring-blue-500 font-mono text-xs">
-                                <p class="text-[10px] text-gray-400 mt-1">Decodo ড্যাশবোর্ড থেকে পাওয়া <code>Basic Auth Token</code> দিন।</p>
+                                <p class="text-[10px] text-gray-400 mt-1">Enter <code>Basic Auth Token</code> obtained from your Decodo dashboard.</p>
                             </div>
                         </div>
                     </div>
@@ -190,7 +190,7 @@
                                min="1" max="90"
                                value="{{ $settings->auto_clean_days ?? 7 }}"
                                class="w-28 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-center font-bold text-base">
-                        <p class="text-xs text-gray-500">দিন পরে যে নিউজ পোস্ট করা হয়নি সেগুলো অটোমেটিক ডিলিট হবে। (Default: 7 দিন)</p>
+                        <p class="text-xs text-gray-500">Unpublished news older than this will be automatically deleted (Default: 7 days).</p>
                     </div>
                 </div>
             </div>
@@ -210,9 +210,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            💰 ROI Calculator Config (সুপার অ্যাডমিন)
+                            💰 ROI Calculator Config (Super Admin)
                         </h2>
-                        <p class="text-xs text-gray-500">কাজের মান অনুযায়ী কত টাকা সাশ্রয় হচ্ছে তা কনফিগার করুন</p>
+                        <p class="text-xs text-gray-500">Configure estimated cost savings metrics</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -224,15 +224,15 @@
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">কর্মী খরচ (প্রতি ঘণ্টা BDT)</label>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Staff Hourly Rate (BDT/Hour)</label>
                         <input type="number" name="roi_hourly_rate" value="{{ $roiConfig['hourly_rate'] ?? 100 }}" class="w-full border-gray-300 rounded shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">১টি নিউজ করতে সময় (মিনিট)</label>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Time per News (Minutes)</label>
                         <input type="number" name="roi_news_minutes" value="{{ $roiConfig['news_minutes'] ?? 20 }}" class="w-full border-gray-300 rounded shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">১টি কার্ড বানাতে সময় (মিনিট)</label>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Time per Card (Minutes)</label>
                         <input type="number" name="roi_card_minutes" value="{{ $roiConfig['card_minutes'] ?? 15 }}" class="w-full border-gray-300 rounded shadow-sm focus:border-green-500 focus:ring-green-500 text-xs">
                     </div>
                 </div>
@@ -248,9 +248,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🎨 স্টুডিও টেমপ্লেট ও মিডিয়া ম্যানেজার শর্টকাট
+                            🎨 Studio Templates & Media Manager Shortcut
                         </h2>
-                        <p class="text-xs text-gray-500">টেমপ্লেট লেআউট তৈরি, ফ্রেম ও ফন্ট আপলোড পরিচালনা</p>
+                        <p class="text-xs text-gray-500">Manage template layout creation, frames, and font uploads</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -264,7 +264,7 @@
                     <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
                         <div>
                             <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">🎨 Studio Template Manager</h3>
-                            <p class="text-xs text-gray-500 mt-1 mb-4">Dashboard থেকে নতুন template যোগ করুন — frame URL, position সব এক জায়গায় কনফিগার করুন।</p>
+                            <p class="text-xs text-gray-500 mt-1 mb-4">Add new templates from dashboard — configure frame URL, positions all in one place.</p>
                         </div>
                         <div class="flex gap-2">
                             <a href="{{ route('admin.templates.index') }}" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 rounded-lg transition shadow-sm text-center">🎨 Templates</a>
@@ -275,7 +275,7 @@
                     <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
                         <div>
                             <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">📁 Media & Assets Manager</h3>
-                            <p class="text-xs text-gray-500 mt-1 mb-4">Template এর Frame PNG এবং Custom Font (.ttf, .woff) আপলোড, রিনেইম, ও URL কপি করুন।</p>
+                            <p class="text-xs text-gray-500 mt-1 mb-4">Upload, rename, and copy URLs for template frame PNGs and custom fonts (.ttf, .woff).</p>
                         </div>
                         <div>
                             <a href="{{ route('admin.media.index') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2 rounded-lg transition shadow-sm text-center">📁 Open Media Manager</a>
@@ -287,7 +287,7 @@
         @endif
 
         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_branding'))
-        {{-- ৩. ব্র্যান্ডিং সেকশন (Collapsible) --}}
+        {{-- 3. Branding Section (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-white hover:bg-gray-50 transition" onclick="toggleSettingsAccordion(this)">
                 <div class="flex items-center gap-3">
@@ -296,9 +296,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🎨 ব্র্যান্ডিং ও নিউজ কার্ড স্টাইল
+                            🎨 Branding & News Card Styles
                         </h2>
-                        <p class="text-xs text-gray-500">ব্র্যান্ডের নাম, ডিফল্ট থিম কালার এবং লোগো</p>
+                        <p class="text-xs text-gray-500">Brand Name, default theme colors, and logo</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -310,11 +310,11 @@
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">ব্র্যান্ড নাম (e.g. Dhaka Post)</label>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Brand Name (e.g. Dhaka Post)</label>
                         <input type="text" name="brand_name" value="{{ old('brand_name', $settings->brand_name ?? 'My News') }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">ডিফল্ট কালার থিম</label>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Default Color Theme</label>
                         <select name="default_theme_color" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs font-semibold">
                             <option value="red" {{ ($settings->default_theme_color ?? '') == 'red' ? 'selected' : '' }}>Red (Breaking)</option>
                             <option value="blue" {{ ($settings->default_theme_color ?? '') == 'blue' ? 'selected' : '' }}>Blue (Standard)</option>
@@ -324,9 +324,9 @@
                         </select>
                     </div>
                     <div class="col-span-1 md:col-span-2">
-                        <label class="block text-xs font-bold text-gray-700 mb-1">লোগো URL (অপশনাল)</label>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Logo URL (Optional)</label>
                         <input type="url" name="logo_url" value="{{ old('logo_url', $settings->logo_url ?? '') }}" placeholder="https://example.com/logo.png" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
-                        <p class="text-[11px] text-gray-500 mt-1">আপনি স্টুডিও থেকেও সরাসরি লোগো আপলোড করতে পারেন।</p>
+                        <p class="text-[11px] text-gray-500 mt-1">You can also upload your logo directly from the Studio.</p>
                     </div>
                 </div>
             </div>
@@ -343,9 +343,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🌍 Target Language (ডিফল্ট নিউজ ভাষা)
+                            🌍 Target Language (Default News Language)
                         </h2>
-                        <p class="text-xs text-gray-500">নিউজ প্রসেসিং ও স্ক্র্যাপিং এর ডিফল্ট ভাষা</p>
+                        <p class="text-xs text-gray-500">Default language for news processing and scraping</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -357,11 +357,66 @@
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="bg-white p-4 rounded-lg border border-teal-200 shadow-sm">
                     <select name="target_language" class="w-full border-gray-300 rounded shadow-sm focus:border-teal-500 focus:ring-teal-500 font-semibold text-xs">
-                        <option value="" {{ empty($settings->target_language) ? 'selected' : '' }}>Website Default (ওয়েবসাইটের সেটিং অনুযায়ী)</option>
-                        <option value="bn" {{ ($settings->target_language ?? '') == 'bn' ? 'selected' : '' }}>Always Bengali (বাংলা)</option>
-                        <option value="en" {{ ($settings->target_language ?? '') == 'en' ? 'selected' : '' }}>Always English (ইংরেজি)</option>
+                        <option value="" {{ empty($settings->target_language) ? 'selected' : '' }}>Website Default (Based on website settings)</option>
+                        <option value="bn" {{ ($settings->target_language ?? '') == 'bn' ? 'selected' : '' }}>Always Bengali</option>
+                        <option value="en" {{ ($settings->target_language ?? '') == 'en' ? 'selected' : '' }}>Always English</option>
                     </select>
-                    <p class="text-[11px] text-gray-500 mt-2">আপনি যখন কোনো নিউজ স্ক্র্যাপ করবেন, তখন এই ভাষা অনুযায়ী প্রসেস হবে। (তবে ওয়েবসাইটের সেটিংসে আলাদা ভাষা দেওয়া থাকলে সেটি প্রাধান্য পাবে)।</p>
+                    <p class="text-[11px] text-gray-500 mt-2">When you scrape a news item, it will be processed in this language (website-specific language settings will take precedence).</p>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_ai') || auth()->user()->hasPermission('can_settings_ai_prompt'))
+        {{-- ✍️ CUSTOM NEWS REWRITE PROMPT (Collapsible) --}}
+        <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
+            <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-teal-50/40 hover:bg-teal-50/80 transition" onclick="toggleSettingsAccordion(this)">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center text-base">
+                        <i class="fas fa-feather-alt"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                            ✍️ Custom News Rewrite Prompt (AI System Prompt)
+                        </h2>
+                        <p class="text-xs text-gray-500">Configure custom sub-editor writing rules, tone, and formatting rules</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs bg-teal-100 text-teal-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">AI Prompt</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
+                </div>
+            </div>
+            
+            <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4 pb-3 border-b border-gray-200">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-700">Customize the system prompt instructions given to the AI when rewriting raw news reports.</p>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Leave blank to use the built-in Bangladeshi/International Senior Sub-Editor prompt rules.</p>
+                    </div>
+                    <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                        <button type="button" onclick="insertDefaultPrompt('bn')" class="text-[11px] bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold px-3 py-1.5 rounded-lg border border-teal-200 transition cursor-pointer flex items-center gap-1.5 shadow-sm">
+                            <i class="fas fa-file-alt"></i> <span>Insert Default (BN)</span>
+                        </button>
+                        <button type="button" onclick="insertDefaultPrompt('en')" class="text-[11px] bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold px-3 py-1.5 rounded-lg border border-teal-200 transition cursor-pointer flex items-center gap-1.5 shadow-sm">
+                            <i class="fas fa-file-alt"></i> <span>Insert Default (EN)</span>
+                        </button>
+                        <button type="button" onclick="resetDefaultPrompt()" class="text-[11px] bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-1.5 rounded-lg border border-red-200 transition cursor-pointer flex items-center gap-1.5 shadow-sm" title="Clear to use system default">
+                            <i class="fas fa-undo"></i> <span>Reset to Default</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-700 mb-2">Custom System Prompt</label>
+                    <textarea id="custom_rewrite_prompt" name="custom_rewrite_prompt" rows="12" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-teal-500 focus:ring-teal-500 text-xs font-mono bg-white p-3.5 leading-relaxed placeholder-gray-400" placeholder="Leave blank to use the built-in Bangladeshi Senior Sub-Editor prompt rules...">{{ old('custom_rewrite_prompt', $settings->custom_rewrite_prompt ?? '') }}</textarea>
+                </div>
+
+                <div class="text-[11px] text-teal-900 flex items-start gap-2 bg-teal-50/70 p-3 rounded-lg border border-teal-200">
+                    <i class="fas fa-info-circle text-teal-600 mt-0.5 text-sm"></i>
+                    <div>
+                        <strong>Automatic JSON Enforcement:</strong> The strict output formatting rules (<code>title</code>, <code>content</code>, <code>meta_description</code>, <code>focus_keyword</code>, <code>tags</code>) are automatically appended by the system, ensuring valid news data across all AI models without syntax breakage.
+                    </div>
                 </div>
             </div>
         </div>
@@ -377,9 +432,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🤖 AI অপটিমাইজেশন সেটিংস (DeepSeek, Gemini, OpenAI)
+                            🤖 AI Optimization Settings (DeepSeek, Gemini, OpenAI)
                         </h2>
-                        <p class="text-xs text-gray-500">Primary AI নির্বাচন এবং বিভিন্ন AI API Keys ও Models</p>
+                        <p class="text-xs text-gray-500">Select Primary AI and manage AI API Keys & Models</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -389,7 +444,7 @@
             </div>
             
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
-                <p class="text-xs text-indigo-700 mb-5 font-medium">প্রতিটি প্রোভাইডারের জন্য API Key এবং Model সেট করতে পারবেন। (খালি রাখলে সিস্টেমের ডিফল্ট .env এরগুলো ব্যবহার হবে)</p>
+                <p class="text-xs text-indigo-700 mb-5 font-medium">Configure API Key and Model for each provider (leaves default .env fallback if empty).</p>
 
                 <div class="mb-6 bg-white p-4 rounded-lg border border-indigo-200 shadow-sm">
                     <label class="block text-xs font-bold text-gray-800 mb-2">⭐ Primary AI Provider</label>
@@ -401,7 +456,7 @@
                         <option value="openai" {{ ($settings->primary_ai ?? '') == 'openai' ? 'selected' : '' }}>OpenAI (ChatGPT)</option>
                         <option value="gemini" {{ ($settings->primary_ai ?? '') == 'gemini' ? 'selected' : '' }}>Gemini (Google)</option>
                     </select>
-                    <p class="text-[11px] text-gray-500 mt-2">উপরের লিস্ট থেকে যে AI টি সিলেক্ট করবেন, নিউজ লেখার সময় সিস্টেম সবার আগে সেটি ব্যবহার করার চেষ্টা করবে। সেটি ফেইল করলে বাকিগুলো অটোমেটিক চেষ্টা করবে।</p>
+                    <p class="text-[11px] text-gray-500 mt-2">The system will prioritize the selected primary AI when generating news. If it fails, fallback AI models will be tried automatically.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -418,7 +473,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">API Key</label>
-                                <input type="password" id="gemini_api_key" name="gemini_api_key" value="{{ old('gemini_api_key', $settings->gemini_api_key ?? '') }}" placeholder="AIzaSy... (খালি রাখলে .env ব্যবহার হবে)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
+                                <input type="password" id="gemini_api_key" name="gemini_api_key" value="{{ old('gemini_api_key', $settings->gemini_api_key ?? '') }}" placeholder="AIzaSy... (Leave empty to use .env value)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">Model Selection</label>
@@ -448,7 +503,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">API Key</label>
-                                <input type="password" id="deepseek_api_key" name="deepseek_api_key" value="{{ old('deepseek_api_key', $settings->deepseek_api_key ?? '') }}" placeholder="sk-... (খালি রাখলে .env ব্যবহার হবে)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
+                                <input type="password" id="deepseek_api_key" name="deepseek_api_key" value="{{ old('deepseek_api_key', $settings->deepseek_api_key ?? '') }}" placeholder="sk-... (Leave empty to use .env value)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">Model Selection</label>
@@ -554,7 +609,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">API Key</label>
-                                <input type="password" id="openai_api_key" name="openai_api_key" value="{{ old('openai_api_key', $settings->openai_api_key ?? '') }}" placeholder="sk-proj-... (খালি রাখলে .env ব্যবহার হবে)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
+                                <input type="password" id="openai_api_key" name="openai_api_key" value="{{ old('openai_api_key', $settings->openai_api_key ?? '') }}" placeholder="sk-proj-... (Leave empty to use .env value)" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-mono">
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">Model Selection</label>
@@ -584,9 +639,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            📸 PhotoRoom API (ছবি ব্যাকগ্রাউন্ড রিমুভাল)
+                            📸 PhotoRoom API (AI Background Removal)
                         </h2>
-                        <p class="text-xs text-gray-500">কাস্টম ফটো কার্ড তৈরির সময় ফটোর ব্যাকগ্রাউন্ড এক ক্লিকে রিমুভ</p>
+                        <p class="text-xs text-gray-500">1-Click background removal when creating custom photo cards</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -596,7 +651,7 @@
             </div>
             
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
-                <p class="text-xs text-purple-700 mb-4 font-medium">কাস্টম ফটো কার্ড তৈরির সময় ফটোর ব্যাকগ্রাউন্ড এক ক্লিকে রিমুভ (Cutout) করার জন্য PhotoRoom API Key দিন। Super Admin যা সেট করবেন, সকল সাব-এডিটর ও স্টাফ এটি স্বয়ংক্রিয়ভাবে ব্যবহার করতে পারবে।</p>
+                <p class="text-xs text-purple-700 mb-4 font-medium">Provide a PhotoRoom API Key for 1-Click background removal (cutout) in custom photo cards. Settings configured by Super Admin will be automatically available to all sub-editors and staff.</p>
 
                 <div class="bg-white p-5 rounded-lg border border-purple-200 shadow-sm">
                     <label class="block text-xs font-bold text-gray-700 mb-1">PhotoRoom API Key (x-api-key)</label>
@@ -608,7 +663,7 @@
                     </div>
                     <div id="photoroom_status_msg" class="text-xs font-bold mt-2"></div>
                     <p class="text-[11px] text-gray-500 mt-2">
-                        <i class="fas fa-info-circle text-purple-500"></i> আপনার <a href="https://www.photoroom.com/api" target="_blank" class="text-purple-600 underline font-semibold">PhotoRoom Developer Console</a> থেকে API Key টি সংগ্রহ করুন।
+                        <i class="fas fa-info-circle text-purple-500"></i> Get your API Key from the <a href="https://www.photoroom.com/api" target="_blank" class="text-purple-600 underline font-semibold">PhotoRoom Developer Console</a>.
                     </p>
                 </div>
             </div>
@@ -616,7 +671,7 @@
         @endif
 
         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_wp_laravel'))
-        {{-- 🔥 WordPress কানেকশন (Collapsible) --}}
+        {{-- WordPress Connection (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-white hover:bg-gray-50 transition" onclick="toggleSettingsAccordion(this)">
                 <div class="flex items-center gap-3">
@@ -625,9 +680,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🔗 WordPress কানেকশন
+                            🔗 WordPress Connection
                         </h2>
-                        <p class="text-xs text-gray-500">ওয়ার্ডপ্রেস সাইট URL, ইউজারনেম এবং অ্যাপ্লিকেশন পাসওয়ার্ড</p>
+                        <p class="text-xs text-gray-500">WordPress Site URL, username, and Application Password</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -638,7 +693,7 @@
             
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="flex justify-between items-center mb-3">
-                    <p class="text-xs text-gray-500">সেটিংস সেভ করার আগে ওয়ার্ডপ্রেস সাইট কানেকশন যাচাই করুন:</p>
+                    <p class="text-xs text-gray-500">Test your WordPress connection before saving:</p>
                     <button type="button" onclick="testWordPress()" class="text-xs bg-gray-100 text-gray-700 px-3.5 py-2 rounded-lg hover:bg-gray-200 transition font-bold border border-gray-300 cursor-pointer">
                         ⚡ Test Connection
                     </button>
@@ -648,17 +703,17 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="col-span-1 md:col-span-2">
-                        <label class="block text-xs font-bold text-gray-700 mb-1">ওয়েবসাইট লিংক (URL)</label>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Website URL</label>
                         <input type="url" id="wp_url" name="wp_url" value="{{ old('wp_url', $settings->wp_url ?? '') }}" placeholder="https://mywebsite.com" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">ইউজারনেম (Username)</label>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Username</label>
                         <input type="text" id="wp_username" name="wp_username" value="{{ old('wp_username', $settings->wp_username ?? '') }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">App Password</label>
                         <input type="password" id="wp_app_password" name="wp_app_password" value="{{ old('wp_app_password', $settings->wp_app_password ?? '') }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs" placeholder="abcd efgh ijkl mnop">
-                        <p class="text-[11px] text-gray-500 mt-1">WP Admin > Users > Profile > Application Passwords এ গিয়ে তৈরি করুন।</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Generate from WP Admin > Users > Profile > Application Passwords.</p>
                     </div>
                 </div>
             </div>
@@ -675,7 +730,7 @@
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
                             🔌 Website API Integration (Laravel / Next.js / Custom CMS)
                         </h2>
-                        <p class="text-xs text-gray-500">REST API, Webhook, ফিল্ড ম্যাপিং ও কোড জেনারেটর</p>
+                        <p class="text-xs text-gray-500">REST API, Webhooks, Field Mapping, and Code Generator</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -686,7 +741,7 @@
             
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="flex flex-wrap justify-between items-center mb-4 border-b border-gray-200 pb-3 gap-2">
-                    <p class="text-xs text-gray-600 font-medium">আপনার ওয়েবসাইটের সাথে স্বয়ংক্রিয় সংবাদ প্রকাশের সংযোগ কনফিগারেশন।</p>
+                    <p class="text-xs text-gray-600 font-medium">Configure automatic news publishing connections with your custom website.</p>
                     
                     <div class="flex items-center gap-2">
                         <button type="button" onclick="openCodeGeneratorModal()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3.5 py-1.5 rounded-lg hover:bg-indigo-100 transition shadow-sm cursor-pointer">
@@ -707,7 +762,7 @@
                         <label class="block text-xs font-bold text-gray-700 mb-1">Website Base URL</label>
                         <input type="url" id="laravel_site_url" name="laravel_site_url" value="{{ old('laravel_site_url', $settings->laravel_site_url ?? '') }}" 
                                placeholder="https://mywebsite.com" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
-                        <p class="text-[11px] text-gray-500 mt-1">আপনার ওয়েবসাইটের মূল ডোমেইন লিংক (যেমন: <code>https://mywebsite.com</code>)।</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Your website domain URL (e.g. <code>https://mywebsite.com</code>).</p>
                     </div>
 
                     <!-- API Secret Token -->
@@ -716,11 +771,11 @@
                         <div class="flex gap-2">
                             <input type="text" id="laravel_api_token" name="laravel_api_token" value="{{ old('laravel_api_token', $settings->laravel_api_token ?? '') }}" 
                                     class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition font-mono text-xs" placeholder="e.g. sec_token_2026_xyz">
-                            <button type="button" onclick="generateRandomToken()" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg border border-gray-300 flex-shrink-0 flex items-center gap-1 cursor-pointer" title="নতুন সিকিউর টোকেন জেনারেট করুন">
+                            <button type="button" onclick="generateRandomToken()" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg border border-gray-300 flex-shrink-0 flex items-center gap-1 cursor-pointer" title="Generate new secure token">
                                 <i class="fas fa-sync-alt text-[10px]"></i> Generate
                             </button>
                         </div>
-                        <p class="text-[11px] text-gray-500 mt-1">সার্ভার হ্যান্ডশেক ও সিকিউরিটি ভেরিফিকেশনে ব্যবহৃত গোপন চাবি।</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Secret key used for secure server-to-server handshake.</p>
                     </div>
 
                     <!-- Route Prefix -->
@@ -732,7 +787,7 @@
                                    class="w-full border-gray-300 rounded-r shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs" 
                                    placeholder="news, post, article">
                         </div>
-                        <p class="text-[11px] text-gray-500 mt-1">পোস্টের লিংক ফরম্যাট: <code>site.com/<b>news</b>/123</code></p>
+                        <p class="text-[11px] text-gray-500 mt-1">Post link format: <code>site.com/<b>news</b>/123</code></p>
                     </div>
 
                     <!-- Enable Auto Post Checkbox -->
@@ -742,7 +797,7 @@
                             <input type="checkbox" name="post_to_laravel" value="1" {{ ($settings->post_to_laravel ?? false) ? 'checked' : '' }} class="toggle-checkbox w-5 h-5 text-indigo-600 rounded">
                             <div>
                                 <span class="font-bold text-gray-800 text-xs block">Enable Auto-Publish to Website</span>
-                                <span class="text-[11px] text-gray-500 block">চালু থাকলে সংবাদ অনুমোদনের পর সরাসরি আপনার ওয়েবসাইটে প্রকাশ হবে।</span>
+                                <span class="text-[11px] text-gray-500 block">When enabled, news is automatically published to your website upon approval.</span>
                             </div>
                         </label>
                     </div>
@@ -750,7 +805,7 @@
 
                 <!-- Test Connection Button -->
                 <div class="mt-4 pt-3 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
-                    <span class="text-xs text-slate-500">সেটিংস সেভ করার আগে এন্ডপয়েন্ট কানেকশন যাচাই করুন:</span>
+                    <span class="text-xs text-slate-500">Verify endpoint connection before saving:</span>
                     <button type="button" onclick="testCustomApiConnection()" id="btn_test_custom_api" class="inline-flex items-center gap-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg transition shadow-sm cursor-pointer">
                         <i class="fas fa-plug"></i> Test Connection
                     </button>
@@ -778,10 +833,10 @@
                         <div class="flex flex-wrap justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-lg text-xs text-slate-700 gap-2">
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-info-circle text-slate-500 text-sm"></i>
-                                <span>ডিফল্ট <code>/api/external-news-post</code> এর বাইরে কাস্টম পাথ বা ভিন্ন ফিল্ডের নাম থাকলে নিচে নির্ধারণ করুন।</span>
+                                <span>Configure custom paths or non-standard database column names below if necessary.</span>
                             </div>
                             <button type="button" onclick="openAssistantHelpModal()" class="text-indigo-600 font-semibold hover:underline flex items-center gap-1 text-[11px]">
-                                ইনটিগ্রেশন গাইড দেখুন <i class="fas fa-arrow-right text-[10px]"></i>
+                                View Integration Guide <i class="fas fa-arrow-right text-[10px]"></i>
                             </button>
                         </div>
 
@@ -791,13 +846,13 @@
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Custom News Post Endpoint URL (Optional)</label>
                                 <input type="url" id="custom_api_url" name="custom_api_url" value="{{ old('custom_api_url', $settings->custom_api_url ?? '') }}" 
                                        placeholder="https://mywebsite.com/api/v1/articles/create" class="w-full border-slate-300 rounded-lg shadow-sm text-xs focus:ring-indigo-500 focus:border-indigo-500">
-                                <p class="text-[10px] text-slate-400 mt-1">খালি রাখলে <code>Base_URL/api/external-news-post</code> ব্যবহার হবে।</p>
+                                <p class="text-[10px] text-slate-400 mt-1">If empty, defaults to <code>Base_URL/api/external-news-post</code>.</p>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Custom Category Fetch URL (Optional)</label>
                                 <input type="url" id="custom_category_url" name="custom_category_url" value="{{ old('custom_category_url', $settings->custom_category_url ?? '') }}" 
                                        placeholder="https://mywebsite.com/api/v1/categories" class="w-full border-slate-300 rounded-lg shadow-sm text-xs focus:ring-indigo-500 focus:border-indigo-500">
-                                <p class="text-[10px] text-slate-400 mt-1">আপনার সাইটের ক্যাটাগরি ফেচ করার API URL।</p>
+                                <p class="text-[10px] text-slate-400 mt-1">API URL to fetch categories from your website.</p>
                             </div>
                         </div>
 
@@ -828,7 +883,7 @@
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Category Format</label>
                                 <select id="v_category_type" onchange="syncVisualToMappingJson()" class="w-full border-slate-300 rounded shadow-sm text-xs focus:ring-indigo-500">
                                     <option value="id">Numeric Category ID (e.g. [1, 2])</option>
-                                    <option value="name">Text Category Name (e.g. "জাতীয়")</option>
+                                    <option value="name">Text Category Name (e.g. "National")</option>
                                 </select>
                             </div>
                         </div>
@@ -838,19 +893,19 @@
                             <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Field Name Mappings (Default Payload ➔ Your API Parameter)</h4>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                                 <div>
-                                    <label class="block font-bold text-slate-600 mb-1">Title (শিরোনাম)</label>
+                                    <label class="block font-bold text-slate-600 mb-1">Title (Headline)</label>
                                     <input type="text" id="v_field_title" oninput="syncVisualToMappingJson()" placeholder="title / headline" class="w-full border-slate-300 rounded p-1.5 font-mono text-xs">
                                 </div>
                                 <div>
-                                    <label class="block font-bold text-slate-600 mb-1">Content (বিস্তারিত)</label>
+                                    <label class="block font-bold text-slate-600 mb-1">Content (Body Text)</label>
                                     <input type="text" id="v_field_content" oninput="syncVisualToMappingJson()" placeholder="content / body / desc" class="w-full border-slate-300 rounded p-1.5 font-mono text-xs">
                                 </div>
                                 <div>
-                                    <label class="block font-bold text-slate-600 mb-1">Image (ছবি)</label>
+                                    <label class="block font-bold text-slate-600 mb-1">Image (Featured Photo)</label>
                                     <input type="text" id="v_field_image" oninput="syncVisualToMappingJson()" placeholder="image / thumbnail_url" class="w-full border-slate-300 rounded p-1.5 font-mono text-xs">
                                 </div>
                                 <div>
-                                    <label class="block font-bold text-slate-600 mb-1">Category (ক্যাটাগরি)</label>
+                                    <label class="block font-bold text-slate-600 mb-1">Category (Taxonomy)</label>
                                     <input type="text" id="v_field_category" oninput="syncVisualToMappingJson()" placeholder="category / category_id" class="w-full border-slate-300 rounded p-1.5 font-mono text-xs">
                                 </div>
                                 <div>
@@ -875,12 +930,12 @@
                         <!-- Extra Static Key-Value Fields -->
                         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <div class="flex justify-between items-center mb-2">
-                                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Additional Static Parameters (ঐচ্ছিক ফিল্ড)</h4>
+                                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Additional Static Parameters (Optional Fields)</h4>
                                 <button type="button" onclick="addExtraFieldRow()" class="text-xs bg-white hover:bg-slate-100 text-slate-700 font-semibold px-2.5 py-1 rounded border border-slate-300 cursor-pointer">
                                     + Add Parameter
                                 </button>
                             </div>
-                            <p class="text-[11px] text-slate-500 mb-3">যেমন: আপনার ডাটাবেজে যদি <code>author_id = 1</code> বা <code>status = published</code> বাধ্যতামূলক থাকে, তবে এখানে যোগ করুন।</p>
+                            <p class="text-[11px] text-slate-500 mb-3">E.g., if your database requires static values like <code>author_id = 1</code> or <code>status = published</code>, add them here.</p>
                             
                             <div id="extra_fields_container" class="space-y-2">
                                 <!-- Dynamic rows appended via JS -->
@@ -916,7 +971,7 @@
                             <h3 class="font-bold text-lg text-white">
                                 Website Integration Guide & FAQ
                             </h3>
-                            <p class="text-xs text-slate-400">যেকোনো ফ্রেমওয়ার্ক ও CMS ওয়েবসাইটের সাথে নিরাপদ ও নির্ভুল কানেকশনের পুঙ্খানুপুঙ্খ নির্দেশিকা।</p>
+                            <p class="text-xs text-slate-400">Comprehensive integration guide for connecting any framework and CMS website safely.</p>
                         </div>
                     </div>
                     <button type="button" onclick="closeAssistantHelpModal()" class="text-slate-400 hover:text-white text-xl p-2 rounded-lg hover:bg-slate-700 cursor-pointer">
@@ -946,11 +1001,11 @@
                         <div class="bg-slate-800/80 p-5 rounded-xl border border-slate-700">
                             <h4 class="text-base font-bold text-white mb-2 flex items-center gap-2">
                                 <span class="w-6 h-6 rounded bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">1</span>
-                                প্রাথমিক সংযোগ (Base URL ও Secret Token)
+                                1. Basic Connection (Base URL & Secret Token)
                             </h4>
                             <p class="text-xs text-slate-300 leading-relaxed mb-3">
-                                আপনার ওয়েবসাইটের মূল ডোমেইন দিন (যেমন: <code class="text-indigo-300 bg-slate-950 px-1.5 py-0.5 rounded">https://mywebsite.com</code>)। 
-                                এরপর <strong>Generate</strong> বাটনে চাপ দিয়ে একটি স্ট্রং <strong>API Secret Token</strong> তৈরি করুন। এই টোকেনটি আপনার সার্ভার ও Subeditor24 এর মধ্যে সিকিউরিটি হ্যান্ডশেক করতে ব্যবহৃত হবে।
+                                Enter your website base domain (e.g. <code class="text-indigo-300 bg-slate-950 px-1.5 py-0.5 rounded">https://mywebsite.com</code>). 
+                                Click <strong>Generate</strong> to create a strong <strong>API Secret Token</strong> for authenticating requests between Subeditor24 and your server.
                             </p>
                         </div>
 
@@ -958,17 +1013,17 @@
                         <div class="bg-slate-800/80 p-5 rounded-xl border border-slate-700">
                             <h4 class="text-base font-bold text-white mb-2 flex items-center gap-2">
                                 <span class="w-6 h-6 rounded bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">2</span>
-                                কোড জেনারেটর ব্যবহার করে এন্ডপয়েন্ট তৈরি
+                                2. Generate Endpoint Code
                             </h4>
                             <p class="text-xs text-slate-300 leading-relaxed mb-2">
-                                উপরের <strong>Code Generator</strong> বাটনে চাপুন। আপনার ফ্রেমওয়ার্ক সিলেক্ট করে রেডিমেড কোড কপি করে আপনার প্রজেক্টের নির্দিষ্ট ফাইলে পেস্ট করুন:
+                                Click <strong>Code Generator</strong> above. Select your stack, copy the drop-in snippet, and paste it into your project:
                             </p>
                             <ul class="list-disc list-inside text-xs text-slate-400 space-y-1 ml-2">
                                 <li><strong>Next.js (App Router):</strong> <code class="text-indigo-300 font-mono">app/api/external-news-post/route.ts</code></li>
                                 <li><strong>Next.js (Pages Router):</strong> <code class="text-indigo-300 font-mono">pages/api/external-news-post.ts</code></li>
                                 <li><strong>Node.js (Express):</strong> <code class="text-indigo-300 font-mono">routes/newsReceiver.js</code></li>
                                 <li><strong>Laravel:</strong> <code class="text-indigo-300 font-mono">routes/api.php</code></li>
-                                <li><strong>Raw PHP:</strong> <code class="text-indigo-300 font-mono">public/news-receiver.php</code> (সিঙ্গেল ড্রপ-ইন ফাইল)</li>
+                                <li><strong>Raw PHP:</strong> <code class="text-indigo-300 font-mono">public/news-receiver.php</code> (Single drop-in file)</li>
                                 <li><strong>Python (FastAPI/Django):</strong> <code class="text-indigo-300 font-mono">main.py</code></li>
                             </ul>
                         </div>
@@ -977,10 +1032,10 @@
                         <div class="bg-slate-800/80 p-5 rounded-xl border border-slate-700">
                             <h4 class="text-base font-bold text-white mb-2 flex items-center gap-2">
                                 <span class="w-6 h-6 rounded bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">3</span>
-                                লাইভ কানেকশন টেস্ট
+                                3. Live Connection Test
                             </h4>
                             <p class="text-xs text-slate-300 leading-relaxed">
-                                কোড বসানো শেষ হলে <strong>Test Connection</strong> বাটনে ক্লিক করুন। সিস্টেম টেস্ট পে-লোড পাঠিয়ে হ্যান্ডশেক সফল হলে সবুজ সংকেত ও আপনার ডাটাবেজে তৈরি হওয়া টেস্ট পোস্ট আইডি দেখাবে।
+                                After deploying the code, click <strong>Test Connection</strong>. The system will send a test payload and confirm success with the created post ID.
                             </p>
                         </div>
                     </div>
@@ -988,16 +1043,16 @@
                     <!-- 2. FAQ CONTENT -->
                     <div id="help_content_faq" class="space-y-4 hidden">
                         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                            <h4 class="font-bold text-white text-sm mb-1.5">প্রশ্ন: সাব-এডিটর24 থেকে আমার সাইটে কী কী ডাটা পাঠানো হয়?</h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">উত্তর: শিরোনাম (title), বিস্তারিত সংবাদ (content/body), নির্বাচিত ক্যাটাগরি (category ID/name), ছবি লিংক বা বাইনারি ফাইল (image), ট্যাগ (tags) এবং স্ল্যাগ (slug)।</p>
+                            <h4 class="font-bold text-white text-sm mb-1.5">FAQ: What data is transmitted to my website?</h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">Answer: Title, content/body, category ID/name, featured image (URL or binary), tags, and slug.</p>
                         </div>
                         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                            <h4 class="font-bold text-white text-sm mb-1.5">প্রশ্ন: আমার সাইটের ফিল্ডের নাম ভিন্ন (যেমন headline বা description), কীভাবে মিলাবো?</h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">উত্তর: <strong>Advanced Field Mapping</strong> সেকশনে যান। সেখানে Title এর জায়গায় আপনার ফিল্ডের নাম (e.g. headline) এবং Content এর জায়গায় আপনার ফিল্ডের নাম (e.g. description) লিখে দিলেই সাব-এডিটর24 অটোমেটিক সেই নামে ডাটা পাঠাবে।</p>
+                            <h4 class="font-bold text-white text-sm mb-1.5">FAQ: My database uses different field names (e.g. headline / description), how to map them?</h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">Answer: Open <strong>Advanced Field Mapping</strong> section and map Title to your custom key (e.g. headline) and Content to your custom key (e.g. description).</p>
                         </div>
                         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                            <h4 class="font-bold text-white text-sm mb-1.5">প্রশ্ন: সিকিউরিটি টোকেন কীভাবে যাচাই করব?</h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">উত্তর: সাব-এডিটর24 প্রতিটি রিকোয়েস্টের হেডারে <code>Authorization: Bearer <Secret_Token></code> পাঠায়। আপনার এন্ডপয়েন্টে শুধু চেক করবেন ইনকামিং টোকেনটি আপনার গোপন টোকেনের সমান কি না।</p>
+                            <h4 class="font-bold text-white text-sm mb-1.5">FAQ: How is the security token authenticated?</h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">Answer: Subeditor24 sends <code>Authorization: Bearer <Secret_Token></code> in every request header. Your endpoint checks whether the bearer token matches your secret.</p>
                         </div>
                     </div>
 
@@ -1007,13 +1062,13 @@
                             <h4 class="font-bold text-red-300 text-sm flex items-center gap-2 mb-1.5">
                                 <i class="fas fa-exclamation-triangle"></i> HTTP 401 Unauthorized
                             </h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">সমস্যা: API Secret Token মিলছে না।<br>সমাধান: Settings পেজের টোকেন এবং আপনার সার্ভারের <code>.env</code> বা রিসিভার ফাইলের গোপন টোকেন একই আছে কি না চেক করুন।</p>
+                            <p class="text-xs text-slate-300 leading-relaxed">Issue: API Secret Token mismatch.<br>Solution: Ensure the token in Settings matches the secret key in your backend <code>.env</code> or receiver file.</p>
                         </div>
                         <div class="bg-amber-950/40 border border-amber-800/60 p-4 rounded-xl">
                             <h4 class="font-bold text-amber-300 text-sm flex items-center gap-2 mb-1.5">
                                 <i class="fas fa-exclamation-circle"></i> HTTP 404 Not Found
                             </h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">সমস্যা: API রুট/ইউআরএল খুঁজে পাওয়া যাচ্ছে না।<br>সমাধান: আপনার ডোমেইনের পর <code>/api/external-news-post</code> রুটটি কার্যকর আছে কি না ব্রাউজারে বা পোস্টম্যানে চেক করুন। ভিন্ন পাথ হলে Custom News Post Endpoint URL এ সম্পূর্ণ URL টি লিখুন।</p>
+                            <p class="text-xs text-slate-300 leading-relaxed">Issue: API route/URL not found.<br>Solution: Check if <code>/api/external-news-post</code> is accessible, or specify the complete URL in Custom News Post Endpoint URL.</p>
                         </div>
                     </div>
                 </div>
@@ -1031,7 +1086,7 @@
                         </div>
                         <div>
                             <h3 class="font-bold text-lg text-white">Instant API Receiver Code Generator</h3>
-                            <p class="text-xs text-slate-400">আপনার টেক-স্ট্যাক অনুযায়ী ড্রপ-ইন রিসিভার কোড কপি করুন।</p>
+                            <p class="text-xs text-slate-400">Copy drop-in receiver code for your stack.</p>
                         </div>
                     </div>
                     <button type="button" onclick="closeCodeGeneratorModal()" class="text-slate-400 hover:text-white text-xl p-2 rounded-lg hover:bg-slate-700 cursor-pointer">
@@ -1063,7 +1118,7 @@
         </div>
 
         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_category'))
-        {{-- 📂 ক্যাটাগরি ম্যাপিং (Collapsible) --}}
+        {{-- Category Mapping (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-white hover:bg-gray-50 transition" onclick="toggleSettingsAccordion(this)">
                 <div class="flex items-center gap-3">
@@ -1072,9 +1127,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            📂 ক্যাটাগরি ম্যাপিং (Category Mapping)
+                            📂 Category Mapping
                         </h2>
-                        <p class="text-xs text-gray-500">AI এর ডিটেক্ট করা বিষয়ের সাথে আপনার ওয়েবসাইটের ক্যাটাগরি মিলান</p>
+                        <p class="text-xs text-gray-500">Map AI-detected topics to target website categories</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -1086,7 +1141,7 @@
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
                     <p class="text-xs text-gray-500">
-                        AI দ্বারা ডিটেক্ট করা বিষয়গুলো আপনার ওয়েবসাইটের কোন ক্যাটাগরিতে পোস্ট হবে তা নির্ধারণ করুন।
+                        Select the target website category for each AI-detected topic.
                     </p>
                     <button type="button" id="refresh-cat-btn" onclick="fetchWPCategories(true)" class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-bold flex items-center gap-1 transition cursor-pointer">
                         🔄 Refresh Categories
@@ -1133,7 +1188,7 @@
         </div>
         @endif
 
-        {{-- 📱 টেলিগ্রাম নোটিফিকেশন (Collapsible) --}}
+        {{-- Telegram Notifications (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-white hover:bg-gray-50 transition" onclick="toggleSettingsAccordion(this)">
                 <div class="flex items-center gap-3">
@@ -1142,9 +1197,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            ✈️ টেলিগ্রাম নোটিফিকেশন
+                            ✈️ Telegram Notifications
                         </h2>
-                        <p class="text-xs text-gray-500">টেলিগ্রাম চ্যানেল আইডি ও অ্যালার্ট সেটিংস</p>
+                        <p class="text-xs text-gray-500">Telegram channel ID and alert settings</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -1155,9 +1210,9 @@
             
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">চ্যানেল আইডি (Channel ID)</label>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Channel ID</label>
                     <input type="text" name="telegram_channel_id" value="{{ old('telegram_channel_id', $settings->telegram_channel_id ?? '') }}" placeholder="-100xxxxxxxxxx" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
-                    <p class="text-[11px] text-gray-500 mt-1">আপনার বটকে চ্যানেলে এডমিন করুন এবং চ্যানেল আইডি দিন।</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Add your bot as an admin to the channel and enter Channel ID.</p>
                 </div>
             </div>
         </div>
@@ -1165,7 +1220,7 @@
         <!-- Sticky or Bottom Save Bar -->
         <div class="flex justify-end pt-4 sticky bottom-4 z-20">
             <button type="submit" class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-3 rounded-xl font-bold text-base hover:shadow-xl transition transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer shadow-lg">
-                <i class="fas fa-save"></i> <span>💾 সেটিংস সেভ করুন</span>
+                <i class="fas fa-save"></i> <span>💾 Save Settings</span>
             </button>
         </div>
     </form>
@@ -1238,7 +1293,7 @@
         }
     });
 
-    // ১. ক্যাটাগরি ফেচ করা (Cache logic সহ)
+    // 1. Fetch Categories (with caching)
     function fetchWPCategories(forceRefresh = false) {
         const btn = document.getElementById('refresh-cat-btn');
         const originalText = btn.innerHTML;
@@ -1258,7 +1313,7 @@
                     alert(data.error);
                 } else {
                     populateDropdowns(data);
-                    if(forceRefresh) alert('✅ ক্যাটাগরি লিস্ট আপডেট করা হয়েছে!');
+                    if(forceRefresh) alert('✅ Category list updated successfully!');
                 }
             })
             .catch(err => {
@@ -1271,7 +1326,7 @@
             });
     }
 
-    // ২. ড্রপডাউন পপুলেট করা
+    // 2. Populate Dropdowns
     function populateDropdowns(categories) {
         const selectors = document.querySelectorAll('.wp-cat-selector');
         selectors.forEach(select => {
@@ -1288,7 +1343,7 @@
         });
     }
 
-    // ৩. কানেকশন টেস্ট ফাংশনগুলো
+    // 3. Connection Test Functions
     function genericTest(type, data, statusId, btn) {
         const statusMsg = document.getElementById(statusId);
         const originalBtnText = btn.innerHTML;
@@ -1316,7 +1371,7 @@
         });
     }
 
-    // বাটন ক্লিক ইভেন্টগুলো
+    // Button Click Events
     function testWordPress() {
         genericTest('wordpress', {
             wp_url: document.getElementById('wp_url').value,
@@ -1346,14 +1401,14 @@
         const originalText = btn.innerHTML;
 
         if (!keyInput.value.trim()) {
-            statusMsg.innerText = "❌ অনুগ্রহ করে PhotoRoom API Key দিন।";
+            statusMsg.innerText = "❌ Please enter a PhotoRoom API Key.";
             statusMsg.className = "text-xs font-bold mt-2 text-red-600";
             return;
         }
 
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
         btn.disabled = true;
-        statusMsg.innerHTML = "⏳ PhotoRoom সার্ভারে হ্যান্ডশেক টেস্ট করা হচ্ছে...";
+        statusMsg.innerHTML = "⏳ Testing PhotoRoom server handshake...";
         statusMsg.className = "text-xs font-bold mt-2 text-blue-600";
 
         fetch(`/settings/test/photoroom`, {
@@ -1370,7 +1425,7 @@
             statusMsg.className = data.success ? "text-xs font-bold mt-2 text-green-600" : "text-xs font-bold mt-2 text-red-600";
         })
         .catch(err => {
-            statusMsg.innerText = "❌ নেটওয়ার্ক এরর: " + err.message;
+            statusMsg.innerText = "❌ Network error: " + err.message;
             statusMsg.className = "text-xs font-bold mt-2 text-red-600";
         })
         .finally(() => {
@@ -1391,7 +1446,7 @@
 
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing Proxy...';
         btn.disabled = true;
-        statusMsg.innerHTML = "⏳ Decodo Universal API ও প্রক্সি সার্ভারে লাইভ হ্যান্ডশেক টেস্ট করা হচ্ছে...";
+        statusMsg.innerHTML = "⏳ Testing Decodo Universal API & Proxy handshake...";
         statusMsg.className = "text-xs font-bold mb-4 text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200 block";
 
         const payload = {
@@ -1420,13 +1475,37 @@
             }
         })
         .catch(err => {
-            statusMsg.innerText = "❌ নেটওয়ার্ক এরর: " + err.message;
+            statusMsg.innerText = "❌ Network error: " + err.message;
             statusMsg.className = "text-xs font-bold mb-4 text-red-700 bg-red-50 p-3 rounded-lg border border-red-300 block whitespace-pre-line";
         })
         .finally(() => {
             btn.innerHTML = originalText;
             btn.disabled = false;
         });
+    }
+
+    const defaultAiPrompts = {
+        bn: @json(\App\Services\AIWriterService::getDefaultPrompt('bn')),
+        en: @json(\App\Services\AIWriterService::getDefaultPrompt('en'))
+    };
+
+    function insertDefaultPrompt(lang = 'bn') {
+        const promptArea = document.getElementById('custom_rewrite_prompt');
+        if (!promptArea) return;
+        if (promptArea.value.trim() !== '' && !confirm('Are you sure you want to replace the current prompt with the default prompt?')) {
+            return;
+        }
+        promptArea.value = defaultAiPrompts[lang] || defaultAiPrompts['bn'];
+        promptArea.focus();
+    }
+
+    function resetDefaultPrompt() {
+        const promptArea = document.getElementById('custom_rewrite_prompt');
+        if (!promptArea) return;
+        if (promptArea.value.trim() !== '' && !confirm('Are you sure you want to reset to default? This will clear the custom prompt so the built-in system prompt will be used.')) {
+            return;
+        }
+        promptArea.value = '';
     }
 
     function testAiProvider(provider) {
@@ -1438,7 +1517,7 @@
 
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
         btn.disabled = true;
-        statusMsg.innerHTML = "⏳ এআই সার্ভারে টেস্ট রিকোয়েস্ট পাঠানো হচ্ছে...";
+        statusMsg.innerHTML = "⏳ Sending test request to AI server...";
         statusMsg.className = "text-xs font-bold mt-2 text-blue-600 bg-blue-50 p-2.5 rounded border border-blue-200 block";
 
         fetch(`/settings/test/ai-provider`, {
@@ -1463,7 +1542,7 @@
             }
         })
         .catch(err => {
-            statusMsg.innerText = "❌ নেটওয়ার্ক এরর: " + err.message;
+            statusMsg.innerText = "❌ Network error: " + err.message;
             statusMsg.className = "text-xs font-bold mt-2 text-red-700 bg-red-50 p-2.5 rounded border border-red-300 block whitespace-pre-line";
         })
         .finally(() => {
@@ -1634,7 +1713,7 @@
 
         if (!siteUrl && !customApiUrl) {
             box.className = 'mb-4 p-3.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 block';
-            box.innerText = 'দয়া করে Website Base URL অথবা Custom News Post Endpoint URL দিন।';
+            box.innerText = 'Please provide Website Base URL or Custom News Post Endpoint URL.';
             return;
         }
 
@@ -1642,7 +1721,7 @@
         btn.disabled = true;
 
         box.className = 'mb-4 p-3.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200 block';
-        box.innerText = '⏳ হ্যান্ডশেক টেস্ট রিকোয়েস্ট পাঠানো হচ্ছে...';
+        box.innerText = '⏳ Sending handshake test request...';
 
         fetch("{{ route('settings.test-custom-api') }}", {
             method: 'POST',
@@ -1669,7 +1748,7 @@
         })
         .catch(err => {
             box.className = 'mb-4 p-3.5 rounded-lg text-xs font-bold bg-red-50 text-red-800 border border-red-300 block';
-            box.innerText = '❌ নেটওয়ার্ক এরর: ' + err.message;
+            box.innerText = '❌ Network error: ' + err.message;
         })
         .finally(() => {
             btn.innerHTML = originalText;
@@ -1886,7 +1965,7 @@ async def receive_news(data: NewsPayload, authorization: Optional[str] = Header(
     function copyGeneratedCode() {
         const code = document.getElementById('cg_code_content').innerText;
         navigator.clipboard.writeText(code).then(() => {
-            alert('✅ কোড ক্লিপবোর্ডে কপি করা হয়েছে!');
+            alert('✅ Code copied to clipboard!');
         });
     }
 
@@ -1926,7 +2005,7 @@ async def receive_news(data: NewsPayload, authorization: Optional[str] = Header(
         .then(res => res.json())
         .then(data => {
             if (loading) loading.classList.add('hidden');
-            if (timestamp && data.timestamp) timestamp.innerText = `সর্বশেষ চেক: ${data.timestamp}`;
+            if (timestamp && data.timestamp) timestamp.innerText = `Last checked: ${data.timestamp}`;
 
             if (data.success && data.checks) {
                 if (container) {
@@ -1964,7 +2043,7 @@ async def receive_news(data: NewsPayload, authorization: Optional[str] = Header(
         .catch(err => {
             if (loading) loading.classList.add('hidden');
             if (container) {
-                container.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-xl text-xs font-bold">সার্ভারে সমস্যা হয়েছে: ${err.message}</div>`;
+                container.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-xl text-xs font-bold">Server error: ${err.message}</div>`;
                 container.classList.remove('hidden');
             }
         });
@@ -1988,8 +2067,8 @@ async def receive_news(data: NewsPayload, authorization: Optional[str] = Header(
                     <i class="fa-solid fa-heart-pulse"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-black font-bangla">সিস্টেম হেলথ ডায়াগনস্টিকস</h3>
-                    <p class="text-[11px] text-white/80 font-semibold" id="diagnosticsTimestamp">১-ক্লিক লাইভ সিস্টেম স্ট্যাটাস</p>
+                    <h3 class="text-base font-black">System Health Diagnostics</h3>
+                    <p class="text-[11px] text-white/80 font-semibold" id="diagnosticsTimestamp">1-Click Live System Status</p>
                 </div>
             </div>
             <button type="button" onclick="closeDiagnosticsModal()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition cursor-pointer">
@@ -2001,7 +2080,7 @@ async def receive_news(data: NewsPayload, authorization: Optional[str] = Header(
             {{-- Loading Spinner --}}
             <div id="diagnosticsLoading" class="py-12 flex flex-col items-center justify-center gap-3">
                 <div class="w-12 h-12 rounded-full border-4 border-emerald-200 border-t-emerald-600 animate-spin"></div>
-                <p class="text-sm font-bold text-slate-600 dark:text-slate-300 animate-pulse">ডাটাবেস, এআই ও এপিআই কানেকশন টেস্ট করা হচ্ছে...</p>
+                <p class="text-sm font-bold text-slate-600 dark:text-slate-300 animate-pulse">Testing Database, AI, and API connections...</p>
             </div>
 
             {{-- Diagnostics Results Container --}}
@@ -2011,13 +2090,13 @@ async def receive_news(data: NewsPayload, authorization: Optional[str] = Header(
         </div>
 
         <div class="p-4 bg-slate-50 dark:bg-slate-850 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center font-bangla">
-            <span class="text-xs text-slate-400 font-semibold">স্বয়ংক্রিয় লাইভ কানেকশন অডিট</span>
+            <span class="text-xs text-slate-400 font-semibold">Automated live connection audit</span>
             <div class="flex items-center gap-2">
                 <button type="button" onclick="runDiagnosticsModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
-                    <i class="fa-solid fa-rotate-right"></i> রি-টেস্ট
+                    <i class="fa-solid fa-rotate-right"></i> Re-test
                 </button>
                 <button type="button" onclick="closeDiagnosticsModal()" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition cursor-pointer">
-                    বন্ধ করুন
+                    Close
                 </button>
             </div>
         </div>

@@ -11,7 +11,7 @@
                 <input type="checkbox" id="modalSocialOnly" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer" onchange="toggleCategoryField(this.checked)">
                 <div>
                     <label for="modalSocialOnly" class="font-bold text-gray-700 cursor-pointer select-none">Only Social Media</label>
-                    <p class="text-xs text-gray-500">ওয়েবসাইটে পোস্ট হবে না, শুধু ফেসবুক/টেলিগ্রামে যাবে।</p>
+                    <p class="text-xs text-gray-500">Will not post to website, publishes to Facebook/Telegram only.</p>
                 </div>
             </div>
 
@@ -23,7 +23,7 @@
                     </button>
                 </div>
 
-                {{-- 🔥 অটো লোড হওয়া ড্রপডাউন --}}
+                {{-- Auto-loaded dropdown --}}
                 <select id="modalCategory" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 bg-white">
                     <option value="">⏳ Loading Categories...</option>
                 </select>

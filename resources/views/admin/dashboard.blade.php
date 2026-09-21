@@ -6,8 +6,8 @@
     {{-- Header Section --}}
     <div class="flex flex-col md:flex-row justify-between items-center mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-slate-800">⚡ সুপার অ্যাডমিন প্যানেল</h1>
-            <p class="text-slate-500 mt-1">সিস্টেম ওভারভিউ এবং ইউজার ম্যানেজমেন্ট</p>
+            <h1 class="text-3xl font-bold text-slate-800">⚡ Super Admin Panel</h1>
+            <p class="text-slate-500 mt-1">System Overview and User Management</p>
         </div>
         <div class="mt-4 md:mt-0">
             <span class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-mono shadow-md">
@@ -29,7 +29,7 @@
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition">
             <div class="p-4 bg-blue-50 text-blue-600 rounded-xl text-2xl">👥</div>
             <div>
-                <p class="text-slate-500 text-sm font-bold uppercase">মোট ইউজার</p>
+                <p class="text-slate-500 text-sm font-bold uppercase">Total Users</p>
                 <h3 class="text-3xl font-bold text-slate-800">{{ $totalUsers }}</h3>
             </div>
         </div>
@@ -37,7 +37,7 @@
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition">
             <div class="p-4 bg-purple-50 text-purple-600 rounded-xl text-2xl">📰</div>
             <div>
-                <p class="text-slate-500 text-sm font-bold uppercase">জেনারেটেড নিউজ</p>
+                <p class="text-slate-500 text-sm font-bold uppercase">Generated News</p>
                 <h3 class="text-3xl font-bold text-slate-800">{{ $totalNews }}</h3>
             </div>
         </div>
@@ -45,7 +45,7 @@
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition">
             <div class="p-4 bg-emerald-50 text-emerald-600 rounded-xl text-2xl">🌐</div>
             <div>
-                <p class="text-slate-500 text-sm font-bold uppercase">কানেক্টেড সাইট</p>
+                <p class="text-slate-500 text-sm font-bold uppercase">Connected Sources</p>
                 <h3 class="text-3xl font-bold text-slate-800">{{ $totalWebsites }}</h3>
             </div>
         </div>
@@ -54,9 +54,9 @@
     {{-- User Table Section --}}
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-            <h2 class="text-lg font-bold text-slate-700">👤 ইউজার লিস্ট</h2>
+            <h2 class="text-lg font-bold text-slate-700">👤 User Directory</h2>
             <button onclick="openCreateUserModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 shadow flex items-center gap-2">
-                ➕ নতুন ইউজার
+                ➕ Add New User
             </button>
         </div>
 
@@ -64,12 +64,12 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                        <th class="px-6 py-4 font-bold">নাম ও ইমেইল</th>
-                        <th class="px-6 py-4 font-bold text-center">ক্রেডিট</th>
-                        <th class="px-6 py-4 font-bold text-center">ডেইলি লিমিট</th>
-                        <th class="px-6 py-4 font-bold text-center">স্ট্যাটাস</th>
-                        <th class="px-6 py-4 font-bold">জয়েনিং ডেট</th>
-                        <th class="px-6 py-4 font-bold text-right">অ্যাকশন</th>
+                        <th class="px-6 py-4 font-bold">Name & Email</th>
+                        <th class="px-6 py-4 font-bold text-center">Credits</th>
+                        <th class="px-6 py-4 font-bold text-center">Daily Limit</th>
+                        <th class="px-6 py-4 font-bold text-center">Status</th>
+                        <th class="px-6 py-4 font-bold">Joined Date</th>
+                        <th class="px-6 py-4 font-bold text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -112,7 +112,7 @@
 
                         <td class="px-6 py-4 text-right flex justify-end gap-2 items-center flex-wrap">
                             
-                            {{-- Edit Button (স্টাফ লিমিট পাস করা হলো) --}}
+                            {{-- Edit Button --}}
                             <button onclick="openEditUserModal('{{ $user->id }}', '{{ $user->name }}', '{{ $user->email }}', '{{ $user->staff_limit }}')" class="bg-yellow-500 text-white px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-600 shadow-sm flex items-center justify-center gap-1" title="Edit Profile">✏️ Edit</button>
                             
                             <button onclick='openSourceModal("{{ $user->id }}", "{{ $user->name }}", @json($user->accessibleWebsites->pluck("id")))' class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700 flex items-center gap-1 shadow-sm" title="Manage News Sources">🌐 <span class="hidden md:inline">Sources</span></button>
@@ -126,7 +126,7 @@
                                 <button type="submit" class="bg-indigo-600 text-white text-xs px-2 py-1.5 rounded-r-lg hover:bg-indigo-700 font-bold shadow-sm">Add</button>
                             </form>
                             
-                            <a href="{{ route('admin.users.login-as', $user->id) }}" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs font-bold hover:bg-yellow-600 ml-2" onclick="return confirm('আপনি কি এই ইউজার হিসেবে লগইন করতে চান?')">🔑 Login</a>
+                            <a href="{{ route('admin.users.login-as', $user->id) }}" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs font-bold hover:bg-yellow-600 ml-2" onclick="return confirm('Do you want to sign in as this user?')">🔑 Login</a>
 
                             <form action="{{ route('admin.users.toggle', $user->id) }}" method="POST">
                                 @csrf

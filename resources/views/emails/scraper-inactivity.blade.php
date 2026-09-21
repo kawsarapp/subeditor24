@@ -116,7 +116,7 @@
         </div>
         <div class="content">
             <div class="warning-box">
-                স্ক্র্যাপার মনিটর সিস্টেম খেয়াল করেছে যে নিচের নিউজ সোর্সটি গত ৩ ঘণ্টা ধরে কোনো সফল স্ক্র্যাপ রেকর্ড করেনি।
+                The Scraper Monitor system detected that the following news source has not recorded a successful scrape in the last 3 hours.
             </div>
 
             <table class="details-table">

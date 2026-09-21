@@ -5,19 +5,19 @@
     <div class="flex items-center gap-3 mb-6">
         <a href="{{ route('admin.templates.index') }}" class="text-gray-400 hover:text-gray-700 text-sm border border-gray-300 px-3 py-1.5 rounded-lg transition">← Back</a>
         <h1 class="text-xl font-bold text-gray-800">
-            {{ $template ? '✏️ Edit: ' . $template->name : '➕ নতুন Template যোগ করুন' }}
+            {{ $template ? '✏️ Edit: ' . $template->name : '➕ Add New Template' }}
         </h1>
     </div>
 
-    {{-- 💡 How-to guide --}}
+    {{-- How-to guide --}}
     <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-5 text-sm text-indigo-800 space-y-1">
-        <p class="font-bold">📌 কীভাবে template যোগ করবেন?</p>
+        <p class="font-bold">📌 How to configure templates?</p>
         <ol class="list-decimal pl-5 space-y-1 text-xs text-indigo-700">
-            <li><strong>Frame URL</strong> দিন → ডানদিকে preview দেখাবে</li>
-            <li><strong>Clone From Existing</strong> বাটন দিয়ে বিদ্যমান template এর position copy করুন</li>
-            <li><strong>Position নম্বর</strong> পরিবর্তন করুন → JSON auto-update হবে + preview এ overlay দেখাবে</li>
-            <li><strong>Font</strong> আলাদাভাবে title ও date এর জন্য select করুন</li>
-            <li>সব ঠিক হলে <strong>Save</strong> করুন → Studio তে দেখাবে</li>
+            <li>Provide <strong>Frame URL</strong> → Preview will appear on the right</li>
+            <li>Use <strong>Clone From Existing</strong> to copy positions from an existing template</li>
+            <li>Adjust <strong>Position numbers</strong> → JSON auto-updates and overlays update in preview</li>
+            <li>Select <strong>Fonts</strong> independently for title and date</li>
+            <li>Click <strong>Save</strong> when done → It will appear in Studio</li>
         </ol>
     </div>
 
@@ -44,7 +44,7 @@
                     <div class="space-y-4">
 
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Template নাম <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Template Name <span class="text-red-500">*</span></label>
                             <input type="text" name="name" value="{{ old('name', $template->name ?? '') }}"
                                    placeholder="e.g. NTV Top Frame"
                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
@@ -53,7 +53,7 @@
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">
                                 Frame URL <span class="text-red-500">*</span>
-                                <span class="font-normal text-gray-400 text-xs ml-1">— আসল blank frame PNG (1080×1080px)</span>
+                                <span class="font-normal text-gray-400 text-xs ml-1">— Original blank frame PNG (1080×1080px)</span>
                             </label>
                             <input type="url" name="frame_url" id="frame_url_input"
                                    value="{{ old('frame_url', $template->frame_url ?? '') }}"
@@ -75,14 +75,14 @@
                                    value="{{ old('thumbnail_url', $template->thumbnail_url ?? '') }}"
                                    placeholder="https://your-cdn.com/thumbs/preview.jpg"
                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition font-mono">
-                            <p class="text-xs text-gray-400 mt-1">খালি রাখলে Frame URL ই thumbnail হিসেবে কাজ করবে।</p>
+                            <p class="text-xs text-gray-400 mt-1">If left empty, Frame URL will be used as the thumbnail.</p>
                         </div>
 
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="is_active" id="is_active" value="1"
                                    {{ old('is_active', $template->is_active ?? true) ? 'checked' : '' }}
                                    class="w-4 h-4 rounded text-indigo-600">
-                            <span class="text-sm font-bold text-gray-700">Active — Studio তে দেখাবে</span>
+                            <span class="text-sm font-bold text-gray-700">Active — Show in Studio</span>
                         </label>
 
                         {{-- Custom Font URL --}}
@@ -100,18 +100,18 @@
                                 </a>
                             </div>
                             <div class="mt-2 text-xs text-purple-600 space-y-1">
-                                <p><strong>কিভাবে দেবেন:</strong> Font file (.ttf, .woff, .woff2) server এ upload করুন বা Google Fonts CDN URL দিন।</p>
-                                <p class="text-purple-400">উদাহরণ: <code class="bg-purple-100 px-1 rounded">https://cdn.example.com/fonts/MyFont.woff2</code></p>
-                                <p>এই URL দিলে title ও date এর Font selector এ <strong class="text-purple-700">"Custom Font (from URL)"</strong> option select করুন।</p>
+                                <p><strong>How to use:</strong> Upload font file (.ttf, .woff, .woff2) to server or provide Google Fonts CDN URL.</p>
+                                <p class="text-purple-400">Example: <code class="bg-purple-100 px-1 rounded">https://cdn.example.com/fonts/MyFont.woff2</code></p>
+                                <p>When using this URL, select <strong class="text-purple-700">"Custom Font (from URL)"</strong> in Title/Date font selector.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- 🔥 Clone from Hardcoded Template --}}
+                {{-- Clone from Hardcoded Template --}}
                 <div class="bg-amber-50 rounded-2xl border border-amber-200 shadow-sm p-5">
-                    <h3 class="font-bold text-amber-800 border-b border-amber-200 pb-3 mb-4">⚡ বিদ্যমান Template থেকে Clone করুন</h3>
-                    <p class="text-xs text-amber-700 mb-3">কোনো বিদ্যমান hardcoded template এর position values copy করতে চাইলে এখান থেকে select করুন — সব fields auto-fill হবে।</p>
+                    <h3 class="font-bold text-amber-800 border-b border-amber-200 pb-3 mb-4">⚡ Clone from Existing Template</h3>
+                    <p class="text-xs text-amber-700 mb-3">Select an existing template below to automatically fill in standard position coordinates.</p>
                     <select onchange="cloneFromHardcoded(this.value)" class="w-full border border-amber-300 rounded-lg px-3 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-amber-400">
                         <option value="">-- Select a template to clone positions --</option>
                         <option value="bottom">bottom (Title: top=800, left=540)</option>
@@ -133,7 +133,7 @@
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
                     <h3 class="font-bold text-gray-700 border-b pb-3 mb-4">
                         📐 Position Configuration
-                        <span class="text-xs font-normal text-gray-400 ml-1">— সব values 1080×1080 canvas এ</span>
+                        <span class="text-xs font-normal text-gray-400 ml-1">— All values based on 1080×1080 canvas</span>
                     </h3>
 
                     <div class="space-y-5">
@@ -294,37 +294,48 @@
                                             "NotoSerifBengali-Regular" => "Noto Serif Bengali Regular",
                                             "__custom__" => "⭐ Custom Font (from URL above)",
                                         ] as $val => $label)
-                                        @php
-                                            $currentDateFont = $template->layout_data['date']['fontFamily'] ?? "Hind Siliguri, sans-serif";
-                                            $isSelected = str_contains($currentDateFont, explode(',', $val)[0]) ? 'selected' : '';
-                                        @endphp
-                                        <option value="{{ $val }}" {{ $isSelected }}>{{ $label }}</option>
+                                        @foreach($fontFamilies as $fKey => $fLabel)
+                                            <option value="{{ $fKey }}" {{ ($template->layout_data['date']['fontFamily'] ?? 'SolaimanLipi') == $fKey ? 'selected' : '' }}>{{ $fLabel }}</option>
                                         @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="lbl">Color</label>
+                                    <input type="text" id="date_fill" oninput="syncJSON()" placeholder="#FFFFFF"
+                                           value="{{ old('date_fill', $template->layout_data['date']['fill'] ?? '#FFFFFF') }}"
+                                           class="pos-input w-full">
+                                </div>
+                                <div>
+                                    <label class="lbl">Align</label>
+                                    <select id="date_textAlign" onchange="syncJSON()" class="pos-input w-full">
+                                        <option value="center" {{ ($template->layout_data['date']['textAlign'] ?? 'center') == 'center' ? 'selected' : '' }}>Center</option>
+                                        <option value="left" {{ ($template->layout_data['date']['textAlign'] ?? '') == 'left' ? 'selected' : '' }}>Left</option>
+                                        <option value="right" {{ ($template->layout_data['date']['textAlign'] ?? '') == 'right' ? 'selected' : '' }}>Right</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- ===== IMAGE ===== --}}
-                        <div class="border border-emerald-100 bg-emerald-50/30 rounded-xl p-4">
-                            <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-4">🖼️ News Image Area</p>
-                            <div class="grid grid-cols-3 gap-3">
+                        {{-- IMAGE --}}
+                        <div class="p-4 rounded-xl border border-emerald-100 bg-emerald-50/30">
+                            <h4 class="font-bold text-emerald-700 text-sm mb-3">🖼️ News Image</h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                 <div>
-                                    <label class="lbl">Left</label>
-                                    <input type="number" id="img_left" oninput="syncJSON()" placeholder="45"
-                                           value="{{ old('img_left', $template->layout_data['image']['left'] ?? 45) }}"
+                                    <label class="lbl">Top</label>
+                                    <input type="number" id="img_top" oninput="syncJSON()" placeholder="280"
+                                           value="{{ old('img_top', $template->layout_data['image']['top'] ?? 280) }}"
                                            class="pos-input w-full">
                                 </div>
                                 <div>
-                                    <label class="lbl">Top</label>
-                                    <input type="number" id="img_top" oninput="syncJSON()" placeholder="100"
-                                           value="{{ old('img_top', $template->layout_data['image']['top'] ?? 100) }}"
+                                    <label class="lbl">Left</label>
+                                    <input type="number" id="img_left" oninput="syncJSON()" placeholder="540"
+                                           value="{{ old('img_left', $template->layout_data['image']['left'] ?? 540) }}"
                                            class="pos-input w-full">
                                 </div>
                                 <div>
                                     <label class="lbl">Width</label>
-                                    <input type="number" id="img_width" oninput="syncJSON()" placeholder="1000"
-                                           value="{{ old('img_width', $template->layout_data['image']['width'] ?? 1000) }}"
+                                    <input type="number" id="img_width" oninput="syncJSON()" placeholder="760"
+                                           value="{{ old('img_width', $template->layout_data['image']['width'] ?? 760) }}"
                                            class="pos-input w-full">
                                 </div>
                                 <div>
@@ -334,7 +345,7 @@
                                            class="pos-input w-full">
                                 </div>
                                 <div class="col-span-2">
-                                    <label class="lbl">Zoom <span class="text-gray-400 font-normal">(1.0 = সাধারণ, 1.2 = 20% বড়)</span></label>
+                                    <label class="lbl">Zoom <span class="text-gray-400 font-normal">(1.0 = normal, 1.2 = 20% zoom)</span></label>
                                     <input type="number" id="img_zoom" oninput="syncJSON()" step="0.05" min="0.1" max="5" placeholder="1.0"
                                            value="{{ old('img_zoom', $template->layout_data['image']['zoom'] ?? 1.0) }}"
                                            class="pos-input w-full">
@@ -354,12 +365,12 @@
                     <textarea name="layout_data" id="layout_data_output" rows="14"
                               class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs font-mono focus:ring-2 focus:ring-indigo-500 outline-none bg-gray-50 transition"
                               required>{{ old('layout_data', $template ? json_encode($template->layout_data, JSON_PRETTY_PRINT) : '') }}</textarea>
-                    <p class="text-xs text-gray-400 mt-1">উপরের fields পরিবর্তন করলে এটা auto-update হবে। অথবা সরাসরি edit করুন।</p>
+                    <p class="text-xs text-gray-400 mt-1">Modifying fields above auto-updates JSON, or edit JSON directly.</p>
                 </div>
 
                 <button type="submit"
                         class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition shadow-md text-sm">
-                    {{ $template ? '💾 Update Template' : '✅ Template Save করুন' }}
+                    {{ $template ? '💾 Update Template' : '✅ Save Template' }}
                 </button>
             </div>
 
@@ -378,7 +389,7 @@
                                  alt="Frame Preview">
                             <div id="preview_placeholder" style="display:{{ $template ? 'none' : 'flex' }}; position:absolute; inset:0; flex-direction:column; align-items:center; justify-content:center; color:#9ca3af; gap:8px;">
                                 <span style="font-size:2.5rem;">🖼️</span>
-                                <span style="font-size:0.75rem;">Frame URL দিলে preview দেখাবে</span>
+                                <span style="font-size:0.75rem;">Enter Frame URL to view preview</span>
                             </div>
                             {{-- Overlays --}}
                             <div id="overlay_container" style="position:absolute; inset:0; pointer-events:none; display:{{ $template ? 'block' : 'none' }};">
@@ -400,14 +411,15 @@
                         </div>
                         <div class="bg-amber-50 rounded-lg p-2 text-amber-700">
                             <p class="font-bold">📅 Date</p>
-                            <p>Top=<span id="info_date_top" class="font-mono">50</span>, Left=<span id="info_date_left" class="font-mono">50</span></p>
+                            <p>Top=<span id="info_date_top" class="font-mono">990</span>, Left=<span id="info_date_left" class="font-mono">540</span>, fs=<span id="info_date_fs" class="font-mono">22</span></p>
                         </div>
                         <div class="bg-emerald-50 rounded-lg p-2 text-emerald-700">
                             <p class="font-bold">🖼️ Image</p>
-                            <p>Left=<span id="info_img_left" class="font-mono">45</span>, Top=<span id="info_img_top" class="font-mono">100</span></p>
-                            <p><span id="info_img_width" class="font-mono">1000</span>×<span id="info_img_height" class="font-mono">430</span>, zoom=<span id="info_img_zoom" class="font-mono">1.0</span></p>
+                            <p>Top=<span id="info_img_top" class="font-mono">280</span>, Left=<span id="info_img_left" class="font-mono">540</span></p>
+                            <p>W=<span id="info_img_w" class="font-mono">760</span>, H=<span id="info_img_h" class="font-mono">430</span>, Zoom=<span id="info_img_z" class="font-mono">1.0</span></p>
                         </div>
                     </div>
+
                 </div>
             </div>
 
@@ -416,70 +428,143 @@
 </div>
 
 <style>
-.lbl { display:block; font-size:0.7rem; font-weight:700; color:#374151; margin-bottom:0.2rem; }
-.pos-input { border:1px solid #d1d5db; border-radius:0.5rem; padding:0.3rem 0.5rem; font-size:0.78rem; width:100%; outline:none; transition:border-color .15s; background:#fff; }
-.pos-input:focus { border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,0.15); }
+.lbl { display:block; font-size:0.75rem; font-weight:700; color:#4b5563; margin-bottom:0.25rem; }
+.pos-input { border:1px solid #d1d5db; border-radius:0.5rem; padding:0.375rem 0.5rem; font-size:0.875rem; outline:none; transition:all 0.15s; }
+.pos-input:focus { border-color:#6366f1; box-shadow:0 0 0 2px rgba(99,102,241,0.2); }
 </style>
 
 <script>
-    // ==========================================
-    // Hardcoded template positions for cloning
-    // ==========================================
-    const HARDCODED = {
-        'bottom':              { title:{top:800,left:540,width:980,fontSize:60,fill:'#ffffff',textAlign:'center',originX:'center',fontFamily:"Hind Siliguri, sans-serif"}, date:{top:50,left:50,fontSize:30,fill:'#000000',originX:'left',fontFamily:"Hind Siliguri, sans-serif"}, image:{left:0,top:0,width:1080,height:1080,zoom:1.0} },
-        'ntv':                 { title:{top:705,left:555,width:1000,fontSize:50,fill:'#000000',textAlign:'center',originX:'center',fontFamily:"Hind Siliguri, sans-serif"}, date:{top:633,left:240,fontSize:30,fill:'#000000',originX:'right',fontFamily:"Hind Siliguri, sans-serif"}, image:{left:17,top:62,width:1080,height:520,zoom:1.0} },
-        'rtv':                 { title:{top:603,left:540,width:950,fontSize:45,fill:'#d90429',textAlign:'center',originX:'center',fontFamily:"Hind Siliguri, sans-serif"}, date:{top:43,left:500,fontSize:30,fill:'#d90429',originX:'left',fontFamily:"Hind Siliguri, sans-serif"}, image:{left:40,top:115,width:1000,height:430,zoom:0.9} },
-        'dhakapost':           { title:{top:772,left:545,width:980,fontSize:60,fill:'#ffffff',textAlign:'center',originX:'center',fontFamily:"Hind Siliguri, sans-serif"}, date:{top:20,left:975,fontSize:30,fill:'#000000',originX:'center',fontFamily:"Hind Siliguri, sans-serif"}, image:{left:40,top:130,width:1000,height:430,zoom:1.3} },
-        'todayevents':         { title:{top:760,left:560,width:900,fontSize:60,fill:'#000000',textAlign:'center',originX:'center',fontFamily:"Noto Serif Cond Black"}, date:{top:1015,left:640,fontSize:26,fill:'#ffffff',originX:'right',backgroundColor:'red',fontFamily:"SolaimanLipi"}, image:{left:40,top:120,width:1000,height:430,zoom:1.2} },
-        'BanglaLiveNews':      { title:{top:685,left:540,width:980,fontSize:60,fill:'#ffffff',textAlign:'center',originX:'center',fontFamily:"Hind Siliguri, sans-serif"}, date:{top:43,left:850,fontSize:30,fill:'#000000',originX:'left',fontFamily:"Hind Siliguri, sans-serif"}, image:{left:50,top:150,width:980,height:550,zoom:1.0} },
-        'Jaijaidin1':          { title:{top:750,left:540,width:950,fontSize:55,fill:'#ffffff',textAlign:'center',originX:'center',fontFamily:"Hind Siliguri, sans-serif"}, date:{top:38,left:1042,fontSize:28,fill:'#000000',originX:'right',fontFamily:"Hind Siliguri, sans-serif"}, image:{left:40,top:160,width:1000,height:450,zoom:1.1} },
-        'ShotterKhoje':        { title:{top:730,left:540,width:900,fontSize:60,fill:'#ffffff',textAlign:'center',originX:'center',fontFamily:"Hind Siliguri, sans-serif"}, date:{top:15,left:460,fontSize:28,fill:'#ffffff',originX:'left',fontFamily:"Hind Siliguri, sans-serif"}, image:{left:40,top:80,width:980,height:520,zoom:1.2} },
-        'jonomot':             { title:{top:770,left:545,width:1050,fontSize:60,fill:'#ffffff',textAlign:'center',originX:'center',fontFamily:"Hind Siliguri, sans-serif"}, date:{top:45,left:120,fontSize:30,fill:'#000000',originX:'center',fontFamily:"Hind Siliguri, sans-serif"}, image:{left:1,top:160,width:1080,height:540,zoom:1.0} },
-        'TodayEventsDualFrame':{ title:{top:780,left:560,width:1080,fontSize:60,fill:'#ffffff',textAlign:'center',originX:'center',fontFamily:"Noto Serif Cond Black"}, date:{top:1015,left:1045,fontSize:25,fill:'#ffffff',originX:'right',fontFamily:"SolaimanLipi"}, image:{left:45,top:100,width:1000,height:480,zoom:1.2} },
-        'Thenews24Main':       { title:{top:720,left:540,width:1000,fontSize:60,fill:'#ffffff',textAlign:'center',originX:'center',fontFamily:"Noto Serif Bengali SemiBold"}, date:{top:50,left:1045,fontSize:28,fill:'#000000',originX:'right',fontFamily:"NotoSerifBengali-Regular"}, image:{left:45,top:100,width:1000,height:430,zoom:1.1} },
-        'ITVNews':             { title:{top:770,left:540,width:1000,fontSize:60,fill:'#ffffff',textAlign:'center',originX:'center',fontFamily:"SutonnyOMJRegular"}, date:{top:1030,left:1050,fontSize:30,fill:'#ffffff',originX:'right',fontFamily:"SutonnyOMJRegular"}, image:{left:45,top:100,width:1000,height:450,zoom:1.3} },
+const HARDCODED_TEMPLATES = {
+    bottom: {
+        title: { top: 800, left: 540, width: 1000, fontSize: 60, fontFamily: 'SolaimanLipi', fill: '#FFFFFF', textAlign: 'center', maxLines: 2, originX: 'center', originY: 'center' },
+        date:  { top: 1010, left: 540, fontSize: 22, fontFamily: 'SolaimanLipi', fill: '#FFFFFF', textAlign: 'center', originX: 'center', originY: 'center' },
+        image: { top: 350, left: 540, width: 1000, height: 600, zoom: 1.0, originX: 'center', originY: 'center' }
+    },
+    ntv: {
+        title: { top: 705, left: 555, width: 900, fontSize: 45, fontFamily: 'HindSiliguri', fill: '#FFFFFF', textAlign: 'center', maxLines: 2, originX: 'center', originY: 'center' },
+        date:  { top: 855, left: 555, fontSize: 18, fontFamily: 'HindSiliguri', fill: '#E0E7FF', textAlign: 'center', originX: 'center', originY: 'center' },
+        image: { top: 310, left: 555, width: 730, height: 410, zoom: 1.0, originX: 'center', originY: 'center' }
+    },
+    rtv: {
+        title: { top: 603, left: 540, width: 880, fontSize: 48, fontFamily: 'SolaimanLipi', fill: '#FFFFFF', textAlign: 'center', maxLines: 2, originX: 'center', originY: 'center' },
+        date:  { top: 825, left: 540, fontSize: 20, fontFamily: 'SolaimanLipi', fill: '#93C5FD', textAlign: 'center', originX: 'center', originY: 'center' },
+        image: { top: 250, left: 540, width: 800, height: 450, zoom: 1.0, originX: 'center', originY: 'center' }
+    },
+    dhakapost: {
+        title: { top: 772, left: 545, width: 940, fontSize: 50, fontFamily: 'SolaimanLipi', fill: '#FFFFFF', textAlign: 'center', maxLines: 2, originX: 'center', originY: 'center' },
+        date:  { top: 965, left: 545, fontSize: 20, fontFamily: 'SolaimanLipi', fill: '#CBD5E1', textAlign: 'center', originX: 'center', originY: 'center' },
+        image: { top: 320, left: 545, width: 880, height: 495, zoom: 1.0, originX: 'center', originY: 'center' }
+    },
+    todayevents: {
+        title: { top: 760, left: 560, width: 860, fontSize: 46, fontFamily: 'AnekBangla', fill: '#1E293B', textAlign: 'center', maxLines: 2, originX: 'center', originY: 'center' },
+        date:  { top: 945, left: 560, fontSize: 20, fontFamily: 'AnekBangla', fill: '#64748B', textAlign: 'center', originX: 'center', originY: 'center' },
+        image: { top: 320, left: 560, width: 820, height: 460, zoom: 1.0, originX: 'center', originY: 'center' }
+    },
+    BanglaLiveNews: {
+        title: { top: 685, left: 540, width: 900, fontSize: 48, fontFamily: 'SolaimanLipi', fill: '#FFFFFF', textAlign: 'center', maxLines: 2, originX: 'center', originY: 'center' },
+        date:  { top: 860, left: 540, fontSize: 20, fontFamily: 'SolaimanLipi', fill: '#E2E8F0', textAlign: 'center', originX: 'center', originY: 'center' },
+        image: { top: 275, left: 540, width: 820, height: 460, zoom: 1.0, originX: 'center', originY: 'center' }
+    },
+    Jaijaidin1: {
+        title: { top: 750, left: 540, width: 920, fontSize: 48, fontFamily: 'SolaimanLipi', fill: '#FFFFFF', textAlign: 'center', maxLines: 2, originX: 'center', originY: 'center' },
+        date:  { top: 940, left: 540, fontSize: 20, fontFamily: 'SolaimanLipi', fill: '#F1F5F9', textAlign: 'center', originX: 'center', originY: 'center' },
+        image: { top: 310, left: 540, width: 850, height: 478, zoom: 1.0, originX: 'center', originY: 'center' }
+    },
+    ShotterKhoje: {
+        title: { top: 730, left: 540, width: 900, fontSize: 46, fontFamily: 'HindSiliguri', fill: '#FFFFFF', textAlign: 'center', maxLines: 2, originX: 'center', originY: 'center' },
+        date:  { top: 920, left: 540, fontSize: 20, fontFamily: 'HindSiliguri', fill: '#CBD5E1', textAlign: 'center', originX: 'center', originY: 'center' },
+        image: { top: 295, left: 540, width: 840, height: 472, zoom: 1.0, originX: 'center', originY: 'center' }
+    },
+    jonomot: {
+        title: { top: 770, left: 545, width: 920, fontSize: 48, fontFamily: 'SolaimanLipi', fill: '#FFFFFF', textAlign: 'center', maxLines: 2, originX: 'center', originY: 'center' },
+        date:  { top: 960, left: 545, fontSize: 20, fontFamily: 'SolaimanLipi', fill: '#E2E8F0', textAlign: 'center', originX: 'center', originY: 'center' },
+        image: { top: 320, left: 545, width: 870, height: 490, zoom: 1.0, originX: 'center', originY: 'center' }
+    },
+    TodayEventsDualFrame: {
+        title: { top: 780, left: 560, width: 880, fontSize: 46, fontFamily: 'AnekBangla', fill: '#0F172A', textAlign: 'center', maxLines: 2, originX: 'center', originY: 'center' },
+        date:  { top: 960, left: 560, fontSize: 20, fontFamily: 'AnekBangla', fill: '#475569', textAlign: 'center', originX: 'center', originY: 'center' },
+        image: { top: 330, left: 560, width: 830, height: 467, zoom: 1.0, originX: 'center', originY: 'center' }
+    },
+    Thenews24Main: {
+        title: { top: 720, left: 540, width: 900, fontSize: 48, fontFamily: 'SolaimanLipi', fill: '#FFFFFF', textAlign: 'center', maxLines: 2, originX: 'center', originY: 'center' },
+        date:  { top: 905, left: 540, fontSize: 20, fontFamily: 'SolaimanLipi', fill: '#E2E8F0', textAlign: 'center', originX: 'center', originY: 'center' },
+        image: { top: 290, left: 540, width: 830, height: 467, zoom: 1.0, originX: 'center', originY: 'center' }
+    },
+    ITVNews: {
+        title: { top: 770, left: 540, width: 920, fontSize: 48, fontFamily: 'SolaimanLipi', fill: '#FFFFFF', textAlign: 'center', maxLines: 2, originX: 'center', originY: 'center' },
+        date:  { top: 960, left: 540, fontSize: 20, fontFamily: 'SolaimanLipi', fill: '#E2E8F0', textAlign: 'center', originX: 'center', originY: 'center' },
+        image: { top: 320, left: 540, width: 870, height: 490, zoom: 1.0, originX: 'center', originY: 'center' }
+    }
+};
+
+function cloneFromHardcoded(key) {
+    if (!key || !HARDCODED_TEMPLATES[key]) return;
+    const t = HARDCODED_TEMPLATES[key];
+
+    // Set Title
+    document.getElementById('title_top').value       = t.title.top;
+    document.getElementById('title_left').value      = t.title.left;
+    document.getElementById('title_width').value     = t.title.width;
+    document.getElementById('title_fontSize').value  = t.title.fontSize;
+    document.getElementById('title_fontFamily').value= t.title.fontFamily || 'SolaimanLipi';
+    document.getElementById('title_fill').value      = t.title.fill || '#FFFFFF';
+    document.getElementById('title_textAlign').value = t.title.textAlign || 'center';
+    document.getElementById('title_maxLines').value  = t.title.maxLines || 2;
+
+    // Set Date
+    document.getElementById('date_top').value        = t.date.top;
+    document.getElementById('date_left').value       = t.date.left;
+    document.getElementById('date_fontSize').value   = t.date.fontSize;
+    document.getElementById('date_fontFamily').value = t.date.fontFamily || 'SolaimanLipi';
+    document.getElementById('date_fill').value       = t.date.fill || '#FFFFFF';
+    document.getElementById('date_textAlign').value  = t.date.textAlign || 'center';
+
+    // Set Image
+    document.getElementById('img_top').value         = t.image.top;
+    document.getElementById('img_left').value        = t.image.left;
+    document.getElementById('img_width').value       = t.image.width;
+    document.getElementById('img_height').value      = t.image.height;
+    document.getElementById('img_zoom').value        = t.image.zoom || 1.0;
+
+    syncJSON();
+    alert('✅ Positions cloned from "' + key + '"! Adjust as needed.');
+}
+
+function syncJSON() {
+    const ld = {
+        title: {
+            top: parseInt(document.getElementById('title_top').value) || 0,
+            left: parseInt(document.getElementById('title_left').value) || 0,
+            width: parseInt(document.getElementById('title_width').value) || 0,
+            fontSize: parseInt(document.getElementById('title_fontSize').value) || 0,
+            fontFamily: document.getElementById('title_fontFamily').value,
+            fill: document.getElementById('title_fill').value,
+            textAlign: document.getElementById('title_textAlign').value,
+            maxLines: parseInt(document.getElementById('title_maxLines').value) || 2,
+            originX: 'center',
+            originY: 'center'
+        },
+        date: {
+            top: parseInt(document.getElementById('date_top').value) || 0,
+            left: parseInt(document.getElementById('date_left').value) || 0,
+            fontSize: parseInt(document.getElementById('date_fontSize').value) || 0,
+            fontFamily: document.getElementById('date_fontFamily').value,
+            fill: document.getElementById('date_fill').value,
+            textAlign: document.getElementById('date_textAlign').value,
+            originX: 'center',
+            originY: 'center'
+        },
+        image: {
+            top: parseInt(document.getElementById('img_top').value) || 0,
+            left: parseInt(document.getElementById('img_left').value) || 0,
+            width: parseInt(document.getElementById('img_width').value) || 0,
+            height: parseInt(document.getElementById('img_height').value) || 0,
+            zoom: parseFloat(document.getElementById('img_zoom').value) || 1.0,
+            originX: 'center',
+            originY: 'center'
+        }
     };
 
-    function cloneFromHardcoded(key) {
-        if (!key || !HARDCODED[key]) return;
-        const tpl = HARDCODED[key];
-
-        // Title
-        setVal('title_top',      tpl.title.top);
-        setVal('title_left',     tpl.title.left);
-        setVal('title_width',    tpl.title.width);
-        setVal('title_fontSize', tpl.title.fontSize);
-        setColor('title', tpl.title.fill || '#ffffff');
-        setVal('title_bg',       tpl.title.backgroundColor || '');
-        setSelVal('title_textAlign', tpl.title.textAlign || 'center');
-        setSelVal('title_originX',   tpl.title.originX || 'center');
-        setFontSel('title_fontFamily', tpl.title.fontFamily || 'Hind Siliguri, sans-serif');
-
-        // Date
-        setVal('date_top',      tpl.date.top);
-        setVal('date_left',     tpl.date.left);
-        setVal('date_fontSize', tpl.date.fontSize);
-        setColor('date', tpl.date.fill || '#ffffff');
-        setVal('date_bg',       tpl.date.backgroundColor || '');
-        setSelVal('date_originX', tpl.date.originX || 'left');
-        setFontSel('date_fontFamily', tpl.date.fontFamily || 'Hind Siliguri, sans-serif');
-
-        // Image
-        setVal('img_left',   tpl.image.left);
-        setVal('img_top',    tpl.image.top);
-        setVal('img_width',  tpl.image.width);
-        setVal('img_height', tpl.image.height);
-        setVal('img_zoom',   tpl.image.zoom);
-
-        syncJSON();
-        alert('✅ "' + key + '" এর positions clone করা হয়েছে! প্রয়োজনমতো adjust করুন।');
-    }
-
-    function setVal(id, val) {
-        const el = document.getElementById(id);
-        if (el) el.value = val;
-    }
-    function setSelVal(id, val) {
         const el = document.getElementById(id);
         if (el) el.value = val;
     }
@@ -517,7 +602,7 @@
         document.getElementById('title_fill_hex').value = titleFill;
         document.getElementById('date_fill_hex').value  = dateFill;
 
-        // Font: __custom__ হলে 'CustomFont' নামে save হবে, Studio তে URL দিয়ে @font-face load হবে
+        // Font: If __custom__, save as 'CustomFont', Studio loads @font-face via URL
         const titleFontSel = document.getElementById('title_fontFamily').value;
         const dateFontSel  = document.getElementById('date_fontFamily').value;
         const titleFont = titleFontSel === '__custom__' ? 'CustomFont' : ("'" + titleFontSel + "'");

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-{{-- 🔥 ১. TinyMCE স্ক্রিপ্ট যুক্ত করা হলো --}}
+{{-- TinyMCE Script --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js"></script>
 
 <style>
@@ -9,16 +9,16 @@
     .font-bangla { font-family: 'Hind Siliguri', sans-serif; }
 </style>
 
-<div class="max-w-4xl mx-auto font-bangla">
+<div class="max-w-4xl mx-auto">
     <div class="flex justify-between items-center mb-6">
         <div>
             <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                ✍️ নতুন খবর তৈরি করুন
+                ✍️ Create New Post
             </h2>
-            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">খবরের শিরোনাম, ছবি ও বিস্তারিত বিবরণ লিখুন</p>
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Write title, attach images and craft article content</p>
         </div>
         <a href="{{ route('news.index') }}" class="text-xs font-extrabold text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl transition shadow-sm">
-            ← ফিডে ফিরে যান
+            ← Back to Feed
         </a>
     </div>
 
@@ -29,16 +29,16 @@
                 <i class="fa-solid fa-clock-rotate-left"></i>
             </div>
             <div>
-                <h4 class="text-xs font-extrabold text-amber-900 dark:text-amber-200 uppercase tracking-wide">অসংরক্ষিত ড্রাফট উদ্ধার!</h4>
-                <p class="text-xs font-semibold text-amber-800 dark:text-amber-300 mt-0.5" id="autoSaveRecoveryInfo">পূর্বে সংরক্ষিত ড্রাফট পাওয়া গেছে।</p>
+                <h4 class="text-xs font-extrabold text-amber-900 dark:text-amber-200 uppercase tracking-wide">Unsaved Draft Recovered!</h4>
+                <p class="text-xs font-semibold text-amber-800 dark:text-amber-300 mt-0.5" id="autoSaveRecoveryInfo">A previously autosaved draft was found.</p>
             </div>
         </div>
         <div class="flex items-center gap-2 self-end sm:self-center">
             <button type="button" onclick="restoreAutoSaveDraft()" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer">
-                📂 রিকভার করুন
+                📂 Restore
             </button>
             <button type="button" onclick="discardAutoSaveDraft()" class="px-3.5 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition cursor-pointer">
-                ✕ মুছুন
+                ✕ Discard
             </button>
         </div>
     </div>
@@ -50,25 +50,25 @@
             {{-- Title --}}
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-2">
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">খবরের শিরোনাম (Title) <span class="text-rose-500">*</span></label>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">News Title <span class="text-rose-500">*</span></label>
                     <div class="flex items-center gap-2">
                         <span id="titleDuplicateCheckingSpinner" class="hidden text-[10px] font-bold text-slate-400 animate-pulse flex items-center gap-1">
-                            <i class="fa-solid fa-spinner fa-spin text-indigo-500"></i> ডুপ্লিকেট চেক হচ্ছে...
+                            <i class="fa-solid fa-spinner fa-spin text-indigo-500"></i> Checking duplicates...
                         </span>
                         <button type="button" onclick="generateCreateViralHeadlines()" id="btnCreateViralHeadlines" class="text-xs font-bold px-3 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl shadow-sm flex items-center gap-1.5 transition cursor-pointer">
-                            <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i> ✨ ৩টি AI ভাইরাল শিরোনাম
+                            <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i> ✨ 3 AI Viral Headlines
                         </button>
                     </div>
                 </div>
                 <input type="text" name="title" id="newsTitleInput" oninput="debouncedCheckTitleDuplicates()" required value="{{ old('title', request('title')) }}"
-                    class="w-full border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5 focus:ring-2 focus:ring-indigo-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bangla text-lg font-bold placeholder-slate-400 focus:bg-white dark:focus:bg-slate-900 transition"
-                    placeholder="এখানে আকর্ষণীয় শিরোনাম লিখুন...">
+                    class="w-full border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5 focus:ring-2 focus:ring-indigo-500 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-lg font-bold placeholder-slate-400 focus:bg-white dark:focus:bg-slate-900 transition"
+                    placeholder="Enter an engaging headline...">
                 
                 {{-- 3-Option Viral Headline Suggestions Box --}}
                 <div id="createViralHeadlineBox" class="hidden mt-3 p-4 bg-gradient-to-br from-indigo-50/90 to-purple-50/90 dark:from-slate-800 dark:to-slate-850 border border-indigo-200/70 dark:border-slate-700 rounded-2xl space-y-2.5 transition-all">
                     <div class="flex items-center justify-between pb-2 border-b border-indigo-100 dark:border-slate-700">
                         <span class="text-xs font-black text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
-                            <i class="fa-solid fa-sparkles text-indigo-600"></i> AI প্রস্তাবিত ভাইরাল শিরোনাম (১-ক্লিকে সিলেক্ট করুন):
+                            <i class="fa-solid fa-sparkles text-indigo-600"></i> AI Suggested Viral Headlines (1-Click Apply):
                         </span>
                         <button type="button" onclick="document.getElementById('createViralHeadlineBox').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer">✕</button>
                     </div>
@@ -81,7 +81,7 @@
                 <div id="createTitleDuplicateAlert" class="hidden mt-2 p-3 bg-amber-50 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-800/60 rounded-xl text-xs font-bold text-amber-900 dark:text-amber-200 flex items-start gap-2">
                     <i class="fa-solid fa-triangle-exclamation text-amber-600 dark:text-amber-400 mt-0.5"></i>
                     <div class="flex-1">
-                        <span id="createTitleDuplicateText">এই শিরোনামের অনুরূপ আরেকটি খবর ইতিমধ্যে তালিকায় রয়েছে।</span>
+                        <span id="createTitleDuplicateText">A news article with a similar title already exists in the feed.</span>
                     </div>
                 </div>
             </div>
@@ -90,52 +90,52 @@
             <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {{-- Option A: Upload File --}}
                 <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80">
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">📷 ছবি আপলোড করুন</label>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">📷 Upload Image</label>
                     <input type="file" name="image_file" accept="image/*"
                         class="w-full border border-slate-200 dark:border-slate-700 rounded-xl p-2 text-xs focus:ring-2 focus:ring-indigo-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 dark:file:bg-indigo-950 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 cursor-pointer">
-                    <p class="text-[10px] font-semibold text-slate-400 mt-1.5">ফরম্যাট: JPG, PNG, WEBP (সর্বোচ্চ: ৫MB)</p>
+                    <p class="text-[10px] font-semibold text-slate-400 mt-1.5">Format: JPG, PNG, WEBP (Max: 5MB)</p>
                 </div>
 
                 {{-- Option B: Image Link --}}
                 <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80">
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">🔗 অথবা, ছবির লিংক দিন</label>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">🔗 Or, Provide Image URL</label>
                     <input type="url" name="image_url" id="newsImageUrlInput"
                         class="w-full border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 text-xs bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400"
                         placeholder="https://example.com/image.jpg">
-                    <p class="text-[10px] font-semibold text-slate-400 mt-1.5">অনলাইন ছবির সরাসরি লিঙ্ক পেস্ট করুন</p>
+                    <p class="text-[10px] font-semibold text-slate-400 mt-1.5">Paste direct URL of an online image</p>
                 </div>
             </div>
 
             {{-- Content --}}
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-2">
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">বিস্তারিত খবর (Content)</label>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">Article Content</label>
                     <span id="autoSaveStatusBadge" class="text-[10px] font-bold text-slate-400 flex items-center gap-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> অটো-সেভ সক্রিয়
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Auto-Save Active
                     </span>
                 </div>
                 
                 {{-- TinyMCE Content Textarea --}}
                 <textarea name="content" id="newsContent" rows="15"
-                    class="w-full border border-slate-200 dark:border-slate-700 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 font-bangla"
-                    placeholder="এখানে বিস্তারিত লিখুন..."></textarea>
+                    class="w-full border border-slate-200 dark:border-slate-700 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Write article details here..."></textarea>
             </div>
 
             {{-- Actions --}}
             <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
-                {{-- ১. ড্রাফট বাটন --}}
+                {{-- 1. Save Draft --}}
                 <button type="submit" class="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 py-3.5 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer">
-                    💾 ড্রাফটে সেভ করুন
+                    💾 Save as Draft
                 </button>
 
-                {{-- ২. AI বাটন --}}
+                {{-- 2. AI Rewrite + Save --}}
                 <button type="submit" name="process_ai" value="1" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-2xl font-bold text-xs shadow-md shadow-indigo-500/20 transition flex justify-center items-center gap-2 cursor-pointer">
-                    🤖 AI রিরাইট + সেভ 
+                    🤖 AI Rewrite & Save
                 </button>
 
-                {{-- ৩. ডাইরেক্ট পাবলিশ বাটন --}}
+                {{-- 3. Direct Publish --}}
                 <button type="submit" name="direct_publish" value="1" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-2xl font-bold text-xs shadow-md shadow-emerald-500/20 transition flex justify-center items-center gap-2 cursor-pointer">
-                    🚀 সরাসরি পাবলিশ
+                    🚀 Direct Publish
                 </button>
             </div>
 			
@@ -143,7 +143,7 @@
     </div>
 </div>
 
-{{-- 🔥 ৩. TinyMCE ইনিশিয়ালাইজেশন & ড্রাফট অটো-সেভ স্ক্রিপ্ট --}}
+{{-- TinyMCE Initialization & Autosave Script --}}
 <script>
     const AUTOSAVE_KEY = 'subeditor24_news_create_draft';
 
@@ -191,7 +191,7 @@
                 const alertEl = document.getElementById('autoSaveRecoveryAlert');
                 const infoEl = document.getElementById('autoSaveRecoveryInfo');
                 if (alertEl) {
-                    if (infoEl) infoEl.innerText = `পূর্বে সংরক্ষিত ড্রাফট (${draft.time || 'কিছুক্ষণ আগে'}): "${(draft.title || 'শিরোনামবিহীন').substring(0, 40)}..."`;
+                    if (infoEl) infoEl.innerText = `Autosaved draft (${draft.time || 'recently'}): "${(draft.title || 'Untitled').substring(0, 40)}..."`;
                     alertEl.classList.remove('hidden');
                 }
             }
@@ -218,7 +218,7 @@
             }
 
             document.getElementById('autoSaveRecoveryAlert').classList.add('hidden');
-            if (window.showToast) window.showToast('✅ ড্রাফট সফলভাবে পুনরুদ্ধার করা হয়েছে!', 'success');
+            if (window.showToast) window.showToast('✅ Draft successfully restored!', 'success');
         } catch (e) {
             console.error(e);
         }
@@ -227,7 +227,7 @@
     function discardAutoSaveDraft() {
         localStorage.removeItem(AUTOSAVE_KEY);
         document.getElementById('autoSaveRecoveryAlert').classList.add('hidden');
-        if (window.showToast) window.showToast('ড্রাফট মুছে ফেলা হয়েছে', 'info');
+        if (window.showToast) window.showToast('Draft discarded', 'info');
     }
 
     // --- Auto-save engine ---
@@ -258,9 +258,9 @@
             localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(draft));
             const badge = document.getElementById('autoSaveStatusBadge');
             if (badge) {
-                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> সংরক্ষিত (${draft.time})`;
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> Saved (${draft.time})`;
                 setTimeout(() => {
-                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> অটো-সেভ সক্রিয়`;
+                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Auto-Save Active`;
                 }, 2500);
             }
         } catch (e) {
@@ -318,7 +318,7 @@
             if (data.success && data.duplicates && data.duplicates.length > 0) {
                 const top = data.duplicates[0];
                 if (alertText) {
-                    alertText.innerHTML = `⚠️ <strong>সতর্কতা:</strong> অনুরূপ খবর পাওয়া গেছে: "<u>${top.title}</u>" (${top.website_name} - ${top.similarity}% মিল)। ডুপ্লিকেট এড়াতে শিরোনাম বা কনটেন্ট পরিবর্তন করুন।`;
+                    alertText.innerHTML = `⚠️ <strong>Warning:</strong> Similar news found: "<u>${top.title}</u>" (${top.website_name} - ${top.similarity}% match). Modify headline or content to prevent duplicates.`;
                 }
                 if (alertBox) alertBox.classList.remove('hidden');
             } else {
@@ -345,14 +345,14 @@
         }
 
         if (!currentTitle && !contentText) {
-            alert('অনুগ্রহ করে শিরোনাম বা কন্টেন্ট লিখুন!');
+            alert('Please provide a title or content first!');
             return;
         }
 
         const btn = document.getElementById('btnCreateViralHeadlines');
         const origBtnText = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>জেনারেট হচ্ছে...</span>`;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Generating...</span>`;
 
         fetch("{{ route('news.generate-headlines') }}", {
             method: 'POST',
@@ -374,19 +374,19 @@
                 if (box && container) {
                     const h = data.headlines;
                     const items = [
-                        { type: '💡 তথ্যবহুল ও প্রমিত (Informative)', text: h.informative, color: 'border-blue-300 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200' },
-                        { type: '🔥 ভাইরাল / হাই-সিটিআর (Viral & High-CTR)', text: h.viral, color: 'border-purple-300 dark:border-purple-800 bg-purple-50/80 dark:bg-purple-950/40 text-purple-900 dark:text-purple-200' },
-                        { type: '⚡ ছোট ও ব্রেকিং (Short & Breaking)', text: h.breaking, color: 'border-rose-300 dark:border-rose-800 bg-rose-50/80 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200' }
+                        { type: '💡 Informative & Standard', text: h.informative, color: 'border-blue-300 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200' },
+                        { type: '🔥 Viral & High-CTR', text: h.viral, color: 'border-purple-300 dark:border-purple-800 bg-purple-50/80 dark:bg-purple-950/40 text-purple-900 dark:text-purple-200' },
+                        { type: '⚡ Short & Breaking', text: h.breaking, color: 'border-rose-300 dark:border-rose-800 bg-rose-50/80 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200' }
                     ];
 
                     container.innerHTML = items.map(item => `
                         <div class="p-3 rounded-xl border ${item.color} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition hover:shadow-sm">
                             <div class="flex-1">
                                 <span class="text-[10px] font-black uppercase tracking-wider block mb-0.5 opacity-80">${item.type}</span>
-                                <p class="text-xs font-bold leading-snug font-bangla">${item.text}</p>
+                                <p class="text-xs font-bold leading-snug">${item.text}</p>
                             </div>
                             <button type="button" onclick="applyCreateViralHeadline('${item.text.replace(/'/g, "\\'")}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shrink-0 shadow-sm flex items-center gap-1 transition cursor-pointer">
-                                <span>ব্যবহার করুন</span> ↵
+                                <span>Apply</span> ↵
                             </button>
                         </div>
                     `).join('');
@@ -394,12 +394,12 @@
                     box.classList.remove('hidden');
                 }
             } else {
-                alert(data.message || 'শিরোনাম তৈরি করতে সমস্যা হয়েছে!');
+                alert(data.message || 'Failed to generate headlines!');
             }
         })
         .catch(err => {
             console.error('Viral Headlines Error:', err);
-            alert('সার্ভারে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+            alert('A server error occurred. Please try again.');
         })
         .finally(() => {
             btn.disabled = false;

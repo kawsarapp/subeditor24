@@ -175,14 +175,14 @@
         }
 
         if (!currentTitle.trim() && !contentText.trim()) {
-            alert('অনুগ্রহ করে শিরোনাম বা কন্টেন্ট লিখুন!');
+            alert('Please provide headline or content first!');
             return;
         }
 
         const btn = document.getElementById('btnAiKeywords');
         const origHtml = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin inline-block mr-1 text-indigo-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>জেনারেট হচ্ছে...</span>`;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin inline-block mr-1 text-indigo-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Generating...</span>`;
 
         fetch("{{ route('news.generate-focus-keywords') }}", {
             method: 'POST',
@@ -236,17 +236,17 @@
                 calculateSEO();
                 syncSocialCardPreview();
                 if (window.showToast) {
-                    window.showToast('🎯 AI Focus Keywords & Meta Description তৈরি সম্পন্ন!', 'success');
+                    window.showToast('🎯 AI Focus Keywords & Meta Description generated!', 'success');
                 }
             } else {
-                alert('❌ ' + (data.message || 'কী-ওয়ার্ড জেনারেট করা সম্ভব হয়নি।'));
+                alert('❌ ' + (data.message || 'Failed to generate keywords.'));
             }
         })
         .catch(err => {
             btn.disabled = false;
             btn.innerHTML = origHtml;
             console.error('Focus keywords error:', err);
-            alert('⚠️ সার্ভারে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+            alert('⚠️ Server error occurred. Please try again.');
         });
     }
 
@@ -429,16 +429,16 @@
         if (metaCountEl) metaCountEl.innerText = metaDesc.length;
         if (metaStatusEl) {
             if (metaDesc.length === 0) {
-                metaStatusEl.innerText = 'খালি';
+                metaStatusEl.innerText = 'Empty';
                 metaStatusEl.className = 'font-bold text-slate-400';
             } else if (metaDesc.length >= 120 && metaDesc.length <= 160) {
-                metaStatusEl.innerText = 'অনুকূল দৈর্ঘ্য (Ideal)';
+                metaStatusEl.innerText = 'Ideal Length';
                 metaStatusEl.className = 'font-bold text-emerald-600 dark:text-emerald-400';
             } else if (metaDesc.length < 120) {
-                metaStatusEl.innerText = 'খুব ছোট (Short)';
+                metaStatusEl.innerText = 'Too Short';
                 metaStatusEl.className = 'font-bold text-amber-500';
             } else {
-                metaStatusEl.innerText = 'বেশি বড় (Long)';
+                metaStatusEl.innerText = 'Too Long';
                 metaStatusEl.className = 'font-bold text-rose-500';
             }
         }
@@ -449,7 +449,7 @@
         const serpSlugEl = document.getElementById('serpSlug');
 
         if (serpTitleEl) {
-            serpTitleEl.innerText = title.trim() || 'খবরের শিরোনাম';
+            serpTitleEl.innerText = title.trim() || 'News Headline';
         }
         if (serpSnippetEl) {
             serpSnippetEl.innerText = metaDesc.trim() || (words.slice(0, 25).join(' ') + (words.length > 25 ? '...' : ''));
@@ -472,7 +472,7 @@
         }
         contentText = contentText.replace(/\s+/g, ' ').trim();
         if (!contentText) {
-            alert('কন্টেন্টে কোনো লেখা পাওয়া যায়নি!');
+            alert('No text found in content!');
             return;
         }
         
@@ -487,7 +487,7 @@
         calculateSEO();
         syncSocialCardPreview();
         if (window.showToast) {
-            window.showToast('📝 কন্টেন্টের শুরু থেকে মেটা ডেসক্রিপশন সেট করা হয়েছে', 'success');
+            window.showToast('📝 Meta description extracted from lead content', 'success');
         }
     }
 
@@ -529,8 +529,8 @@
                     list.innerHTML = `
                         <div class="text-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
                             <i class="fa-solid fa-link-slash text-slate-400 text-lg mb-1"></i>
-                            <p class="text-[11px] font-bold text-slate-500 m-0">কোনো প্রকাশিত নিউজ পাওয়া যায়নি!</p>
-                            <span class="text-[10px] text-slate-400">অন্য কোনো কী-ওয়ার্ড দিয়ে সার্চ করুন।</span>
+                            <p class="text-[11px] font-bold text-slate-500 m-0">No published news found!</p>
+                            <span class="text-[10px] text-slate-400">Try searching with different keywords.</span>
                         </div>
                     `;
                     return;
@@ -558,14 +558,14 @@
                             </div>
                             
                             <div class="flex items-center gap-1 pt-1 border-t border-slate-100 dark:border-slate-700/60 justify-end">
-                                <button type="button" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-600 dark:hover:text-white px-2 py-1 rounded text-[10px] font-black transition flex items-center gap-1 cursor-pointer" onclick="insertLinkToEditor('${safeTitle}', '${safeUrl}')" title="এডিটরে ইনলাইন লিঙ্ক হিসেবে যুক্ত করুন">
+                                <button type="button" class="bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-600 dark:hover:text-white px-2 py-1 rounded text-[10px] font-black transition flex items-center gap-1 cursor-pointer" onclick="insertLinkToEditor('${safeTitle}', '${safeUrl}')" title="Insert as inline link into editor">
                                     <i class="fa-solid fa-link text-[9px]"></i> Inline
                                 </button>
-                                <button type="button" class="bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-600 dark:hover:text-white px-2 py-1 rounded text-[10px] font-black transition flex items-center gap-1 cursor-pointer" onclick="insertReadMoreToEditor('${safeTitle}', '${safeUrl}')" title="আকর্ষণীয় 'আরও পড়ুন' বক্স হিসেবে যোগ করুন">
-                                    <i class="fa-solid fa-bookmark text-[9px]"></i> আরও পড়ুন
+                                <button type="button" class="bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-600 dark:hover:text-white px-2 py-1 rounded text-[10px] font-black transition flex items-center gap-1 cursor-pointer" onclick="insertReadMoreToEditor('${safeTitle}', '${safeUrl}')" title="Insert as 'Read More' callout box">
+                                    <i class="fa-solid fa-bookmark text-[9px]"></i> Read More
                                 </button>
-                                <button type="button" class="bg-slate-100 hover:bg-slate-800 hover:text-white dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 px-2 py-1 rounded text-[10px] font-bold transition flex items-center gap-1 cursor-pointer" onclick="insertRelatedMediaCard('${safeTitle}', '${safeUrl}', '${safeImg}')" title="ছোট ফটো কার্ড যুক্ত করুন">
-                                    <i class="fa-solid fa-id-card text-[9px]"></i> কার্ড
+                                <button type="button" class="bg-slate-100 hover:bg-slate-800 hover:text-white dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 px-2 py-1 rounded text-[10px] font-bold transition flex items-center gap-1 cursor-pointer" onclick="insertRelatedMediaCard('${safeTitle}', '${safeUrl}', '${safeImg}')" title="Insert photo card into editor">
+                                    <i class="fa-solid fa-id-card text-[9px]"></i> Card
                                 </button>
                             </div>
                         </div>
@@ -583,7 +583,7 @@
         let text = document.getElementById('manual-link-text').value;
         let url = document.getElementById('manual-link-url').value;
         
-        if(!text || !url) return alert('লিংকের লেখা এবং URL দুটোই দিন!');
+        if(!text || !url) return alert('Please provide both link text and URL!');
         
         if (type === 'readmore') {
             insertReadMoreToEditor(text, url);
@@ -609,7 +609,7 @@
         
         editor.execCommand('mceInsertContent', false, linkHtml);
         calculateSEO();
-        if (window.showToast) window.showToast('🔗 ইনলাইন লিংক এডিটরে যুক্ত হয়েছে', 'success');
+        if (window.showToast) window.showToast('🔗 Inline link added to editor', 'success');
     }
 
     function insertReadMoreToEditor(text, url) {
@@ -620,7 +620,7 @@
 
         const readMoreHtml = `
             <div style="margin: 18px 0; padding: 12px 16px; border-left: 4px solid #e11d48; background: #fff1f2; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                <span style="color: #e11d48; font-size: 14px; font-weight: 800; text-transform: uppercase; margin-right: 6px;">📌 আরও পড়ুন:</span>
+                <span style="color: #e11d48; font-size: 14px; font-weight: 800; text-transform: uppercase; margin-right: 6px;">📌 Read More:</span>
                 <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #1e40af; font-size: 15px; font-weight: bold; text-decoration: underline;">${text}</a>
             </div>
             <p>&nbsp;</p>
@@ -628,7 +628,7 @@
 
         tinymce.get('previewContent').execCommand('mceInsertContent', false, readMoreHtml);
         calculateSEO();
-        if (window.showToast) window.showToast('📌 "আরও পড়ুন" বক্স এডিটরে যুক্ত হয়েছে', 'success');
+        if (window.showToast) window.showToast('📌 "Read More" callout added to editor', 'success');
     }
 
     function insertRelatedMediaCard(text, url, imageUrl) {
@@ -645,7 +645,7 @@
             <div style="margin: 20px 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; overflow: hidden; display: flex; align-items: center;">
                 ${imgTag}
                 <div>
-                    <span style="font-size: 11px; color: #64748b; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 2px;">সম্পর্কিত খবর</span>
+                    <span style="font-size: 11px; color: #64748b; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 2px;">Related News</span>
                     <a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #0f172a; font-size: 14px; font-weight: bold; text-decoration: none;">${text}</a>
                 </div>
                 <div style="clear: both;"></div>
@@ -655,7 +655,7 @@
 
         tinymce.get('previewContent').execCommand('mceInsertContent', false, cardHtml);
         calculateSEO();
-        if (window.showToast) window.showToast('🖼️ রিলেটেড কার্ড এডিটরে যুক্ত হয়েছে', 'success');
+        if (window.showToast) window.showToast('🖼️ Related card added to editor', 'success');
     }
 
     function previewSelectedImage(input) {
@@ -773,7 +773,7 @@
                     currentOriginalData = {
                         title: data.original_title || data.title,
                         content: data.original_content || data.content,
-                        source_name: data.source_name || 'অনলাইন সোর্স',
+                        source_name: data.source_name || 'Online Source',
                         original_link: data.original_link || '#',
                         duplicates: data.duplicates || []
                     };
@@ -785,20 +785,20 @@
                     const sourceBadge = document.getElementById('modalSourceBadge');
 
                     if (sideTitle) sideTitle.innerText = currentOriginalData.title;
-                    if (sideContent) sideContent.innerHTML = currentOriginalData.content || '<p class="text-slate-400">মূল লেখার টেক্সট পাওয়া যায়নি।</p>';
+                    if (sideContent) sideContent.innerHTML = currentOriginalData.content || '<p class="text-slate-400">Original article text unavailable.</p>';
                     if (sideTag) sideTag.innerText = currentOriginalData.source_name;
                     if (sideLink) {
                         sideLink.href = currentOriginalData.original_link;
                         if (currentOriginalData.original_link === '#' || !currentOriginalData.original_link) sideLink.style.display = 'none';
                         else sideLink.style.display = 'inline-flex';
                     }
-                    if (sourceBadge) sourceBadge.innerText = `সোর্স: ${currentOriginalData.source_name}`;
+                    if (sourceBadge) sourceBadge.innerText = `Source: ${currentOriginalData.source_name}`;
 
                     // ⚠️ Smart News Deduplication Detection inside Modal
                     if (data.duplicates && data.duplicates.length > 0) {
                         const topDup = data.duplicates[0];
                         if (dupAlert) {
-                            document.getElementById('modalDuplicateAlertText').innerHTML = `⚠️ <strong>সতর্কতা:</strong> একই ঘটনার আরও <strong>${data.duplicates.length}টি</strong> খবর রয়েছে (যেমন: <u>${topDup.website_name}</u> - ${topDup.similarity}% মিল)`;
+                            document.getElementById('modalDuplicateAlertText').innerHTML = `⚠️ <strong>Warning:</strong> Found <strong>${data.duplicates.length}</strong> duplicate articles on this event (e.g. <u>${topDup.website_name}</u> - ${topDup.similarity}% match)`;
                             dupAlert.classList.remove('hidden');
                         }
                         if (dupList) {
@@ -808,7 +808,7 @@
                                         <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100">${d.website_name}</span>
                                         <span class="truncate font-bold">${d.title}</span>
                                     </div>
-                                    <span class="text-[10px] font-extrabold text-amber-700 dark:text-amber-300 shrink-0 ml-2">${d.similarity}% মিল</span>
+                                    <span class="text-[10px] font-extrabold text-amber-700 dark:text-amber-300 shrink-0 ml-2">${d.similarity}% match</span>
                                 </div>
                             `).join('');
                         }
@@ -952,7 +952,7 @@
     function copyBossLink(id) {
         const previewUrl = "{{ url('/preview') }}/" + id;
         navigator.clipboard.writeText(previewUrl).then(() => {
-            alert("✅ প্রিভিউ লিঙ্ক কপি হয়েছে! বসের হোয়াটসঅ্যাপ বা মেসেঞ্জারে পাঠিয়ে দিন।");
+            alert("✅ Preview link copied! Share via WhatsApp or Messenger.");
         });
     }
 
@@ -978,7 +978,7 @@
         })
         .then(response => response.json())
         .then(data => {
-            // চেক করবে এডিট মোডাল ওপেন আছে কি না
+            // Checks if edit modal is open
             let isModalOpen = !document.getElementById('rewriteModal').classList.contains('hidden');
             let needsReload = false;
 
@@ -988,26 +988,26 @@
                     let card = document.querySelector(`div[data-news-id="${news.id}"]`);
                     
                     if (card) {
-                        // কার্ডের স্ট্যাটাস আপডেট করে দিলাম, যাতে এটি আর পোলিং না করে
+                        // Update card status to stop polling
                         card.setAttribute('data-status', news.status); 
                         
                         if (isModalOpen) {
-                            // মোডাল ওপেন থাকলে পেজ রিলোড না করে শুধু বাটন চেঞ্জ করে দেব
+                            // Update button instead of reloading page if modal is open
                             let btnArea = card.querySelector('.cursor-wait');
                             if (btnArea) {
-                                btnArea.innerHTML = '✅ কাজ শেষ! রিফ্রেশ দিন';
+                                btnArea.innerHTML = '✅ Done! Please refresh';
                                 btnArea.className = 'w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center border border-emerald-200 cursor-pointer transition';
                                 btnArea.onclick = function() { window.location.reload(); };
                             }
                         } else {
-                            // মোডাল ক্লোজ থাকলে অটো রিলোড হবে
+                            // Auto reload if modal is closed
                             needsReload = true;
                         }
                     }
                 }
             });
 
-            // যদি কোনো আইটেমের কাজ শেষ হয় এবং মোডাল ক্লোজ থাকে, তবেই পেজ রিলোড হবে
+            // Reload page only if item is done and modal is closed
             if (needsReload) {
                 window.location.reload(); 
             }
@@ -1055,8 +1055,8 @@
                 uniqueness_score: 100 - parseInt(data || 0),
                 credibility_score: legacyStatus === 'verified' ? 90 : (legacyStatus === 'warning' ? 65 : 40),
                 overall_verdict: legacyStatus || 'unverified',
-                verdict_title: legacyStatus === 'verified' ? 'তথ্য যাচাই সম্পন্ন ও নির্ভরযোগ্য' : 'তথ্য যাচাইয়ে সতর্কতা',
-                summary_report: legacyReport || 'কোনো এআই রিপোর্ট পাওয়া যায়নি।',
+                verdict_title: legacyStatus === 'verified' ? 'Fact Check Complete & Reliable' : 'Fact Check Caution',
+                summary_report: legacyReport || 'No AI report found.',
                 claims: [],
                 official_factchecks: [],
                 red_flags: []
@@ -1068,7 +1068,7 @@
             if (badge) badge.classList.add('hidden');
             if (checkBtn) {
                 checkBtn.classList.remove('hidden');
-                checkBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart text-indigo-400"></i> <span>রিয়েল-টাইম সত্যতা ও তথ্য যাচাই করুন</span>';
+                checkBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart text-indigo-400"></i> <span>Verify Real-time Facts</span>';
             }
             return;
         }
@@ -1077,7 +1077,7 @@
         if (badge) badge.classList.remove('hidden');
         if (checkBtn) {
             checkBtn.classList.remove('hidden');
-            checkBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> <span>পুনরায় যাচাই করুন</span>';
+            checkBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> <span>Re-verify Claims</span>';
         }
 
         // 1. Uniqueness Meter
@@ -1118,29 +1118,29 @@
         const status = (res.overall_verdict || res.fact_check_status || 'unverified').toLowerCase();
         if (badge) {
             if (status === 'verified' || status === 'verified_true') {
-                badge.innerText = '🟢 সত্য ও প্রমাণিত';
+                badge.innerText = '🟢 Verified & Factual';
                 badge.className = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-sm';
             } else if (status === 'warning' || status === 'partially_true') {
-                badge.innerText = '🟡 আংশিক সত্য / সতর্কতা';
+                badge.innerText = '🟡 Partially True / Caution';
                 badge.className = 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-sm';
             } else if (status === 'false') {
-                badge.innerText = '🔴 অসত্য / ভুয়া তথ্য';
+                badge.innerText = '🔴 False / Misleading';
                 badge.className = 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-sm';
             } else {
-                badge.innerText = '⚪ যাচাই আবশ্যক';
+                badge.innerText = '⚪ Verification Required';
                 badge.className = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-sm';
             }
         }
 
         // 4. Verdict Card Heading & Report Text
         if (verdictHeading) {
-            verdictHeading.innerText = res.verdict_title || (status === 'verified' ? 'তথ্য সম্পূর্ণ সঠিক ও প্রমাণিত' : 'তথ্য পর্যালোচনায় সতর্কতা প্রয়োজন');
+            verdictHeading.innerText = res.verdict_title || (status === 'verified' ? 'Information is verified & factual' : 'Caution advised in claims review');
         }
         if (verdictIcon) {
             verdictIcon.innerText = (status === 'verified' ? '✅' : (status === 'false' ? '🚨' : (status === 'warning' ? '⚠️' : '🔍')));
         }
         if (reportText) {
-            reportText.innerText = res.summary_report || res.fact_check_report || 'কোনো এআই রিপোর্ট পাওয়া যায়নি।';
+            reportText.innerText = res.summary_report || res.fact_check_report || 'No AI report available.';
         }
 
         // 5. Official Fact-Checks (Google ClaimReview Matches)
@@ -1155,7 +1155,7 @@
                             <span class="px-1.5 py-0.2 text-[9px] font-black rounded bg-rose-100 text-rose-700">${item.rating}</span>
                         </div>
                         <p class="text-slate-800 dark:text-slate-200 text-xs font-semibold leading-snug">${item.text}</p>
-                        ${item.review_url ? `<a href="${item.review_url}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">ফ্যাক্ট-চেক রিপোর্ট দেখুন 🔗</a>` : ''}
+                        ${item.review_url ? `<a href="${item.review_url}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">View Fact-Check Report 🔗</a>` : ''}
                     </div>
                 `).join('');
             } else {
@@ -1167,26 +1167,26 @@
         // 6. Claim-by-Claim Breakdown
         if (claimsList && claimsCountBadge) {
             const claims = res.claims || [];
-            claimsCountBadge.innerText = claims.length + 'টি দাবি';
+            claimsCountBadge.innerText = claims.length + ' Claims';
             
             if (claims.length > 0) {
                 claimsList.innerHTML = claims.map((c, idx) => {
                     const cStatus = (c.status || 'unverified').toLowerCase();
                     let badgeClass = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
-                    let badgeLabel = '⚪ অযাচাইকৃত';
+                    let badgeLabel = '⚪ Unverified';
                     let borderClass = 'border-slate-200 dark:border-slate-800';
 
                     if (cStatus.includes('true') || cStatus === 'verified') {
                         badgeClass = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200';
-                        badgeLabel = '🟢 সত্য';
+                        badgeLabel = '🟢 True / Verified';
                         borderClass = 'border-emerald-100 dark:border-emerald-900/40';
                     } else if (cStatus.includes('partial') || cStatus === 'warning') {
                         badgeClass = 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200';
-                        badgeLabel = '🟡 আংশিক সত্য';
+                        badgeLabel = '🟡 Partially True';
                         borderClass = 'border-amber-100 dark:border-amber-900/40';
                     } else if (cStatus.includes('false')) {
                         badgeClass = 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200';
-                        badgeLabel = '🔴 অসত্য';
+                        badgeLabel = '🔴 False / Debunked';
                         borderClass = 'border-rose-100 dark:border-rose-900/40';
                     }
 
@@ -1198,19 +1198,19 @@
                                     <span class="px-2 py-0.5 rounded-md text-[10px] font-black border ${badgeClass}">${badgeLabel}</span>
                                     ${c.type ? `<span class="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">(${c.type})</span>` : ''}
                                 </div>
-                                ${c.confidence ? `<span class="text-[10px] font-bold text-slate-400">${c.confidence}% নিশ্চিত</span>` : ''}
+                                ${c.confidence ? `<span class="text-[10px] font-bold text-slate-400">${c.confidence}% Confidence</span>` : ''}
                             </div>
                             <p class="font-extrabold text-slate-900 dark:text-slate-100 leading-snug">${c.claim_text}</p>
                             <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">${c.explanation || ''}</p>
-                            ${c.source_hint ? `<div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1"><i class="fa-solid fa-link text-[8px]"></i> সূত্র: ${c.source_hint}</div>` : ''}
+                            ${c.source_hint ? `<div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1"><i class="fa-solid fa-link text-[8px]"></i> Source: ${c.source_hint}</div>` : ''}
                             ${c.suggested_correction ? `
                                 <div class="mt-1.5 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-[11px] text-emerald-900 dark:text-emerald-200 flex items-start justify-between gap-2">
                                     <div>
-                                        <strong class="font-black text-emerald-800 dark:text-emerald-300 block mb-0.5">💡 সঠিক তথ্য:</strong>
+                                        <strong class="font-black text-emerald-800 dark:text-emerald-300 block mb-0.5">💡 Verified Correction:</strong>
                                         <span>${c.suggested_correction}</span>
                                     </div>
-                                    <button type="button" onclick="navigator.clipboard.writeText('${c.suggested_correction.replace(/'/g, "\\'")}'); showNotification('সংশোধিত তথ্য কপি হয়েছে!');" class="shrink-0 px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold cursor-pointer">
-                                        কপি
+                                    <button type="button" onclick="navigator.clipboard.writeText('${c.suggested_correction.replace(/'/g, "\\'")}'); showNotification('Correction copied to clipboard!');" class="shrink-0 px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold cursor-pointer">
+                                        Copy
                                     </button>
                                 </div>
                             ` : ''}
@@ -1218,7 +1218,7 @@
                     `;
                 }).join('');
             } else {
-                claimsList.innerHTML = '<div class="text-xs text-slate-400 p-2 text-center">কোনো পৃথক দাবির তালিকা পাওয়া যায়নি।</div>';
+                claimsList.innerHTML = '<div class="text-xs text-slate-400 p-2 text-center">No specific claims breakdown found.</div>';
             }
         }
 
@@ -1252,7 +1252,7 @@
 
         const currentTitle = titleInput ? titleInput.value : '';
 
-        if (!currentContent && !currentTitle) return alert('যাচাই করার জন্য শিরোনাম বা কনটেন্ট নেই!');
+        if (!currentContent && !currentTitle) return alert('No headline or content available to verify!');
 
         // Show skeletons, hide button & results
         checkBtn.classList.add('hidden');
@@ -1277,13 +1277,13 @@
             if (data.success) {
                 displayFactCheckResults(data);
             } else {
-                alert('❌ ' + (data.message || 'ভুল হয়েছে।'));
+                alert('❌ ' + (data.message || 'An error occurred.'));
                 displayFactCheckResults(null);
             }
         })
         .catch(err => {
             console.error(err);
-            alert('⚠️ সার্ভার কানেকশন এরর!');
+            alert('⚠️ Server connection error!');
             displayFactCheckResults(null);
         });
     }
@@ -1346,8 +1346,8 @@
             contentText = tinymce.get('previewContent').getContent({ format: 'text' });
         }
 
-        const excerpt = metaDesc.trim() || contentText.substring(0, 150) || 'খবরের বিস্তারিত বিবরণ...';
-        const displayTitle = title.trim() || 'শিরোনামহীন খবর';
+        const excerpt = metaDesc.trim() || contentText.substring(0, 150) || 'Article content details...';
+        const displayTitle = title.trim() || 'Untitled Article';
 
         // Facebook Card
         const fbTitle = document.getElementById('fbPreviewTitle');
@@ -1380,15 +1380,15 @@
     function copyOriginalContent() {
         if (currentOriginalData.content) {
             const cleanText = currentOriginalData.content.replace(/<[^>]*>?/gm, '').trim();
-            if (window.copyToClipboard) window.copyToClipboard(cleanText, '📋 মূল খবরের টেক্সট কপি করা হয়েছে!');
-            else alert('কপি করা হয়েছে!');
+            if (window.copyToClipboard) window.copyToClipboard(cleanText, '📋 Original article text copied!');
+            else alert('Copied to clipboard!');
         }
     }
 
     function insertOriginalToEditor() {
         if (currentOriginalData.content && tinymce.get('previewContent')) {
             tinymce.get('previewContent').execCommand('mceInsertContent', false, `<p>${currentOriginalData.content}</p>`);
-            if (window.showToast) window.showToast('➕ এডিটরে মূল টেক্সট যুক্ত করা হয়েছে', 'success');
+            if (window.showToast) window.showToast('➕ Original text inserted into editor', 'success');
             calculateSEO();
         }
     }
@@ -1411,14 +1411,14 @@
         }
 
         if (!currentTitle.trim() && !contentText.trim()) {
-            alert('অনুগ্রহ করে শিরোনাম বা কন্টেন্ট লিখুন!');
+            alert('Please provide headline or content first!');
             return;
         }
 
         const btn = document.getElementById('btnGenerateViralHeadlines');
         const origBtnText = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>জেনারেট হচ্ছে...</span>`;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Generating...</span>`;
 
         fetch("{{ route('news.generate-headlines') }}", {
             method: 'POST',
@@ -1441,9 +1441,9 @@
                 if (box && container) {
                     const h = data.headlines;
                     const items = [
-                        { type: '💡 তথ্যবহুল ও প্রমিত (Informative)', text: h.informative, color: 'border-blue-300 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200' },
-                        { type: '🔥 ভাইরাল / হাই-সিটিআর (Viral & High-CTR)', text: h.viral, color: 'border-purple-300 dark:border-purple-800 bg-purple-50/80 dark:bg-purple-950/40 text-purple-900 dark:text-purple-200' },
-                        { type: '⚡ ছোট ও ব্রেকিং (Short & Breaking)', text: h.breaking, color: 'border-rose-300 dark:border-rose-800 bg-rose-50/80 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200' }
+                        { type: '💡 Informative & Standard', text: h.informative, color: 'border-blue-300 dark:border-blue-800 bg-blue-50/80 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200' },
+                        { type: '🔥 Viral & High-CTR', text: h.viral, color: 'border-purple-300 dark:border-purple-800 bg-purple-50/80 dark:bg-purple-950/40 text-purple-900 dark:text-purple-200' },
+                        { type: '⚡ Short & Breaking', text: h.breaking, color: 'border-rose-300 dark:border-rose-800 bg-rose-50/80 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200' }
                     ];
 
                     container.innerHTML = items.map(item => `
@@ -1453,7 +1453,7 @@
                                 <p class="text-xs font-bold leading-snug font-bangla">${item.text}</p>
                             </div>
                             <button type="button" onclick="applyViralHeadline('${item.text.replace(/'/g, "\\'")}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shrink-0 shadow-sm flex items-center gap-1 transition cursor-pointer">
-                                <span>ব্যবহার করুন</span> ↵
+                                <span>Use Headline</span> ↵
                             </button>
                         </div>
                     `).join('');
@@ -1461,12 +1461,12 @@
                     box.classList.remove('hidden');
                 }
             } else {
-                alert(data.message || 'শিরোনাম তৈরি করতে সমস্যা হয়েছে!');
+                alert(data.message || 'Failed to generate headlines.');
             }
         })
         .catch(err => {
             console.error('Viral Headlines Error:', err);
-            alert('সার্ভারে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+            alert('Server error occurred. Please try again.');
         })
         .finally(() => {
             btn.disabled = false;
