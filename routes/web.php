@@ -77,6 +77,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // 🎨 Free Photo Card Generator (Link to Photo Card)
     Route::get('/free-photocard', [\App\Http\Controllers\FreePhotocardController::class, 'index'])->name('free-photocard.index');
     Route::post('/free-photocard/fetch-url', [\App\Http\Controllers\FreePhotocardController::class, 'fetchUrl'])->name('free-photocard.fetch-url');
+    Route::get('/free-photocard/proxy-image', [\App\Http\Controllers\FreePhotocardController::class, 'proxyImage'])->name('free-photocard.proxy-image');
     Route::post('/free-photocard/template', [\App\Http\Controllers\FreePhotocardController::class, 'saveTemplate'])->name('free-photocard.save-template');
     Route::delete('/free-photocard/template/{id}', [\App\Http\Controllers\FreePhotocardController::class, 'deleteTemplate'])->name('free-photocard.delete-template');
 

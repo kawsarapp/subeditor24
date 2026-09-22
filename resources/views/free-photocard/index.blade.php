@@ -34,7 +34,7 @@
                     <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Free Photo Card Generator</h1>
                     <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">Canva-Style Drag & Drop</span>
                 </div>
-                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Drag & move images, headline text, and date directly on the canvas. Save positions to your PNG frame for instant reuse.</p>
+                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Drag & resize images, headline text, and date directly on the canvas. Save positions to your PNG frame for instant reuse.</p>
             </div>
         </div>
 
@@ -57,7 +57,7 @@
                 <i class="fa-solid fa-layer-group text-indigo-600"></i>
                 <span>Your Saved Frame Templates:</span>
             </span>
-            <span class="text-xs text-slate-500">Click any frame to switch templates</span>
+            <span class="text-xs text-slate-500">Click any frame to switch & reuse template</span>
         </div>
 
         <div class="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none" id="templatesPillContainer">
@@ -154,15 +154,55 @@
                     </div>
                 </div>
 
-                {{-- Featured Image Upload / Change --}}
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Featured Image</label>
+                {{-- 3. Featured Image Upload & Resize Controls --}}
+                <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-image text-indigo-600"></i>
+                            <span>Featured News Image</span>
+                        </label>
+                        <span class="text-[10px] text-indigo-600 font-semibold">Drag & Resize on Canvas</span>
+                    </div>
+
                     <div class="flex items-center gap-2">
                         <input type="file" id="localImageInput" accept="image/*" onchange="handleLocalImageUpload(event)" class="hidden">
-                        <button type="button" onclick="document.getElementById('localImageInput').click()" class="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-image text-slate-400"></i>
-                            <span>Replace / Upload Image</span>
+                        <button type="button" onclick="document.getElementById('localImageInput').click()" class="w-full py-2 px-3 bg-white hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 transition cursor-pointer flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-arrow-up-from-bracket text-indigo-500"></i>
+                            <span>Upload / Replace Photo</span>
                         </button>
+                    </div>
+
+                    {{-- Image Height & Size Sliders --}}
+                    <div class="grid grid-cols-2 gap-3 pt-1">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Image Height</label>
+                                <span id="imageHeightVal" class="text-[11px] font-bold text-slate-700 dark:text-slate-300">800px</span>
+                            </div>
+                            <input type="range" id="imageHeightRange" min="150" max="2000" step="10" value="800" oninput="handleImageHeightChange(this.value)" class="w-full accent-indigo-600 cursor-pointer">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Image Width</label>
+                                <span id="imageWidthVal" class="text-[11px] font-bold text-slate-700 dark:text-slate-300">1200px</span>
+                            </div>
+                            <input type="range" id="imageWidthRange" min="200" max="2500" step="10" value="1200" oninput="handleImageWidthChange(this.value)" class="w-full accent-indigo-600 cursor-pointer">
+                        </div>
+                    </div>
+
+                    {{-- Image Fit & Quick Presets --}}
+                    <div class="flex items-center justify-between gap-2 pt-1">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[11px] text-slate-500">Fit:</span>
+                            <select id="imageFitSelect" onchange="activeLayout.image_fit = this.value; renderCanvas();" class="py-1 px-2 text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200">
+                                <option value="cover" selected>Cover (Fill Area)</option>
+                                <option value="contain">Contain (Full Image)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button type="button" onclick="presetImageSize('top65')" class="px-2 py-1 text-[10px] font-semibold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded hover:bg-slate-100 text-slate-600 dark:text-slate-300">Top 65%</button>
+                            <button type="button" onclick="presetImageSize('full')" class="px-2 py-1 text-[10px] font-semibold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded hover:bg-slate-100 text-slate-600 dark:text-slate-300">Full 100%</button>
+                        </div>
                     </div>
                 </div>
 
@@ -204,9 +244,9 @@
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Title Align</label>
                             <div class="flex rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-0.5">
-                                <button type="button" onclick="setTextAlign('left')" class="flex-1 py-1 text-xs text-center text-slate-600 hover:text-indigo-600 font-bold" title="Left"><i class="fa-solid fa-align-left"></i></button>
-                                <button type="button" onclick="setTextAlign('center')" class="flex-1 py-1 text-xs text-center text-indigo-600 font-bold bg-white dark:bg-slate-700 rounded shadow-xs" title="Center"><i class="fa-solid fa-align-center"></i></button>
-                                <button type="button" onclick="setTextAlign('right')" class="flex-1 py-1 text-xs text-center text-slate-600 hover:text-indigo-600 font-bold" title="Right"><i class="fa-solid fa-align-right"></i></button>
+                                <button type="button" onclick="setTextAlign('left')" id="alignLeftBtn" class="flex-1 py-1 text-xs text-center text-slate-600 hover:text-indigo-600 font-bold" title="Left"><i class="fa-solid fa-align-left"></i></button>
+                                <button type="button" onclick="setTextAlign('center')" id="alignCenterBtn" class="flex-1 py-1 text-xs text-center text-indigo-600 font-bold bg-white dark:bg-slate-700 rounded shadow-xs" title="Center"><i class="fa-solid fa-align-center"></i></button>
+                                <button type="button" onclick="setTextAlign('right')" id="alignRightBtn" class="flex-1 py-1 text-xs text-center text-slate-600 hover:text-indigo-600 font-bold" title="Right"><i class="fa-solid fa-align-right"></i></button>
                             </div>
                         </div>
                     </div>
@@ -226,7 +266,7 @@
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                             <i class="fa-solid fa-arrows-up-down-left-right text-indigo-500"></i>
-                            <span>Interactive Canvas (Drag & Move Elements)</span>
+                            <span>Interactive Canvas (Drag & Resize Elements)</span>
                         </span>
                     </div>
 
@@ -250,9 +290,9 @@
                 {{-- USER GUIDES & CONTROLS FOOTER --}}
                 <div class="text-[11px] text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
                     <span class="flex items-center gap-2">
-                        <span>👆 <strong>Click & Drag</strong> any element (Image, Title, Date) directly on the canvas to move it.</span>
+                        <span>👆 <strong>Click & Drag</strong> Image, Title, or Date. Drag bottom handle to resize height.</span>
                     </span>
-                    <button type="button" onclick="saveCurrentLayoutToActiveTemplate()" class="text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1 self-start sm:self-auto">
+                    <button type="button" onclick="saveCurrentLayoutToActiveTemplate()" class="text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1 self-start sm:self-auto cursor-pointer">
                         <i class="fa-solid fa-check"></i> Save Positions to Template
                     </button>
                 </div>
@@ -327,14 +367,15 @@ let currentNewsImage = null;
 let currentFrameImage = null;
 let currentTextAlign = 'center';
 
-// Active Layout State
-let activeLayout = {
+// Default layout baseline
+const defaultBaseLayout = {
     canvas_width: 1200,
     canvas_height: 1200,
     image_x: 0,
     image_y: 0,
     image_w: 1200,
     image_h: 800,
+    image_fit: 'cover',
     title_x: 60,
     title_y: 860,
     title_w: 1080,
@@ -352,19 +393,29 @@ let activeLayout = {
     date_font_color: '#f3f4f6'
 };
 
+let activeLayout = Object.assign({}, defaultBaseLayout);
+
 // Interactive Drag & Select State
 let selectedElement = null; // 'image', 'title', 'date', or null
 let isDragging = false;
+let dragMode = 'move'; // 'move', 'resize_height', 'resize_corner'
 let dragStartX = 0;
 let dragStartY = 0;
 let elementOrigX = 0;
 let elementOrigY = 0;
+let elementOrigW = 0;
+let elementOrigH = 0;
 
 // Computed bounding boxes for hit testing
 let hitBoxes = {
     image: { x: 0, y: 0, w: 0, h: 0 },
     title: { x: 0, y: 0, w: 0, h: 0 },
     date:  { x: 0, y: 0, w: 0, h: 0 }
+};
+
+let resizeHandles = {
+    imageBottom: { x: 0, y: 0, w: 24, h: 24 },
+    imageCorner: { x: 0, y: 0, w: 24, h: 24 }
 };
 
 let modalCanvasWidth = 1200;
@@ -383,29 +434,15 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('touchmove', handleCanvasTouchMove, { passive: false });
     window.addEventListener('touchend', handleCanvasTouchEnd);
 
-    // Default sample news image
-    const sampleImg = new Image();
-    sampleImg.crossOrigin = "anonymous";
-    sampleImg.onload = () => {
-        currentNewsImage = sampleImg;
-        if (savedTemplates.length > 0) {
-            selectTemplate(savedTemplates[0].id);
-        } else {
-            renderCanvas();
-        }
-    };
-    sampleImg.onerror = () => {
-        console.warn("Sample image could not load, continuing with placeholder.");
-        if (savedTemplates.length > 0) {
-            selectTemplate(savedTemplates[0].id);
-        } else {
-            renderCanvas();
-        }
-    };
-    sampleImg.src = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=1200&q=80";
+    // Initial load
+    if (savedTemplates.length > 0) {
+        selectTemplate(savedTemplates[0].id);
+    } else {
+        renderCanvas();
+    }
 });
 
-// 🔄 Select and apply a template
+// 🔄 Select and apply a template (Full state reset & reuse)
 function selectTemplate(tmplId) {
     const tmpl = savedTemplates.find(t => t.id === tmplId);
     if (!tmpl) return;
@@ -421,13 +458,33 @@ function selectTemplate(tmplId) {
         activePill.className = 'tmpl-pill-card shrink-0 flex items-center gap-3 p-2.5 pr-4 rounded-xl border transition-all cursor-pointer border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/60 shadow-xs';
     }
 
-    // Parse layout data
+    // Reset layout cleanly from defaults + parsed template layout
+    activeLayout = Object.assign({}, defaultBaseLayout);
     if (tmpl.layout_data) {
         const parsed = typeof tmpl.layout_data === 'string' ? JSON.parse(tmpl.layout_data) : tmpl.layout_data;
         activeLayout = Object.assign(activeLayout, parsed);
     }
 
-    // Set font controls from layout
+    // Synchronize UI Inputs with newly selected template
+    const cw = activeLayout.canvas_width || 1200;
+    const ch = activeLayout.canvas_height || 1200;
+    document.getElementById('activeResolutionLabel').innerText = `${cw} × ${ch} px`;
+
+    // Image height & width controls
+    const imgH = activeLayout.image_h ?? Math.round(ch * 0.65);
+    const imgW = activeLayout.image_w ?? cw;
+    document.getElementById('imageHeightRange').max = ch * 1.5;
+    document.getElementById('imageHeightRange').value = imgH;
+    document.getElementById('imageHeightVal').innerText = imgH + 'px';
+    document.getElementById('imageWidthRange').max = cw * 1.5;
+    document.getElementById('imageWidthRange').value = imgW;
+    document.getElementById('imageWidthVal').innerText = imgW + 'px';
+
+    if (activeLayout.image_fit) {
+        document.getElementById('imageFitSelect').value = activeLayout.image_fit;
+    }
+
+    // Typography controls
     if (activeLayout.font_size) {
         document.getElementById('fontSizeRange').value = activeLayout.font_size;
         document.getElementById('fontSizeVal').innerText = activeLayout.font_size + 'px';
@@ -440,7 +497,7 @@ function selectTemplate(tmplId) {
         document.getElementById('textColorText').value = activeLayout.font_color;
     }
     if (activeLayout.text_align) {
-        currentTextAlign = activeLayout.text_align;
+        setTextAlign(activeLayout.text_align, false);
     }
     if (activeLayout.date_font_size) {
         document.getElementById('dateFontSizeInput').value = activeLayout.date_font_size;
@@ -452,10 +509,6 @@ function selectTemplate(tmplId) {
         document.getElementById('showDateToggle').checked = activeLayout.show_date;
         document.getElementById('dateConfigRow').style.display = activeLayout.show_date ? 'grid' : 'none';
     }
-
-    const cw = activeLayout.canvas_width || 1200;
-    const ch = activeLayout.canvas_height || 1200;
-    document.getElementById('activeResolutionLabel').innerText = `${cw} × ${ch} px`;
 
     // Load Frame Image
     if (tmpl.frame_path && tmpl.frame_path.trim() !== '') {
@@ -480,10 +533,56 @@ function selectTemplate(tmplId) {
     }
 }
 
-function setTextAlign(align) {
+// 📐 Height & Width slider handlers
+function handleImageHeightChange(val) {
+    const num = parseInt(val);
+    activeLayout.image_h = num;
+    document.getElementById('imageHeightVal').innerText = num + 'px';
+    renderCanvas();
+}
+
+function handleImageWidthChange(val) {
+    const num = parseInt(val);
+    activeLayout.image_w = num;
+    document.getElementById('imageWidthVal').innerText = num + 'px';
+    renderCanvas();
+}
+
+function presetImageSize(type) {
+    const ch = activeLayout.canvas_height || 1200;
+    const cw = activeLayout.canvas_width || 1200;
+    if (type === 'top65') {
+        activeLayout.image_x = 0;
+        activeLayout.image_y = 0;
+        activeLayout.image_w = cw;
+        activeLayout.image_h = Math.round(ch * 0.65);
+    } else if (type === 'full') {
+        activeLayout.image_x = 0;
+        activeLayout.image_y = 0;
+        activeLayout.image_w = cw;
+        activeLayout.image_h = ch;
+    }
+    document.getElementById('imageHeightRange').value = activeLayout.image_h;
+    document.getElementById('imageHeightVal').innerText = activeLayout.image_h + 'px';
+    document.getElementById('imageWidthRange').value = activeLayout.image_w;
+    document.getElementById('imageWidthVal').innerText = activeLayout.image_w + 'px';
+    renderCanvas();
+}
+
+function setTextAlign(align, triggerRender = true) {
     currentTextAlign = align;
     activeLayout.text_align = align;
-    renderCanvas();
+    ['left', 'center', 'right'].forEach(a => {
+        const btn = document.getElementById('align' + a.charAt(0).toUpperCase() + a.slice(1) + 'Btn');
+        if (btn) {
+            if (a === align) {
+                btn.className = 'flex-1 py-1 text-xs text-center text-indigo-600 font-bold bg-white dark:bg-slate-700 rounded shadow-xs';
+            } else {
+                btn.className = 'flex-1 py-1 text-xs text-center text-slate-600 hover:text-indigo-600 font-bold';
+            }
+        }
+    });
+    if (triggerRender) renderCanvas();
 }
 
 function toggleShowDate(e) {
@@ -508,7 +607,7 @@ function handleLocalImageUpload(e) {
     reader.readAsDataURL(file);
 }
 
-// ⚡ Fetch news from URL
+// ⚡ Fetch news from URL with Base64 & CORS auto-handling
 function fetchNewsFromUrl() {
     const urlInput = document.getElementById('newsUrlInput');
     const statusMsg = document.getElementById('fetchStatusMsg');
@@ -550,7 +649,8 @@ function fetchNewsFromUrl() {
                 activeLayout.date_text = formattedDate;
             }
 
-            if (data.image_url) {
+            const imageSrcToUse = data.image_base64 || data.proxy_image_url || data.image_url;
+            if (imageSrcToUse) {
                 const img = new Image();
                 img.crossOrigin = "anonymous";
                 img.onload = () => {
@@ -558,9 +658,17 @@ function fetchNewsFromUrl() {
                     renderCanvas();
                 };
                 img.onerror = () => {
-                    renderCanvas();
+                    console.warn("Direct image failed, trying proxy URL...");
+                    if (data.proxy_image_url && imageSrcToUse !== data.proxy_image_url) {
+                        const fallbackImg = new Image();
+                        fallbackImg.crossOrigin = "anonymous";
+                        fallbackImg.onload = () => { currentNewsImage = fallbackImg; renderCanvas(); };
+                        fallbackImg.src = data.proxy_image_url;
+                    } else {
+                        renderCanvas();
+                    }
                 };
-                img.src = data.image_url;
+                img.src = imageSrcToUse;
             } else {
                 renderCanvas();
             }
@@ -619,8 +727,11 @@ function renderCanvas(isExport = false) {
     const imgY = activeLayout.image_y ?? 0;
     const imgW = activeLayout.image_w ?? width;
     const imgH = activeLayout.image_h ?? Math.round(height * 0.65);
+    const fitMode = activeLayout.image_fit || 'cover';
 
     hitBoxes.image = { x: imgX, y: imgY, w: imgW, h: imgH };
+    resizeHandles.imageBottom = { x: imgX + imgW / 2 - 12, y: imgY + imgH - 12, w: 24, h: 24 };
+    resizeHandles.imageCorner = { x: imgX + imgW - 12, y: imgY + imgH - 12, w: 24, h: 24 };
 
     if (currentNewsImage && currentNewsImage.complete && currentNewsImage.naturalWidth > 0) {
         ctx.save();
@@ -628,24 +739,28 @@ function renderCanvas(isExport = false) {
         ctx.rect(imgX, imgY, imgW, imgH);
         ctx.clip();
 
-        // Proportional Cover-fit calculation
-        const imgRatio = currentNewsImage.naturalWidth / currentNewsImage.naturalHeight;
-        const targetRatio = imgW / imgH;
-        let drawW, drawH, drawX, drawY;
+        if (fitMode === 'cover') {
+            const imgRatio = currentNewsImage.naturalWidth / currentNewsImage.naturalHeight;
+            const targetRatio = imgW / imgH;
+            let drawW, drawH, drawX, drawY;
 
-        if (imgRatio > targetRatio) {
-            drawH = imgH;
-            drawW = imgH * imgRatio;
-            drawX = imgX + (imgW - drawW) / 2;
-            drawY = imgY;
+            if (imgRatio > targetRatio) {
+                drawH = imgH;
+                drawW = imgH * imgRatio;
+                drawX = imgX + (imgW - drawW) / 2;
+                drawY = imgY;
+            } else {
+                drawW = imgW;
+                drawH = imgW / imgRatio;
+                drawX = imgX;
+                drawY = imgY + (imgH - drawH) / 2;
+            }
+            ctx.drawImage(currentNewsImage, drawX, drawY, drawW, drawH);
         } else {
-            drawW = imgW;
-            drawH = imgW / imgRatio;
-            drawX = imgX;
-            drawY = imgY + (imgH - drawH) / 2;
+            // Contain
+            ctx.drawImage(currentNewsImage, imgX, imgY, imgW, imgH);
         }
 
-        ctx.drawImage(currentNewsImage, drawX, drawY, drawW, drawH);
         ctx.restore();
     } else {
         // Subtle image placeholder if no image loaded
@@ -660,7 +775,7 @@ function renderCanvas(isExport = false) {
         ctx.font = '600 24px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('📷 News Featured Image Area (Drag & Move)', imgX + imgW / 2, imgY + imgH / 2);
+        ctx.fillText('📷 News Featured Image Area (Drag & Resize)', imgX + imgW / 2, imgY + imgH / 2);
         ctx.restore();
     }
 
@@ -726,13 +841,13 @@ function renderCanvas(isExport = false) {
             ctx.setLineDash([6, 4]);
             ctx.strokeRect(box.x, box.y, box.w, box.h);
 
-            // Draw 4 Corner Handles
+            // Draw Corner & Edge Handles
             ctx.fillStyle = '#ffffff';
             ctx.strokeStyle = '#4338ca';
             ctx.lineWidth = 2;
             ctx.setLineDash([]);
             
-            const handleSize = 10;
+            const handleSize = 12;
             const corners = [
                 { x: box.x, y: box.y },
                 { x: box.x + box.w, y: box.y },
@@ -745,15 +860,24 @@ function renderCanvas(isExport = false) {
                 ctx.strokeRect(c.x - handleSize/2, c.y - handleSize/2, handleSize, handleSize);
             });
 
+            // If image is selected, draw special bottom-center handle for direct Height resize
+            if (selectedElement === 'image') {
+                const bottomCenter = { x: box.x + box.w / 2, y: box.y + box.h };
+                ctx.fillStyle = '#10b981';
+                ctx.strokeStyle = '#065f46';
+                ctx.fillRect(bottomCenter.x - 14, bottomCenter.y - 6, 28, 12);
+                ctx.strokeRect(bottomCenter.x - 14, bottomCenter.y - 6, 28, 12);
+            }
+
             // Element Label Badge
             ctx.fillStyle = '#4f46e5';
-            ctx.font = 'bold 16px sans-serif';
+            ctx.font = 'bold 15px sans-serif';
             ctx.textAlign = 'left';
-            const labelText = selectedElement.toUpperCase();
+            const labelText = selectedElement === 'image' ? 'IMAGE (DRAG TO MOVE / RESIZE)' : selectedElement.toUpperCase();
             const labelMetrics = ctx.measureText(labelText);
             ctx.fillRect(box.x, box.y - 24, labelMetrics.width + 12, 22);
             ctx.fillStyle = '#ffffff';
-            ctx.fillText(labelText, box.x + 6, box.y - 20);
+            ctx.fillText(labelText, box.x + 6, box.y - 7);
 
             ctx.restore();
         }
@@ -794,7 +918,7 @@ function drawWrappedText(context, text, x, y, maxWidth, lineHeight, maxLines) {
 }
 
 // ==========================================
-// 🖱️ CANVA-STYLE POINTER DRAGGING SYSTEM
+// 🖱️ CANVA-STYLE POINTER DRAGGING & RESIZING
 // ==========================================
 function getCanvasCoordinates(e) {
     const rect = canvas.getBoundingClientRect();
@@ -813,7 +937,35 @@ function getCanvasCoordinates(e) {
 function handleCanvasPointerDown(e) {
     const pos = getCanvasCoordinates(e);
 
+    // Check if clicking resize handles of currently selected image
+    if (selectedElement === 'image') {
+        const bottomHandle = resizeHandles.imageBottom;
+        const cornerHandle = resizeHandles.imageCorner;
+
+        if (isInsideBox(pos, bottomHandle)) {
+            isDragging = true;
+            dragMode = 'resize_height';
+            dragStartX = pos.x;
+            dragStartY = pos.y;
+            elementOrigH = activeLayout.image_h ?? 800;
+            canvas.style.cursor = 'ns-resize';
+            return;
+        }
+
+        if (isInsideBox(pos, cornerHandle)) {
+            isDragging = true;
+            dragMode = 'resize_corner';
+            dragStartX = pos.x;
+            dragStartY = pos.y;
+            elementOrigW = activeLayout.image_w ?? canvas.width;
+            elementOrigH = activeLayout.image_h ?? 800;
+            canvas.style.cursor = 'nwse-resize';
+            return;
+        }
+    }
+
     // Hit test order: Date -> Title -> Image
+    dragMode = 'move';
     if (hitBoxes.date.w > 0 && isInsideBox(pos, hitBoxes.date)) {
         selectedElement = 'date';
         elementOrigX = activeLayout.date_x ?? 60;
@@ -846,21 +998,42 @@ function handleCanvasPointerMove(e) {
         const deltaX = Math.round(pos.x - dragStartX);
         const deltaY = Math.round(pos.y - dragStartY);
 
-        if (selectedElement === 'date') {
-            activeLayout.date_x = elementOrigX + deltaX;
-            activeLayout.date_y = elementOrigY + deltaY;
-        } else if (selectedElement === 'title') {
-            activeLayout.title_x = elementOrigX + deltaX;
-            activeLayout.title_y = elementOrigY + deltaY;
-        } else if (selectedElement === 'image') {
-            activeLayout.image_x = elementOrigX + deltaX;
-            activeLayout.image_y = elementOrigY + deltaY;
+        if (dragMode === 'resize_height' && selectedElement === 'image') {
+            const newH = Math.max(100, elementOrigH + deltaY);
+            activeLayout.image_h = newH;
+            document.getElementById('imageHeightRange').value = newH;
+            document.getElementById('imageHeightVal').innerText = newH + 'px';
+        } else if (dragMode === 'resize_corner' && selectedElement === 'image') {
+            const newW = Math.max(100, elementOrigW + deltaX);
+            const newH = Math.max(100, elementOrigH + deltaY);
+            activeLayout.image_w = newW;
+            activeLayout.image_h = newH;
+            document.getElementById('imageWidthRange').value = newW;
+            document.getElementById('imageWidthVal').innerText = newW + 'px';
+            document.getElementById('imageHeightRange').value = newH;
+            document.getElementById('imageHeightVal').innerText = newH + 'px';
+        } else {
+            // Standard move
+            if (selectedElement === 'date') {
+                activeLayout.date_x = elementOrigX + deltaX;
+                activeLayout.date_y = elementOrigY + deltaY;
+            } else if (selectedElement === 'title') {
+                activeLayout.title_x = elementOrigX + deltaX;
+                activeLayout.title_y = elementOrigY + deltaY;
+            } else if (selectedElement === 'image') {
+                activeLayout.image_x = elementOrigX + deltaX;
+                activeLayout.image_y = elementOrigY + deltaY;
+            }
         }
 
         renderCanvas();
     } else {
-        // Change cursor on hover over elements
-        if (isInsideBox(pos, hitBoxes.date) || isInsideBox(pos, hitBoxes.title) || isInsideBox(pos, hitBoxes.image)) {
+        // Change cursor on hover
+        if (selectedElement === 'image' && isInsideBox(pos, resizeHandles.imageBottom)) {
+            canvas.style.cursor = 'ns-resize';
+        } else if (selectedElement === 'image' && isInsideBox(pos, resizeHandles.imageCorner)) {
+            canvas.style.cursor = 'nwse-resize';
+        } else if (isInsideBox(pos, hitBoxes.date) || isInsideBox(pos, hitBoxes.title) || isInsideBox(pos, hitBoxes.image)) {
             canvas.style.cursor = 'move';
         } else {
             canvas.style.cursor = 'default';
@@ -923,6 +1096,7 @@ function saveCurrentLayoutToActiveTemplate() {
         image_y: activeLayout.image_y ?? 0,
         image_w: activeLayout.image_w ?? (activeLayout.canvas_width || 1200),
         image_h: activeLayout.image_h ?? 800,
+        image_fit: activeLayout.image_fit || 'cover',
         title_x: activeLayout.title_x ?? 60,
         title_y: activeLayout.title_y ?? 860,
         title_w: activeLayout.title_w ?? 1080,
@@ -1070,6 +1244,7 @@ function handleSaveTemplate(e) {
         image_y: 0,
         image_w: modalCanvasWidth || 1200,
         image_h: Math.round((modalCanvasHeight || 1200) * 0.65),
+        image_fit: 'cover',
         title_x: Math.round((modalCanvasWidth || 1200) * 0.05),
         title_y: Math.round((modalCanvasHeight || 1200) * 0.72),
         title_w: Math.round((modalCanvasWidth || 1200) * 0.90),
@@ -1101,7 +1276,7 @@ function handleSaveTemplate(e) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ Template saved! You can now drag and position elements on the canvas.');
+            alert('✅ Template saved successfully!');
             window.location.reload();
         } else {
             alert('❌ ' + (data.message || 'Error saving template.'));
@@ -1131,8 +1306,11 @@ function deleteSavedTemplate(id) {
         if (data.success) {
             window.location.reload();
         } else {
-            alert(data.message);
+            alert('❌ ' + (data.message || 'Error deleting template.'));
         }
+    })
+    .catch(err => {
+        alert('❌ Error: ' + err.message);
     });
 }
 </script>
