@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\DomCrawler\Crawler;
 
 class FreePhotocardController extends Controller
 {
@@ -58,126 +59,325 @@ class FreePhotocardController extends Controller
             'url' => 'required|url',
         ]);
 
-        $userId = Auth::id();
         $url = trim($request->url);
-        $title = null;
-        $image = null;
-        $category = 'News';
-        $date = date('d M Y');
+        $userId = Auth::id();
 
-        // 1. Primary Attempt: NewsScraperService (curl_cffi, proxies, universal scraper)
+        $metadata = [
+            'title'    => null,
+            'image'    => null,
+            'category' => 'News',
+            'date'     => date('d M Y'),
+        ];
+
+        // 1. Try Internal NewsScraperService
         try {
             $scraper = app(\App\Services\NewsScraperService::class);
             $scraped = $scraper->scrape($url, [], $userId);
             if ($scraped && (!empty($scraped['title']) || !empty($scraped['image']))) {
-                $title = $scraped['title'] ?? null;
-                $image = $scraped['image'] ?? null;
-                $category = $scraped['category'] ?? 'News';
+                $metadata['title'] = $scraped['title'] ?? null;
+                $metadata['image'] = $scraped['image'] ?? null;
+                $metadata['category'] = $scraped['category'] ?? 'News';
                 if (!empty($scraped['date'])) {
-                    $date = $scraped['date'];
+                    $metadata['date'] = $scraped['date'];
                 }
             }
-        } catch (\Throwable $scraperErr) {
-            Log::warning("FreePhotoCard NewsScraperService notice: " . $scraperErr->getMessage());
+        } catch (\Throwable $e) {
+            Log::warning("FreePhotoCard NewsScraperService notice: " . $e->getMessage());
         }
 
-        // 2. Direct HTTP Fallback with Full Browser Headers
-        if (empty($title) || empty($image)) {
-            try {
-                $response = Http::withHeaders([
-                    'User-Agent'                => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                    'Accept'                    => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                    'Accept-Language'           => 'bn,en-US,en;q=0.9',
-                    'Sec-Ch-Ua'                 => '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-                    'Sec-Ch-Ua-Mobile'          => '?0',
-                    'Sec-Ch-Ua-Platform'        => '"Windows"',
-                    'Sec-Fetch-Dest'            => 'document',
-                    'Sec-Fetch-Mode'            => 'navigate',
-                    'Sec-Fetch-Site'            => 'none',
-                    'Sec-Fetch-User'            => '?1',
-                    'Upgrade-Insecure-Requests' => '1',
-                ])->timeout(12)->withoutVerifying()->get($url);
-
-                if ($response->successful()) {
-                    $html = $response->body();
-                    $title = $title ?: $this->extractMeta($html, ['og:title', 'twitter:title', 'title']);
-                    $image = $image ?: $this->extractMeta($html, ['og:image', 'twitter:image', 'og:image:secure_url', 'image_src']);
-                    $category = $category === 'News' ? ($this->extractMeta($html, ['article:section', 'category', 'news_keywords']) ?: 'News') : $category;
-                    $date = $this->extractMeta($html, ['article:published_time', 'pubdate', 'date']) ?: $date;
-
-                    if (empty($title) && preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $matches)) {
-                        $title = trim(html_entity_decode(strip_tags($matches[1])));
-                    }
-                }
-            } catch (\Throwable $httpErr) {
-                Log::warning("FreePhotoCard Direct HTTP notice: " . $httpErr->getMessage());
+        // 2. If metadata missing, fetch HTML using multi-method browser client
+        if (empty($metadata['title']) || empty($metadata['image'])) {
+            $html = $this->fetchHtmlFromUrl($url);
+            if (!empty($html)) {
+                $parsed = $this->parseMetadataFromHtml($html, $url);
+                $metadata['title'] = $metadata['title'] ?: $parsed['title'];
+                $metadata['image'] = $metadata['image'] ?: $parsed['image'];
+                $metadata['category'] = $metadata['category'] !== 'News' ? $metadata['category'] : $parsed['category'];
+                $metadata['date'] = $metadata['date'] !== date('d M Y') ? $metadata['date'] : $parsed['date'];
             }
         }
 
-        // 3. Fallback: Jina AI Reader proxy for heavy Cloudflare WAF protected portals
-        if (empty($title) || empty($image)) {
+        // 3. Fallback to Jina Reader if still empty
+        if (empty($metadata['title']) || empty($metadata['image'])) {
             try {
-                $jinaUrl = 'https://r.jina.ai/' . $url;
-                $jinaResp = Http::withHeaders([
-                    'X-Target-Selector' => 'h1, title, img, meta',
-                ])->timeout(10)->get($jinaUrl);
+                $jinaResp = Http::withHeaders(['X-Target-Selector' => 'h1, title, img, meta'])
+                    ->timeout(10)
+                    ->get('https://r.jina.ai/' . $url);
 
                 if ($jinaResp->successful()) {
                     $body = $jinaResp->body();
-                    if (empty($title) && preg_match('/Title:\s*(.+)/i', $body, $tm)) {
-                        $title = trim($tm[1]);
+                    if (empty($metadata['title']) && preg_match('/Title:\s*(.+)/i', $body, $tm)) {
+                        $metadata['title'] = trim($tm[1]);
                     }
-                    if (empty($image) && preg_match('/!\[.*?\]\((https?:\/\/[^\s\)]+)\)/i', $body, $im)) {
-                        $image = trim($im[1]);
+                    if (empty($metadata['image']) && preg_match('/!\[.*?\]\((https?:\/\/[^\s\)]+)\)/i', $body, $im)) {
+                        $metadata['image'] = trim($im[1]);
                     }
                 }
             } catch (\Throwable $jinaErr) {
-                Log::warning("FreePhotoCard Jina fallback notice: " . $jinaErr->getMessage());
+                Log::warning("FreePhotoCard Jina notice: " . $jinaErr->getMessage());
             }
         }
 
         // Clean up title
-        if (!empty($title)) {
-            $title = preg_replace('/(\s*[-|–—]\s*[^–—|-]+)$/u', '', $title);
-            $title = trim(html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        if (!empty($metadata['title'])) {
+            $metadata['title'] = preg_replace('/(\s*[-|–—]\s*[^–—|-]+)$/u', '', $metadata['title']);
+            $metadata['title'] = trim(html_entity_decode($metadata['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         }
 
         // Resolve relative image URLs
-        if (!empty($image) && !preg_match('/^https?:\/\//i', $image)) {
-            $parsed = parse_url($url);
-            $scheme = $parsed['scheme'] ?? 'http';
-            $host = $parsed['host'] ?? '';
-            if (str_starts_with($image, '//')) {
-                $image = $scheme . ':' . $image;
-            } elseif (str_starts_with($image, '/')) {
-                $image = $scheme . '://' . $host . $image;
-            } else {
-                $image = $scheme . '://' . $host . '/' . $image;
-            }
+        if (!empty($metadata['image'])) {
+            $metadata['image'] = $this->resolveAbsoluteUrl($metadata['image'], $url);
         }
 
-        if (empty($title) && empty($image)) {
+        if (empty($metadata['title']) && empty($metadata['image'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Could not detect article title or featured image from this page. Please enter manually.',
             ], 404);
         }
 
-        // Convert image to Base64 to bypass browser CORS / hotlink protection on canvas
+        // Convert image to Base64 to bypass browser CORS on canvas
         $imageBase64 = null;
-        if (!empty($image)) {
-            $imageBase64 = $this->convertImageToBase64($image, $url);
+        if (!empty($metadata['image'])) {
+            $imageBase64 = $this->convertImageToBase64($metadata['image'], $url);
         }
 
         return response()->json([
-            'success'          => true,
-            'title'            => $title ?: 'Headline Not Found',
-            'image_url'        => $image ?: '',
-            'image_base64'     => $imageBase64,
-            'proxy_image_url'  => $image ? route('free-photocard.proxy-image', ['url' => $image]) : '',
-            'category'         => $category ?: 'News',
-            'date'             => $date ?: date('d M Y'),
+            'success'         => true,
+            'title'           => $metadata['title'] ?: 'Headline Not Found',
+            'image_url'       => $metadata['image'] ?: '',
+            'image_base64'    => $imageBase64,
+            'proxy_image_url' => $metadata['image'] ? route('free-photocard.proxy-image', ['url' => $metadata['image']]) : '',
+            'category'        => $metadata['category'] ?: 'News',
+            'date'            => $metadata['date'] ?: date('d M Y'),
         ]);
+    }
+
+    /**
+     * Resilient HTML fetcher using cURL with full browser TLS fingerprint headers.
+     */
+    private function fetchHtmlFromUrl(string $url): ?string
+    {
+        // Method A: cURL with browser headers
+        if (function_exists('curl_init')) {
+            try {
+                $ch = curl_init();
+                curl_setopt_array($ch, [
+                    CURLOPT_URL            => $url,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_MAXREDIRS      => 5,
+                    CURLOPT_TIMEOUT        => 12,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => false,
+                    CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                    CURLOPT_HTTPHEADER     => [
+                        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                        'Accept-Language: bn,en-US,en;q=0.9',
+                        'Sec-Ch-Ua: "Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+                        'Sec-Ch-Ua-Mobile: ?0',
+                        'Sec-Ch-Ua-Platform: "Windows"',
+                        'Sec-Fetch-Dest: document',
+                        'Sec-Fetch-Mode: navigate',
+                        'Sec-Fetch-Site: none',
+                        'Sec-Fetch-User: ?1',
+                        'Upgrade-Insecure-Requests: 1',
+                    ],
+                ]);
+                $content = curl_exec($ch);
+                $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                if ($status >= 200 && $status < 400 && !empty($content)) {
+                    return $content;
+                }
+            } catch (\Throwable $curlErr) {
+                Log::warning("fetchHtmlFromUrl cURL notice: " . $curlErr->getMessage());
+            }
+        }
+
+        // Method B: Laravel HTTP Client
+        try {
+            $resp = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept'     => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            ])->timeout(10)->withoutVerifying()->get($url);
+
+            if ($resp->successful()) {
+                return $resp->body();
+            }
+        } catch (\Throwable $httpErr) {
+            Log::warning("fetchHtmlFromUrl Http notice: " . $httpErr->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Parse Title, Featured Image, Date, and Category using DomCrawler and Schema.org JSON-LD.
+     */
+    private function parseMetadataFromHtml(string $html, string $baseUrl): array
+    {
+        $data = [
+            'title'    => null,
+            'image'    => null,
+            'category' => 'News',
+            'date'     => date('d M Y'),
+        ];
+
+        // 1. Check Schema.org JSON-LD (Most reliable on all news websites)
+        if (preg_match_all('/<script[^>]+type=[\'"]application\/ld\+json[\'"][^>]*>(.*?)<\/script>/is', $html, $matches)) {
+            foreach ($matches[1] as $jsonString) {
+                $ld = json_decode(trim($jsonString), true);
+                if (!$ld) continue;
+
+                // Flatten @graph if present
+                $items = isset($ld['@graph']) && is_array($ld['@graph']) ? $ld['@graph'] : [$ld];
+
+                foreach ($items as $item) {
+                    if (!is_array($item)) continue;
+                    $type = $item['@type'] ?? '';
+
+                    // Headline
+                    if (empty($data['title']) && !empty($item['headline'])) {
+                        $data['title'] = is_string($item['headline']) ? $item['headline'] : null;
+                    }
+
+                    // Image
+                    if (empty($data['image']) && !empty($item['image'])) {
+                        if (is_string($item['image'])) {
+                            $data['image'] = $item['image'];
+                        } elseif (is_array($item['image'])) {
+                            if (isset($item['image']['url'])) {
+                                $data['image'] = $item['image']['url'];
+                            } elseif (isset($item['image'][0])) {
+                                $data['image'] = is_string($item['image'][0]) ? $item['image'][0] : ($item['image'][0]['url'] ?? null);
+                            }
+                        }
+                    }
+
+                    // Date
+                    if (!empty($item['datePublished'])) {
+                        $data['date'] = $item['datePublished'];
+                    }
+
+                    // Category / Section
+                    if (!empty($item['articleSection'])) {
+                        $data['category'] = is_string($item['articleSection']) ? $item['articleSection'] : $data['category'];
+                    }
+                }
+            }
+        }
+
+        // 2. Use DomCrawler for OpenGraph, Twitter, and DOM Fallbacks
+        try {
+            $crawler = new Crawler($html);
+
+            // Title Selectors
+            if (empty($data['title'])) {
+                $titleSelectors = [
+                    'meta[property="og:title"]'        => 'content',
+                    'meta[name="twitter:title"]'       => 'content',
+                    'meta[name="title"]'               => 'content',
+                    'h1.title'                         => 'text',
+                    'h1.news-title'                    => 'text',
+                    'h1'                               => 'text',
+                    'title'                            => 'text',
+                ];
+                foreach ($titleSelectors as $sel => $attr) {
+                    try {
+                        $node = $crawler->filter($sel);
+                        if ($node->count() > 0) {
+                            $val = $attr === 'text' ? trim($node->first()->text()) : trim($node->first()->attr($attr));
+                            if (!empty($val)) {
+                                $data['title'] = $val;
+                                break;
+                            }
+                        }
+                    } catch (\Throwable $e) {}
+                }
+            }
+
+            // Image Selectors
+            if (empty($data['image'])) {
+                $imageSelectors = [
+                    'meta[property="og:image"]'            => 'content',
+                    'meta[property="og:image:secure_url"]' => 'content',
+                    'meta[name="twitter:image"]'           => 'content',
+                    'meta[name="twitter:image:src"]'       => 'content',
+                    'link[rel="image_src"]'                => 'href',
+                    'meta[itemprop="image"]'               => 'content',
+                    'article figure img'                   => 'src',
+                    'article img'                          => 'src',
+                    '.featured-image img'                  => 'src',
+                    '.news-details img'                    => 'src',
+                    'main img'                             => 'src',
+                ];
+                foreach ($imageSelectors as $sel => $attr) {
+                    try {
+                        $node = $crawler->filter($sel);
+                        if ($node->count() > 0) {
+                            $val = trim($node->first()->attr($attr));
+                            if (!empty($val) && !str_starts_with($val, 'data:')) {
+                                $data['image'] = $val;
+                                break;
+                            }
+                        }
+                    } catch (\Throwable $e) {}
+                }
+            }
+
+            // Date Selectors
+            if ($data['date'] === date('d M Y')) {
+                $dateSelectors = [
+                    'meta[property="article:published_time"]' => 'content',
+                    'meta[name="pubdate"]'                    => 'content',
+                    'meta[name="publish_date"]'               => 'content',
+                    'time'                                    => 'datetime',
+                ];
+                foreach ($dateSelectors as $sel => $attr) {
+                    try {
+                        $node = $crawler->filter($sel);
+                        if ($node->count() > 0) {
+                            $val = trim($node->first()->attr($attr));
+                            if (!empty($val)) {
+                                $data['date'] = $val;
+                                break;
+                            }
+                        }
+                    } catch (\Throwable $e) {}
+                }
+            }
+
+        } catch (\Throwable $crawlErr) {
+            Log::warning("parseMetadataFromHtml Crawler notice: " . $crawlErr->getMessage());
+        }
+
+        return $data;
+    }
+
+    /**
+     * Resolve relative image URL to absolute URL.
+     */
+    private function resolveAbsoluteUrl(string $url, string $baseUrl): string
+    {
+        if (preg_match('/^https?:\/\//i', $url)) {
+            return $url;
+        }
+
+        $parsed = parse_url($baseUrl);
+        $scheme = $parsed['scheme'] ?? 'http';
+        $host = $parsed['host'] ?? '';
+
+        if (str_starts_with($url, '//')) {
+            return $scheme . ':' . $url;
+        }
+
+        if (str_starts_with($url, '/')) {
+            return $scheme . '://' . $host . $url;
+        }
+
+        return $scheme . '://' . $host . '/' . $url;
     }
 
     /**
@@ -315,28 +515,6 @@ class FreePhotocardController extends Controller
             }
         } catch (\Throwable $e) {
             Log::warning("Could not convert image to base64: " . $e->getMessage());
-        }
-        return null;
-    }
-
-    /**
-     * Helper to extract OpenGraph and Meta tags.
-     */
-    private function extractMeta($html, array $tags): ?string
-    {
-        foreach ($tags as $tag) {
-            // Check meta property
-            if (preg_match('/<meta[^>]+property=[\'"]' . preg_quote($tag, '/') . '[\'"][^>]+content=[\'"]([^\'"]+)[\'"]/i', $html, $m)) {
-                return trim(html_entity_decode($m[1]));
-            }
-            // Check meta name
-            if (preg_match('/<meta[^>]+name=[\'"]' . preg_quote($tag, '/') . '[\'"][^>]+content=[\'"]([^\'"]+)[\'"]/i', $html, $m)) {
-                return trim(html_entity_decode($m[1]));
-            }
-            // Check inverted attributes (content first)
-            if (preg_match('/<meta[^>]+content=[\'"]([^\'"]+)[\'"][^>]+(?:property|name)=[\'"]' . preg_quote($tag, '/') . '[\'"]/i', $html, $m)) {
-                return trim(html_entity_decode($m[1]));
-            }
         }
         return null;
     }
