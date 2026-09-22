@@ -1954,14 +1954,13 @@
 
         if (langKey === 'laravel') {
             pathBox.innerText = 'Target File: routes/api.php';
-            codeBox.innerText = `<?php
-
-use Illuminate\\Http\\Request;
-use Illuminate\\Support\\Facades\\Route;
-use Illuminate\\Support\\Facades\\Storage;
-use Illuminate\\Support\\Str;
-use App\\Models\\NewsPost; // ⚠️ আপনার নিউজ মডেল
-use App\\Models\\Category; // ⚠️ আপনার ক্যাটাগরি মডেল
+            codeBox.innerText = '<\x3Fphp\n\n' +
+`use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use App\Models\NewsPost; // ⚠️ আপনার নিউজ মডেল
+use App\Models\Category; // ⚠️ আপনার ক্যাটাগরি মডেল
 
 /*
 |--------------------------------------------------------------------------

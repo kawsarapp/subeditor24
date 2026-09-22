@@ -296,7 +296,7 @@ SUBEDITOR_API_SECRET=your_generated_secret_token_here
 
                 <div class="relative">
                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                    <pre><code class="text-emerald-300"><?php
+                    <pre><code class="text-emerald-300">&lt;?php
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -707,7 +707,7 @@ module.exports = router;
             <p class="text-slate-400 mb-4 font-bangla text-xs">কোনো ফ্রেমওয়ার্ক ছাড়া সাধারণ PHP সাইটের <code>public</code> ফোল্ডারে এই ফাইলটি রেখে দিন:</p>
             <div class="glass-card rounded-2xl p-5 relative">
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                <pre><code class="text-purple-300"><?php
+                <pre><code class="text-purple-300">&lt;?php
 header('Content-Type: application/json');
 
 $headers = getallheaders();
