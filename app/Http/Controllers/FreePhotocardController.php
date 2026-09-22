@@ -53,14 +53,41 @@ class FreePhotocardController extends Controller
             'url' => 'required|url',
         ]);
 
+        $userId = Auth::id();
         $url = trim($request->url);
 
         try {
+            // 1. Primary: Use powerful NewsScraperService (handles Cloudflare, WAF, Python curl_cffi, proxies)
+            try {
+                $scraper = app(\App\Services\NewsScraperService::class);
+                $scraped = $scraper->scrape($url, [], $userId);
+                if ($scraped && (!empty($scraped['title']) || !empty($scraped['image']))) {
+                    return response()->json([
+                        'success'   => true,
+                        'title'     => $scraped['title'] ?? 'Headline Not Found',
+                        'image_url' => $scraped['image'] ?? '',
+                        'category'  => $scraped['category'] ?? 'News',
+                        'date'      => !empty($scraped['date']) ? $scraped['date'] : date('d M Y'),
+                    ]);
+                }
+            } catch (\Throwable $scraperErr) {
+                Log::warning("FreePhotoCard NewsScraperService notice: " . $scraperErr->getMessage());
+            }
+
+            // 2. Direct HTTP request with realistic browser headers as fallback
             $response = Http::withHeaders([
-                'User-Agent'      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Accept'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language' => 'bn,en-US,en;q=0.9',
-            ])->timeout(12)->withoutVerifying()->get($url);
+                'User-Agent'                => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept'                    => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language'           => 'bn,en-US,en;q=0.9',
+                'Sec-Ch-Ua'                 => '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+                'Sec-Ch-Ua-Mobile'          => '?0',
+                'Sec-Ch-Ua-Platform'        => '"Windows"',
+                'Sec-Fetch-Dest'            => 'document',
+                'Sec-Fetch-Mode'            => 'navigate',
+                'Sec-Fetch-Site'            => 'none',
+                'Sec-Fetch-User'            => '?1',
+                'Upgrade-Insecure-Requests' => '1',
+            ])->timeout(15)->withoutVerifying()->get($url);
 
             if (!$response->successful()) {
                 return response()->json([
