@@ -1182,12 +1182,13 @@
 
                 <!-- Framework Selector Tabs -->
                 <div class="flex flex-wrap border-b border-slate-800 bg-slate-950 px-5 gap-2 text-xs font-bold py-2">
-                    <button type="button" onclick="switchCodeGenTab('next_app')" class="cg-tab-btn px-3 py-2 rounded-lg bg-indigo-600 text-white" id="cg_tab_next_app">Next.js (App Router)</button>
-                    <button type="button" onclick="switchCodeGenTab('next_pages')" class="cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white" id="cg_tab_next_pages">Next.js (Pages)</button>
-                    <button type="button" onclick="switchCodeGenTab('express')" class="cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white" id="cg_tab_express">Node.js (Express)</button>
-                    <button type="button" onclick="switchCodeGenTab('laravel')" class="cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white" id="cg_tab_laravel">Laravel</button>
-                    <button type="button" onclick="switchCodeGenTab('php')" class="cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white" id="cg_tab_php">Raw PHP File</button>
-                    <button type="button" onclick="switchCodeGenTab('python')" class="cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white" id="cg_tab_python">Python (FastAPI)</button>
+                    <button type="button" onclick="switchCodeGenTab('laravel')" class="cg-tab-btn px-3 py-2 rounded-lg bg-indigo-600 text-white cursor-pointer" id="cg_tab_laravel">Laravel (Full routes/api.php)</button>
+                    <button type="button" onclick="switchCodeGenTab('wp')" class="cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white cursor-pointer" id="cg_tab_wp">WordPress (functions.php)</button>
+                    <button type="button" onclick="switchCodeGenTab('next_app')" class="cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white cursor-pointer" id="cg_tab_next_app">Next.js (App Router)</button>
+                    <button type="button" onclick="switchCodeGenTab('next_pages')" class="cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white cursor-pointer" id="cg_tab_next_pages">Next.js (Pages)</button>
+                    <button type="button" onclick="switchCodeGenTab('express')" class="cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white cursor-pointer" id="cg_tab_express">Node.js (Express)</button>
+                    <button type="button" onclick="switchCodeGenTab('php')" class="cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white cursor-pointer" id="cg_tab_php">Raw PHP Drop-in</button>
+                    <button type="button" onclick="switchCodeGenTab('python')" class="cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white cursor-pointer" id="cg_tab_python">Python (FastAPI)</button>
                 </div>
 
                 <!-- Code Container -->
@@ -1933,7 +1934,7 @@
     // ==========================================================
     function openCodeGeneratorModal() {
         document.getElementById('codeGeneratorModal').classList.remove('hidden');
-        switchCodeGenTab('next_app');
+        switchCodeGenTab('laravel');
     }
 
     function closeCodeGeneratorModal() {
@@ -1942,18 +1943,157 @@
 
     function switchCodeGenTab(langKey) {
         document.querySelectorAll('.cg-tab-btn').forEach(b => {
-            b.className = 'cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white';
+            b.className = 'cg-tab-btn px-3 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white cursor-pointer';
         });
-        document.getElementById('cg_tab_' + langKey).className = 'cg-tab-btn px-3 py-2 rounded-lg bg-indigo-600 text-white';
+        const activeTab = document.getElementById('cg_tab_' + langKey);
+        if (activeTab) activeTab.className = 'cg-tab-btn px-3 py-2 rounded-lg bg-indigo-600 text-white cursor-pointer';
 
         const token = document.getElementById('laravel_api_token').value.trim() || 'YOUR_SECRET_TOKEN_HERE';
         const codeBox = document.getElementById('cg_code_content');
         const pathBox = document.getElementById('cg_target_file_path');
 
-        if (langKey === 'next_app') {
+        if (langKey === 'laravel') {
+            pathBox.innerText = 'Target File: routes/api.php';
+            codeBox.innerText = `<?php
+
+use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Route;
+use Illuminate\\Support\\Facades\\Storage;
+use Illuminate\\Support\\Str;
+use App\\Models\\NewsPost; // ⚠️ আপনার নিউজ মডেল
+use App\\Models\\Category; // ⚠️ আপনার ক্যাটাগরি মডেল
+
+/*
+|--------------------------------------------------------------------------
+| ১. NEWS POST RECEIVER (নিউজ রিসিভ ও ডাটাবেসে সংরক্ষণ)
+|--------------------------------------------------------------------------
+*/
+Route::post('/external-news-post', function (Request $request) {
+    // ১.১ সিকিউরিটি টোকেন যাচাই (Authorization: Bearer <token>)
+    $authHeader = $request->header('Authorization');
+    $expectedToken = "Bearer " . env('SUBEDITOR_API_SECRET', '${token}');
+
+    if (!$authHeader || $authHeader !== $expectedToken) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized: Invalid API Secret Token'
+        ], 401);
+    }
+
+    // ১.২ ডেটা ভ্যালিডেশন
+    $validated = $request->validate([
+        'title'       => 'required|string',
+        'content'     => 'required|string',
+        'image'       => 'nullable',
+        'category_id' => 'nullable',
+        'tags'        => 'nullable|string',
+        'slug'        => 'nullable|string',
+    ]);
+
+    // ১.৩ ফিচার্ড ইমেজ হ্যান্ডলিং (Multipart File বা URL)
+    $imagePath = null;
+    if ($request->hasFile('image')) {
+        $imagePath = $request->file('image')->store('news', 'public');
+    } elseif ($request->filled('image') && is_string($request->image)) {
+        $imagePath = $request->image;
+    }
+
+    // ১.৪ স্লাগ তৈরি
+    $slug = !empty($validated['slug']) 
+        ? Str::slug($validated['slug']) 
+        : Str::slug($validated['title']) . '-' . time();
+
+    // ১.৫ ডাটাবেসে নিউজ তৈরি করুন
+    $post = NewsPost::create([
+        'title'       => $validated['title'],
+        'slug'        => $slug,
+        'content'     => $validated['content'],
+        'image'       => $imagePath,
+        'category_id' => $validated['category_id'] ?? 1,
+        'tags'        => $validated['tags'] ?? null,
+        'status'      => 'published',
+    ]);
+
+    // ১.৬ সফল রেসপন্স ও লাইভ পোস্টের লিঙ্ক রিটার্ন করুন
+    return response()->json([
+        'success' => true,
+        'message' => 'News published successfully',
+        'post_id' => $post->id,
+        'url'     => url('/news/' . $post->slug)
+    ], 200);
+});
+
+/*
+|--------------------------------------------------------------------------
+| ২. CATEGORY FETCHER (Subeditor24 এর জন্য ক্যাটাগরি তালিকা)
+|--------------------------------------------------------------------------
+*/
+Route::get('/get-categories', function (Request $request) {
+    $token = $request->bearerToken() ?? $request->query('token');
+    $expectedSecret = env('SUBEDITOR_API_SECRET', '${token}');
+
+    if ($token !== $expectedSecret) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    // আপনার ডাটাবেস থেকে ক্যাটাগরি তালিকা রিটার্ন করুন
+    return response()->json(
+        Category::select('id', 'name')->get()
+    );
+});`;
+        } else if (langKey === 'wp') {
+            pathBox.innerText = 'Target File: wp-content/themes/your-theme/functions.php';
+            codeBox.innerText = `// Subeditor24 Universal WordPress API Integration
+add_action('rest_api_init', function () {
+    // 1. News Post Receiver Endpoint
+    register_rest_route('subeditor/v1', '/post-news', [
+        'methods'  => 'POST',
+        'callback' => 'handle_subeditor_post',
+        'permission_callback' => '__return_true'
+    ]);
+
+    // 2. Category Fetcher Endpoint
+    register_rest_route('subeditor/v1', '/categories', [
+        'methods'  => 'GET',
+        'callback' => 'handle_subeditor_categories',
+        'permission_callback' => '__return_true'
+    ]);
+});
+
+function handle_subeditor_post($request) {
+    $token = $request->get_header('Authorization');
+    if ($token !== 'Bearer ${token}') {
+        return new WP_Error('unauthorized', 'Invalid Secret Token', ['status' => 401]);
+    }
+
+    $params = $request->get_params();
+    $post_id = wp_insert_post([
+        'post_title'   => sanitize_text_field($params['title'] ?? ''),
+        'post_content' => wp_kses_post($params['content'] ?? ''),
+        'post_status'  => 'publish',
+        'post_author'  => 1
+    ]);
+
+    return rest_ensure_response([
+        'success' => true,
+        'post_id' => $post_id,
+        'url'     => get_permalink($post_id)
+    ]);
+}
+
+function handle_subeditor_categories($request) {
+    $categories = get_categories(['hide_empty' => false]);
+    $data = [];
+    foreach ($categories as $cat) {
+        $data[] = ['id' => $cat->term_id, 'name' => $cat->name];
+    }
+    return rest_ensure_response($data);
+}`;
+        } else if (langKey === 'next_app') {
             pathBox.innerText = 'Target File: app/api/external-news-post/route.ts';
             codeBox.innerText = `import { NextRequest, NextResponse } from 'next/server';
 
+// 1. News Receiver Endpoint
 export async function POST(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization');
@@ -1972,42 +2112,65 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Article published successfully',
-      post_id: 101, // Return your generated post ID
+      post_id: 101,
       url: \`/news/article-101\`
     }, { status: 200 });
 
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
+}
+
+// 2. Category Fetcher Endpoint (app/api/get-categories/route.ts)
+export async function GET(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  if (authHeader !== "Bearer ${token}") {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // const categories = await db.category.findMany({ select: { id: true, name: true } });
+  return NextResponse.json([
+    { id: 1, name: 'জাতীয়' },
+    { id: 2, name: 'আন্তর্জাতিক' },
+    { id: 3, name: 'খেলাধুলা' }
+  ]);
 }`;
         } else if (langKey === 'next_pages') {
             pathBox.innerText = 'Target File: pages/api/external-news-post.ts';
             codeBox.innerText = `import type { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
-
   const authHeader = req.headers.authorization;
   if (authHeader !== "Bearer ${token}") {
     return res.status(401).json({ success: false, message: 'Unauthorized' });
   }
 
-  const { title, content, image, category_id, tags } = req.body;
-  // TODO: Insert into database
+  if (req.method === 'POST') {
+    const { title, content, image, category_id, tags } = req.body;
+    // Insert post into database...
+    return res.status(200).json({
+      success: true,
+      post_id: 101,
+      url: '/news/101'
+    });
+  }
 
-  return res.status(200).json({
-    success: true,
-    post_id: 101,
-    url: '/news/101'
-  });
+  if (req.method === 'GET') {
+    // Return categories list
+    return res.status(200).json([
+      { id: 1, name: 'জাতীয়' },
+      { id: 2, name: 'খেলাধুলা' }
+    ]);
+  }
+
+  return res.status(405).json({ message: 'Method Not Allowed' });
 }`;
         } else if (langKey === 'express') {
             pathBox.innerText = 'Target File: routes/newsReceiver.js';
             codeBox.innerText = `const express = require('express');
 const router = express.Router();
 
+// 1. News Post Receiver
 router.post('/api/external-news-post', (req, res) => {
   const authHeader = req.headers.authorization;
   if (authHeader !== "Bearer ${token}") {
@@ -2015,10 +2178,7 @@ router.post('/api/external-news-post', (req, res) => {
   }
 
   const { title, content, image, category, tags, slug } = req.body;
-  console.log("New Article:", title);
-
   // TODO: Save to your DB (e.g. Mongoose, Sequelize, Postgres)
-
   return res.json({
     success: true,
     post_id: 101,
@@ -2026,32 +2186,21 @@ router.post('/api/external-news-post', (req, res) => {
   });
 });
 
+// 2. Category Fetcher
+router.get('/api/get-categories', (req, res) => {
+  const authHeader = req.headers.authorization || req.query.token;
+  if (authHeader !== "Bearer ${token}" && req.query.token !== "${token}") {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Return categories from DB
+  return res.json([
+    { id: 1, name: 'জাতীয়' },
+    { id: 2, name: 'খেলাধুলা' }
+  ]);
+});
+
 module.exports = router;`;
-        } else if (langKey === 'laravel') {
-            pathBox.innerText = 'Target File: routes/api.php';
-            codeBox.innerText = `use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-
-Route::post('/external-news-post', function (Request $request) {
-    $expectedToken = "Bearer ${token}";
-    if ($request->header('Authorization') !== $expectedToken) {
-        return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
-    }
-
-    $validated = $request->validate([
-        'title'   => 'required|string',
-        'content' => 'required|string',
-        'image'   => 'nullable|string',
-    ]);
-
-    // \App\Models\Post::create([...]);
-
-    return response()->json([
-        'success' => true,
-        'post_id' => 101,
-        'url'     => url('/news/101')
-    ], 200);
-});`;
         } else if (langKey === 'php') {
             pathBox.innerText = 'Target File: public/news-receiver.php';
             codeBox.innerText = '<\x3Fphp\n' +
@@ -2066,46 +2215,68 @@ if ($auth !== "Bearer ${token}") {
     exit;
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
-
-if (!$input || empty($input['title'])) {
-    http_response_code(422);
-    echo json_encode(['success' => false, 'message' => 'Invalid Data']);
+// Check GET request for categories
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    echo json_encode([
+        ['id' => 1, 'name' => 'জাতীয়'],
+        ['id' => 2, 'name' => 'আন্তর্জাতিক'],
+        ['id' => 3, 'name' => 'খেলাধুলা']
+    ]);
     exit;
 }
 
-// Database Connection
+// Handle POST request for news
+$title   = $_POST['title'] ?? '';
+$content = $_POST['content'] ?? '';
+
+if (empty($title)) {
+    http_response_code(422);
+    echo json_encode(['success' => false, 'message' => 'Title is required']);
+    exit;
+}
+
+// Database Connection & Insert
 // $pdo = new PDO("mysql:host=localhost;dbname=mydb", "user", "pass");
-// $stmt = $pdo->prepare("INSERT INTO posts (title, content, image) VALUES (?, ?, ?)");
-// $stmt->execute([$input['title'], $input['content'], $input['image'] ?? '']);
+// $stmt = $pdo->prepare("INSERT INTO posts (title, content) VALUES (?, ?)");
+// $stmt->execute([$title, $content]);
 
 echo json_encode([
     'success' => true,
     'post_id' => 101,
-    'message' => 'Created successfully'
+    'url'     => 'https://mywebsite.com/news/101'
 ]);`;
         } else if (langKey === 'python') {
             pathBox.innerText = 'Target File: main.py (FastAPI)';
-            codeBox.innerText = `from fastapi import FastAPI, Header, HTTPException, status
+            codeBox.innerText = `from fastapi import FastAPI, Header, Form, HTTPException, Depends
+from typing import Optional, List
 from pydantic import BaseModel
-from typing import Optional
 
 app = FastAPI()
 
-class NewsPayload(BaseModel):
-    title: str
-    content: str
-    image: Optional[str] = None
-    category: Optional[str] = None
-
-` + '@' + `app.post("/api/external-news-post")
-async def receive_news(data: NewsPayload, authorization: Optional[str] = Header(None)):
+# 1. News Post Receiver
+@app.post("/api/external-news-post")
+async def receive_news(
+    title: str = Form(...),
+    content: str = Form(...),
+    category_id: Optional[int] = Form(None),
+    authorization: Optional[str] = Header(None)
+):
     if authorization != "Bearer ${token}":
         raise HTTPException(status_code=401, detail="Unauthorized")
     
-    print(f"Received article: {data.title}")
-    # Save to database
-    return {"success": True, "post_id": 101, "message": "Saved"}
+    # Save to Database
+    return {"success": True, "post_id": 101, "url": "https://mywebsite.com/news/101"}
+
+# 2. Category Fetcher
+@app.get("/api/get-categories")
+async def get_categories(authorization: Optional[str] = Header(None)):
+    if authorization != "Bearer ${token}":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    return [
+        {"id": 1, "name": "জাতীয়"},
+        {"id": 2, "name": "খেলাধুলা"}
+    ]
 `;
         }
     }
