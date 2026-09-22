@@ -759,7 +759,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Base / Website URL -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Website Base URL</label>
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <label class="block text-xs font-bold text-gray-700">Website Base URL</label>
+                            <button type="button" onclick="showFieldHelp('laravel_site_url')" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-100 hover:bg-indigo-100 text-slate-400 hover:text-indigo-600 transition text-[10px] cursor-pointer" title="Click for help on Website Base URL">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
                         <input type="url" id="laravel_site_url" name="laravel_site_url" value="{{ old('laravel_site_url', $settings->laravel_site_url ?? '') }}" 
                                placeholder="https://mywebsite.com" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
                         <p class="text-[11px] text-gray-500 mt-1">Your website domain URL (e.g. <code>https://mywebsite.com</code>).</p>
@@ -767,7 +772,12 @@
 
                     <!-- API Secret Token -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">API Secret Token</label>
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <label class="block text-xs font-bold text-gray-700">API Secret Token</label>
+                            <button type="button" onclick="showFieldHelp('laravel_api_token')" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-600 transition text-[10px] font-bold cursor-pointer animate-pulse" title="Click to see where & how to paste this token in your Laravel project">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
                         <div class="flex gap-2">
                             <input type="text" id="laravel_api_token" name="laravel_api_token" value="{{ old('laravel_api_token', $settings->laravel_api_token ?? '') }}" 
                                     class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition font-mono text-xs" placeholder="e.g. sec_token_2026_xyz">
@@ -780,7 +790,12 @@
 
                     <!-- Route Prefix -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">News Link Prefix</label>
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <label class="block text-xs font-bold text-gray-700">News Link Prefix</label>
+                            <button type="button" onclick="showFieldHelp('laravel_route_prefix')" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-100 hover:bg-indigo-100 text-slate-400 hover:text-indigo-600 transition text-[10px] cursor-pointer" title="Click for help on News Link Prefix">
+                                <i class="fas fa-info"></i>
+                            </button>
+                        </div>
                         <div class="flex items-center">
                             <span class="bg-gray-100 border border-r-0 border-gray-300 px-3 py-2 rounded-l text-gray-500 text-xs">/</span>
                             <input type="text" name="laravel_route_prefix" value="{{ old('laravel_route_prefix', $settings->laravel_route_prefix ?? 'news') }}" 
@@ -795,8 +810,13 @@
                         <label class="flex items-center gap-3 cursor-pointer bg-slate-50 hover:bg-slate-100 p-3.5 rounded-lg border border-slate-200 w-full transition">
                             <input type="hidden" name="post_to_laravel" value="0">
                             <input type="checkbox" name="post_to_laravel" value="1" {{ ($settings->post_to_laravel ?? false) ? 'checked' : '' }} class="toggle-checkbox w-5 h-5 text-indigo-600 rounded">
-                            <div>
-                                <span class="font-bold text-gray-800 text-xs block">Enable Auto-Publish to Website</span>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-bold text-gray-800 text-xs block">Enable Auto-Publish to Website</span>
+                                    <button type="button" onclick="event.stopPropagation(); showFieldHelp('post_to_laravel');" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-200 hover:bg-indigo-200 text-slate-500 hover:text-indigo-700 transition text-[10px] cursor-pointer" title="Click for details">
+                                        <i class="fas fa-info"></i>
+                                    </button>
+                                </div>
                                 <span class="text-[11px] text-gray-500 block">When enabled, news is automatically published to your website upon approval.</span>
                             </div>
                         </label>
@@ -843,13 +863,23 @@
                         <!-- Custom URLs -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Custom News Post Endpoint URL (Optional)</label>
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <label class="block text-xs font-bold text-slate-700">Custom News Post Endpoint URL (Optional)</label>
+                                    <button type="button" onclick="showFieldHelp('custom_api_url')" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-200 hover:bg-indigo-100 text-slate-500 hover:text-indigo-600 transition text-[10px] cursor-pointer" title="Click for help on Custom News Post Endpoint">
+                                        <i class="fas fa-info"></i>
+                                    </button>
+                                </div>
                                 <input type="url" id="custom_api_url" name="custom_api_url" value="{{ old('custom_api_url', $settings->custom_api_url ?? '') }}" 
                                        placeholder="https://mywebsite.com/api/v1/articles/create" class="w-full border-slate-300 rounded-lg shadow-sm text-xs focus:ring-indigo-500 focus:border-indigo-500">
                                 <p class="text-[10px] text-slate-400 mt-1">If empty, defaults to <code>Base_URL/api/external-news-post</code>.</p>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Custom Category Fetch URL (Optional)</label>
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    <label class="block text-xs font-bold text-slate-700">Custom Category Fetch URL (Optional)</label>
+                                    <button type="button" onclick="showFieldHelp('custom_category_url')" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-200 hover:bg-indigo-100 text-slate-500 hover:text-indigo-600 transition text-[10px] cursor-pointer" title="Click for help on Category Fetch URL">
+                                        <i class="fas fa-info"></i>
+                                    </button>
+                                </div>
                                 <input type="url" id="custom_category_url" name="custom_category_url" value="{{ old('custom_category_url', $settings->custom_category_url ?? '') }}" 
                                        placeholder="https://mywebsite.com/api/v1/categories" class="w-full border-slate-300 rounded-lg shadow-sm text-xs focus:ring-indigo-500 focus:border-indigo-500">
                                 <p class="text-[10px] text-slate-400 mt-1">API URL to fetch categories from your website.</p>
@@ -960,117 +990,173 @@
 
         {{-- INTERACTIVE ASSISTANT HELP & FAQ MODAL --}}
         <div id="assistantHelpModal" class="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden backdrop-blur-sm">
-            <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden text-slate-100">
+            <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden text-slate-100 font-bangla">
                 <!-- Modal Header -->
-                <div class="p-5 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
+                <div class="p-5 bg-slate-800/90 border-b border-slate-700 flex justify-between items-center">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-lg">
+                        <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-lg shadow-inner">
                             <i class="fas fa-network-wired"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-lg text-white">
-                                Website Integration Guide & FAQ
+                            <h3 class="font-bold text-base sm:text-lg text-white font-sans">
+                                Website Integration Guide & FAQ (ওয়েবসাইট কানেকশন সহায়িকা)
                             </h3>
-                            <p class="text-xs text-slate-400">Comprehensive integration guide for connecting any framework and CMS website safely.</p>
+                            <p class="text-xs text-slate-400">Laravel, WordPress ও কাস্টম ওয়েবসাইট যুক্ত করার সম্পূর্ণ নির্দেশিকা ও সমস্যার সমাধান।</p>
                         </div>
                     </div>
-                    <button type="button" onclick="closeAssistantHelpModal()" class="text-slate-400 hover:text-white text-xl p-2 rounded-lg hover:bg-slate-700 cursor-pointer">
-                        &times;
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('docs.api-guide') }}" target="_blank" class="hidden sm:inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-xl font-sans font-bold">
+                            <i class="fas fa-external-link-alt"></i> Full Docs
+                        </a>
+                        <button type="button" onclick="closeAssistantHelpModal()" class="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer font-sans">
+                            ✕
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Tabs -->
-                <div class="flex border-b border-slate-800 bg-slate-950 px-5 gap-2 text-xs font-bold">
-                    <button type="button" onclick="switchHelpTab('walkthrough')" class="help-tab-btn px-4 py-3 border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2" id="htab_walkthrough">
+                <div class="flex border-b border-slate-800 bg-slate-950 px-5 gap-2 text-xs font-bold font-sans">
+                    <button type="button" onclick="switchHelpTab('walkthrough')" class="help-tab-btn px-4 py-3 border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2 cursor-pointer" id="htab_walkthrough">
                         <i class="fas fa-list-ol"></i> Step-by-Step Guide
                     </button>
-                    <button type="button" onclick="switchHelpTab('faq')" class="help-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2" id="htab_faq">
-                        <i class="fas fa-question-circle"></i> Frequently Asked Questions
+                    <button type="button" onclick="switchHelpTab('faq')" class="help-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 cursor-pointer" id="htab_faq">
+                        <i class="fas fa-question-circle"></i> Frequently Asked Questions (FAQ)
                     </button>
-                    <button type="button" onclick="switchHelpTab('diagnostics')" class="help-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2" id="htab_diagnostics">
-                        <i class="fas fa-wrench"></i> Diagnostics & Troubleshooting
+                    <button type="button" onclick="switchHelpTab('diagnostics')" class="help-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 cursor-pointer" id="htab_diagnostics">
+                        <i class="fas fa-wrench"></i> Troubleshooting (ত্রুটি ও সমাধান)
                     </button>
                 </div>
 
                 <!-- Tab Contents -->
-                <div class="p-6 overflow-y-auto flex-1 bg-slate-900 space-y-6 text-sm text-slate-300">
+                <div class="p-6 overflow-y-auto flex-1 bg-slate-900 space-y-6 text-xs text-slate-300">
                     
                     <!-- 1. WALKTHROUGH CONTENT -->
-                    <div id="help_content_walkthrough" class="space-y-6">
+                    <div id="help_content_walkthrough" class="space-y-4">
                         <!-- Step 1 -->
-                        <div class="bg-slate-800/80 p-5 rounded-xl border border-slate-700">
-                            <h4 class="text-base font-bold text-white mb-2 flex items-center gap-2">
-                                <span class="w-6 h-6 rounded bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">1</span>
-                                1. Basic Connection (Base URL & Secret Token)
+                        <div class="bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-700 space-y-2">
+                            <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white text-xs flex items-center justify-center font-bold font-sans">১</span>
+                                ১. বেসিক কানেকশন ও API Secret Token (.env সেটআপ)
                             </h4>
-                            <p class="text-xs text-slate-300 leading-relaxed mb-3">
-                                Enter your website base domain (e.g. <code class="text-indigo-300 bg-slate-950 px-1.5 py-0.5 rounded">https://mywebsite.com</code>). 
-                                Click <strong>Generate</strong> to create a strong <strong>API Secret Token</strong> for authenticating requests between Subeditor24 and your server.
+                            <p class="text-slate-300 leading-relaxed">
+                                Settings পেজে আপনার ওয়েবসাইটের ডোমেইন দিন (যেমন <code class="text-indigo-300 bg-slate-950 px-1.5 py-0.5 rounded font-mono">https://mybanglanews.com</code>)। এরপর <strong>API Secret Token</strong> এর <strong>Generate</strong> বাটনে ক্লিক করে একটি গোপন চাবি তৈরি করুন এবং সেটি আপনার Laravel প্রজেক্টের <code>.env</code> ফাইলে যোগ করুন:
                             </p>
+                            <pre class="!py-2 !px-3 bg-slate-950 rounded-xl border border-slate-800 text-emerald-400 font-mono text-[11px]"><code>SUBEDITOR_API_SECRET=আপনার_সিক্রেট_টোকেন_এখানে</code></pre>
                         </div>
 
                         <!-- Step 2 -->
-                        <div class="bg-slate-800/80 p-5 rounded-xl border border-slate-700">
-                            <h4 class="text-base font-bold text-white mb-2 flex items-center gap-2">
-                                <span class="w-6 h-6 rounded bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">2</span>
-                                2. Generate Endpoint Code
+                        <div class="bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-700 space-y-2">
+                            <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white text-xs flex items-center justify-center font-bold font-sans">২</span>
+                                ২. Laravel প্রজেক্টে API রুট কোড বসানো (routes/api.php)
                             </h4>
-                            <p class="text-xs text-slate-300 leading-relaxed mb-2">
-                                Click <strong>Code Generator</strong> above. Select your stack, copy the drop-in snippet, and paste it into your project:
+                            <p class="text-slate-300 leading-relaxed">
+                                আপনার Laravel প্রজেক্টের <code class="text-indigo-300 font-mono">routes/api.php</code> ফাইলে নিউজ রিসিভার এবং ক্যাটাগরি ফেচিং রুট যুক্ত করুন:
                             </p>
-                            <ul class="list-disc list-inside text-xs text-slate-400 space-y-1 ml-2">
-                                <li><strong>Next.js (App Router):</strong> <code class="text-indigo-300 font-mono">app/api/external-news-post/route.ts</code></li>
-                                <li><strong>Next.js (Pages Router):</strong> <code class="text-indigo-300 font-mono">pages/api/external-news-post.ts</code></li>
-                                <li><strong>Node.js (Express):</strong> <code class="text-indigo-300 font-mono">routes/newsReceiver.js</code></li>
-                                <li><strong>Laravel:</strong> <code class="text-indigo-300 font-mono">routes/api.php</code></li>
-                                <li><strong>Raw PHP:</strong> <code class="text-indigo-300 font-mono">public/news-receiver.php</code> (Single drop-in file)</li>
-                                <li><strong>Python (FastAPI/Django):</strong> <code class="text-indigo-300 font-mono">main.py</code></li>
-                            </ul>
+                            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 font-mono text-[11px] text-slate-300 space-y-1">
+                                <p class="text-indigo-400 font-bold">// 1. News Receiver Route</p>
+                                <p>Route::post('/external-news-post', function (Request $request) { ... });</p>
+                                <p class="text-emerald-400 font-bold mt-2">// 2. Category Fetch Route</p>
+                                <p>Route::get('/get-categories', function (Request $request) { ... });</p>
+                            </div>
+                            <div class="pt-1 flex gap-2">
+                                <button type="button" onclick="openCodeGeneratorModal(); closeAssistantHelpModal();" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1 font-sans">
+                                    <i class="fas fa-code"></i> Open Code Generator to Copy Complete Laravel Code →
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Step 3 -->
-                        <div class="bg-slate-800/80 p-5 rounded-xl border border-slate-700">
-                            <h4 class="text-base font-bold text-white mb-2 flex items-center gap-2">
-                                <span class="w-6 h-6 rounded bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">3</span>
-                                3. Live Connection Test
+                        <div class="bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-700 space-y-2">
+                            <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white text-xs flex items-center justify-center font-bold font-sans">৩</span>
+                                ৩. ক্যাটাগরি রিফ্রেশ ও ম্যাপিং (Category Sync & Mapping)
                             </h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">
-                                After deploying the code, click <strong>Test Connection</strong>. The system will send a test payload and confirm success with the created post ID.
+                            <p class="text-slate-300 leading-relaxed">
+                                Settings পেজের <strong>"📂 Category Mapping"</strong> সেকশনে গিয়ে <strong>"🔄 Refresh Categories"</strong> বাটনে ক্লিক করুন। সাথে সাথে আপনার Laravel ওয়েবসাইটের সব ক্যাটাগরি চলে আসবে। এরপর বামপাশের AI বিষয়ের সাথে ডানপাশের আপনার ওয়েবসাইটের ক্যাটাগরি সিলেক্ট করে দিন।
+                            </p>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="bg-slate-800/80 p-4 sm:p-5 rounded-2xl border border-slate-700 space-y-2">
+                            <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white text-xs flex items-center justify-center font-bold font-sans">৪</span>
+                                ৪. কানেকশন টেস্ট ও অটো-পাবলিশিং (Test Connection & Auto-Publish)
+                            </h4>
+                            <p class="text-slate-300 leading-relaxed">
+                                কোড বসানোর পর <strong>"Test Connection"</strong> বাটনে চাপ দিন। সিস্টেম সাথে সাথে একটি টেস্ট পোস্ট পাঠিয়ে লাইভ কানেকশন চেক করবে। সফল হলে <strong>"Enable Auto-Publish"</strong> অন রাখুন যাতে কোনো নিউজ এপ্রুভ হওয়ার সাথে সাথেই আপনার ওয়েবসাইটে পাবলিশ হয়ে যায়।
                             </p>
                         </div>
                     </div>
 
                     <!-- 2. FAQ CONTENT -->
-                    <div id="help_content_faq" class="space-y-4 hidden">
-                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                            <h4 class="font-bold text-white text-sm mb-1.5">FAQ: What data is transmitted to my website?</h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">Answer: Title, content/body, category ID/name, featured image (URL or binary), tags, and slug.</p>
+                    <div id="help_content_faq" class="space-y-3 hidden">
+                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-1">
+                            <h4 class="font-bold text-white text-xs sm:text-sm">প্রশ্ন: API Secret Token কোথায় এবং কিভাবে বসাব?</h4>
+                            <p class="text-slate-300 leading-relaxed">উত্তর: Settings পেজ থেকে টোকেনটি কপি করে আপনার Laravel প্রজেক্টের <code>.env</code> ফাইলে <code class="text-indigo-300 font-mono">SUBEDITOR_API_SECRET=your_token</code> হিসেবে বসান। এরপর <code>routes/api.php</code> তে রিকোয়েস্টের হেডার <code>Authorization: Bearer ...</code> চেক করে টোকেন যাচাই করা হয়।</p>
                         </div>
-                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                            <h4 class="font-bold text-white text-sm mb-1.5">FAQ: My database uses different field names (e.g. headline / description), how to map them?</h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">Answer: Open <strong>Advanced Field Mapping</strong> section and map Title to your custom key (e.g. headline) and Content to your custom key (e.g. description).</p>
+
+                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-1">
+                            <h4 class="font-bold text-white text-xs sm:text-sm">প্রশ্ন: ক্যাটাগরি ফেচ কিভাবে কাজ করে?</h4>
+                            <p class="text-slate-300 leading-relaxed">উত্তর: Subeditor24 আপনার ওয়েবসাইটের <code>/api/get-categories</code> রুটে কল করে ক্যাটাগরি তালিকা নিয়ে আসে। আপনার API থেকে <code>[{"id": 1, "name": "জাতীয়"}, {"id": 2, "name": "আন্তর্জাতিক"}]</code> ফরম্যাটে JSON অ্যারে রিটার্ন করতে হবে।</p>
                         </div>
-                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                            <h4 class="font-bold text-white text-sm mb-1.5">FAQ: How is the security token authenticated?</h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">Answer: Subeditor24 sends <code>Authorization: Bearer <Secret_Token></code> in every request header. Your endpoint checks whether the bearer token matches your secret.</p>
+
+                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-1">
+                            <h4 class="font-bold text-white text-xs sm:text-sm">প্রশ্ন: ছবি কিভাবে আপলোড হয়?</h4>
+                            <p class="text-slate-300 leading-relaxed">উত্তর: Subeditor24 মূল সংবাদের ছবি ডাউনলোড করে multipart/form-data হিসেবে ফিজিক্যাল ফাইল আপলোড পাঠায়। আপনার Laravel এ <code>$request->file('image')->store('news', 'public')</code> দিয়ে সরাসরি সেভ করতে পারবেন।</p>
+                        </div>
+
+                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-1">
+                            <h4 class="font-bold text-white text-xs sm:text-sm">প্রশ্ন: আমার ডাটাবেসে ফিল্ডের নাম আলাদা (যেমন title এর বদলে headline), কি করব?</h4>
+                            <p class="text-slate-300 leading-relaxed">উত্তর: Settings পেজের <strong>"⚙️ Custom API Mapping"</strong> অপশনটিতে গিয়ে <code class="text-indigo-300">"title": "headline"</code> লিখে দিন। Subeditor24 স্বয়ংক্রিয়ভাবে ফিল্ডের নাম পরিবর্তন করে পাঠাবে।</p>
+                        </div>
+
+                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-1">
+                            <h4 class="font-bold text-white text-xs sm:text-sm">প্রশ্ন: লোকালহোস্ট (Localhost / 127.0.0.1) বা Staging এ কাজ করবে?</h4>
+                            <p class="text-slate-300 leading-relaxed">উত্তর: হ্যাঁ! Subeditor24 লোকালহোস্ট ও সেলফ-সাইন্ড SSL সার্টিফিকেট স্বয়ংক্রিয়ভাবে বাইপাস করে কানেক্ট হতে পারে।</p>
                         </div>
                     </div>
 
                     <!-- 3. DIAGNOSTICS & TROUBLESHOOTING CONTENT -->
-                    <div id="help_content_diagnostics" class="space-y-4 hidden">
-                        <div class="bg-red-950/40 border border-red-800/60 p-4 rounded-xl">
-                            <h4 class="font-bold text-red-300 text-sm flex items-center gap-2 mb-1.5">
-                                <i class="fas fa-exclamation-triangle"></i> HTTP 401 Unauthorized
+                    <div id="help_content_diagnostics" class="space-y-3 hidden">
+                        <div class="bg-rose-950/40 border border-rose-800/60 p-4 rounded-xl space-y-1">
+                            <h4 class="font-bold text-rose-300 text-xs sm:text-sm flex items-center gap-2">
+                                <i class="fas fa-exclamation-triangle"></i> HTTP 401 Unauthorized (অননুমোদিত রিকোয়েস্ট)
                             </h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">Issue: API Secret Token mismatch.<br>Solution: Ensure the token in Settings matches the secret key in your backend <code>.env</code> or receiver file.</p>
+                            <p class="text-slate-300 leading-relaxed">কারণ: API Secret Token ম্যাচ করেনি।<br>সমাধান: Settings এর টোকেন এবং আপনার Laravel <code>.env</code> ফাইলের টোকেন মিলিয়ে নিন। এরপর টার্মিনালে <code>php artisan config:clear</code> দিন। Apache সার্ভার হলে <code>.htaccess</code> এ <code>CGIPassAuth on</code> যোগ করুন।</p>
                         </div>
-                        <div class="bg-amber-950/40 border border-amber-800/60 p-4 rounded-xl">
-                            <h4 class="font-bold text-amber-300 text-sm flex items-center gap-2 mb-1.5">
-                                <i class="fas fa-exclamation-circle"></i> HTTP 404 Not Found
+
+                        <div class="bg-amber-950/40 border border-amber-800/60 p-4 rounded-xl space-y-1">
+                            <h4 class="font-bold text-amber-300 text-xs sm:text-sm flex items-center gap-2">
+                                <i class="fas fa-exclamation-circle"></i> HTTP 404 Not Found (রুট খুঁজে পাওয়া যায়নি)
                             </h4>
-                            <p class="text-xs text-slate-300 leading-relaxed">Issue: API route/URL not found.<br>Solution: Check if <code>/api/external-news-post</code> is accessible, or specify the complete URL in Custom News Post Endpoint URL.</p>
+                            <p class="text-slate-300 leading-relaxed">কারণ: API রুটটি আপনার <code>routes/api.php</code> ফাইলে ডিফাইন করা হয়নি অথবা Base URL এর শেষে অতিরিক্ত স্ল্যাশ পড়েছে।<br>সমাধান: Base URL চেক করুন (যেমন <code>https://mywebsite.com</code>) এবং <code>routes/api.php</code> ফাইলে <code>Route::post('/external-news-post', ...)</code> রয়েছে কিনা নিশ্চিত হোন।</p>
+                        </div>
+
+                        <div class="bg-purple-950/40 border border-purple-800/60 p-4 rounded-xl space-y-1">
+                            <h4 class="font-bold text-purple-300 text-xs sm:text-sm flex items-center gap-2">
+                                <i class="fas fa-shield-alt"></i> HTTP 419 Page Expired / CSRF Error
+                            </h4>
+                            <p class="text-slate-300 leading-relaxed">কারণ: রুটটি ভুলবশত <code>routes/web.php</code> তে লেখা হয়েছে।<br>সমাধান: API রুটগুলো অবশ্যই <code>routes/api.php</code> ফাইলে লিখতে হবে, যেখানে CSRF টোকেনের প্রয়োজন নেই।</p>
+                        </div>
+
+                        <div class="bg-cyan-950/40 border border-cyan-800/60 p-4 rounded-xl space-y-1">
+                            <h4 class="font-bold text-cyan-300 text-xs sm:text-sm flex items-center gap-2">
+                                <i class="fas fa-file-invoice"></i> HTTP 422 Unprocessable Content (ভ্যালিডেশন ফেইল)
+                            </h4>
+                            <p class="text-slate-300 leading-relaxed">কারণ: আপনার রিসিভার কোডে কোনো কাস্টম ফিল্ডকে <code>required</code> করা আছে যা Subeditor24 পাঠায়নি।<br>সমাধান: অপ্রয়োজনীয় ফিল্ডগুলোকে <code>nullable</code> করুন।</p>
                         </div>
                     </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="p-4 bg-slate-800/80 border-t border-slate-700/80 flex flex-wrap justify-between items-center gap-3">
+                    <a href="{{ route('docs.api-guide') }}" target="_blank" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 font-sans">
+                        <i class="fas fa-book-open"></i> Open Comprehensive Live API Documentation Page →
+                    </a>
+                    <button type="button" onclick="closeAssistantHelpModal()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer font-sans">
+                        Got it (ঠিক আছে)
+                    </button>
                 </div>
             </div>
         </div>
@@ -1113,6 +1199,68 @@
                         </button>
                     </div>
                     <pre><code id="cg_code_content" class="text-emerald-400 leading-relaxed block overflow-x-auto whitespace-pre"></code></pre>
+                </div>
+            </div>
+        </div>
+
+        {{-- 💡 INTERACTIVE FIELD HELP & SETUP MODAL --}}
+        <div id="fieldInfoModal" class="fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden text-slate-100 animate-in fade-in zoom-in-95 duration-150">
+                {{-- Modal Header --}}
+                <div class="p-5 bg-slate-800/90 border-b border-slate-700 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-lg shadow-inner" id="fieldInfoIcon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base text-white flex items-center gap-2" id="fieldInfoTitle">
+                                Field Information
+                            </h3>
+                            <p class="text-xs text-slate-400" id="fieldInfoSubtitle">Configuration & Integration Guide</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="closeFieldInfoModal()" class="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer">
+                        ✕
+                    </button>
+                </div>
+
+                {{-- Modal Body --}}
+                <div class="p-6 overflow-y-auto space-y-5 text-xs text-slate-300 leading-relaxed font-bangla">
+                    {{-- Field Description --}}
+                    <div id="fieldInfoDesc" class="p-4 bg-slate-800/60 rounded-2xl border border-slate-700/60 text-slate-200">
+                        <!-- Injected -->
+                    </div>
+
+                    {{-- Step-by-Step Setup --}}
+                    <div id="fieldInfoStepsContainer" class="space-y-3">
+                        <h4 class="font-bold text-white text-xs flex items-center gap-2 uppercase tracking-wider text-indigo-400">
+                            <i class="fas fa-layer-group"></i> আপনার Laravel প্রজেক্টে যেভাবে বসাবেন:
+                        </h4>
+                        <div id="fieldInfoSteps" class="space-y-2">
+                            <!-- Injected -->
+                        </div>
+                    </div>
+
+                    {{-- Code Snippet Box --}}
+                    <div id="fieldInfoCodeWrapper" class="space-y-2">
+                        <div class="flex justify-between items-center text-[11px] text-slate-400">
+                            <span id="fieldInfoFilePath" class="font-mono text-indigo-300">File: routes/api.php</span>
+                            <button type="button" onclick="copyFieldInfoCode()" id="fieldInfoCopyBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-sans px-3 py-1 rounded-lg text-xs flex items-center gap-1 transition cursor-pointer font-bold">
+                                <i class="fas fa-copy"></i> Copy Code
+                            </button>
+                        </div>
+                        <pre class="p-4 bg-slate-950 rounded-xl border border-slate-800 text-emerald-400 font-mono text-[11px] leading-relaxed overflow-x-auto select-all whitespace-pre" id="fieldInfoCodeBox"></pre>
+                    </div>
+                </div>
+
+                {{-- Modal Footer --}}
+                <div class="p-4 bg-slate-800/80 border-t border-slate-700/80 flex flex-wrap justify-between items-center gap-3">
+                    <button type="button" onclick="openCodeGeneratorModal(); closeFieldInfoModal();" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-code"></i> Open Full Code Generator (All Frameworks)
+                    </button>
+                    <button type="button" onclick="closeFieldInfoModal()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer">
+                        Got it (ঠিক আছে)
+                    </button>
                 </div>
             </div>
         </div>
@@ -2045,6 +2193,196 @@ async def receive_news(data: NewsPayload, authorization: Optional[str] = Header(
             if (container) {
                 container.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-xl text-xs font-bold">Server error: ${err.message}</div>`;
                 container.classList.remove('hidden');
+            }
+        });
+    }
+
+    // ==========================================================
+    // 💡 FIELD HELP & INTEGRATION MODAL ENGINE
+    // ==========================================================
+    const fieldHelpData = {
+        laravel_api_token: {
+            title: 'API Secret Token (সিক্রেট কী)',
+            subtitle: 'Laravel ও Subeditor24 এর নিরাপদ সংযোগ চাবি',
+            icon: '<i class="fas fa-key text-amber-400"></i>',
+            desc: `এই <strong>API Secret Token</strong>-টি একটি গোপন পাসওয়ার্ড। Subeditor24 যখন আপনার Laravel ওয়েবসাইটে নিউজ পোস্ট পাঠায়, তখন রিকোয়েস্টের হেডারে <code>Authorization: Bearer <Secret_Token></code> হিসেবে এই টোকেনটি পাঠানো হয়। আপনার ওয়েবসাইট এই টোকেন মিলিয়ে দেখে রিকোয়েস্টটি বৈধ কিনা।`,
+            steps: [
+                `<strong>Step 1:</strong> আপনার Laravel নিউজ প্রজেক্টের <code>.env</code> ফাইলে টোকেনটি সংরক্ষণ করুন:<br><code class="text-indigo-300">SUBEDITOR_API_SECRET=আপনার_টোকেন_এখানে</code>`,
+                `<strong>Step 2:</strong> আপনার Laravel প্রজেক্টের <code>routes/api.php</code> ফাইলে এই রুট কোডটি যুক্ত করুন:`,
+                `<strong>Step 3:</strong> Settings পেজের <strong>"Test Connection"</strong> বাটনে ক্লিক করে লাইভ সংযোগ পরীক্ষা করুন।`
+            ],
+            filePath: 'Laravel File: routes/api.php',
+            code: `use Illuminate\\Http\\Request;
+use Illuminate\\Support\\Facades\\Route;
+use App\\Models\\NewsPost; // আপনার নিউজ মডেল
+
+Route::post('/external-news-post', function (Request $request) {
+    // ১. সিক্রেট টোকেন যাচাই (Security Handshake)
+    $expectedToken = "Bearer " . env('SUBEDITOR_API_SECRET', 'YOUR_SECRET_TOKEN_HERE');
+    if ($request->header('Authorization') !== $expectedToken) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized: Invalid API Secret Token'
+        ], 401);
+    }
+
+    // ২. ডেটা ভ্যালিডেশন
+    $validated = $request->validate([
+        'title'       => 'required|string',
+        'content'     => 'required|string',
+        'image'       => 'nullable|string',
+        'category'    => 'nullable|string',
+        'category_id' => 'nullable',
+        'tags'        => 'nullable|string',
+        'slug'        => 'nullable|string',
+    ]);
+
+    // ৩. আপনার ডাটাবেসে নিউজ সেভ করুন
+    $post = NewsPost::create([
+        'title'       => $validated['title'],
+        'slug'        => $validated['slug'] ?? \\Illuminate\\Support\\Str::slug($validated['title']),
+        'content'     => $validated['content'],
+        'image'       => $validated['image'] ?? null,
+        'category_id' => $validated['category_id'] ?? 1,
+        'status'      => 'published',
+    ]);
+
+    // ৪. সফল রেসপন্স ও পোস্টের লাইভ লিংক রিটার্ন করুন
+    return response()->json([
+        'success' => true,
+        'message' => 'News published successfully',
+        'post_id' => $post->id,
+        'url'     => url('/news/' . $post->slug)
+    ], 200);
+});`
+        },
+        laravel_site_url: {
+            title: 'Website Base URL (ওয়েবসাইটের ডোমেইন)',
+            subtitle: 'আপনার নিউজ পোর্টালের মূল লাইভ লিঙ্ক',
+            icon: '<i class="fas fa-globe text-indigo-400"></i>',
+            desc: `যে Laravel বা কাস্টম ওয়েবসাইটে নিউজগুলো স্বয়ংক্রিয়ভাবে পোস্ট হবে, তার মূল ডোমেইন ইউআরএল এখানে দিন। যেমন: <code>https://mybanglanews.com</code> বা লোকাল ডেভেলপমেন্টে <code>http://127.0.0.1:8000</code>।`,
+            steps: [
+                `<strong>Step 1:</strong> সম্পূর্ণ প্রোটোকল সহ ডোমেইন দিন (e.g. <code>https://yourdomain.com</code>)। শেষে কোনো স্ল্যাশ (/) দিবেন না।`,
+                `<strong>Step 2:</strong> Subeditor24 ডিফল্টভাবে <code>Base_URL/api/external-news-post</code> এ রিকোয়েস্ট পাঠাবে।`
+            ],
+            filePath: 'Settings Field: Website Base URL',
+            code: `// Subeditor24 will send POST request to:
+https://yourdomain.com/api/external-news-post`
+        },
+        laravel_route_prefix: {
+            title: 'News Link Prefix (পারমালিংক প্রিফিক্স)',
+            subtitle: 'নিউজ ভিজিট লিঙ্কের ফরম্যাট',
+            icon: '<i class="fas fa-link text-emerald-400"></i>',
+            desc: `আপনার ওয়েবসাইটে প্রতিটি নিউজের ইউআরএল স্ট্রাকচার কেমন তা নির্ধারণ করে। যেমন আপনার নিউজের লিংক যদি <code>https://site.com/news/123</code> হয়, তবে প্রিফিক্স হবে <code>news</code>। যদি <code>https://site.com/post/123</code> হয়, তবে <code>post</code>।`,
+            steps: [
+                `ডিফল্ট ভ্যালু: <code>news</code>`,
+                `আর্টিকেল লিংক তৈরি হবে: <code>https://yourdomain.com/news/{slug_or_id}</code>`
+            ],
+            filePath: 'URL Format',
+            code: `https://yourdomain.com/{prefix}/{news_id_or_slug}`
+        },
+        post_to_laravel: {
+            title: 'Enable Auto-Publish to Website (অটো পাবলিশ)',
+            subtitle: 'এপ্রুভালের সাথে সাথে লাইভ পোস্টিং',
+            icon: '<i class="fas fa-paper-plane text-cyan-400"></i>',
+            desc: `এই অপশনটি চালু রাখলে Subeditor24-এ যখন কোনো এআই রিরাইট করা নিউজ এডিটর এপ্রুভ করবেন, সাথে সাথে তা আপনার ওয়েবসাইটে API কলের মাধ্যমে লাইভ পাবলিশ হয়ে যাবে।`,
+            steps: [
+                `সুইচটি অন রাখলে রিয়েল-টাইম অটোমেটিক পাবলিশিং চালু থাকবে।`,
+                `সুইচটি অফ রাখলে নিউজ শুধুমাত্র Subeditor24 ড্যাশবোর্ডে সেভ থাকবে এবং ম্যানুয়ালি পোস্ট করা যাবে।`
+            ],
+            filePath: 'Feature Overview',
+            code: `Auto Publish: ENABLED -> Triggers API on News Approval`
+        },
+        custom_api_url: {
+            title: 'Custom News Post Endpoint URL',
+            subtitle: 'কাস্টম এপিআই রুট ওভাররাইড',
+            icon: '<i class="fas fa-route text-rose-400"></i>',
+            desc: `যদি আপনার Laravel ওয়েবসাইটে ডিফল্ট <code>/api/external-news-post</code> ছাড়া অন্য কোনো স্পেশাল এপিআই এন্ডপয়েন্ট থাকে (যেমন <code>https://api.site.com/v2/news/create</code>), তবে সম্পূর্ণ লিংকটি এখানে প্রদান করুন।`,
+            steps: [
+                `ফাঁকা রাখলে স্বয়ংক্রিয়ভাবে <code>Base_URL/api/external-news-post</code> ব্যবহৃত হবে।`
+            ],
+            filePath: 'Custom API Endpoint',
+            code: `POST https://mywebsite.com/api/v1/custom-news-receiver`
+        },
+        custom_category_url: {
+            title: 'Custom Category Fetch URL',
+            subtitle: 'ক্যাটাগরি লিস্ট এপিআই',
+            icon: '<i class="fas fa-tags text-purple-400"></i>',
+            desc: `আপনার ওয়েবসাইট থেকে ক্যাটাগরি তালিকা স্বয়ংক্রিয়ভাবে এনে Subeditor24-এর সাথে ম্যাপ করতে এই এপিআই ব্যবহৃত হয়। এটি থেকে JSON অ্যারে রিটার্ন করতে হবে: <code>[{"id": 1, "name": "জাতীয়"}, {"id": 2, "name": "আন্তর্জাতিক"}]</code>।`,
+            steps: [
+                `আপনার Laravel প্রজেক্টে একটি ক্যাটাগরি এপিআই রুট তৈরি করুন এবং সেই লিংকটি এখানে দিন।`
+            ],
+            filePath: 'Laravel File: routes/api.php',
+            code: `Route::get('/categories', function () {
+    return response()->json(
+        \\App\\Models\\Category::select('id', 'name')->get()
+    );
+});`
+        }
+    };
+
+    function showFieldHelp(fieldKey) {
+        const data = fieldHelpData[fieldKey];
+        if (!data) return;
+
+        const modal = document.getElementById('fieldInfoModal');
+        const title = document.getElementById('fieldInfoTitle');
+        const subtitle = document.getElementById('fieldInfoSubtitle');
+        const icon = document.getElementById('fieldInfoIcon');
+        const desc = document.getElementById('fieldInfoDesc');
+        const stepsContainer = document.getElementById('fieldInfoSteps');
+        const filePath = document.getElementById('fieldInfoFilePath');
+        const codeBox = document.getElementById('fieldInfoCodeBox');
+        const codeWrapper = document.getElementById('fieldInfoCodeWrapper');
+
+        if (title) title.innerHTML = data.title;
+        if (subtitle) subtitle.innerText = data.subtitle;
+        if (icon && data.icon) icon.innerHTML = data.icon;
+        if (desc) desc.innerHTML = data.desc;
+
+        if (stepsContainer && data.steps) {
+            stepsContainer.innerHTML = data.steps.map(step => `
+                <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
+                    <span class="text-indigo-400 font-bold text-xs mt-0.5">•</span>
+                    <div class="text-xs text-slate-300 flex-1 leading-relaxed">${step}</div>
+                </div>
+            `).join('');
+        }
+
+        if (data.code) {
+            const currentToken = document.getElementById('laravel_api_token')?.value?.trim() || 'YOUR_SECRET_TOKEN_HERE';
+            const populatedCode = data.code.replace('YOUR_SECRET_TOKEN_HERE', currentToken);
+            if (filePath) filePath.innerText = data.filePath || 'Code Snippet';
+            if (codeBox) codeBox.innerText = populatedCode;
+            if (codeWrapper) codeWrapper.classList.remove('hidden');
+        } else {
+            if (codeWrapper) codeWrapper.classList.add('hidden');
+        }
+
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    }
+
+    function closeFieldInfoModal() {
+        const modal = document.getElementById('fieldInfoModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function copyFieldInfoCode() {
+        const code = document.getElementById('fieldInfoCodeBox')?.innerText;
+        if (!code) return;
+
+        navigator.clipboard.writeText(code).then(() => {
+            const btn = document.getElementById('fieldInfoCopyBtn');
+            if (btn) {
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check text-emerald-400"></i> Copied!';
+                setTimeout(() => { btn.innerHTML = orig; }, 2000);
             }
         });
     }

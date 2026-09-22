@@ -1,52 +1,47 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="bn" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom API Integration Guide — Subeditor24</title>
-    <meta name="description" content="Complete guide to connect your website via Custom API Mapping in Subeditor24. Learn all payload fields, authentication methods, and real-world examples.">
+    <title>Website Integration & API Documentation — Subeditor24</title>
+    <meta name="description" content="Complete guide to connect Laravel, WordPress, Next.js, and Custom CMS websites with Subeditor24. Step-by-step setup, code snippets, category fetching, and troubleshooting.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0d1117; color: #e6edf3; }
+        body { font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif; background: #0d1117; color: #e6edf3; }
         .code-font { font-family: 'Fira Code', monospace; }
+        .font-bangla { font-family: 'Hind Siliguri', sans-serif; }
 
-        /* Gradient Text */
+        /* Gradients */
         .gradient-text { background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .gradient-text-green { background: linear-gradient(135deg, #10b981, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .gradient-text-amber { background: linear-gradient(135deg, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
         /* Glass Cards */
         .glass-card { background: rgba(22, 27, 34, 0.95); border: 1px solid rgba(48, 54, 61, 0.8); backdrop-filter: blur(20px); }
         .glass-card-light { background: rgba(30, 37, 47, 0.6); border: 1px solid rgba(48, 54, 61, 0.6); }
 
         /* Nav */
-        .nav-blur { background: rgba(13, 17, 23, 0.9); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(48, 54, 61, 0.8); }
+        .nav-blur { background: rgba(13, 17, 23, 0.92); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(48, 54, 61, 0.8); }
 
-        /* Gradient Background Orbs */
+        /* Background Orbs */
         .orb-1 { position: fixed; top: -150px; left: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%); pointer-events: none; }
         .orb-2 { position: fixed; bottom: -150px; right: -150px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, transparent 70%); pointer-events: none; }
         .orb-3 { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; height: 800px; background: radial-gradient(circle, rgba(139, 92, 246, 0.04) 0%, transparent 70%); pointer-events: none; }
 
         /* Sidebar Nav */
         .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #8b949e; text-decoration: none; transition: all 0.2s; cursor: pointer; }
-        .sidebar-link:hover, .sidebar-link.active { background: rgba(99, 102, 241, 0.12); color: #a5b4fc; }
+        .sidebar-link:hover, .sidebar-link.active { background: rgba(99, 102, 241, 0.14); color: #a5b4fc; }
         .sidebar-link .dot { width: 6px; height: 6px; border-radius: 50%; background: #30363d; flex-shrink: 0; transition: all 0.2s; }
         .sidebar-link:hover .dot, .sidebar-link.active .dot { background: #6366f1; box-shadow: 0 0 8px rgba(99, 102, 241, 0.6); }
 
         /* Code Block */
-        pre { background: #010409; border: 1px solid #30363d; border-radius: 12px; padding: 20px 24px; overflow-x: auto; position: relative; }
-        pre code { font-family: 'Fira Code', monospace; font-size: 13.5px; line-height: 1.7; }
-        .copy-btn { position: absolute; top: 12px; right: 12px; background: rgba(48, 54, 61, 0.8); border: 1px solid #30363d; color: #8b949e; padding: 4px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; }
+        pre { background: #010409; border: 1px solid #30363d; border-radius: 12px; padding: 18px 20px; overflow-x: auto; position: relative; }
+        pre code { font-family: 'Fira Code', monospace; font-size: 13px; line-height: 1.7; }
+        .copy-btn { position: absolute; top: 12px; right: 12px; background: rgba(48, 54, 61, 0.8); border: 1px solid #30363d; color: #8b949e; padding: 4px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; z-index: 10; }
         .copy-btn:hover { background: rgba(99, 102, 241, 0.3); color: #a5b4fc; border-color: #6366f1; }
         .copy-btn.copied { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: #10b981; }
-
-        /* Syntax highlighting */
-        .json-key { color: #79c0ff; }
-        .json-str { color: #a5d6ff; }
-        .json-val { color: #ffa657; }
-        .json-bool { color: #ff7b72; }
-        .json-comment { color: #8b949e; font-style: italic; }
 
         /* Badges */
         .badge-required { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
@@ -60,29 +55,14 @@
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: rgba(48, 54, 61, 0.2); }
 
-        /* Field Card */
-        .field-card { background: rgba(22, 27, 34, 0.8); border: 1px solid #30363d; border-radius: 16px; padding: 20px 24px; transition: all 0.3s; }
-        .field-card:hover { border-color: rgba(99, 102, 241, 0.4); transform: translateY(-1px); box-shadow: 0 8px 30px rgba(99, 102, 241, 0.08); }
+        /* Callouts */
+        .callout-info { background: rgba(6, 182, 212, 0.08); border-left: 3px solid #06b6d4; border-radius: 0 12px 12px 0; padding: 14px 18px; }
+        .callout-warn { background: rgba(245, 158, 11, 0.08); border-left: 3px solid #f59e0b; border-radius: 0 12px 12px 0; padding: 14px 18px; }
+        .callout-success { background: rgba(16, 185, 129, 0.08); border-left: 3px solid #10b981; border-radius: 0 12px 12px 0; padding: 14px 18px; }
+        .callout-danger { background: rgba(239, 68, 68, 0.08); border-left: 3px solid #ef4444; border-radius: 0 12px 12px 0; padding: 14px 18px; }
 
-        /* Timeline Step */
-        .step-line { position: absolute; left: 18px; top: 44px; bottom: -8px; width: 2px; background: linear-gradient(to bottom, #30363d, transparent); }
-
-        /* Callout */
-        .callout-info { background: rgba(6, 182, 212, 0.08); border-left: 3px solid #06b6d4; border-radius: 0 10px 10px 0; padding: 14px 18px; }
-        .callout-warn { background: rgba(245, 158, 11, 0.08); border-left: 3px solid #f59e0b; border-radius: 0 10px 10px 0; padding: 14px 18px; }
-        .callout-success { background: rgba(16, 185, 129, 0.08); border-left: 3px solid #10b981; border-radius: 0 10px 10px 0; padding: 14px 18px; }
-        .callout-danger { background: rgba(239, 68, 68, 0.08); border-left: 3px solid #ef4444; border-radius: 0 10px 10px 0; padding: 14px 18px; }
-
-        /* Section scroll margin */
         section { scroll-margin-top: 80px; }
-
-        /* Animated underline */
-        .nav-link-underline { position: relative; }
-        .nav-link-underline::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 2px; background: #6366f1; transition: width 0.3s; }
-        .nav-link-underline:hover::after { width: 100%; }
-
-        /* Mobile sidebar toggle */
-        @media (max-width: 1024px) { .sidebar { display: none; } .sidebar.open { display: block; } }
+        @media (max-width: 1024px) { .sidebar { display: none; } .sidebar.open { display: block; position: fixed; inset: 64px 0 0 0; background: #0d1117; z-index: 40; padding: 20px; overflow-y: auto; } }
     </style>
 </head>
 <body>
@@ -96,32 +76,31 @@
 <nav class="nav-blur sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
         <div class="flex items-center gap-3">
-            <!-- Mobile sidebar toggle -->
-            <button id="sidebarToggle" class="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
+            <button id="sidebarToggle" class="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors" aria-label="Toggle navigation">
                 <i class="fas fa-bars"></i>
             </button>
             <a href="/" class="flex items-center gap-2.5 group">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
                     <i class="fa-solid fa-bolt text-white text-sm"></i>
                 </div>
                 <div>
                     <span class="font-bold text-lg text-white">Subeditor<span class="text-indigo-400">24</span></span>
                     <span class="hidden sm:inline text-slate-500 mx-2">·</span>
-                    <span class="hidden sm:inline text-slate-400 text-sm font-medium">API Integration Guide</span>
+                    <span class="hidden sm:inline text-slate-400 text-xs font-semibold uppercase tracking-wider">Integration Docs</span>
                 </div>
             </a>
         </div>
         <div class="flex items-center gap-3">
             <span class="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-3 py-1.5 rounded-full font-bold">
                 <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
-                Live Docs
+                v2.4 Complete Documentation
             </span>
             @auth
-            <a href="{{ route('settings.index') }}" class="text-sm font-semibold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-4 py-1.5 rounded-lg transition-colors">
+            <a href="{{ route('settings.index') }}" class="text-xs sm:text-sm font-semibold text-indigo-300 hover:text-white bg-indigo-500/10 hover:bg-indigo-600/30 border border-indigo-500/30 px-3 sm:px-4 py-1.5 rounded-xl transition-all">
                 ← Back to Settings
             </a>
             @else
-            <a href="{{ route('login') }}" class="text-sm font-semibold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-4 py-1.5 rounded-lg transition-colors">
+            <a href="{{ route('login') }}" class="text-xs sm:text-sm font-semibold text-indigo-300 hover:text-white bg-indigo-500/10 hover:bg-indigo-600/30 border border-indigo-500/30 px-3 sm:px-4 py-1.5 rounded-xl transition-all">
                 Login →
             </a>
             @endauth
@@ -130,40 +109,40 @@
 </nav>
 
 <!-- ===== MAIN LAYOUT ===== -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 flex gap-8 pt-8 pb-20">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 flex gap-8 pt-8 pb-24">
 
     <!-- ===== LEFT SIDEBAR ===== -->
     <aside id="sidebar" class="sidebar w-64 flex-shrink-0">
-        <div class="sticky top-24">
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 px-2">On This Page</p>
-            <nav class="space-y-0.5">
-                <a class="sidebar-link active" onclick="scrollToSection('overview')"><span class="dot"></span>Overview</a>
-                <a class="sidebar-link" onclick="scrollToSection('how-it-works')"><span class="dot"></span>How It Works</a>
-                <a class="sidebar-link" onclick="scrollToSection('quick-start')"><span class="dot"></span>Quick Start (3 Steps)</a>
-                <div class="my-3 border-t border-slate-700/50"></div>
-                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Mapping Keys</p>
-                <a class="sidebar-link" onclick="scrollToSection('content-fields')"><span class="dot"></span>Content Fields</a>
-                <a class="sidebar-link" onclick="scrollToSection('auth-fields')"><span class="dot"></span>Authentication</a>
-                <a class="sidebar-link" onclick="scrollToSection('extra-fields')"><span class="dot"></span>Extra / Static Fields</a>
-                <a class="sidebar-link" onclick="scrollToSection('response-parsing')"><span class="dot"></span>Response Parsing</a>
-                <div class="my-3 border-t border-slate-700/50"></div>
-                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-2">API Response</p>
-                <a class="sidebar-link" onclick="scrollToSection('expected-response')"><span class="dot"></span>Expected Response Format</a>
-                <div class="my-3 border-t border-slate-700/50"></div>
-                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Category Fetch</p>
-                <a class="sidebar-link" onclick="scrollToSection('category-fetch')"><span class="dot"></span>How Category Fetch Works</a>
-                <a class="sidebar-link" onclick="scrollToSection('category-custom-url')"><span class="dot"></span>Custom Category URL</a>
-                <a class="sidebar-link" onclick="scrollToSection('category-default-url')"><span class="dot"></span>Default Laravel URL</a>
-                <a class="sidebar-link" onclick="scrollToSection('category-response-format')"><span class="dot"></span>Category Response Format</a>
-                <div class="my-3 border-t border-slate-700/50"></div>
-                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Examples</p>
-                <a class="sidebar-link" onclick="scrollToSection('example-1')"><span class="dot"></span>Laravel / Custom API</a>
-                <a class="sidebar-link" onclick="scrollToSection('example-2')"><span class="dot"></span>Bearer Auth API</a>
-                <a class="sidebar-link" onclick="scrollToSection('example-3')"><span class="dot"></span>TV / Media Portal</a>
-                <a class="sidebar-link" onclick="scrollToSection('example-4')"><span class="dot"></span>Minimal Setup</a>
-                <div class="my-3 border-t border-slate-700/50"></div>
-                <a class="sidebar-link" onclick="scrollToSection('ready-api')"><span class="dot"></span>Build Your JSON →</a>
-                <a class="sidebar-link" onclick="scrollToSection('faq')"><span class="dot"></span>FAQ</a>
+        <div class="sticky top-24 max-h-[85vh] overflow-y-auto pr-2">
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 px-2">Navigation (সূচিপত্র)</p>
+            <nav class="space-y-0.5 text-xs">
+                <a class="sidebar-link active" onclick="scrollToSection('overview')"><span class="dot"></span>Overview (সারসংক্ষেপ)</a>
+                <a class="sidebar-link" onclick="scrollToSection('architecture')"><span class="dot"></span>How It Works (কাজের ধারা)</a>
+                
+                <div class="my-3 border-t border-slate-800"></div>
+                <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2 px-2">🚀 Laravel Setup (সম্পূর্ণ গাইড)</p>
+                <a class="sidebar-link" onclick="scrollToSection('laravel-step1')"><span class="dot"></span>1. .env & Token Setup</a>
+                <a class="sidebar-link" onclick="scrollToSection('laravel-step2')"><span class="dot"></span>2. News Post Route (api.php)</a>
+                <a class="sidebar-link" onclick="scrollToSection('laravel-step3')"><span class="dot"></span>3. Category Fetch Route</a>
+                <a class="sidebar-link" onclick="scrollToSection('laravel-step4')"><span class="dot"></span>4. Image Handling & Storage</a>
+
+                <div class="my-3 border-t border-slate-800"></div>
+                <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2 px-2">📂 Categories & Mappings</p>
+                <a class="sidebar-link" onclick="scrollToSection('category-fetch')"><span class="dot"></span>Category Sync System</a>
+                <a class="sidebar-link" onclick="scrollToSection('field-mappings')"><span class="dot"></span>Field Name Mappings</a>
+                <a class="sidebar-link" onclick="scrollToSection('expected-response')"><span class="dot"></span>Expected JSON Response</a>
+
+                <div class="my-3 border-t border-slate-800"></div>
+                <p class="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2 px-2">💻 Other Frameworks Code</p>
+                <a class="sidebar-link" onclick="scrollToSection('code-wordpress')"><span class="dot"></span>WordPress Plugin / Theme</a>
+                <a class="sidebar-link" onclick="scrollToSection('code-nextjs')"><span class="dot"></span>Next.js (App / Pages)</a>
+                <a class="sidebar-link" onclick="scrollToSection('code-express')"><span class="dot"></span>Node.js / Express</a>
+                <a class="sidebar-link" onclick="scrollToSection('code-php')"><span class="dot"></span>Single File Raw PHP</a>
+                <a class="sidebar-link" onclick="scrollToSection('code-python')"><span class="dot"></span>Python (FastAPI / Flask)</a>
+
+                <div class="my-3 border-t border-slate-800"></div>
+                <a class="sidebar-link" onclick="scrollToSection('ready-api')"><span class="dot"></span>🛠️ Visual JSON Builder</a>
+                <a class="sidebar-link" onclick="scrollToSection('faq-troubleshooting')"><span class="dot"></span>❓ FAQ & Troubleshooting</a>
             </nav>
         </div>
     </aside>
@@ -174,896 +153,823 @@
         <!-- ===== HERO ===== -->
         <section id="overview">
             <div class="mb-3 flex items-center gap-2">
-                <span class="text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">📡 Integration Guide</span>
-                <span class="text-xs text-slate-500">v2.0</span>
+                <span class="text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">📡 Universal Website Integration</span>
+                <span class="text-xs text-slate-500 font-mono">v2.4 Ready</span>
             </div>
-            <h1 class="text-4xl sm:text-5xl font-black text-white leading-tight mb-4">
-                Custom API<br>
-                <span class="gradient-text">Mapping Guide</span>
+            <h1 class="text-3xl sm:text-5xl font-black text-white leading-tight mb-4">
+                Website Integration &<br>
+                <span class="gradient-text">API Developer Documentation</span>
             </h1>
-            <p class="text-lg text-slate-400 max-w-2xl leading-relaxed mb-8">
-                Connect <strong class="text-slate-300">any website</strong> to Subeditor24 — your own Laravel app, custom CMS, TV portal, or any backend — using a simple JSON configuration called <strong class="text-indigo-400">Custom API Mapping</strong>.
+            <p class="text-base sm:text-lg text-slate-300 max-w-3xl leading-relaxed mb-6 font-bangla">
+                Subeditor24 এর মাধ্যমে যেকোনো <strong class="text-indigo-400 font-bold">Laravel</strong>, <strong class="text-purple-400 font-bold">WordPress</strong>, <strong class="text-cyan-400 font-bold">Next.js</strong>, বা কাস্টম CMS ওয়েবসাইটকে মুহূর্তের মধ্যে সংযুক্ত করুন। এআই দ্বারা সংগৃহীত ও রিরাইট করা সংবাদসমূহ স্বয়ংক্রিয়ভাবে সরাসরি আপনার ডাটাবেসে ছবিসহ লাইভ পোস্ট হবে।
             </p>
 
             <!-- Feature Pills -->
-            <div class="flex flex-wrap gap-3 mb-10">
-                <span class="flex items-center gap-2 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 px-4 py-2 rounded-full">
-                    <i class="fas fa-upload text-indigo-400 text-xs"></i> Multipart Image Upload
-                </span>
-                <span class="flex items-center gap-2 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 px-4 py-2 rounded-full">
-                    <i class="fas fa-key text-amber-400 text-xs"></i> Bearer or Body Token Auth
-                </span>
-                <span class="flex items-center gap-2 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 px-4 py-2 rounded-full">
-                    <i class="fas fa-sliders text-emerald-400 text-xs"></i> Dynamic Field Mapping
-                </span>
-                <span class="flex items-center gap-2 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 px-4 py-2 rounded-full">
-                    <i class="fas fa-infinity text-purple-400 text-xs"></i> Any Framework Compatible
-                </span>
-            </div>
-
-            <!-- Quick Overview Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="glass-card rounded-2xl p-5">
-                    <div class="w-10 h-10 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center justify-center mb-3">
-                        <i class="fas fa-plug text-indigo-400"></i>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+                <div class="glass-card rounded-xl p-3.5 flex items-center gap-3">
+                    <div class="w-9 h-9 bg-indigo-500/20 border border-indigo-500/30 rounded-lg flex items-center justify-center text-indigo-400">
+                        <i class="fas fa-lock text-sm"></i>
                     </div>
-                    <p class="font-bold text-white text-sm mb-1">Any API Endpoint</p>
-                    <p class="text-xs text-slate-500 leading-relaxed">Point to your own custom endpoint — no changes needed in Subeditor24's core system.</p>
+                    <div>
+                        <p class="font-bold text-white text-xs">Bearer Auth</p>
+                        <p class="text-[11px] text-slate-400">নিরাপদ টোকেন চাবি</p>
+                    </div>
                 </div>
-                <div class="glass-card rounded-2xl p-5">
-                    <div class="w-10 h-10 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-center justify-center mb-3">
-                        <i class="fas fa-code text-purple-400"></i>
+                <div class="glass-card rounded-xl p-3.5 flex items-center gap-3">
+                    <div class="w-9 h-9 bg-emerald-500/20 border border-emerald-500/30 rounded-lg flex items-center justify-center text-emerald-400">
+                        <i class="fas fa-tags text-sm"></i>
                     </div>
-                    <p class="font-bold text-white text-sm mb-1">JSON Configuration</p>
-                    <p class="text-xs text-slate-500 leading-relaxed">A single JSON object maps our internal field names to your API's expected parameter names.</p>
+                    <div>
+                        <p class="font-bold text-white text-xs">Auto Category</p>
+                        <p class="text-[11px] text-slate-400">ক্যাটাগরি সিঙ্ক</p>
+                    </div>
                 </div>
-                <div class="glass-card rounded-2xl p-5">
-                    <div class="w-10 h-10 bg-cyan-500/10 border border-cyan-500/20 rounded-xl flex items-center justify-center mb-3">
-                        <i class="fas fa-image text-cyan-400"></i>
+                <div class="glass-card rounded-xl p-3.5 flex items-center gap-3">
+                    <div class="w-9 h-9 bg-cyan-500/20 border border-cyan-500/30 rounded-lg flex items-center justify-center text-cyan-400">
+                        <i class="fas fa-image text-sm"></i>
                     </div>
-                    <p class="font-bold text-white text-sm mb-1">Real Image Upload</p>
-                    <p class="text-xs text-slate-500 leading-relaxed">We download the image and upload it as a physical file via multipart form — not just a URL.</p>
+                    <div>
+                        <p class="font-bold text-white text-xs">Multipart Upload</p>
+                        <p class="text-[11px] text-slate-400">আসল ছবি আপলোড</p>
+                    </div>
+                </div>
+                <div class="glass-card rounded-xl p-3.5 flex items-center gap-3">
+                    <div class="w-9 h-9 bg-purple-500/20 border border-purple-500/30 rounded-lg flex items-center justify-center text-purple-400">
+                        <i class="fas fa-sliders text-sm"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-white text-xs">Custom Mapping</p>
+                        <p class="text-[11px] text-slate-400">যেকোনো ফিল্ড ম্যাচিং</p>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- ===== HOW IT WORKS ===== -->
-        <section id="how-it-works">
-            <h2 class="text-2xl font-bold text-white mb-2">How It Works</h2>
-            <p class="text-slate-400 mb-8">When a news item is published, here's what happens behind the scenes:</p>
+        <!-- ===== ARCHITECTURE & HOW IT WORKS ===== -->
+        <section id="architecture">
+            <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                <i class="fas fa-network-wired text-indigo-400"></i> How It Works (সংযোগ যেভাবে কাজ করে)
+            </h2>
+            <p class="text-slate-400 mb-6 font-bangla text-sm">
+                Subeditor24 থেকে আপনার ওয়েবসাইটে নিউজ পোস্ট হওয়ার সম্পূর্ণ ওয়ার্কফ্লো:
+            </p>
 
             <div class="space-y-4">
-                <!-- Step 1 -->
-                <div class="relative flex gap-5">
-                    <div class="step-line"></div>
-                    <div class="w-9 h-9 flex-shrink-0 bg-indigo-500/15 border border-indigo-500/30 rounded-full flex items-center justify-center text-sm font-black text-indigo-400 z-10">1</div>
-                    <div class="flex-1 pb-6">
-                        <p class="font-bold text-white mb-1">Check Configuration</p>
-                        <p class="text-sm text-slate-400">System reads your <code class="code-font text-indigo-300 bg-slate-800 px-1.5 py-0.5 rounded">custom_api_url</code> and <code class="code-font text-indigo-300 bg-slate-800 px-1.5 py-0.5 rounded">custom_api_mapping</code> from your Settings. If both exist, Custom API mode is activated.</p>
+                <div class="relative flex gap-4">
+                    <div class="w-8 h-8 flex-shrink-0 bg-indigo-500/20 border border-indigo-500/40 rounded-full flex items-center justify-center text-xs font-black text-indigo-400">1</div>
+                    <div class="flex-1 bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+                        <p class="font-bold text-white text-sm mb-1">এডিটর এপ্রুভাল (News Approved)</p>
+                        <p class="text-xs text-slate-300 font-bangla">সিস্টেমে এআই-রিরাইট করা নিউজ যখন এডিটর এপ্রুভ করেন বা অটো-পাবলিশ মোড চালু থাকে, তখন পোস্টিং ইঞ্জিন সক্রিয় হয়।</p>
                     </div>
                 </div>
-                <!-- Step 2 -->
-                <div class="relative flex gap-5">
-                    <div class="step-line"></div>
-                    <div class="w-9 h-9 flex-shrink-0 bg-purple-500/15 border border-purple-500/30 rounded-full flex items-center justify-center text-sm font-black text-purple-400 z-10">2</div>
-                    <div class="flex-1 pb-6">
-                        <p class="font-bold text-white mb-1">Build the Payload</p>
-                        <p class="text-sm text-slate-400">Your mapping JSON tells us to rename fields. For example, if you write <code class="code-font text-amber-300 bg-slate-800 px-1.5 py-0.5 rounded">"title": "news_title"</code>, we send your API a field named <strong class="text-white">news_title</strong> instead of <strong class="text-white">title</strong>.</p>
+                <div class="relative flex gap-4">
+                    <div class="w-8 h-8 flex-shrink-0 bg-purple-500/20 border border-purple-500/40 rounded-full flex items-center justify-center text-xs font-black text-purple-400">2</div>
+                    <div class="flex-1 bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+                        <p class="font-bold text-white text-sm mb-1">পেলোড তৈরি ও ছবি প্রসেসিং (Payload & Image Processing)</p>
+                        <p class="text-xs text-slate-300 font-bangla">নিউজ শিরোনাম, বডি কনটেন্ট (HTML), ট্যাগ, ক্যাটাগরি আইডি এবং ফিচার্ড ইমেজ প্রসেস করা হয়। ছবিকে ফিজিক্যাল ফাইল হিসেবে multipart/form-data রিকোয়েস্টে সংযুক্ত করা হয়।</p>
                     </div>
                 </div>
-                <!-- Step 3 -->
-                <div class="relative flex gap-5">
-                    <div class="step-line"></div>
-                    <div class="w-9 h-9 flex-shrink-0 bg-cyan-500/15 border border-cyan-500/30 rounded-full flex items-center justify-center text-sm font-black text-cyan-400 z-10">3</div>
-                    <div class="flex-1 pb-6">
-                        <p class="font-bold text-white mb-1">Download & Upload Image</p>
-                        <p class="text-sm text-slate-400">If <code class="code-font text-cyan-300 bg-slate-800 px-1.5 py-0.5 rounded">"image"</code> is in your mapping, we download the thumbnail from the source and upload it as a <strong class="text-white">real file</strong> (multipart/form-data) — perfect for APIs that don't accept image URLs.</p>
+                <div class="relative flex gap-4">
+                    <div class="w-8 h-8 flex-shrink-0 bg-cyan-500/20 border border-cyan-500/40 rounded-full flex items-center justify-center text-xs font-black text-cyan-400">3</div>
+                    <div class="flex-1 bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+                        <p class="font-bold text-white text-sm mb-1">সিকিউর API হ্যান্ডশেক (Secure API Handshake)</p>
+                        <p class="text-xs text-slate-300 font-bangla">আপনার ওয়েবসাইটের এন্ডপয়েন্টে <code>Authorization: Bearer <Secret_Token></code> হেডার সহ HTTP POST রিকোয়েস্ট পাঠানো হয় (120 সেকেন্ড টাইমআউট সহ)।</p>
                     </div>
                 </div>
-                <!-- Step 4 -->
-                <div class="relative flex gap-5">
-                    <div class="w-9 h-9 flex-shrink-0 bg-emerald-500/15 border border-emerald-500/30 rounded-full flex items-center justify-center text-sm font-black text-emerald-400 z-10">4</div>
-                    <div class="flex-1">
-                        <p class="font-bold text-white mb-1">Parse Response & Save</p>
-                        <p class="text-sm text-slate-400">We read your API's response, extract the post ID and live URL, and save them in our database for tracking. The timeout is <strong class="text-white">120 seconds</strong> to handle slow servers.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="callout-info mt-6 rounded-r-xl">
-                <p class="text-sm text-cyan-300 font-bold mb-1"><i class="fas fa-info-circle mr-1"></i> Request Type</p>
-                <p class="text-sm text-cyan-200/80">All Custom API requests are sent as <strong>multipart/form-data</strong> — compatible with all standard web frameworks (Laravel, CodeIgniter, Django, Express.js, PHP, etc.)</p>
-            </div>
-        </section>
-
-        <!-- ===== QUICK START ===== -->
-        <section id="quick-start">
-            <h2 class="text-2xl font-bold text-white mb-2">Quick Start — 3 Steps</h2>
-            <p class="text-slate-400 mb-6">Get connected in under 5 minutes.</p>
-
-            <div class="space-y-4">
-                <div class="glass-card rounded-2xl p-6">
-                    <div class="flex items-start gap-4">
-                        <span class="text-2xl font-black gradient-text">01</span>
-                        <div class="flex-1">
-                            <p class="font-bold text-white mb-2">Go to Settings → Custom API Mapping section</p>
-                            <p class="text-sm text-slate-400">In your Subeditor24 dashboard, navigate to <strong class="text-slate-300">Settings</strong> and scroll to the <strong class="text-indigo-400">⚙️ Custom API Mapping</strong> section (click to expand).</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="glass-card rounded-2xl p-6">
-                    <div class="flex items-start gap-4">
-                        <span class="text-2xl font-black gradient-text">02</span>
-                        <div class="flex-1">
-                            <p class="font-bold text-white mb-2">Fill in your API URL + API Token</p>
-                            <p class="text-sm text-slate-400 mb-3">In the <strong class="text-slate-300">🚀 Laravel Website Connection</strong> section above it, enter your API endpoint URL and the shared secret token.</p>
-                            <div class="glass-card-light rounded-xl p-4 text-sm">
-                                <p class="text-slate-400 mb-1">Custom News Post API URL:</p>
-                                <code class="code-font text-emerald-400">https://your-site.com/api/news</code>
-                                <p class="text-slate-400 mt-3 mb-1">API Token (shared secret):</p>
-                                <code class="code-font text-amber-400">your-secret-token-here</code>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="glass-card rounded-2xl p-6">
-                    <div class="flex items-start gap-4">
-                        <span class="text-2xl font-black gradient-text">03</span>
-                        <div class="flex-1">
-                            <p class="font-bold text-white mb-2">Paste your JSON Mapping and Save</p>
-                            <p class="text-sm text-slate-400 mb-3">In the Payload JSON Mapping textarea, enter the mapping that matches your API's expected fields. See examples below. Then click <strong class="text-white">💾 Save Settings</strong>.</p>
-                            <div class="callout-success rounded-r-xl">
-                                <p class="text-sm text-emerald-300"><i class="fas fa-check-circle mr-1"></i> That's it! Next time news is published, it will automatically post to your API.</p>
-                            </div>
-                        </div>
+                <div class="relative flex gap-4">
+                    <div class="w-8 h-8 flex-shrink-0 bg-emerald-500/20 border border-emerald-500/40 rounded-full flex items-center justify-center text-xs font-black text-emerald-400">4</div>
+                    <div class="flex-1 bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+                        <p class="font-bold text-white text-sm mb-1">রেসপন্স ও ট্র্যাকিং (Response Parsing & Tracking)</p>
+                        <p class="text-xs text-slate-300 font-bangla">আপনার ওয়েবসাইট থেকে পাওয়া <code>post_id</code> এবং <code>url</code> সেভ করে পোস্টটিকে তাৎক্ষণিক <strong>Published</strong> হিসেবে চিহ্নিত করা হয়।</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ===== CONTENT FIELDS ===== -->
-        <section id="content-fields">
-            <h2 class="text-2xl font-bold text-white mb-2">Content Mapping Keys</h2>
-            <p class="text-slate-400 mb-6">These are the main content fields you can map. The <strong class="text-white">left side</strong> (key) is our internal name; the <strong class="text-white">right side</strong> (value) is the field name your API expects.</p>
+        <!-- ========================================================================= -->
+        <!-- ===== LARAVEL INTEGRATION MASTER GUIDE ===== -->
+        <!-- ========================================================================= -->
+        <section id="laravel-step1" class="border-t border-slate-800 pt-8">
+            <div class="mb-3 flex items-center gap-2">
+                <span class="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-full">
+                    <i class="fab fa-laravel mr-1"></i> Laravel Master Setup
+                </span>
+            </div>
+            <h2 class="text-3xl font-black text-white mb-2">
+                Laravel ওয়েবসাইট কানেক্ট করার ৪টি সহজ ধাপ
+            </h2>
+            <p class="text-sm text-slate-400 mb-6 font-bangla">
+                আপনার বিদ্যমান বা নতুন যেকোনো Laravel (Laravel 9, 10, 11) প্রজেক্টে নিচের কোডগুলো যুক্ত করলেই সম্পূর্ণ অটোমেশন চালু হয়ে যাবে:
+            </p>
+
+            <!-- STEP 1: .ENV & TOKEN -->
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex items-start gap-4 mb-4">
+                    <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm">১</span>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">ধাপ ১: API Secret Token তৈরি ও .env এ সংরক্ষণ</h3>
+                        <p class="text-xs text-slate-400 font-bangla mt-1">
+                            Settings পেজের <strong>"API Secret Token"</strong> ফিল্ডে <strong>Generate</strong> বাটনে ক্লিক করে একটি সিক্রেট টোকেন তৈরি করুন। এরপর আপনার Laravel প্রজেক্টের <code>.env</code> ফাইলে এটি যুক্ত করুন:
+                        </p>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    <pre><code class="text-emerald-400"># আপনার Laravel প্রজেক্টের .env ফাইল ওপেন করে নিচে যুক্ত করুন:
+SUBEDITOR_API_SECRET=your_generated_secret_token_here
+</code></pre>
+                </div>
+            </div>
+
+            <!-- STEP 2: NEWS POST ROUTE -->
+            <div id="laravel-step2" class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex items-start gap-4 mb-4">
+                    <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm">২</span>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">ধাপ ২: নিউজ রিসিভ করার এপিআই রুট তৈরি (routes/api.php)</h3>
+                        <p class="text-xs text-slate-400 font-bangla mt-1">
+                            আপনার Laravel প্রজেক্টের <code class="text-indigo-300">routes/api.php</code> ফাইলে নিচের কোডটি হুবহু পেস্ট করুন। এটি টোকেন ভ্যালিডেশন করবে, ছবি সেভ করবে এবং ডাটাবেসে নতুন নিউজ ইনসার্ট করবে:
+                        </p>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    <pre><code class="text-emerald-300"><?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use App\Models\NewsPost; // ⚠️ আপনার নিউজ মডেল ক্লাসের নাম অনুযায়ী পরিবর্তন করুন
+
+Route::post('/external-news-post', function (Request $request) {
+    // ১. সিকিউরিটি টোকেন চেক (Authorization Header Verification)
+    $authHeader = $request->header('Authorization');
+    $secret = env('SUBEDITOR_API_SECRET', 'YOUR_SECRET_TOKEN_HERE');
+    $expectedToken = "Bearer " . $secret;
+
+    if (!$authHeader || $authHeader !== $expectedToken) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized: Invalid or missing API token'
+        ], 401);
+    }
+
+    // ২. ডেটা ভ্যালিডেশন
+    $validated = $request->validate([
+        'title'       => 'required|string',
+        'content'     => 'required|string',
+        'image'       => 'nullable', // ফাইল অথবা ইমেজ ইউআরএল
+        'category_id' => 'nullable',
+        'category'    => 'nullable|string',
+        'tags'        => 'nullable|string',
+        'slug'        => 'nullable|string',
+    ]);
+
+    // ৩. ফিচার্ড ইমেজ প্রসেসিং ও সংরক্ষণ
+    $imagePath = null;
+    if ($request->hasFile('image')) {
+        // ফিজিক্যাল ফাইল আপলোড হলে public disk এ সেভ করুন
+        $imagePath = $request->file('image')->store('news_images', 'public');
+    } elseif ($request->filled('image') && is_string($request->image)) {
+        // ইমেজ ইউআরএল হিসেবে আসলে
+        $imagePath = $request->image;
+    }
+
+    // ৪. স্লাগ (Slug) হ্যান্ডলিং
+    $slug = !empty($validated['slug']) 
+        ? Str::slug($validated['slug']) 
+        : Str::slug($validated['title']) . '-' . time();
+
+    // ৫. ডাটাবেসে নিউজ ইনসার্ট করুন
+    $post = NewsPost::create([
+        'title'       => $validated['title'],
+        'slug'        => $slug,
+        'content'     => $validated['content'],
+        'image'       => $imagePath,
+        'category_id' => $validated['category_id'] ?? 1,
+        'tags'        => $validated['tags'] ?? null,
+        'status'      => 'published',
+        'created_at'  => now(),
+        'updated_at'  => now(),
+    ]);
+
+    // ৬. সফল রেসপন্স ও লাইভ পোস্টের ইউআরএল প্রদান
+    return response()->json([
+        'success' => true,
+        'message' => 'News published successfully to your website',
+        'post_id' => $post->id,
+        'url'     => url('/news/' . $post->slug) // পোস্টের লাইভ লিংক
+    ], 200);
+});
+</code></pre>
+                </div>
+            </div>
+
+            <!-- STEP 3: CATEGORY FETCH ROUTE -->
+            <div id="laravel-step3" class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex items-start gap-4 mb-4">
+                    <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm">৩</span>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">ধাপ ৩: ক্যাটাগরি তালিকা রিটার্ন করার রুট (routes/api.php)</h3>
+                        <p class="text-xs text-slate-400 font-bangla mt-1">
+                            Subeditor24 যেন Settings পেজের <strong>"Refresh Categories"</strong> চাপলেই আপনার ওয়েবসাইটের সব ক্যাটাগরি পেয়ে যায়, সেজন্য <code class="text-indigo-300">routes/api.php</code> ফাইলে এই রুটটি যোগ করুন:
+                        </p>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    <pre><code class="text-emerald-300">use App\Models\Category; // ⚠️ আপনার ক্যাটাগরি মডেল
+
+Route::get('/get-categories', function (Request $request) {
+    // টোকেন ভেরিফিকেশন (Bearer Header অথবা Query Parameter ?token=...)
+    $token = $request->bearerToken() ?? $request->query('token');
+    $expectedSecret = env('SUBEDITOR_API_SECRET');
+
+    if ($token !== $expectedSecret) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    // আপনার ডাটাবেস থেকে id এবং name সহ ক্যাটাগরি রিটার্ন করুন
+    return response()->json(
+        Category::select('id', 'name')->get()
+    );
+});
+</code></pre>
+                </div>
+
+                <div class="callout-info mt-4 rounded-r-xl">
+                    <p class="text-xs text-cyan-300 font-bangla leading-relaxed">
+                        <i class="fas fa-info-circle mr-1"></i> <strong>রেসপন্স ফরম্যাট:</strong> এটি সরাসরি <code>[{"id": 1, "name": "জাতীয়"}, {"id": 2, "name": "খেলাধুলা"}]</code> রিটার্ন করবে, যা Subeditor24 ড্যাশবোর্ডে সাথে সাথে লোড হয়ে যাবে।
+                    </p>
+                </div>
+            </div>
+
+            <!-- STEP 4: STORAGE LINK & LARAVEL 11 SETUP -->
+            <div id="laravel-step4" class="glass-card rounded-2xl p-6">
+                <div class="flex items-start gap-4 mb-4">
+                    <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm">৪</span>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">ধাপ ৪: স্টোরেজ লিংক ও Laravel 11 স্পেশাল কনফিগারেশন</h3>
+                        <p class="text-xs text-slate-400 font-bangla mt-1">
+                            ছবিগুলো ওয়েবসাইটে দৃশ্যমান করতে এবং Laravel 11-এ API রুট চালু রাখতে নিচের কমান্ডগুলো দিন:
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-bangla">
+                    <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                        <p class="font-bold text-white mb-2"><i class="fas fa-terminal text-indigo-400 mr-1"></i> Storage Link কমান্ড</p>
+                        <p class="text-slate-300 mb-2">আপলোড করা ছবি ব্রাউজারে দেখতে আপনার টার্মিনালে রান করুন:</p>
+                        <pre class="!py-2 !px-3"><code>php artisan storage:link</code></pre>
+                    </div>
+                    <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                        <p class="font-bold text-white mb-2"><i class="fab fa-laravel text-red-400 mr-1"></i> Laravel 11 API Route চালু</p>
+                        <p class="text-slate-300 mb-2">Laravel 11 এ ডিফল্ট api.php চালু করতে টার্মিনালে রান করুন:</p>
+                        <pre class="!py-2 !px-3"><code>php artisan install:api</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- ===== CATEGORY SYNC SYSTEM ===== -->
+        <!-- ========================================================================= -->
+        <section id="category-fetch" class="border-t border-slate-800 pt-8">
+            <div class="mb-3 flex items-center gap-2">
+                <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                    <i class="fas fa-tags mr-1"></i> Category System
+                </span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">
+                ক্যাটাগরি সিঙ্ক ও ম্যাপিং কিভাবে কাজ করে
+            </h2>
+            <p class="text-slate-400 mb-6 font-bangla text-sm">
+                Subeditor24 এর এআই প্রতি নিউজের জন্য একটি মূল বিষয়বস্তু (Topic) চিহ্নিত করে (যেমন Politics, Sports, International ইত্যাদি)। আপনি আপনার ওয়েবসাইটের ক্যাটাগরির সাথে এটি মিলিয়ে দিতে পারেন:
+            </p>
+
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <h3 class="text-base font-bold text-white mb-3">ক্যাটাগরি ফেচিংয়ের অগ্রাধিকার ক্রম (Priority Order):</h3>
+                <div class="space-y-3 font-bangla text-xs">
+                    <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center">1</span>
+                        <div>
+                            <strong class="text-emerald-300">Custom Category Fetch URL:</strong> Settings এ যদি কাস্টম ক্যাটাগরি ইউআরএল দেওয়া থাকে, তবে সবার আগে সেখান থেকে ক্যাটাগরি নিয়ে আসা হয়।
+                        </div>
+                    </div>
+                    <div class="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center">2</span>
+                        <div>
+                            <strong class="text-indigo-300">Default Laravel API ({Base_URL}/api/get-categories):</strong> কাস্টম ইউআরএল না থাকলে স্বয়ংক্রিয়ভাবে ওয়েবসাইটের <code>/api/get-categories</code> এ রিকোয়েস্ট পাঠানো হয়।
+                        </div>
+                    </div>
+                    <div class="p-3 bg-slate-800 border border-slate-700 rounded-xl flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-full bg-slate-700 text-slate-300 font-bold flex items-center justify-center">3</span>
+                        <div>
+                            <strong class="text-slate-300">WordPress REST API Fallback:</strong> উপরের দুটি না থাকলে WordPress credentials দিয়ে ক্যাটাগরি ফেচ করার চেষ্টা করা হয়।
+                        </div>
+                    </div>
+                </div>
+
+                <div class="callout-success mt-4 rounded-r-xl">
+                    <p class="text-xs text-emerald-300 font-bangla">
+                        <i class="fas fa-check-circle mr-1"></i> ক্যাটাগরিগুলো ২৪ ঘণ্টার জন্য ক্যাশ (Cache) হয়ে থাকে। নতুন ক্যাটাগরি যুক্ত করলে Settings পেজে এসে <strong>"🔄 Refresh Categories"</strong> বাটনে ক্লিক করলেই আপডেট হয়ে যাবে।
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- ===== FIELD MAPPINGS ===== -->
+        <!-- ========================================================================= -->
+        <section id="field-mappings" class="border-t border-slate-800 pt-8">
+            <div class="mb-3 flex items-center gap-2">
+                <span class="text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
+                    <i class="fas fa-sliders mr-1"></i> Dynamic Mapping
+                </span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">
+                Field Name Mappings (ফিল্ড নেম ম্যাপিং)
+            </h2>
+            <p class="text-slate-400 mb-6 font-bangla text-sm">
+                যদি আপনার ওয়েবসাইট বা API তে প্যারামিটারের নাম আলাদা হয় (যেমন <code class="text-indigo-300">title</code> এর বদলে <code class="text-indigo-300">news_headline</code>), তবে আপনি কাস্টম ম্যাপিং JSON ব্যবহার করে যেকোনো ফিল্ডের নাম পরিবর্তন করতে পারেন:
+            </p>
 
             <div class="overflow-hidden glass-card rounded-2xl mb-6">
                 <table>
                     <thead>
                         <tr>
-                            <th>Mapping Key</th>
-                            <th>What We Send</th>
-                            <th>Type</th>
-                            <th>Status</th>
+                            <th>Subeditor24 Default Key</th>
+                            <th>ডেটার বিবরণ (Description)</th>
+                            <th>ডেটা টাইপ</th>
+                            <th>প্রয়োজনীয়তা</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="font-bangla text-xs">
                         <tr>
                             <td><code class="code-font text-sky-400 text-sm">"title"</code></td>
-                            <td>
-                                <p class="text-slate-200 font-medium">AI-rewritten news headline</p>
-                                <p class="text-xs text-slate-500 mt-0.5">Plain text string. Maximum ~200 characters.</p>
-                            </td>
-                            <td><span class="code-font text-xs text-slate-400">string</span></td>
-                            <td><span class="badge-required">Required</span></td>
+                            <td>সংবাদের প্রধান শিরোনাম (AI Rewritten News Headline)</td>
+                            <td><span class="code-font text-slate-400">string</span></td>
+                            <td><span class="badge-required">আবশ্যক</span></td>
                         </tr>
                         <tr>
                             <td><code class="code-font text-sky-400 text-sm">"content"</code></td>
-                            <td>
-                                <p class="text-slate-200 font-medium">News body content (HTML)</p>
-                                <p class="text-xs text-slate-500 mt-0.5">Full article HTML with paragraphs, headings, etc.</p>
-                            </td>
-                            <td><span class="code-font text-xs text-slate-400">string (HTML)</span></td>
-                            <td><span class="badge-required">Required</span></td>
+                            <td>সম্পূর্ণ সংবাদ বডি HTML ফরম্যাটে (Full Article Body HTML)</td>
+                            <td><span class="code-font text-slate-400">HTML string</span></td>
+                            <td><span class="badge-required">আবশ্যক</span></td>
                         </tr>
                         <tr>
                             <td><code class="code-font text-sky-400 text-sm">"image"</code></td>
-                            <td>
-                                <p class="text-slate-200 font-medium">Thumbnail — physical file upload</p>
-                                <p class="text-xs text-slate-500 mt-0.5">We download from source and upload as multipart file. Not a URL.</p>
-                            </td>
-                            <td><span class="code-font text-xs text-slate-400">file (multipart)</span></td>
-                            <td><span class="badge-optional">Optional</span></td>
+                            <td>ফিচার্ড ইমেজ (Multipart File Upload)</td>
+                            <td><span class="code-font text-slate-400">file</span></td>
+                            <td><span class="badge-optional">ঐচ্ছিক</span></td>
                         </tr>
                         <tr>
-                            <td><code class="code-font text-sky-400 text-sm">"category"</code></td>
-                            <td>
-                                <p class="text-slate-200 font-medium">Category ID(s) from mapping table</p>
-                                <p class="text-xs text-slate-500 mt-0.5">Can be single or array. To send as array, add <code class="code-font text-amber-400">[]</code> to the value: <code class="code-font text-cyan-400">"category[]"</code></p>
-                            </td>
-                            <td><span class="code-font text-xs text-slate-400">int / int[]</span></td>
-                            <td><span class="badge-optional">Optional</span></td>
+                            <td><code class="code-font text-sky-400 text-sm">"category"</code> / <code class="code-font text-sky-400 text-sm">"category_id"</code></td>
+                            <td>টার্গেট ওয়েবসাইটের ক্যাটাগরি আইডি (Category ID)</td>
+                            <td><span class="code-font text-slate-400">int / int[]</span></td>
+                            <td><span class="badge-optional">ঐচ্ছিক</span></td>
                         </tr>
                         <tr>
                             <td><code class="code-font text-sky-400 text-sm">"tags"</code></td>
-                            <td>
-                                <p class="text-slate-200 font-medium">Hashtags string</p>
-                                <p class="text-xs text-slate-500 mt-0.5">Comma-separated or space-separated tags. Example: <code class="code-font text-slate-400">bangladesh,politics,news</code></p>
-                            </td>
-                            <td><span class="code-font text-xs text-slate-400">string</span></td>
-                            <td><span class="badge-optional">Optional</span></td>
+                            <td>কমা দিয়ে বিভক্ত হ্যাশট্যাগ তালিকা (Comma-separated tags)</td>
+                            <td><span class="code-font text-slate-400">string</span></td>
+                            <td><span class="badge-optional">ঐচ্ছিক</span></td>
                         </tr>
                         <tr>
-                            <td><code class="code-font text-sky-400 text-sm">"date"</code></td>
-                            <td>
-                                <p class="text-slate-200 font-medium">Publish date (today's date)</p>
-                                <p class="text-xs text-slate-500 mt-0.5">Format: <code class="code-font text-amber-400">YYYY-MM-DD</code> (e.g. 2026-04-21)</p>
-                            </td>
-                            <td><span class="code-font text-xs text-slate-400">string (date)</span></td>
-                            <td><span class="badge-optional">Optional</span></td>
+                            <td><code class="code-font text-sky-400 text-sm">"slug"</code></td>
+                            <td>ইউআরএল ফ্রেন্ডলি স্লাগ (URL Slug)</td>
+                            <td><span class="code-font text-slate-400">string</span></td>
+                            <td><span class="badge-optional">ঐচ্ছিক</span></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-
-            <!-- Example of category array -->
-            <div class="callout-warn rounded-r-xl">
-                <p class="text-sm text-amber-300 font-bold mb-1"><i class="fas fa-triangle-exclamation mr-1"></i> Category as Array</p>
-                <p class="text-sm text-amber-200/80">If your API expects category IDs as an array (e.g. <code class="code-font text-amber-300">category_ids[]</code>), add <code class="code-font">[]</code> to the value in your mapping:</p>
-                <pre class="mt-3 !py-3 !px-4"><code><span class="json-key">"category"</span><span class="text-white">: </span><span class="json-str">"category_ids[]"</span>  <span class="json-comment">// Sent as: category_ids[]=5&category_ids[]=12</span></code></pre>
-            </div>
         </section>
 
-        <!-- ===== AUTH FIELDS ===== -->
-        <section id="auth-fields">
-            <h2 class="text-2xl font-bold text-white mb-2">Authentication Keys</h2>
-            <p class="text-slate-400 mb-6">Two authentication methods are supported. Use only one at a time.</p>
+        <!-- ========================================================================= -->
+        <!-- ===== EXPECTED JSON RESPONSE ===== -->
+        <!-- ========================================================================= -->
+        <section id="expected-response" class="border-t border-slate-800 pt-8">
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">
+                Expected Response (আপনার API যে রেসপন্স রিটার্ন করবে)
+            </h2>
+            <p class="text-slate-400 mb-6 font-bangla text-sm">
+                আপনার ওয়েবসাইট সফলভাবে সংবাদ রিসিভ করার পর HTTP <strong class="text-emerald-400">200</strong> বা <strong class="text-emerald-400">201</strong> স্ট্যাটাস সহ নিচের যেকোনো একটি JSON ফরম্যাটে রেসপন্স দিতে হবে:
+            </p>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
-                <!-- Method 1: Body Token -->
-                <div class="field-card">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-8 h-8 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-lock text-amber-400 text-sm"></i>
-                        </div>
-                        <div>
-                            <p class="font-bold text-white text-sm">Method 1: Body Token</p>
-                            <span class="badge-optional">Recommended</span>
-                        </div>
-                    </div>
-                    <p class="text-sm text-slate-400 mb-3">The API token is sent as part of the POST body (multipart field).</p>
-                    <pre class="!py-3 !px-4 text-xs"><code><span class="json-key">"token"</span><span class="text-white">: </span><span class="json-str">"api_key"</span></code></pre>
-                    <p class="text-xs text-slate-500 mt-2">Your API receives: field <code class="code-font text-amber-400">api_key</code> = your token value</p>
-                </div>
-
-                <!-- Method 2: Bearer Header -->
-                <div class="field-card">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-8 h-8 bg-purple-500/10 border border-purple-500/20 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-shield text-purple-400 text-sm"></i>
-                        </div>
-                        <div>
-                            <p class="font-bold text-white text-sm">Method 2: Bearer Header</p>
-                            <span class="badge-optional">For JWT APIs</span>
-                        </div>
-                    </div>
-                    <p class="text-sm text-slate-400 mb-3">Token is sent in the HTTP <code class="code-font text-purple-300">Authorization</code> header.</p>
-                    <pre class="!py-3 !px-4 text-xs"><code><span class="json-key">"header_auth"</span><span class="text-white">: </span><span class="json-str">"Bearer"</span></code></pre>
-                    <p class="text-xs text-slate-500 mt-2">Your API receives: <code class="code-font text-purple-400">Authorization: Bearer {token}</code></p>
-                </div>
-            </div>
-
-            <div class="callout-danger rounded-r-xl">
-                <p class="text-sm text-red-300 font-bold mb-1"><i class="fas fa-xmark-circle mr-1"></i> Don't Use Both Together</p>
-                <p class="text-sm text-red-200/80">Never add both <code class="code-font">"token"</code> and <code class="code-font">"header_auth"</code> to the same mapping. If <code class="code-font">"header_auth": "Bearer"</code> is present, it takes priority and no body token will be sent. However, <code class="code-font">"token"</code> alone works as a body field — completely safe.</p>
-            </div>
-        </section>
-
-        <!-- ===== EXTRA FIELDS ===== -->
-        <section id="extra-fields">
-            <h2 class="text-2xl font-bold text-white mb-2">Extra / Static Fields</h2>
-            <p class="text-slate-400 mb-6">Need to send hardcoded values that don't change per post? Use the <code class="code-font text-amber-300 bg-slate-800 px-1.5 py-0.5 rounded">extra</code> key.</p>
-
-            <div class="glass-card rounded-2xl p-6 mb-6">
-                <p class="text-sm font-bold text-slate-300 mb-3">Format:</p>
-                <div class="relative">
-                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="glass-card rounded-2xl p-5">
+                    <p class="text-xs font-bold text-emerald-400 mb-2">✅ সেরা ফরম্যাট (Standard & Recommended):</p>
                     <pre><code><span class="text-slate-500">{</span>
-  <span class="json-key">"title"</span><span class="text-white">: </span><span class="json-str">"news_title"</span><span class="text-white">,</span>
-  <span class="json-key">"content"</span><span class="text-white">: </span><span class="json-str">"body"</span><span class="text-white">,</span>
-  <span class="json-key">"extra"</span><span class="text-white">: </span><span class="text-slate-500">{</span>
-    <span class="json-key">"news_type"</span><span class="text-white">: </span><span class="json-str">"2"</span><span class="text-white">,</span>         <span class="json-comment">// always sends news_type=2</span>
-    <span class="json-key">"source"</span><span class="text-white">: </span><span class="json-str">"automation"</span><span class="text-white">,</span>   <span class="json-comment">// always sends source=automation</span>
-    <span class="json-key">"priority"</span><span class="text-white">: </span><span class="json-str">"1"</span>            <span class="json-comment">// always sends priority=1</span>
+  <span class="text-sky-400">"success"</span>: <span class="text-amber-400">true</span>,
+  <span class="text-sky-400">"post_id"</span>: <span class="text-amber-400">101</span>,
+  <span class="text-sky-400">"url"</span>: <span class="text-emerald-300">"https://mywebsite.com/news/article-slug"</span>
+<span class="text-slate-500">}</span></code></pre>
+                </div>
+
+                <div class="glass-card rounded-2xl p-5">
+                    <p class="text-xs font-bold text-indigo-400 mb-2">✅ নেস্টেড ফরম্যাট (Nested Data Format):</p>
+                    <pre><code><span class="text-slate-500">{</span>
+  <span class="text-sky-400">"status"</span>: <span class="text-emerald-300">"success"</span>,
+  <span class="text-sky-400">"data"</span>: <span class="text-slate-500">{</span>
+    <span class="text-sky-400">"post_id"</span>: <span class="text-amber-400">205</span>,
+    <span class="text-sky-400">"live_url"</span>: <span class="text-emerald-300">"https://mywebsite.com/205"</span>
   <span class="text-slate-500">}</span>
 <span class="text-slate-500">}</span></code></pre>
                 </div>
-                <div class="callout-info rounded-r-xl mt-4">
-                    <p class="text-xs text-cyan-300"><i class="fas fa-info-circle mr-1"></i> All values in <code class="code-font">extra</code> must be <strong>strings</strong>. Numbers should be quoted: <code class="code-font">"1"</code> not <code class="code-font">1</code>.</p>
-                </div>
             </div>
         </section>
 
-        <!-- ===== RESPONSE PARSING ===== -->
-        <section id="response-parsing">
-            <h2 class="text-2xl font-bold text-white mb-2">Response Parsing Keys</h2>
-            <p class="text-slate-400 mb-6">Tell our system how to read your API's response to extract the post ID and live URL.</p>
-
-            <div class="overflow-hidden glass-card rounded-2xl mb-6">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Mapping Key</th>
-                            <th>Purpose</th>
-                            <th>Default Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code class="code-font text-sky-400 text-sm">"response_id_key"</code></td>
-                            <td>
-                                <p class="text-slate-200 font-medium">Which field in your response JSON holds the new post ID</p>
-                                <p class="text-xs text-slate-500 mt-1">We already auto-check: <code class="code-font text-slate-400">id</code>, <code class="code-font text-slate-400">data.post_id</code>, <code class="code-font text-slate-400">post_id</code>. Only set this if yours is different.</p>
-                            </td>
-                            <td><code class="code-font text-amber-400 text-sm">"post_id"</code></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="callout-info rounded-r-xl">
-                <p class="text-sm text-cyan-300 font-bold mb-2"><i class="fas fa-lightbulb mr-1"></i> Auto-detected Response Keys</p>
-                <p class="text-sm text-cyan-200/80 mb-2">Even without <code class="code-font">response_id_key</code>, we automatically try to find the post ID in:</p>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
-                    <code class="code-font text-xs bg-slate-800 px-2 py-1.5 rounded text-slate-300">"post_id"</code>
-                    <code class="code-font text-xs bg-slate-800 px-2 py-1.5 rounded text-slate-300">"id"</code>
-                    <code class="code-font text-xs bg-slate-800 px-2 py-1.5 rounded text-slate-300">"data.post_id"</code>
-                    <code class="code-font text-xs bg-slate-800 px-2 py-1.5 rounded text-slate-300">"data.id"</code>
-                </div>
-                <p class="text-sm text-cyan-200/80 mt-3">For live URL, we try: <code class="code-font text-cyan-400">"live_url"</code>, <code class="code-font text-cyan-400">"link"</code>, <code class="code-font text-cyan-400">"url"</code>, <code class="code-font text-cyan-400">"data.URLAlies"</code></p>
-            </div>
-        </section>
-
-        <!-- ===== EXPECTED RESPONSE ===== -->
-        <section id="expected-response">
-            <h2 class="text-2xl font-bold text-white mb-2">Expected Response Format</h2>
-            <p class="text-slate-400 mb-6">Your API should return a <strong class="text-white">JSON response</strong> with HTTP status <strong class="text-emerald-400">200–299</strong> for success. Here are the supported formats:</p>
-
-            <div class="space-y-4">
-                <!-- Best Format -->
-                <div class="glass-card rounded-2xl p-6">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="w-2 h-2 bg-emerald-400 rounded-full"></span>
-                        <p class="font-bold text-white text-sm">Best Format (Recommended)</p>
-                        <span class="badge-special">✨ Ideal</span>
-                    </div>
-                    <div class="relative">
-                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                        <pre><code><span class="text-slate-500">{</span>
-  <span class="json-key">"post_id"</span><span class="text-white">: </span><span class="json-val">123</span><span class="text-white">,</span>
-  <span class="json-key">"live_url"</span><span class="text-white">: </span><span class="json-str">"https://your-site.com/news/breaking-story-123"</span>
-<span class="text-slate-500">}</span></code></pre>
-                    </div>
-                </div>
-
-                <!-- Nested Data -->
-                <div class="glass-card rounded-2xl p-6">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
-                        <p class="font-bold text-white text-sm">Nested Data Format</p>
-                        <span class="badge-optional">Supported</span>
-                    </div>
-                    <div class="relative">
-                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                        <pre><code><span class="text-slate-500">{</span>
-  <span class="json-key">"status"</span><span class="text-white">: </span><span class="json-str">"success"</span><span class="text-white">,</span>
-  <span class="json-key">"data"</span><span class="text-white">: </span><span class="text-slate-500">{</span>
-    <span class="json-key">"post_id"</span><span class="text-white">: </span><span class="json-val">456</span><span class="text-white">,</span>
-    <span class="json-key">"URLAlies"</span><span class="text-white">: </span><span class="json-str">"https://your-site.com/news/456"</span>  <span class="json-comment">// for Islamic TV style APIs</span>
-  <span class="text-slate-500">}</span>
-<span class="text-slate-500">}</span></code></pre>
-                    </div>
-                </div>
-
-                <!-- Minimal -->
-                <div class="glass-card rounded-2xl p-6">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="w-2 h-2 bg-slate-400 rounded-full"></span>
-                        <p class="font-bold text-white text-sm">Minimal Format</p>
-                        <span class="badge-optional">Supported</span>
-                    </div>
-                    <div class="relative">
-                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                        <pre><code><span class="text-slate-500">{</span>
-  <span class="json-key">"id"</span><span class="text-white">: </span><span class="json-val">789</span>   <span class="json-comment">// live URL will be auto-built: siteurl/prefix/789</span>
-<span class="text-slate-500">}</span></code></pre>
-                    </div>
-                </div>
-            </div>
-
-            <div class="callout-warn rounded-r-xl mt-5">
-                <p class="text-sm text-amber-300 font-bold mb-1"><i class="fas fa-triangle-exclamation mr-1"></i> Non-success HTTP Status</p>
-                <p class="text-sm text-amber-200/80">If your API returns HTTP <code class="code-font text-amber-300">400</code>, <code class="code-font text-amber-300">401</code>, <code class="code-font text-amber-300">500</code>, etc., our system marks the post as <strong>failed</strong> and logs the error. Make sure your API returns 2xx on success.</p>
-            </div>
-        </section>
-
-        <!-- ===== CATEGORY FETCH ===== -->
-        <section id="category-fetch">
+        <!-- ========================================================================= -->
+        <!-- ===== CODE SNIPPETS FOR OTHER FRAMEWORKS ===== -->
+        <!-- ========================================================================= -->
+        <section id="code-wordpress" class="border-t border-slate-800 pt-8">
             <div class="mb-3 flex items-center gap-2">
-                <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">📂 Category System</span>
+                <span class="text-xs font-bold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-3 py-1 rounded-full">
+                    <i class="fab fa-wordpress mr-1"></i> WordPress Integration
+                </span>
             </div>
-            <h2 class="text-2xl font-bold text-white mb-2">How Category Fetch Works</h2>
-            <p class="text-slate-400 mb-6">Before you can map categories in Settings, our system needs to fetch your website's category list. Here's exactly how it works — in order of priority.</p>
+            <h2 class="text-2xl font-bold text-white mb-2">WordPress (Custom Endpoint via functions.php)</h2>
+            <p class="text-slate-400 mb-4 font-bangla text-xs">আপনার থিমের <code>functions.php</code> ফাইলে এই কোড যুক্ত করলে WordPress এ রিসিভার চালু হবে:</p>
+            <div class="glass-card rounded-2xl p-5 relative">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="text-emerald-300">add_action('rest_api_init', function () {
+    register_rest_route('subeditor/v1', '/post-news', [
+        'methods'  => 'POST',
+        'callback' => 'handle_subeditor_post',
+        'permission_callback' => '__return_true'
+    ]);
+});
 
-            <!-- Priority Flow -->
-            <div class="glass-card rounded-2xl p-6 mb-6">
-                <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-5">Priority Order (Top = Highest)</p>
-                <div class="space-y-3">
-                    <div class="flex items-start gap-4 p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
-                        <span class="w-7 h-7 flex-shrink-0 bg-emerald-500/15 border border-emerald-500/30 rounded-full flex items-center justify-center text-xs font-black text-emerald-400">1</span>
-                        <div>
-                            <p class="font-bold text-emerald-300 text-sm">Custom Category URL <span class="text-xs text-slate-500 font-normal ml-2">(if set in Settings)</span></p>
-                            <p class="text-xs text-slate-400 mt-1">If specified in Settings → <code class="code-font text-emerald-400">Custom Category Fetch URL</code>, this endpoint takes top priority. Auth: Sent via <code class="code-font text-purple-300">Authorization: Bearer {token}</code> header.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-4 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl">
-                        <span class="w-7 h-7 flex-shrink-0 bg-blue-500/15 border border-blue-500/30 rounded-full flex items-center justify-center text-xs font-black text-blue-400">2</span>
-                        <div>
-                            <p class="font-bold text-blue-300 text-sm">Default Laravel Category API <span class="text-xs text-slate-500 font-normal ml-2">(auto-built URL)</span></p>
-                            <p class="text-xs text-slate-400 mt-1">If no custom URL is configured, a GET request is sent to <code class="code-font text-blue-300">{laravel_site_url}/api/get-categories?token={api_token}</code>. You can build this endpoint easily in your Laravel app.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-4 p-4 bg-slate-700/30 border border-slate-600/30 rounded-xl">
-                        <span class="w-7 h-7 flex-shrink-0 bg-slate-600/30 border border-slate-600/50 rounded-full flex items-center justify-center text-xs font-black text-slate-400">3</span>
-                        <div>
-                            <p class="font-bold text-slate-300 text-sm">WordPress Fallback</p>
-                            <p class="text-xs text-slate-400 mt-1">If neither of the above succeeds, categories are retrieved via the standard WordPress REST API (if WP credentials are configured).</p>
-                        </div>
-                    </div>
-                </div>
+function handle_subeditor_post($request) {
+    $token = $request->get_header('Authorization');
+    if ($token !== 'Bearer YOUR_SECRET_TOKEN_HERE') {
+        return new WP_Error('unauthorized', 'Invalid Token', ['status' => 401]);
+    }
 
-                <div class="callout-info rounded-r-xl mt-5">
-                    <p class="text-sm text-cyan-300 font-bold mb-1"><i class="fas fa-clock mr-1"></i> Cache: 24 Hours</p>
-                    <p class="text-sm text-cyan-200/80">Once fetched, category lists are <strong>cached for 24 hours</strong>. Click <strong>🔄 Refresh Categories</strong> on the Settings page to clear the cache and refetch immediately.</p>
-                </div>
-            </div>
-        </section>
+    $params = $request->get_params();
+    $post_id = wp_insert_post([
+        'post_title'   => sanitize_text_field($params['title']),
+        'post_content' => wp_kses_post($params['content']),
+        'post_status'  => 'publish',
+        'post_author'  => 1
+    ]);
 
-        <!-- ===== CUSTOM CATEGORY URL ===== -->
-        <section id="category-custom-url">
-            <h3 class="text-xl font-bold text-white mb-2">① Custom Category URL <span class="text-emerald-400">(Recommended)</span></h3>
-            <p class="text-slate-400 mb-5">Provide category lists via your custom API endpoint. Enter the endpoint URL into the <strong class="text-slate-300">Custom Category Fetch URL</strong> field in Settings.</p>
-
-            <div class="glass-card rounded-2xl p-6 mb-5">
-                <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Request Details</p>
-                <div class="space-y-3">
-                    <div class="flex items-center gap-3 p-3 bg-slate-800 rounded-lg">
-                        <span class="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded">GET</span>
-                        <code class="code-font text-slate-300 text-sm">https://your-site.com/api/your-categories-endpoint</code>
-                    </div>
-                    <div class="flex items-center gap-3 p-3 bg-slate-800 rounded-lg">
-                        <span class="text-xs font-bold text-purple-400 bg-purple-400/10 px-2 py-1 rounded">Header</span>
-                        <code class="code-font text-purple-300 text-sm">Authorization: Bearer {your api_token}</code>
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass-card rounded-2xl p-6 mb-5">
-                <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Expected API Response Format</p>
-
-                <p class="text-sm text-slate-400 mb-3">The system automatically parses <strong class="text-white">two formats</strong>:</p>
-
-                <div class="space-y-4">
-                    <!-- Format 1: Nested data -->
-                    <div>
-                        <p class="text-xs font-bold text-emerald-300 mb-2">✅ Format 1 — Nested (TV/Custom CMS Style)</p>
-                        <div class="relative">
-                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <pre><code><span class="text-slate-500">{</span>
-  <span class="json-key">"data"</span><span class="text-white">: </span><span class="text-slate-500">[</span>
-    <span class="text-slate-500">{</span>
-      <span class="json-key">"CategoryID"</span><span class="text-white">: </span><span class="json-val">5</span><span class="text-white">,</span>        <span class="json-comment">// OR: "id": 5</span>
-      <span class="json-key">"CategoryName"</span><span class="text-white">: </span><span class="json-str">"Politics"</span>  <span class="json-comment">// OR: "name": "Politics"</span>
-    <span class="text-slate-500">}</span><span class="text-white">,</span>
-    <span class="text-slate-500">{</span>
-      <span class="json-key">"CategoryID"</span><span class="text-white">: </span><span class="json-val">12</span><span class="text-white">,</span>
-      <span class="json-key">"CategoryName"</span><span class="text-white">: </span><span class="json-str">"Sports"</span>
-    <span class="text-slate-500">}</span>
-  <span class="text-slate-500">]</span>
-<span class="text-slate-500">}</span></code></pre>
-                        </div>
-                        <p class="text-xs text-slate-500 mt-2">System automatically reads <code class="code-font text-emerald-400">CategoryID</code> or <code class="code-font text-emerald-400">id</code> and <code class="code-font text-emerald-400">CategoryName</code> or <code class="code-font text-emerald-400">name</code>.</p>
-                    </div>
-
-                    <!-- Format 2: Direct array -->
-                    <div>
-                        <p class="text-xs font-bold text-blue-300 mb-2">✅ Format 2 — Direct Array</p>
-                        <div class="relative">
-                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <pre><code><span class="text-slate-500">[</span>
-  <span class="text-slate-500">{</span> <span class="json-key">"id"</span><span class="text-white">: </span><span class="json-val">5</span><span class="text-white">,</span> <span class="json-key">"name"</span><span class="text-white">: </span><span class="json-str">"Politics"</span> <span class="text-slate-500">}</span><span class="text-white">,</span>
-  <span class="text-slate-500">{</span> <span class="json-key">"id"</span><span class="text-white">: </span><span class="json-val">12</span><span class="text-white">,</span> <span class="json-key">"name"</span><span class="text-white">: </span><span class="json-str">"Sports"</span> <span class="text-slate-500">}</span>
-<span class="text-slate-500">]</span></code></pre>
-                        </div>
-                        <p class="text-xs text-slate-500 mt-2">Also accepted. Must be a direct JSON array at the root level.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="callout-warn rounded-r-xl">
-                <p class="text-sm text-amber-300 font-bold mb-1"><i class="fas fa-triangle-exclamation mr-1"></i> Important: Requirements for Custom URL</p>
-                <p class="text-sm text-amber-200/80">Custom Category URL works when <strong class="text-white">"Enable Posting to Laravel"</strong> is enabled and both <strong class="text-white">Laravel Site URL</strong> and <strong class="text-white">API Token</strong> are filled in Settings.</p>
+    return rest_ensure_response([
+        'success' => true,
+        'post_id' => $post_id,
+        'url'     => get_permalink($post_id)
+    ]);
+}
+</code></pre>
             </div>
         </section>
 
-        <!-- ===== DEFAULT CATEGORY URL ===== -->
-        <section id="category-default-url">
-            <h3 class="text-xl font-bold text-white mb-2">② Default Laravel Category API</h3>
-            <p class="text-slate-400 mb-5">If Custom Category URL is not set, the system automatically sends requests to your <code class="code-font text-indigo-300 bg-slate-800 px-1.5 py-0.5 rounded text-sm">{laravel_site_url}/api/get-categories</code> endpoint.</p>
-
-            <div class="glass-card rounded-2xl p-6 mb-5">
-                <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Request Details</p>
-                <div class="space-y-3">
-                    <div class="flex items-center gap-3 p-3 bg-slate-800 rounded-lg">
-                        <span class="text-xs font-bold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded">GET</span>
-                        <code class="code-font text-slate-300 text-sm">https://your-site.com/api/get-categories?token={api_token}</code>
-                    </div>
-                    <div class="flex items-center gap-3 p-3 bg-slate-800 rounded-lg">
-                        <span class="text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-1 rounded">Query Param</span>
-                        <code class="code-font text-amber-300 text-sm">token = {your laravel_api_token}</code>
-                    </div>
-                </div>
-
-                <div class="callout-info rounded-r-xl mt-4">
-                    <p class="text-xs text-cyan-300"><i class="fas fa-info-circle mr-1"></i> You should define this endpoint on your Laravel server to verify the token and return all available categories.</p>
-                </div>
+        <section id="code-nextjs" class="border-t border-slate-800 pt-8">
+            <div class="mb-3 flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-300 bg-slate-800 border border-slate-700 px-3 py-1 rounded-full">
+                    <i class="fab fa-react mr-1"></i> Next.js App Router (TypeScript)
+                </span>
             </div>
+            <h2 class="text-2xl font-bold text-white mb-2">Next.js (app/api/external-news-post/route.ts)</h2>
+            <div class="glass-card rounded-2xl p-5 relative">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="text-cyan-300">import { NextRequest, NextResponse } from 'next/server';
 
-            <!-- Laravel Sample Implementation -->
-            <div class="glass-card rounded-2xl p-6">
-                <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">💡 Sample Laravel Route (Add to your application)</p>
-                <div class="relative">
-                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                    <pre><code><span class="json-comment">// routes/api.php</span>
-<span class="text-white">Route::</span><span class="json-key">get</span><span class="text-white">('/get-categories', function (Request </span><span class="json-val">$request</span><span class="text-white">) {</span>
-    <span class="json-comment">// Verify Token</span>
-    <span class="text-white">if (</span><span class="json-val">$request</span><span class="text-white">->token !== </span><span class="json-str">'your-secret-token'</span><span class="text-white">) {</span>
-        <span class="text-white">return response()->json(['error' => 'Unauthorized'], 401);</span>
-    <span class="text-white">}</span>
-    <span class="json-comment">// Return category list</span>
-    <span class="text-white">return response()->json(</span>
-        Category::<span class="json-key">select</span><span class="text-white">('id', 'name')->get()</span>
-    <span class="text-white">);</span>
-<span class="text-white">});</span></code></pre>
-                </div>
+export async function POST(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  const expectedToken = `Bearer ${process.env.SUBEDITOR_API_SECRET || 'YOUR_SECRET_TOKEN'}`;
+
+  if (authHeader !== expectedToken) {
+    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  }
+
+  const formData = await req.formData();
+  const title = formData.get('title') as string;
+  const content = formData.get('content') as string;
+
+  // TODO: Save to your DB (Prisma / Drizzle / MongoDB)
+  const postId = 101;
+
+  return NextResponse.json({
+    success: true,
+    post_id: postId,
+    url: `/news/${postId}`
+  });
+}
+</code></pre>
             </div>
         </section>
 
-        <!-- ===== CATEGORY RESPONSE FORMAT ===== -->
-        <section id="category-response-format">
-            <h3 class="text-xl font-bold text-white mb-2">Category Response — Field Name Reference</h3>
-            <p class="text-slate-400 mb-5">The system extracts <code class="code-font text-emerald-300 bg-slate-800 px-1.5 py-0.5 rounded text-sm">id</code> and <code class="code-font text-emerald-300 bg-slate-800 px-1.5 py-0.5 rounded text-sm">name</code> from the category response. Any of the following field combinations are supported:</p>
-
-            <div class="overflow-hidden glass-card rounded-2xl mb-5">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Identifier (ID)</th>
-                            <th>Category Title (Name)</th>
-                            <th>Typical Source</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code class="code-font text-emerald-400 text-sm">CategoryID</code></td>
-                            <td><code class="code-font text-emerald-400 text-sm">CategoryName</code></td>
-                            <td><span class="text-xs text-slate-400">TV Portal / Custom CMS style</span></td>
-                        </tr>
-                        <tr>
-                            <td><code class="code-font text-blue-400 text-sm">id</code></td>
-                            <td><code class="code-font text-blue-400 text-sm">name</code></td>
-                            <td><span class="text-xs text-slate-400">Standard REST API / Laravel style</span></td>
-                        </tr>
-                    </tbody>
-                </table>
+        <section id="code-express" class="border-t border-slate-800 pt-8">
+            <div class="mb-3 flex items-center gap-2">
+                <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                    <i class="fab fa-node-js mr-1"></i> Node.js (Express.js)
+                </span>
             </div>
+            <h2 class="text-2xl font-bold text-white mb-2">Express.js API Route</h2>
+            <div class="glass-card rounded-2xl p-5 relative">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="text-emerald-300">const express = require('express');
+const router = express.Router();
 
-            <div class="callout-success rounded-r-xl">
-                <p class="text-sm text-emerald-300 font-bold mb-1"><i class="fas fa-check-circle mr-1"></i> How it appears in Settings</p>
-                <p class="text-sm text-emerald-200/80">Once successfully fetched, your site's categories appear in the dropdown in the <strong>Category Mapping</strong> section on the Settings page (e.g., <code class="code-font">Politics (ID: 5)</code>). You can then map system categories on the left to target categories on the right.</p>
+router.post('/api/external-news-post', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader !== 'Bearer ' + process.env.SUBEDITOR_API_SECRET) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+
+  const { title, content, category_id, tags } = req.body;
+  // TODO: Insert into database
+  return res.json({
+    success: true,
+    post_id: 101,
+    url: 'https://mysite.com/news/101'
+  });
+});
+
+module.exports = router;
+</code></pre>
             </div>
         </section>
 
-        <!-- ===== EXAMPLES ===== -->
-        <section id="example-1">
-            <h2 class="text-2xl font-bold text-white mb-1">Example 1 — Laravel / Custom API</h2>
-            <p class="text-slate-400 mb-5">Standard setup for most Laravel or PHP backends that expect common field names.</p>
-            <div class="glass-card rounded-2xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                        <div class="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
-                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                        <span class="text-xs text-slate-500 ml-2 code-font">custom_api_mapping</span>
-                    </div>
-                    <button class="copy-btn !static" onclick="copyCode(this)">Copy</button>
-                </div>
-                <pre class="!border-0 !bg-transparent !p-0 !rounded-none"><code><span class="text-slate-500">{</span>
-  <span class="json-key">"title"</span><span class="text-white">:    </span><span class="json-str">"news_title"</span><span class="text-white">,</span>       <span class="json-comment">// our title → your news_title</span>
-  <span class="json-key">"content"</span><span class="text-white">:  </span><span class="json-str">"news_content"</span><span class="text-white">,</span>     <span class="json-comment">// our HTML body → your news_content</span>
-  <span class="json-key">"image"</span><span class="text-white">:    </span><span class="json-str">"thumbnail"</span><span class="text-white">,</span>        <span class="json-comment">// file upload → your thumbnail field</span>
-  <span class="json-key">"category"</span><span class="text-white">: </span><span class="json-str">"category_ids[]"</span><span class="text-white">,</span>   <span class="json-comment">// array of IDs → your category_ids[]</span>
-  <span class="json-key">"tags"</span><span class="text-white">:     </span><span class="json-str">"post_tags"</span><span class="text-white">,</span>        <span class="json-comment">// hashtags string → your post_tags</span>
-  <span class="json-key">"token"</span><span class="text-white">:    </span><span class="json-str">"api_secret"</span><span class="text-white">,</span>       <span class="json-comment">// your API Token → your api_secret field</span>
-  <span class="json-key">"response_id_key"</span><span class="text-white">: </span><span class="json-str">"news_id"</span><span class="text-white">  </span><span class="json-comment">// we read response.news_id as the post ID</span>
-<span class="text-slate-500">}</span></code></pre>
+        <section id="code-php" class="border-t border-slate-800 pt-8">
+            <div class="mb-3 flex items-center gap-2">
+                <span class="text-xs font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full">
+                    <i class="fab fa-php mr-1"></i> Raw PHP Single Drop-in File
+                </span>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-2">Single File Drop-in (public/news-receiver.php)</h2>
+            <p class="text-slate-400 mb-4 font-bangla text-xs">কোনো ফ্রেমওয়ার্ক ছাড়া সাধারণ PHP সাইটের <code>public</code> ফোল্ডারে এই ফাইলটি রেখে দিন:</p>
+            <div class="glass-card rounded-2xl p-5 relative">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="text-purple-300"><?php
+header('Content-Type: application/json');
+
+$headers = getallheaders();
+$auth = $headers['Authorization'] ?? ($headers['authorization'] ?? '');
+
+if ($auth !== "Bearer YOUR_SECRET_TOKEN_HERE") {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit;
+}
+
+$title   = $_POST['title'] ?? '';
+$content = $_POST['content'] ?? '';
+
+if (empty($title)) {
+    http_response_code(422);
+    echo json_encode(['success' => false, 'message' => 'Title is required']);
+    exit;
+}
+
+// TODO: PDO Database Insert
+// $pdo = new PDO("mysql:host=localhost;dbname=news", "user", "pass");
+// $stmt = $pdo->prepare("INSERT INTO posts (title, content) VALUES (?, ?)");
+// $stmt->execute([$title, $content]);
+
+echo json_encode([
+    'success' => true,
+    'post_id' => 101,
+    'url'     => 'https://mywebsite.com/news/101'
+]);
+</code></pre>
             </div>
         </section>
 
-        <section id="example-2">
-            <h2 class="text-2xl font-bold text-white mb-1">Example 2 — Bearer Token Authentication</h2>
-            <p class="text-slate-400 mb-5">For APIs that require JWT or Bearer token in the Authorization header (common in REST APIs, mobile backends).</p>
-            <div class="glass-card rounded-2xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                        <div class="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
-                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                        <span class="text-xs text-slate-500 ml-2 code-font">custom_api_mapping</span>
-                    </div>
-                    <button class="copy-btn !static" onclick="copyCode(this)">Copy</button>
-                </div>
-                <pre class="!border-0 !bg-transparent !p-0 !rounded-none"><code><span class="text-slate-500">{</span>
-  <span class="json-key">"title"</span><span class="text-white">:       </span><span class="json-str">"title"</span><span class="text-white">,</span>
-  <span class="json-key">"content"</span><span class="text-white">:     </span><span class="json-str">"description"</span><span class="text-white">,</span>
-  <span class="json-key">"image"</span><span class="text-white">:       </span><span class="json-str">"featured_photo"</span><span class="text-white">,</span>
-  <span class="json-key">"category"</span><span class="text-white">:    </span><span class="json-str">"cat_id"</span><span class="text-white">,</span>
-  <span class="json-key">"header_auth"</span><span class="text-white">: </span><span class="json-str">"Bearer"</span><span class="text-white">,</span>           <span class="json-comment">// sends: Authorization: Bearer {your token}</span>
-  <span class="json-key">"extra"</span><span class="text-white">: </span><span class="text-slate-500">{</span>
-    <span class="json-key">"source"</span><span class="text-white">: </span><span class="json-str">"subeditor24"</span><span class="text-white">,</span>
-    <span class="json-key">"auto"</span><span class="text-white">:   </span><span class="json-str">"1"</span>
-  <span class="text-slate-500">}</span>
-<span class="text-slate-500">}</span></code></pre>
+        <section id="code-python" class="border-t border-slate-800 pt-8">
+            <div class="mb-3 flex items-center gap-2">
+                <span class="text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
+                    <i class="fab fa-python mr-1"></i> Python (FastAPI)
+                </span>
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-2">Python (FastAPI API Receiver)</h2>
+            <div class="glass-card rounded-2xl p-5 relative">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code class="text-amber-300">from fastapi import FastAPI, Header, Form, HTTPException
+from typing import Optional
+
+app = FastAPI()
+
+@app.post("/api/external-news-post")
+async def receive_news(
+    title: str = Form(...),
+    content: str = Form(...),
+    authorization: Optional[str] = Header(None)
+):
+    if authorization != "Bearer YOUR_SECRET_TOKEN":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    # Save to database
+    return {"success": True, "post_id": 101, "url": f"https://mywebsite.com/news/101"}
+</code></pre>
             </div>
         </section>
 
-        <section id="example-3">
-            <h2 class="text-2xl font-bold text-white mb-1">Example 3 — TV / Media Portal (Custom CMS)</h2>
-            <p class="text-slate-400 mb-5">For media organizations or TV portals with their own proprietary CMS that uses different field names.</p>
-            <div class="glass-card rounded-2xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                        <div class="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
-                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                        <span class="text-xs text-slate-500 ml-2 code-font">custom_api_mapping</span>
-                    </div>
-                    <button class="copy-btn !static" onclick="copyCode(this)">Copy</button>
-                </div>
-                <pre class="!border-0 !bg-transparent !p-0 !rounded-none"><code><span class="text-slate-500">{</span>
-  <span class="json-key">"title"</span><span class="text-white">:    </span><span class="json-str">"HeadLine"</span><span class="text-white">,</span>             <span class="json-comment">// capital letter field names</span>
-  <span class="json-key">"content"</span><span class="text-white">:  </span><span class="json-str">"NewsBody"</span><span class="text-white">,</span>
-  <span class="json-key">"image"</span><span class="text-white">:    </span><span class="json-str">"NewsImage"</span><span class="text-white">,</span>
-  <span class="json-key">"category"</span><span class="text-white">: </span><span class="json-str">"CategoryID"</span><span class="text-white">,</span>
-  <span class="json-key">"tags"</span><span class="text-white">:     </span><span class="json-str">"Keywords"</span><span class="text-white">,</span>
-  <span class="json-key">"token"</span><span class="text-white">:    </span><span class="json-str">"APIKey"</span><span class="text-white">,</span>
-  <span class="json-key">"extra"</span><span class="text-white">: </span><span class="text-slate-500">{</span>
-    <span class="json-key">"NewsType"</span><span class="text-white">:   </span><span class="json-str">"2"</span><span class="text-white">,</span>          <span class="json-comment">// static: always General News type</span>
-    <span class="json-key">"IsBreaking"</span><span class="text-white">: </span><span class="json-str">"0"</span><span class="text-white">,</span>
-    <span class="json-key">"Language"</span><span class="text-white">:   </span><span class="json-str">"bn"</span>           <span class="json-comment">// always Bengali</span>
-  <span class="text-slate-500">}</span><span class="text-white">,</span>
-  <span class="json-key">"response_id_key"</span><span class="text-white">: </span><span class="json-str">"NewsID"</span>     <span class="json-comment">// response: { "NewsID": 555 }</span>
-<span class="text-slate-500">}</span></code></pre>
-            </div>
-        </section>
-
-        <section id="example-4">
-            <h2 class="text-2xl font-bold text-white mb-1">Example 4 — Minimal Setup</h2>
-            <p class="text-slate-400 mb-5">Just starting? Use this bare minimum mapping — title and content are all you absolutely need.</p>
-            <div class="glass-card rounded-2xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                        <div class="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
-                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                        <span class="text-xs text-slate-500 ml-2 code-font">custom_api_mapping</span>
-                    </div>
-                    <button class="copy-btn !static" onclick="copyCode(this)">Copy</button>
-                </div>
-                <pre class="!border-0 !bg-transparent !p-0 !rounded-none"><code><span class="text-slate-500">{</span>
-  <span class="json-key">"title"</span><span class="text-white">:   </span><span class="json-str">"title"</span><span class="text-white">,</span>      <span class="json-comment">// same name, just validates it's sent</span>
-  <span class="json-key">"content"</span><span class="text-white">: </span><span class="json-str">"content"</span><span class="text-white">,</span>
-  <span class="json-key">"token"</span><span class="text-white">:   </span><span class="json-str">"token"</span>
-<span class="text-slate-500">}</span></code></pre>
-            </div>
-        </section>
-
+        <!-- ========================================================================= -->
         <!-- ===== INTERACTIVE JSON BUILDER ===== -->
-        <section id="ready-api">
-            <h2 class="text-2xl font-bold text-white mb-2">🛠️ Build Your Mapping JSON</h2>
-            <p class="text-slate-400 mb-6">Fill in your API's field names below — the JSON will be generated automatically. Then copy and paste it into your Settings.</p>
+        <!-- ========================================================================= -->
+        <section id="ready-api" class="border-t border-slate-800 pt-8">
+            <div class="mb-3 flex items-center gap-2">
+                <span class="text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">
+                    <i class="fas fa-magic mr-1"></i> Visual Generator
+                </span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">🛠️ Build Your Mapping JSON</h2>
+            <p class="text-slate-400 mb-6 font-bangla text-sm">আপনার ওয়েবসাইটের প্যারামিটার নাম লিখুন — তাৎক্ষণিক JSON তৈরি হয়ে যাবে। তারপর Copy করে Settings পেজে বসিয়ে দিন:</p>
 
             <div class="glass-card rounded-2xl p-6 sm:p-8">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Builder Form -->
+                    <div class="space-y-4">
+                        <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Field Names</p>
 
-                    <!-- Left: Builder Form -->
-                    <div class="space-y-5">
-                        <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Field Name Mapping</p>
-
-                        <div class="space-y-3">
-                            <!-- Title -->
+                        <div class="space-y-3 text-xs">
                             <div class="flex items-center gap-3">
                                 <div class="w-28 flex-shrink-0">
-                                    <span class="text-sm font-bold text-sky-400 code-font">"title"</span>
-                                    <span class="block text-[10px] text-slate-500">Required</span>
+                                    <span class="font-bold text-sky-400 code-font">"title"</span>
+                                    <span class="block text-[10px] text-slate-500">আবশ্যক</span>
                                 </div>
                                 <span class="text-slate-600">→</span>
-                                <input id="b_title" type="text" placeholder="e.g. news_title" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition code-font">
+                                <input id="b_title" type="text" placeholder="e.g. news_title" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 code-font">
                             </div>
-
-                            <!-- Content -->
                             <div class="flex items-center gap-3">
                                 <div class="w-28 flex-shrink-0">
-                                    <span class="text-sm font-bold text-sky-400 code-font">"content"</span>
-                                    <span class="block text-[10px] text-slate-500">Required</span>
+                                    <span class="font-bold text-sky-400 code-font">"content"</span>
+                                    <span class="block text-[10px] text-slate-500">আবশ্যক</span>
                                 </div>
                                 <span class="text-slate-600">→</span>
-                                <input id="b_content" type="text" placeholder="e.g. body_text" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition code-font">
+                                <input id="b_content" type="text" placeholder="e.g. body" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 code-font">
                             </div>
-
-                            <!-- Image -->
                             <div class="flex items-center gap-3">
                                 <div class="w-28 flex-shrink-0">
-                                    <span class="text-sm font-bold text-sky-400 code-font">"image"</span>
-                                    <span class="block text-[10px] text-slate-500">Optional</span>
+                                    <span class="font-bold text-sky-400 code-font">"image"</span>
+                                    <span class="block text-[10px] text-slate-500">ঐচ্ছিক</span>
                                 </div>
                                 <span class="text-slate-600">→</span>
-                                <input id="b_image" type="text" placeholder="e.g. featured_image" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition code-font">
+                                <input id="b_image" type="text" placeholder="e.g. thumbnail" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 code-font">
                             </div>
-
-                            <!-- Category -->
                             <div class="flex items-center gap-3">
                                 <div class="w-28 flex-shrink-0">
-                                    <span class="text-sm font-bold text-sky-400 code-font">"category"</span>
-                                    <span class="block text-[10px] text-slate-500">Optional</span>
+                                    <span class="font-bold text-sky-400 code-font">"category"</span>
+                                    <span class="block text-[10px] text-slate-500">ঐচ্ছিক</span>
                                 </div>
                                 <span class="text-slate-600">→</span>
-                                <input id="b_category" type="text" placeholder="e.g. cat_ids[]" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition code-font">
+                                <input id="b_category" type="text" placeholder="e.g. category_id" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 code-font">
                             </div>
-
-                            <!-- Tags -->
                             <div class="flex items-center gap-3">
                                 <div class="w-28 flex-shrink-0">
-                                    <span class="text-sm font-bold text-sky-400 code-font">"tags"</span>
-                                    <span class="block text-[10px] text-slate-500">Optional</span>
+                                    <span class="font-bold text-sky-400 code-font">"tags"</span>
+                                    <span class="block text-[10px] text-slate-500">ঐচ্ছিক</span>
                                 </div>
                                 <span class="text-slate-600">→</span>
-                                <input id="b_tags" type="text" placeholder="e.g. post_tags" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition code-font">
-                            </div>
-
-                            <!-- Date -->
-                            <div class="flex items-center gap-3">
-                                <div class="w-28 flex-shrink-0">
-                                    <span class="text-sm font-bold text-sky-400 code-font">"date"</span>
-                                    <span class="block text-[10px] text-slate-500">Optional</span>
-                                </div>
-                                <span class="text-slate-600">→</span>
-                                <input id="b_date" type="text" placeholder="e.g. publish_date" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition code-font">
+                                <input id="b_tags" type="text" placeholder="e.g. tags" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 code-font">
                             </div>
                         </div>
 
-                        <div class="border-t border-slate-700 pt-5">
-                            <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Authentication</p>
-                            <div class="flex gap-3 mb-3">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="auth_type" value="body" checked onchange="buildJson()" class="text-indigo-500">
-                                    <span class="text-sm text-slate-300">Body Token</span>
+                        <div class="border-t border-slate-700 pt-4">
+                            <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Authentication Method</p>
+                            <div class="flex gap-4 text-xs mb-3 font-bangla">
+                                <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                                    <input type="radio" name="auth_type" value="bearer" checked onchange="buildJson()" class="text-indigo-500">
+                                    <span>Bearer Header (Standard)</span>
                                 </label>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="auth_type" value="bearer" onchange="buildJson()" class="text-indigo-500">
-                                    <span class="text-sm text-slate-300">Bearer Header</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="auth_type" value="none" onchange="buildJson()" class="text-indigo-500">
-                                    <span class="text-sm text-slate-300">None</span>
+                                <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                                    <input type="radio" name="auth_type" value="body" onchange="buildJson()" class="text-indigo-500">
+                                    <span>Body Token</span>
                                 </label>
                             </div>
-                            <div id="token_field_wrap" class="flex items-center gap-3">
+                            <div id="token_field_wrap" class="hidden items-center gap-3">
                                 <div class="w-28 flex-shrink-0">
-                                    <span class="text-sm font-bold text-amber-400 code-font">"token"</span>
+                                    <span class="text-xs font-bold text-amber-400 code-font">"token"</span>
                                 </div>
                                 <span class="text-slate-600">→</span>
-                                <input id="b_token" type="text" placeholder="e.g. api_key" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition code-font">
-                            </div>
-                        </div>
-
-                        <div class="border-t border-slate-700 pt-5">
-                            <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Response Parsing (Optional)</p>
-                            <div class="flex items-center gap-3">
-                                <div class="w-28 flex-shrink-0">
-                                    <span class="text-xs font-bold text-slate-400 code-font">response_id_key</span>
-                                </div>
-                                <span class="text-slate-600">→</span>
-                                <input id="b_resp_key" type="text" placeholder="e.g. news_id (default: post_id)" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition code-font">
+                                <input id="b_token" type="text" placeholder="e.g. api_key" oninput="buildJson()" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 code-font">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Right: Live Preview -->
+                    <!-- Live Preview -->
                     <div>
                         <div class="flex justify-between items-center mb-3">
-                            <p class="text-xs font-black text-slate-500 uppercase tracking-widest">Live JSON Preview</p>
+                            <p class="text-xs font-black text-slate-500 uppercase tracking-widest">Live JSON Output</p>
                             <button id="copyBuiltJson" onclick="copyBuiltJson()" class="text-xs bg-slate-700 hover:bg-indigo-600 border border-slate-600 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg font-bold transition-all">
                                 <i class="fas fa-copy mr-1"></i> Copy JSON
                             </button>
                         </div>
-                        <pre id="json_preview" class="min-h-[300px] text-sm"><code id="json_preview_code" class="code-font text-slate-300">// Fill in fields on the left →</code></pre>
+                        <pre id="json_preview" class="min-h-[260px] text-xs"><code id="json_preview_code" class="text-slate-300">// ফিল্ডগুলো পূরণ করলে এখানে JSON তৈরি হবে</code></pre>
 
                         @auth
-                        <button onclick="applyToSettings()" class="mt-4 w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-indigo-500/20 text-sm">
-                            ✅ Apply to My Settings
+                        <button onclick="applyToSettings()" class="mt-4 w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-2.5 rounded-xl transition-all text-xs font-bangla cursor-pointer">
+                            ✅ Apply to My Settings (সেটিংসে যুক্ত করুন)
                         </button>
-                        @else
-                        <a href="{{ route('login') }}" class="mt-4 flex items-center justify-center gap-2 w-full bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-3 rounded-xl transition-all text-sm">
-                            <i class="fas fa-lock text-xs"></i> Login to Apply to Settings
-                        </a>
                         @endauth
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ===== FAQ ===== -->
-        <section id="faq">
-            <h2 class="text-2xl font-bold text-white mb-6">Frequently Asked Questions</h2>
-            <div class="space-y-3" id="faq-list">
+        <!-- ========================================================================= -->
+        <!-- ===== FAQ & TROUBLESHOOTING ===== -->
+        <!-- ========================================================================= -->
+        <section id="faq-troubleshooting" class="border-t border-slate-800 pt-8">
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-6">
+                ❓ Troubleshooting & FAQ (সমস্যা ও সমাধান)
+            </h2>
+            <div class="space-y-3 font-bangla" id="faq-list">
 
+                <!-- FAQ 1: 401 -->
                 <div class="faq-item glass-card rounded-2xl overflow-hidden">
                     <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-5 text-left hover:bg-slate-800/50 transition-colors">
-                        <p class="font-bold text-white text-sm pr-4">What happens if my API is slow or times out?</p>
+                        <p class="font-bold text-white text-sm pr-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                            HTTP 401 Unauthorized এরর দেখালে কি করব?
+                        </p>
                         <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
                     </button>
-                    <div class="faq-body hidden px-5 pb-5">
-                        <p class="text-sm text-slate-400">Our system gives your API up to <strong class="text-white">120 seconds</strong> to respond (with a 30-second connection timeout). If it still doesn't respond, the post is marked as <strong class="text-red-400">failed</strong>. You can retry from the news list. Make sure your API doesn't do heavy processing synchronously — return a quick 200 and process in background.</p>
+                    <div class="faq-body hidden px-5 pb-5 text-xs text-slate-300 leading-relaxed space-y-2">
+                        <p><strong>কারণ:</strong> Subeditor24 এর সেটিংসের টোকেন এবং আপনার Laravel <code>.env</code> ফাইলের টোকেন ম্যাচ করছে না, অথবা Apache/Nginx সার্ভার <code>Authorization</code> হেডার ফিল্টার করে দিচ্ছে।</p>
+                        <p><strong>সমাধান:</strong></p>
+                        <ul class="list-disc list-inside space-y-1 ml-2 text-slate-400">
+                            <li>আপনার <code>.env</code> ফাইলে <code class="text-indigo-300">SUBEDITOR_API_SECRET</code> মিলিয়ে নিন এবং <code>php artisan config:clear</code> দিন।</li>
+                            <li>Apache সার্ভার হলে <code>.htaccess</code> ফাইলে <code class="text-indigo-300">CGIPassAuth on</code> যোগ করুন।</li>
+                        </ul>
                     </div>
                 </div>
 
+                <!-- FAQ 2: 404 -->
                 <div class="faq-item glass-card rounded-2xl overflow-hidden">
                     <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-5 text-left hover:bg-slate-800/50 transition-colors">
-                        <p class="font-bold text-white text-sm pr-4">Can I use both Custom API AND WordPress at the same time?</p>
+                        <p class="font-bold text-white text-sm pr-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                            HTTP 404 Not Found এরর আসলে কি চেক করব?
+                        </p>
                         <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
                     </button>
-                    <div class="faq-body hidden px-5 pb-5">
-                        <p class="text-sm text-slate-400">Yes! If both WordPress credentials and Custom API are configured, the system will post to <strong class="text-white">WordPress first</strong>, then Custom API second. Both can run in the same job.</p>
+                    <div class="faq-body hidden px-5 pb-5 text-xs text-slate-300 leading-relaxed space-y-2">
+                        <p><strong>কারণ:</strong> API রুটটি আপনার প্রজেক্টের <code>routes/api.php</code> তে যোগ করা হয়নি অথবা Base URL এর শেষে অতিরিক্ত স্ল্যাশ (/) পড়েছে।</p>
+                        <p><strong>সমাধান:</strong> নিশ্চিত করুন যে আপনার <code>routes/api.php</code> ফাইলে <code>Route::post('/external-news-post', ...)</code> রুটটি ডিফাইন করা আছে এবং Settings এ Base URL সঠিকভাবে দেওয়া আছে (যেমন <code>https://mywebsite.com</code>)।</p>
                     </div>
                 </div>
 
+                <!-- FAQ 3: 419 / CSRF -->
                 <div class="faq-item glass-card rounded-2xl overflow-hidden">
                     <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-5 text-left hover:bg-slate-800/50 transition-colors">
-                        <p class="font-bold text-white text-sm pr-4">My API uses a different image field name. What should I do?</p>
+                        <p class="font-bold text-white text-sm pr-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                            HTTP 419 Page Expired বা CSRF এরর আসলে কি করতে হবে?
+                        </p>
                         <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
                     </button>
-                    <div class="faq-body hidden px-5 pb-5">
-                        <p class="text-sm text-slate-400">Easy! In your mapping, set the value of <code class="code-font text-cyan-400">"image"</code> to whatever field name your API expects. For example, if your API expects <code class="code-font text-amber-400">news_photo</code>, write: <code class="code-font text-white">"image": "news_photo"</code>. We'll upload the file under that name.</p>
+                    <div class="faq-body hidden px-5 pb-5 text-xs text-slate-300 leading-relaxed space-y-2">
+                        <p>Laravel এ <code>routes/api.php</code> ফাইলের রুটগুলোতে কোনো CSRF যাচাই লাগে না (Stateless)। আপনি যদি ভুল করে <code>routes/web.php</code> তে রুট লিখে থাকেন, তবে তা সরিয়ে <code>routes/api.php</code> ফাইলে লিখুন।</p>
                     </div>
                 </div>
 
+                <!-- FAQ 4: 422 -->
                 <div class="faq-item glass-card rounded-2xl overflow-hidden">
                     <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-5 text-left hover:bg-slate-800/50 transition-colors">
-                        <p class="font-bold text-white text-sm pr-4">Where do I get the Category IDs to put in the mapping table?</p>
+                        <p class="font-bold text-white text-sm pr-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                            HTTP 422 Unprocessable Content এর কারণ কি?
+                        </p>
                         <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
                     </button>
-                    <div class="faq-body hidden px-5 pb-5">
-                        <p class="text-sm text-slate-400 mb-2">In Settings, there's a <strong class="text-white">Category Mapping</strong> table and a <strong class="text-white">Refresh Categories</strong> button. Click it — if you've set the <code class="code-font text-cyan-400">custom_category_url</code>, it fetches from your API. Otherwise, it tries your WordPress. The IDs shown in the dropdowns are the real IDs from your target site.</p>
+                    <div class="faq-body hidden px-5 pb-5 text-xs text-slate-300 leading-relaxed space-y-2">
+                        <p>আপনার Laravel রিসিভারের ভ্যালিডেশন রুলসে এমন কোনো ফিল্ড <code class="text-indigo-300">required</code> করা আছে যা Subeditor24 পাঠায়নি (যেমন author_id বা custom field)। সেগুলোকে <code class="text-indigo-300">nullable</code> করুন অথবা ডিফল্ট মান সেট করুন।</p>
                     </div>
                 </div>
 
+                <!-- FAQ 5: 500 -->
                 <div class="faq-item glass-card rounded-2xl overflow-hidden">
                     <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-5 text-left hover:bg-slate-800/50 transition-colors">
-                        <p class="font-bold text-white text-sm pr-4">SSL verify is failing for my local/staging API. What can I do?</p>
+                        <p class="font-bold text-white text-sm pr-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                            HTTP 500 Internal Server Error আসলে কিভাবে ফিক্স করব?
+                        </p>
                         <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
                     </button>
-                    <div class="faq-body hidden px-5 pb-5">
-                        <p class="text-sm text-slate-400">Custom API mode uses Guzzle with <code class="code-font text-amber-400">'verify' => false</code> by default, so self-signed SSL certificates are automatically accepted. No extra configuration needed for staging/dev servers.</p>
+                    <div class="faq-body hidden px-5 pb-5 text-xs text-slate-300 leading-relaxed space-y-2">
+                        <p>আপনার সার্ভারের <code>storage/logs/laravel.log</code> ফাইলটি দেখুন। সাধারণত ডাটাবেস কলাম অনুপস্থিত থাকা (Unknown column), মডেল Fillable মিসিং, অথবা <code>storage/</code> ডিরেক্টরির ফাইল পারমিশনজনিত কারণে এই ত্রুটি ঘটে।</p>
                     </div>
                 </div>
 
+                <!-- FAQ 6: Localhost / Staging -->
                 <div class="faq-item glass-card rounded-2xl overflow-hidden">
                     <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-5 text-left hover:bg-slate-800/50 transition-colors">
-                        <p class="font-bold text-white text-sm pr-4">What if I don't include the "image" key in my mapping?</p>
+                        <p class="font-bold text-white text-sm pr-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            লোকালহোস্ট বা সেলফ-সাইন্ড SSL এ কাজ করবে কি?
+                        </p>
                         <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
                     </button>
-                    <div class="faq-body hidden px-5 pb-5">
-                        <p class="text-sm text-slate-400">If <code class="code-font text-cyan-400">"image"</code> is not in your mapping, no image will be sent to your API. This is fine if your API doesn't need images, or if you handle image association separately on your end.</p>
+                    <div class="faq-body hidden px-5 pb-5 text-xs text-slate-300 leading-relaxed space-y-2">
+                        <p>হ্যাঁ! Subeditor24 স্বয়ংক্রিয়ভাবে লোকাল ডেভেলপমেন্ট এবং সেলফ-সাইন্ড SSL সার্টিফিকেট বাইপাস করে কাজ করে। Ngrok বা লোকাল সার্ভার লিঙ্ক সরাসরি ব্যবহার করতে পারবেন।</p>
                     </div>
                 </div>
 
@@ -1071,9 +977,9 @@
         </section>
 
         <!-- ===== FOOTER ===== -->
-        <div class="border-t border-slate-800 pt-8 text-center">
-            <p class="text-slate-600 text-sm">Subeditor24 API Integration Guide · Built for client developers</p>
-            <p class="text-slate-700 text-xs mt-1">© {{ date('Y') }} Subeditor24. Questions? Contact your admin.</p>
+        <div class="border-t border-slate-800 pt-8 text-center text-xs text-slate-500">
+            <p>Subeditor24 Universal API Integration System · Engineered for Developers & News Organizations</p>
+            <p class="text-slate-600 text-[11px] mt-1">© {{ date('Y') }} Subeditor24. All rights reserved.</p>
         </div>
 
     </main>
@@ -1089,13 +995,13 @@ function buildJson() {
     const image   = document.getElementById('b_image').value.trim();
     const cat     = document.getElementById('b_category').value.trim();
     const tags    = document.getElementById('b_tags').value.trim();
-    const date    = document.getElementById('b_date').value.trim();
-    const token   = document.getElementById('b_token').value.trim();
-    const respKey = document.getElementById('b_resp_key').value.trim();
-    const authType = document.querySelector('input[name="auth_type"]:checked').value;
+    const token   = document.getElementById('b_token') ? document.getElementById('b_token').value.trim() : '';
+    const authType = document.querySelector('input[name="auth_type"]:checked')?.value || 'bearer';
 
-    // Show/hide token field
-    document.getElementById('token_field_wrap').style.display = (authType === 'body') ? 'flex' : 'none';
+    const tokenField = document.getElementById('token_field_wrap');
+    if (tokenField) {
+        tokenField.style.display = (authType === 'body') ? 'flex' : 'none';
+    }
 
     builtJson = {};
     if (title)   builtJson['title']   = title;
@@ -1103,16 +1009,16 @@ function buildJson() {
     if (image)   builtJson['image']   = image;
     if (cat)     builtJson['category']= cat;
     if (tags)    builtJson['tags']    = tags;
-    if (date)    builtJson['date']    = date;
 
-    if (authType === 'body'   && token) builtJson['token']       = token;
-    if (authType === 'bearer')          builtJson['header_auth'] = 'Bearer';
-
-    if (respKey) builtJson['response_id_key'] = respKey;
+    if (authType === 'body' && token) {
+        builtJson['token'] = token;
+    } else if (authType === 'bearer') {
+        builtJson['header_auth'] = 'Bearer';
+    }
 
     const json = JSON.stringify(builtJson, null, 2);
     document.getElementById('json_preview_code').textContent = Object.keys(builtJson).length === 0
-        ? '// Fill in fields on the left →'
+        ? '// ফিল্ডগুলো পূরণ করলে এখানে JSON তৈরি হবে'
         : json;
 }
 
@@ -1120,7 +1026,7 @@ function buildJson() {
 function copyBuiltJson() {
     const json = JSON.stringify(builtJson, null, 2);
     if (!json || Object.keys(builtJson).length === 0) {
-        alert('Please fill in at least one field first.');
+        alert('অনুগ্রহ করে আগে অন্তত একটি ফিল্ড পূরণ করুন।');
         return;
     }
     navigator.clipboard.writeText(json).then(() => {
@@ -1134,14 +1040,13 @@ function copyBuiltJson() {
     });
 }
 
-// ===== APPLY TO SETTINGS (redirect) =====
+// ===== APPLY TO SETTINGS =====
 function applyToSettings() {
     const json = JSON.stringify(builtJson, null, 2);
     if (!json || Object.keys(builtJson).length === 0) {
-        alert('Please fill in at least one field first.');
+        alert('অনুগ্রহ করে আগে অন্তত একটি ফিল্ড পূরণ করুন।');
         return;
     }
-    // Store in sessionStorage, then redirect to settings page
     sessionStorage.setItem('pendingApiMapping', json);
     window.location.href = '{{ route("settings.index") }}#custom-api-section';
 }
@@ -1161,37 +1066,25 @@ function copyCode(btn) {
 // ===== FAQ TOGGLE =====
 function toggleFaq(btn) {
     const body = btn.nextElementSibling;
-    const icon = btn.querySelector('i');
+    const icon = btn.querySelector('i.fa-chevron-down');
     body.classList.toggle('hidden');
-    icon.classList.toggle('rotate-180');
+    if (icon) icon.classList.toggle('rotate-180');
 }
 
 // ===== SCROLL TO SECTION =====
 function scrollToSection(id) {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    // Update active sidebar links
     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    event.currentTarget?.classList.add('active');
 }
 
-// ===== MOBILE SIDEBAR =====
+// ===== MOBILE SIDEBAR TOGGLE =====
 document.getElementById('sidebarToggle')?.addEventListener('click', () => {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('open');
+    document.getElementById('sidebar')?.classList.toggle('open');
 });
 
-// ===== APPLY PENDING MAPPING from sessionStorage =====
 document.addEventListener('DOMContentLoaded', () => {
-    const pending = sessionStorage.getItem('pendingApiMapping');
-    if (pending) {
-        const textarea = document.querySelector('textarea[name="custom_api_mapping"]');
-        if (textarea) {
-            textarea.value = pending;
-            sessionStorage.removeItem('pendingApiMapping');
-        }
-    }
-
-    // Active sidebar on scroll
+    buildJson();
     const sections = document.querySelectorAll('section[id]');
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -1201,7 +1094,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (active) active.classList.add('active');
             }
         });
-    }, { threshold: 0.3 });
+    }, { threshold: 0.2 });
     sections.forEach(s => observer.observe(s));
 });
 </script>
