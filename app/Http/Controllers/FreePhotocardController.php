@@ -175,8 +175,8 @@ class FreePhotocardController extends Controller
         if ($request->hasFile('frame_image')) {
             $file = $request->file('frame_image');
             $filename = 'frame_' . $userId . '_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('public/photocard_frames', $filename);
-            $framePath = Storage::url($path);
+            $path = $file->storeAs('photocard_frames', $filename, 'public');
+            $framePath = asset('storage/' . $path);
         }
 
         if (empty($framePath)) {

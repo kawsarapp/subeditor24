@@ -68,8 +68,8 @@
                     $ch = $lData['canvas_height'] ?? 1200;
                 @endphp
                 <div onclick="selectTemplate({{ $tmpl->id }})" id="tmpl-card-{{ $tmpl->id }}" class="tmpl-pill-card shrink-0 flex items-center gap-3 p-2.5 pr-4 rounded-xl border transition-all cursor-pointer {{ $index === 0 ? 'border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/60 shadow-xs' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50/50 dark:bg-slate-800/50' }}">
-                    <div class="w-10 h-10 rounded-lg bg-slate-900 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
-                        <img src="{{ $tmpl->frame_path }}" class="max-w-full max-h-full object-contain" alt="">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center shrink-0 p-0.5">
+                        <img src="{{ $tmpl->frame_path }}" class="max-w-full max-h-full object-contain" alt="" onerror="this.style.opacity='0.4'">
                     </div>
                     <div>
                         <p class="text-xs font-bold text-slate-900 dark:text-white leading-tight">{{ $tmpl->name }}</p>
@@ -394,6 +394,14 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCanvas();
         }
     };
+    sampleImg.onerror = () => {
+        console.warn("Sample image could not load, continuing with placeholder.");
+        if (savedTemplates.length > 0) {
+            selectTemplate(savedTemplates[0].id);
+        } else {
+            renderCanvas();
+        }
+    };
     sampleImg.src = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=1200&q=80";
 });
 
@@ -458,6 +466,11 @@ function selectTemplate(tmplId) {
             activeLayout.canvas_width = frameImg.naturalWidth || cw;
             activeLayout.canvas_height = frameImg.naturalHeight || ch;
             document.getElementById('activeResolutionLabel').innerText = `${activeLayout.canvas_width} × ${activeLayout.canvas_height} px`;
+            renderCanvas();
+        };
+        frameImg.onerror = () => {
+            console.warn("Frame image failed to load:", tmpl.frame_path);
+            currentFrameImage = null;
             renderCanvas();
         };
         frameImg.src = tmpl.frame_path;
@@ -609,14 +622,14 @@ function renderCanvas(isExport = false) {
 
     hitBoxes.image = { x: imgX, y: imgY, w: imgW, h: imgH };
 
-    if (currentNewsImage && currentNewsImage.complete) {
+    if (currentNewsImage && currentNewsImage.complete && currentNewsImage.naturalWidth > 0) {
         ctx.save();
         ctx.beginPath();
         ctx.rect(imgX, imgY, imgW, imgH);
         ctx.clip();
 
         // Proportional Cover-fit calculation
-        const imgRatio = currentNewsImage.width / currentNewsImage.height;
+        const imgRatio = currentNewsImage.naturalWidth / currentNewsImage.naturalHeight;
         const targetRatio = imgW / imgH;
         let drawW, drawH, drawX, drawY;
 
@@ -634,10 +647,25 @@ function renderCanvas(isExport = false) {
 
         ctx.drawImage(currentNewsImage, drawX, drawY, drawW, drawH);
         ctx.restore();
+    } else {
+        // Subtle image placeholder if no image loaded
+        ctx.save();
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(imgX, imgY, imgW, imgH);
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 6]);
+        ctx.strokeRect(imgX + 10, imgY + 10, imgW - 20, imgH - 20);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '600 24px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('📷 News Featured Image Area (Drag & Move)', imgX + imgW / 2, imgY + imgH / 2);
+        ctx.restore();
     }
 
     // 3. Draw User's PNG Frame Overlay
-    if (currentFrameImage && currentFrameImage.complete) {
+    if (currentFrameImage && currentFrameImage.complete && currentFrameImage.naturalWidth > 0) {
         ctx.drawImage(currentFrameImage, 0, 0, width, height);
     }
 
