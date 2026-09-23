@@ -263,6 +263,9 @@ web_extra_daemons:
   - name: "laravel-queue-worker"
     command: "php /var/www/html/artisan queue:work --sleep=3 --tries=2 --timeout=180"
     directory: /var/www/html
+  - name: "laravel-scheduler"
+    command: "php /var/www/html/artisan schedule:work"
+    directory: /var/www/html
 
 # override_config: false
 # By default, config.*.yaml files are *merged* into the configuration
