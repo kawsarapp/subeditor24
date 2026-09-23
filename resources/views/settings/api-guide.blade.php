@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Website Integration & API Documentation — Subeditor24</title>
-    <meta name="description" content="Complete guide to connect Laravel, WordPress, Next.js, and Custom CMS websites with Subeditor24. Step-by-step setup, code snippets, category fetching, and troubleshooting.">
+    <meta name="description" content="Subeditor24 integration guide and API documentation for Laravel, WordPress, Next.js, Express, and custom CMS. Includes step-by-step setup, payload structure, category synchronization, and troubleshooting.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
@@ -93,7 +93,7 @@
         <div class="flex items-center gap-3">
             <span class="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-3 py-1.5 rounded-full font-bold">
                 <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
-                v2.4 Complete Documentation
+                API & Webhook Reference
             </span>
             @auth
             <a href="{{ route('settings.index') }}" class="text-xs sm:text-sm font-semibold text-indigo-300 hover:text-white bg-indigo-500/10 hover:bg-indigo-600/30 border border-indigo-500/30 px-3 sm:px-4 py-1.5 rounded-xl transition-all">
@@ -114,35 +114,35 @@
     <!-- ===== LEFT SIDEBAR ===== -->
     <aside id="sidebar" class="sidebar w-64 flex-shrink-0">
         <div class="sticky top-24 max-h-[85vh] overflow-y-auto pr-2">
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 px-2">Navigation (সূচিপত্র)</p>
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 px-2">সূচিপত্র (Table of Contents)</p>
             <nav class="space-y-0.5 text-xs">
-                <a class="sidebar-link active" onclick="scrollToSection('overview')"><span class="dot"></span>Overview (সারসংক্ষেপ)</a>
-                <a class="sidebar-link" onclick="scrollToSection('architecture')"><span class="dot"></span>How It Works (কাজের ধারা)</a>
+                <a class="sidebar-link active" onclick="scrollToSection('overview')"><span class="dot"></span>সংক্ষিপ্ত পরিচিতি (Overview)</a>
+                <a class="sidebar-link" onclick="scrollToSection('architecture')"><span class="dot"></span>কাজের ধারা (Architecture)</a>
                 
                 <div class="my-3 border-t border-slate-800"></div>
-                <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2 px-2">🚀 Laravel Setup (সম্পূর্ণ গাইড)</p>
-                <a class="sidebar-link" onclick="scrollToSection('laravel-step1')"><span class="dot"></span>1. .env & Token Setup</a>
-                <a class="sidebar-link" onclick="scrollToSection('laravel-step2')"><span class="dot"></span>2. News Post Route (api.php)</a>
-                <a class="sidebar-link" onclick="scrollToSection('laravel-step3')"><span class="dot"></span>3. Category Fetch Route</a>
-                <a class="sidebar-link" onclick="scrollToSection('laravel-step4')"><span class="dot"></span>4. Image Handling & Storage</a>
+                <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2 px-2">🚀 Laravel Setup Guide</p>
+                <a class="sidebar-link" onclick="scrollToSection('laravel-step1')"><span class="dot"></span>১. Secret Token ও .env কনফিগারেশন</a>
+                <a class="sidebar-link" onclick="scrollToSection('laravel-step2')"><span class="dot"></span>২. News Post Endpoint (routes/api.php)</a>
+                <a class="sidebar-link" onclick="scrollToSection('laravel-step3')"><span class="dot"></span>৩. Category Fetch Endpoint</a>
+                <a class="sidebar-link" onclick="scrollToSection('laravel-step4')"><span class="dot"></span>৪. Storage Link ও Laravel 11/12</a>
 
                 <div class="my-3 border-t border-slate-800"></div>
                 <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2 px-2">📂 Categories & Mappings</p>
-                <a class="sidebar-link" onclick="scrollToSection('category-fetch')"><span class="dot"></span>Category Sync System</a>
-                <a class="sidebar-link" onclick="scrollToSection('field-mappings')"><span class="dot"></span>Field Name Mappings</a>
-                <a class="sidebar-link" onclick="scrollToSection('expected-response')"><span class="dot"></span>Expected JSON Response</a>
+                <a class="sidebar-link" onclick="scrollToSection('category-fetch')"><span class="dot"></span>ক্যাটাগরি সিঙ্ক্রোনাইজেশন</a>
+                <a class="sidebar-link" onclick="scrollToSection('field-mappings')"><span class="dot"></span>পেলোড ফিল্ড ম্যাপিং</a>
+                <a class="sidebar-link" onclick="scrollToSection('expected-response')"><span class="dot"></span>প্রত্যাশিত JSON রেসপন্স</a>
 
                 <div class="my-3 border-t border-slate-800"></div>
-                <p class="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2 px-2">💻 Other Frameworks Code</p>
-                <a class="sidebar-link" onclick="scrollToSection('code-wordpress')"><span class="dot"></span>WordPress Plugin / Theme</a>
-                <a class="sidebar-link" onclick="scrollToSection('code-nextjs')"><span class="dot"></span>Next.js (App / Pages)</a>
+                <p class="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2 px-2">💻 Other Frameworks</p>
+                <a class="sidebar-link" onclick="scrollToSection('code-wordpress')"><span class="dot"></span>WordPress (REST API / functions.php)</a>
+                <a class="sidebar-link" onclick="scrollToSection('code-nextjs')"><span class="dot"></span>Next.js (App Router)</a>
                 <a class="sidebar-link" onclick="scrollToSection('code-express')"><span class="dot"></span>Node.js / Express</a>
-                <a class="sidebar-link" onclick="scrollToSection('code-php')"><span class="dot"></span>Single File Raw PHP</a>
-                <a class="sidebar-link" onclick="scrollToSection('code-python')"><span class="dot"></span>Python (FastAPI / Flask)</a>
+                <a class="sidebar-link" onclick="scrollToSection('code-php')"><span class="dot"></span>Raw PHP (Single File)</a>
+                <a class="sidebar-link" onclick="scrollToSection('code-python')"><span class="dot"></span>Python (FastAPI)</a>
 
                 <div class="my-3 border-t border-slate-800"></div>
-                <a class="sidebar-link" onclick="scrollToSection('ready-api')"><span class="dot"></span>🛠️ Visual JSON Builder</a>
-                <a class="sidebar-link" onclick="scrollToSection('faq-troubleshooting')"><span class="dot"></span>❓ FAQ & Troubleshooting</a>
+                <a class="sidebar-link" onclick="scrollToSection('ready-api')"><span class="dot"></span>🛠️ Payload JSON Builder</a>
+                <a class="sidebar-link" onclick="scrollToSection('faq-troubleshooting')"><span class="dot"></span>❓ সাধারণ সমস্যা ও সমাধান (FAQ)</a>
             </nav>
         </div>
     </aside>
@@ -153,15 +153,15 @@
         <!-- ===== HERO ===== -->
         <section id="overview">
             <div class="mb-3 flex items-center gap-2">
-                <span class="text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">📡 Universal Website Integration</span>
-                <span class="text-xs text-slate-500 font-mono">v2.4 Ready</span>
+                <span class="text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">External Website Integration</span>
+                <span class="text-xs text-slate-500 font-mono">REST API & Webhooks</span>
             </div>
             <h1 class="text-3xl sm:text-5xl font-black text-white leading-tight mb-4">
                 Website Integration &<br>
-                <span class="gradient-text">API Developer Documentation</span>
+                <span class="gradient-text">Developer Documentation</span>
             </h1>
             <p class="text-base sm:text-lg text-slate-300 max-w-3xl leading-relaxed mb-6 font-bangla">
-                Subeditor24 এর মাধ্যমে যেকোনো <strong class="text-indigo-400 font-bold">Laravel</strong>, <strong class="text-purple-400 font-bold">WordPress</strong>, <strong class="text-cyan-400 font-bold">Next.js</strong>, বা কাস্টম CMS ওয়েবসাইটকে মুহূর্তের মধ্যে সংযুক্ত করুন। এআই দ্বারা সংগৃহীত ও রিরাইট করা সংবাদসমূহ স্বয়ংক্রিয়ভাবে সরাসরি আপনার ডাটাবেসে ছবিসহ লাইভ পোস্ট হবে।
+                Subeditor24 থেকে আপনার নিজস্ব নিউজ পোর্টাল বা অ্যাপ্লিকেশনে (যেমন <strong class="text-indigo-400 font-bold">Laravel</strong>, <strong class="text-purple-400 font-bold">WordPress</strong>, <strong class="text-cyan-400 font-bold">Next.js</strong>, বা যেকোনো কাস্টম ব্যাকএন্ড) সংবাদ প্রকাশের সম্পূর্ণ গাইডলাইন। এডিটর দ্বারা অনুমোদিত বা অটো-পাবলিশ হওয়া সংবাদসমূহ স্বয়ংক্রিয়ভাবে আপনার ডাটাবেসে ছবি, ক্যাটাগরি ও ট্যাগসহ সংরক্ষিত হবে।
             </p>
 
             <!-- Feature Pills -->
@@ -171,8 +171,8 @@
                         <i class="fas fa-lock text-sm"></i>
                     </div>
                     <div>
-                        <p class="font-bold text-white text-xs">Bearer Auth</p>
-                        <p class="text-[11px] text-slate-400">নিরাপদ টোকেন চাবি</p>
+                        <p class="font-bold text-white text-xs">Bearer Token</p>
+                        <p class="text-[11px] text-slate-400">নিরাপদ হেডার অথেন্টিকেশন</p>
                     </div>
                 </div>
                 <div class="glass-card rounded-xl p-3.5 flex items-center gap-3">
@@ -180,8 +180,8 @@
                         <i class="fas fa-tags text-sm"></i>
                     </div>
                     <div>
-                        <p class="font-bold text-white text-xs">Auto Category</p>
-                        <p class="text-[11px] text-slate-400">ক্যাটাগরি সিঙ্ক</p>
+                        <p class="font-bold text-white text-xs">Category Sync</p>
+                        <p class="text-[11px] text-slate-400">অটোমেটিক ক্যাটাগরি সিঙ্ক</p>
                     </div>
                 </div>
                 <div class="glass-card rounded-xl p-3.5 flex items-center gap-3">
@@ -190,7 +190,7 @@
                     </div>
                     <div>
                         <p class="font-bold text-white text-xs">Multipart Upload</p>
-                        <p class="text-[11px] text-slate-400">আসল ছবি আপলোড</p>
+                        <p class="text-[11px] text-slate-400">ফিজিক্যাল ইমেজ ফাইল ট্রান্সফার</p>
                     </div>
                 </div>
                 <div class="glass-card rounded-xl p-3.5 flex items-center gap-3">
@@ -199,7 +199,7 @@
                     </div>
                     <div>
                         <p class="font-bold text-white text-xs">Custom Mapping</p>
-                        <p class="text-[11px] text-slate-400">যেকোনো ফিল্ড ম্যাচিং</p>
+                        <p class="text-[11px] text-slate-400">কাস্টম প্যারামিটার সাপোর্ট</p>
                     </div>
                 </div>
             </div>
@@ -208,39 +208,39 @@
         <!-- ===== ARCHITECTURE & HOW IT WORKS ===== -->
         <section id="architecture">
             <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-                <i class="fas fa-network-wired text-indigo-400"></i> How It Works (সংযোগ যেভাবে কাজ করে)
+                <i class="fas fa-network-wired text-indigo-400"></i> How It Works (ইন্টিগ্রেশনের কার্যপ্রণালী)
             </h2>
             <p class="text-slate-400 mb-6 font-bangla text-sm">
-                Subeditor24 থেকে আপনার ওয়েবসাইটে নিউজ পোস্ট হওয়ার সম্পূর্ণ ওয়ার্কফ্লো:
+                Subeditor24 থেকে আপনার এক্সটারনাল ওয়েবসাইটে সংবাদ পাঠানোর প্রতিটি ধাপ নিচে ব্যাখ্যা করা হলো:
             </p>
 
             <div class="space-y-4">
                 <div class="relative flex gap-4">
                     <div class="w-8 h-8 flex-shrink-0 bg-indigo-500/20 border border-indigo-500/40 rounded-full flex items-center justify-center text-xs font-black text-indigo-400">1</div>
                     <div class="flex-1 bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-                        <p class="font-bold text-white text-sm mb-1">এডিটর এপ্রুভাল (News Approved)</p>
-                        <p class="text-xs text-slate-300 font-bangla">সিস্টেমে এআই-রিরাইট করা নিউজ যখন এডিটর এপ্রুভ করেন বা অটো-পাবলিশ মোড চালু থাকে, তখন পোস্টিং ইঞ্জিন সক্রিয় হয়।</p>
+                        <p class="font-bold text-white text-sm mb-1">১. সংবাদ অনুমোদন (Article Approval & Trigger)</p>
+                        <p class="text-xs text-slate-300 font-bangla">নিউজ ড্যাশবোর্ডে যখন কোনো সংবাদ এডিটর অনুমোদন করেন অথবা সিস্টেমে অটো-পাবলিশ মোড সক্রিয় থাকে, তখনই পোস্টিং ইঞ্জিন ব্যাকগ্রাউন্ড টাস্ক শুরু করে।</p>
                     </div>
                 </div>
                 <div class="relative flex gap-4">
                     <div class="w-8 h-8 flex-shrink-0 bg-purple-500/20 border border-purple-500/40 rounded-full flex items-center justify-center text-xs font-black text-purple-400">2</div>
                     <div class="flex-1 bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-                        <p class="font-bold text-white text-sm mb-1">পেলোড তৈরি ও ছবি প্রসেসিং (Payload & Image Processing)</p>
-                        <p class="text-xs text-slate-300 font-bangla">নিউজ শিরোনাম, বডি কনটেন্ট (HTML), ট্যাগ, ক্যাটাগরি আইডি এবং ফিচার্ড ইমেজ প্রসেস করা হয়। ছবিকে ফিজিক্যাল ফাইল হিসেবে multipart/form-data রিকোয়েস্টে সংযুক্ত করা হয়।</p>
+                        <p class="font-bold text-white text-sm mb-1">২. পেলোড প্রস্তুতকরণ ও ইমেজ প্রসেসিং (Payload & Image Processing)</p>
+                        <p class="text-xs text-slate-300 font-bangla">সংবাদের শিরোনাম, মূল বডি কনটেন্ট (HTML), ট্যাগ, ক্যাটাগরি আইডি এবং ফিচার্ড ইমেজ প্রসেস করা হয়। ছবিটি বাইনারি ফাইল হিসেবে <code>multipart/form-data</code> ফরম্যাটে প্রস্তুত হয়।</p>
                     </div>
                 </div>
                 <div class="relative flex gap-4">
                     <div class="w-8 h-8 flex-shrink-0 bg-cyan-500/20 border border-cyan-500/40 rounded-full flex items-center justify-center text-xs font-black text-cyan-400">3</div>
                     <div class="flex-1 bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-                        <p class="font-bold text-white text-sm mb-1">সিকিউর API হ্যান্ডশেক (Secure API Handshake)</p>
-                        <p class="text-xs text-slate-300 font-bangla">আপনার ওয়েবসাইটের এন্ডপয়েন্টে <code>Authorization: Bearer <Secret_Token></code> হেডার সহ HTTP POST রিকোয়েস্ট পাঠানো হয় (120 সেকেন্ড টাইমআউট সহ)।</p>
+                        <p class="font-bold text-white text-sm mb-1">৩. নিরাপদ HTTP POST রিকোয়েস্ট (Secure API Delivery)</p>
+                        <p class="text-xs text-slate-300 font-bangla">আপনার নির্ধারিত API এন্ডপয়েন্টে <code>Authorization: Bearer &lt;Secret_Token&gt;</code> হেডার সহ HTTP POST রিকোয়েস্ট পাঠানো হয়। সংযোগের নির্ভরযোগ্যতার জন্য ১২০ সেকেন্ড পর্যন্ত টাইমআউট রাখা হয়।</p>
                     </div>
                 </div>
                 <div class="relative flex gap-4">
                     <div class="w-8 h-8 flex-shrink-0 bg-emerald-500/20 border border-emerald-500/40 rounded-full flex items-center justify-center text-xs font-black text-emerald-400">4</div>
                     <div class="flex-1 bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-                        <p class="font-bold text-white text-sm mb-1">রেসপন্স ও ট্র্যাকিং (Response Parsing & Tracking)</p>
-                        <p class="text-xs text-slate-300 font-bangla">আপনার ওয়েবসাইট থেকে পাওয়া <code>post_id</code> এবং <code>url</code> সেভ করে পোস্টটিকে তাৎক্ষণিক <strong>Published</strong> হিসেবে চিহ্নিত করা হয়।</p>
+                        <p class="font-bold text-white text-sm mb-1">৪. রেসপন্স হ্যান্ডলিং ও স্ট্যাটাস আপডেট (Response Handling)</p>
+                        <p class="text-xs text-slate-300 font-bangla">আপনার ওয়েবসাইট থেকে রেসপন্সে আসা <code>post_id</code> এবং <code>url</code> সংরক্ষণ করে সংশ্লিষ্ট সংবাদটিকে সিস্টেমে <strong>Published</strong> হিসেবে মার্ক করা হয়।</p>
                     </div>
                 </div>
             </div>
@@ -252,14 +252,14 @@
         <section id="laravel-step1" class="border-t border-slate-800 pt-8">
             <div class="mb-3 flex items-center gap-2">
                 <span class="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-full">
-                    <i class="fab fa-laravel mr-1"></i> Laravel Master Setup
+                    <i class="fab fa-laravel mr-1"></i> Laravel Integration
                 </span>
             </div>
             <h2 class="text-3xl font-black text-white mb-2">
-                Laravel ওয়েবসাইট কানেক্ট করার ৪টি সহজ ধাপ
+                Laravel ইন্টিগ্রেশন নির্দেশিকা (৪টি ধাপ)
             </h2>
             <p class="text-sm text-slate-400 mb-6 font-bangla">
-                আপনার বিদ্যমান বা নতুন যেকোনো Laravel (Laravel 9, 10, 11) প্রজেক্টে নিচের কোডগুলো যুক্ত করলেই সম্পূর্ণ অটোমেশন চালু হয়ে যাবে:
+                আপনার Laravel (Laravel 9, 10, 11, 12) প্রজেক্টে Subeditor24 থেকে সরাসরি সংবাদ রিসিভ ও ক্যাটাগরি সিঙ্ক করতে নিচের ধাপগুলো সম্পন্ন করুন:
             </p>
 
             <!-- STEP 1: .ENV & TOKEN -->
@@ -267,16 +267,16 @@
                 <div class="flex items-start gap-4 mb-4">
                     <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm">১</span>
                     <div>
-                        <h3 class="text-lg font-bold text-white">ধাপ ১: API Secret Token তৈরি ও .env এ সংরক্ষণ</h3>
+                        <h3 class="text-lg font-bold text-white">ধাপ ১: API Secret Token তৈরি ও .env ফাইলে যুক্ত করা</h3>
                         <p class="text-xs text-slate-400 font-bangla mt-1">
-                            Settings পেজের <strong>"API Secret Token"</strong> ফিল্ডে <strong>Generate</strong> বাটনে ক্লিক করে একটি সিক্রেট টোকেন তৈরি করুন। এরপর আপনার Laravel প্রজেক্টের <code>.env</code> ফাইলে এটি যুক্ত করুন:
+                            Subeditor24 এর Settings পেজে <strong>"API Secret Token"</strong> ফিল্ডে দেওয়া টোকেনটি কপি করুন (বা Generate বাটনে ক্লিক করে নতুন তৈরি করুন)। এরপর আপনার Laravel প্রজেক্টের <code>.env</code> ফাইলে এটি যুক্ত করুন:
                         </p>
                     </div>
                 </div>
 
                 <div class="relative">
                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                    <pre><code class="text-emerald-400"># আপনার Laravel প্রজেক্টের .env ফাইল ওপেন করে নিচে যুক্ত করুন:
+                    <pre><code class="text-emerald-400"># আপনার Laravel প্রজেক্টের .env ফাইলে যুক্ত করুন:
 SUBEDITOR_API_SECRET=your_generated_secret_token_here
 </code></pre>
                 </div>
@@ -287,10 +287,27 @@ SUBEDITOR_API_SECRET=your_generated_secret_token_here
                 <div class="flex items-start gap-4 mb-4">
                     <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm">২</span>
                     <div>
-                        <h3 class="text-lg font-bold text-white">ধাপ ২: নিউজ রিসিভ করার এপিআই রুট তৈরি (routes/api.php)</h3>
+                        <h3 class="text-lg font-bold text-white">ধাপ ২: নিউজ রিসিভার এন্ডপয়েন্ট তৈরি (routes/api.php)</h3>
                         <p class="text-xs text-slate-400 font-bangla mt-1">
-                            আপনার Laravel প্রজেক্টের <code class="text-indigo-300">routes/api.php</code> ফাইলে নিচের কোডটি হুবহু পেস্ট করুন। এটি টোকেন ভ্যালিডেশন করবে, ছবি সেভ করবে এবং ডাটাবেসে নতুন নিউজ ইনসার্ট করবে:
+                            আপনার Laravel প্রজেক্টের <code class="text-indigo-300">routes/api.php</code> ফাইলে নিচের রাউটটি যুক্ত করুন। এটি ডেটা ভ্যালিডেট করে ডাটাবেসে সেভ করবে এবং আপলোড করা ইমেজ স্টোরেজে রাখবে:
                         </p>
+                    </div>
+                </div>
+
+                {{-- Laravel Version Note Banner --}}
+                <div class="mb-4 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/25 text-xs font-bangla space-y-2">
+                    <p class="font-bold text-indigo-300 flex items-center gap-1.5 text-sm">
+                        <i class="fab fa-laravel"></i> Laravel ভার্সন নির্দেশিকা (routes/api.php ফাইল সংক্রান্ত):
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-300">
+                        <div class="bg-slate-900/70 p-3 rounded-lg border border-slate-800">
+                            <strong class="text-emerald-400 block mb-1">✅ Laravel 10 এবং পূর্ববর্তী ভার্সন:</strong>
+                            <p class="text-[11px] leading-relaxed text-slate-400">Laravel 6, 7, 8, 9 ও 10 এ <code class="text-indigo-300">routes/api.php</code> ফাইলটি প্রজেক্ট তৈরির সময় ডিফল্টভাবেই বিদ্যমান থাকে। কোনো অতিরিক্ত কমান্ডের প্রয়োজন নেই।</p>
+                        </div>
+                        <div class="bg-slate-900/70 p-3 rounded-lg border border-slate-800">
+                            <strong class="text-amber-400 block mb-1">⚡ Laravel 11 ও 12 (Modern Laravel):</strong>
+                            <p class="text-[11px] leading-relaxed text-slate-400">Laravel 11/12 এ ফ্রেশ প্রজেক্টে <code class="text-indigo-300">api.php</code> ডিফল্ট থাকে না। টার্মিনালে কমান্ডটি একবার রান করুন: <code class="text-amber-300 bg-slate-950 px-1 py-0.5 rounded font-mono">php artisan install:api</code> — ফাইলটি তৈরি হয়ে যাবে।</p>
+                        </div>
                     </div>
                 </div>
 
@@ -302,10 +319,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Models\NewsPost; // ⚠️ আপনার নিউজ মডেল ক্লাসের নাম অনুযায়ী পরিবর্তন করুন
+use App\Models\NewsPost; // ⚠️ আপনার প্রজেক্টের নিউজ মডেল
 
 Route::post('/external-news-post', function (Request $request) {
-    // ১. সিকিউরিটি টোকেন চেক (Authorization Header Verification)
+    // ১. অথেন্টিকেশন টোকেন ভেরিফিকেশন
     $authHeader = $request->header('Authorization');
     $secret = env('SUBEDITOR_API_SECRET', 'YOUR_SECRET_TOKEN_HERE');
     $expectedToken = "Bearer " . $secret;
@@ -317,7 +334,7 @@ Route::post('/external-news-post', function (Request $request) {
         ], 401);
     }
 
-    // ২. ডেটা ভ্যালিডেশন
+    // ২. ইনকামিং রিকোয়েস্ট ভ্যালিডেশন
     $validated = $request->validate([
         'title'       => 'required|string',
         'content'     => 'required|string',
@@ -328,22 +345,20 @@ Route::post('/external-news-post', function (Request $request) {
         'slug'        => 'nullable|string',
     ]);
 
-    // ৩. ফিচার্ড ইমেজ প্রসেসিং ও সংরক্ষণ
+    // ৩. ফিচার্ড ইমেজ সংরক্ষণ (Multipart File অথবা URL)
     $imagePath = null;
     if ($request->hasFile('image')) {
-        // ফিজিক্যাল ফাইল আপলোড হলে public disk এ সেভ করুন
         $imagePath = $request->file('image')->store('news_images', 'public');
     } elseif ($request->filled('image') && is_string($request->image)) {
-        // ইমেজ ইউআরএল হিসেবে আসলে
         $imagePath = $request->image;
     }
 
-    // ৪. স্লাগ (Slug) হ্যান্ডলিং
+    // ৪. স্লাগ জেনারেট
     $slug = !empty($validated['slug']) 
         ? Str::slug($validated['slug']) 
         : Str::slug($validated['title']) . '-' . time();
 
-    // ৫. ডাটাবেসে নিউজ ইনসার্ট করুন
+    // ৫. ডাটাবেসে নিউজ সংরক্ষণ
     $post = NewsPost::create([
         'title'       => $validated['title'],
         'slug'        => $slug,
@@ -356,12 +371,12 @@ Route::post('/external-news-post', function (Request $request) {
         'updated_at'  => now(),
     ]);
 
-    // ৬. সফল রেসপন্স ও লাইভ পোস্টের ইউআরএল প্রদান
+    // ৬. সফল রেসপন্স ও লাইভ পোস্ট লিংক রিটার্ন
     return response()->json([
         'success' => true,
-        'message' => 'News published successfully to your website',
+        'message' => 'News published successfully',
         'post_id' => $post->id,
-        'url'     => url('/news/' . $post->slug) // পোস্টের লাইভ লিংক
+        'url'     => url('/news/' . $post->slug)
     ], 200);
 });
 </code></pre>
@@ -375,17 +390,17 @@ Route::post('/external-news-post', function (Request $request) {
                     <div>
                         <h3 class="text-lg font-bold text-white">ধাপ ৩: ক্যাটাগরি তালিকা রিটার্ন করার রুট (routes/api.php)</h3>
                         <p class="text-xs text-slate-400 font-bangla mt-1">
-                            Subeditor24 যেন Settings পেজের <strong>"Refresh Categories"</strong> চাপলেই আপনার ওয়েবসাইটের সব ক্যাটাগরি পেয়ে যায়, সেজন্য <code class="text-indigo-300">routes/api.php</code> ফাইলে এই রুটটি যোগ করুন:
+                            Subeditor24 ড্যাশবোর্ড থেকে যাতে সরাসরি আপনার ওয়েবসাইটের ক্যাটাগরিগুলো ফেচ করা যায়, সেজন্য <code class="text-indigo-300">routes/api.php</code> ফাইলে এই GET এন্ডপয়েন্টটি যোগ করুন:
                         </p>
                     </div>
                 </div>
 
                 <div class="relative">
                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                    <pre><code class="text-emerald-300">use App\Models\Category; // ⚠️ আপনার ক্যাটাগরি মডেল
+                    <pre><code class="text-emerald-300">use App\Models\Category; // ⚠️ আপনার প্রজেক্টের ক্যাটাগরি মডেল
 
 Route::get('/get-categories', function (Request $request) {
-    // টোকেন ভেরিফিকেশন (Bearer Header অথবা Query Parameter ?token=...)
+    // টোকেন যাচাই (Bearer Header অথবা Query Parameter ?token=...)
     $token = $request->bearerToken() ?? $request->query('token');
     $expectedSecret = env('SUBEDITOR_API_SECRET');
 
@@ -393,7 +408,7 @@ Route::get('/get-categories', function (Request $request) {
         return response()->json(['error' => 'Unauthorized'], 401);
     }
 
-    // আপনার ডাটাবেস থেকে id এবং name সহ ক্যাটাগরি রিটার্ন করুন
+    // ক্যাটাগরি তালিকা রিটার্ন করুন (id ও name ফিল্ড সহ)
     return response()->json(
         Category::select('id', 'name')->get()
     );
@@ -403,7 +418,7 @@ Route::get('/get-categories', function (Request $request) {
 
                 <div class="callout-info mt-4 rounded-r-xl">
                     <p class="text-xs text-cyan-300 font-bangla leading-relaxed">
-                        <i class="fas fa-info-circle mr-1"></i> <strong>রেসপন্স ফরম্যাট:</strong> এটি সরাসরি <code>[{"id": 1, "name": "জাতীয়"}, {"id": 2, "name": "খেলাধুলা"}]</code> রিটার্ন করবে, যা Subeditor24 ড্যাশবোর্ডে সাথে সাথে লোড হয়ে যাবে।
+                        <i class="fas fa-info-circle mr-1"></i> <strong>রেসপন্স স্ট্রাকচার:</strong> এন্ডপয়েন্টটি সরাসরি <code>[{"id": 1, "name": "জাতীয়"}, {"id": 2, "name": "খেলাধুলা"}]</code> অ্যারে রিটার্ন করবে, যা Subeditor24 ড্যাশবোর্ডে সাথে সাথে লোড হয়ে যাবে।
                     </p>
                 </div>
             </div>
@@ -413,23 +428,23 @@ Route::get('/get-categories', function (Request $request) {
                 <div class="flex items-start gap-4 mb-4">
                     <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm">৪</span>
                     <div>
-                        <h3 class="text-lg font-bold text-white">ধাপ ৪: স্টোরেজ লিংক ও Laravel 11 স্পেশাল কনফিগারেশন</h3>
+                        <h3 class="text-lg font-bold text-white">ধাপ ৪: স্টোরেজ লিংক ও প্রয়োজনীয় আর্টিসান কমান্ড</h3>
                         <p class="text-xs text-slate-400 font-bangla mt-1">
-                            ছবিগুলো ওয়েবসাইটে দৃশ্যমান করতে এবং Laravel 11-এ API রুট চালু রাখতে নিচের কমান্ডগুলো দিন:
+                            আপলোড করা ইমেজগুলো ওয়েবসাইটে দৃশ্যমান করতে এবং কনফিগারেশন আপডেট করতে নিচের কমান্ডগুলো দিন:
                         </p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-bangla">
                     <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
-                        <p class="font-bold text-white mb-2"><i class="fas fa-terminal text-indigo-400 mr-1"></i> Storage Link কমান্ড</p>
-                        <p class="text-slate-300 mb-2">আপলোড করা ছবি ব্রাউজারে দেখতে আপনার টার্মিনালে রান করুন:</p>
+                        <p class="font-bold text-white mb-2"><i class="fas fa-terminal text-indigo-400 mr-1"></i> Public Storage Link</p>
+                        <p class="text-slate-300 mb-2">পাবলিক ডিরেক্টরিতে স্টোরেজ লিংক তৈরি করতে রান করুন:</p>
                         <pre class="!py-2 !px-3"><code>php artisan storage:link</code></pre>
                     </div>
                     <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700">
-                        <p class="font-bold text-white mb-2"><i class="fab fa-laravel text-red-400 mr-1"></i> Laravel 11 API Route চালু</p>
-                        <p class="text-slate-300 mb-2">Laravel 11 এ ডিফল্ট api.php চালু করতে টার্মিনালে রান করুন:</p>
-                        <pre class="!py-2 !px-3"><code>php artisan install:api</code></pre>
+                        <p class="font-bold text-white mb-2"><i class="fab fa-laravel text-red-400 mr-1"></i> Config Cache Refresh</p>
+                        <p class="text-slate-300 mb-2">.env পরিবর্তনের পর কনফিগ ক্যাশ ক্লিয়ার করতে রান করুন:</p>
+                        <pre class="!py-2 !px-3"><code>php artisan config:clear</code></pre>
                     </div>
                 </div>
             </div>
@@ -445,38 +460,38 @@ Route::get('/get-categories', function (Request $request) {
                 </span>
             </div>
             <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">
-                ক্যাটাগরি সিঙ্ক ও ম্যাপিং কিভাবে কাজ করে
+                ক্যাটাগরি সিঙ্ক্রোনাইজেশন ও ম্যাপিং
             </h2>
             <p class="text-slate-400 mb-6 font-bangla text-sm">
-                Subeditor24 এর এআই প্রতি নিউজের জন্য একটি মূল বিষয়বস্তু (Topic) চিহ্নিত করে (যেমন Politics, Sports, International ইত্যাদি)। আপনি আপনার ওয়েবসাইটের ক্যাটাগরির সাথে এটি মিলিয়ে দিতে পারেন:
+                Subeditor24 প্রতিটি সংবাদের বিষয়বস্তু বিশ্লেষণ করে উপযুক্ত ক্যাটাগরি নির্ধারণ করে। আপনার ওয়েবসাইটের ক্যাটাগরি তালিকার সাথে মেলাতে সিস্টেম নিচের অগ্রাধিকার ক্রমে ডেটা ফেচ করে:
             </p>
 
             <div class="glass-card rounded-2xl p-6 mb-6">
-                <h3 class="text-base font-bold text-white mb-3">ক্যাটাগরি ফেচিংয়ের অগ্রাধিকার ক্রম (Priority Order):</h3>
+                <h3 class="text-base font-bold text-white mb-3">ক্যাটাগরি ফেচিং প্রায়োরিটি অর্ডার (Resolution Order):</h3>
                 <div class="space-y-3 font-bangla text-xs">
                     <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-3">
                         <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center">1</span>
                         <div>
-                            <strong class="text-emerald-300">Custom Category Fetch URL:</strong> Settings এ যদি কাস্টম ক্যাটাগরি ইউআরএল দেওয়া থাকে, তবে সবার আগে সেখান থেকে ক্যাটাগরি নিয়ে আসা হয়।
+                            <strong class="text-emerald-300">Custom Category Fetch URL:</strong> Settings এ যদি কাস্টম ক্যাটাগরি এন্ডপয়েন্ট দেওয়া থাকে, সিস্টেম সর্বপ্রথম সেই URL থেকে ক্যাটাগরি ডেটা ফেচ করে।
                         </div>
                     </div>
                     <div class="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center gap-3">
                         <span class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center">2</span>
                         <div>
-                            <strong class="text-indigo-300">Default Laravel API ({Base_URL}/api/get-categories):</strong> কাস্টম ইউআরএল না থাকলে স্বয়ংক্রিয়ভাবে ওয়েবসাইটের <code>/api/get-categories</code> এ রিকোয়েস্ট পাঠানো হয়।
+                            <strong class="text-indigo-300">Default API Endpoint ({Base_URL}/api/get-categories):</strong> কাস্টম URL খালি থাকলে সিস্টেম স্বয়ংক্রিয়ভাবে আপনার সাইটের <code>/api/get-categories</code> পাথে রিকোয়েস্ট পাঠায়।
                         </div>
                     </div>
                     <div class="p-3 bg-slate-800 border border-slate-700 rounded-xl flex items-center gap-3">
                         <span class="w-6 h-6 rounded-full bg-slate-700 text-slate-300 font-bold flex items-center justify-center">3</span>
                         <div>
-                            <strong class="text-slate-300">WordPress REST API Fallback:</strong> উপরের দুটি না থাকলে WordPress credentials দিয়ে ক্যাটাগরি ফেচ করার চেষ্টা করা হয়।
+                            <strong class="text-slate-300">WordPress REST API Fallback:</strong> যদি প্ল্যাটফর্ম হিসেবে WordPress সিলেক্ট করা থাকে, তবে ডিফল্ট WP REST API (<code>/wp-json/wp/v2/categories</code>) ব্যবহার করা হয়।
                         </div>
                     </div>
                 </div>
 
                 <div class="callout-success mt-4 rounded-r-xl">
                     <p class="text-xs text-emerald-300 font-bangla">
-                        <i class="fas fa-check-circle mr-1"></i> ক্যাটাগরিগুলো ২৪ ঘণ্টার জন্য ক্যাশ (Cache) হয়ে থাকে। নতুন ক্যাটাগরি যুক্ত করলে Settings পেজে এসে <strong>"🔄 Refresh Categories"</strong> বাটনে ক্লিক করলেই আপডেট হয়ে যাবে।
+                        <i class="fas fa-check-circle mr-1"></i> পারফরম্যান্সের স্বার্থে ক্যাটাগরি ডেটা ক্যাশ রাখা হয়। কোনো নতুন ক্যাটাগরি তৈরি বা পরিবর্তন করলে Settings পেজে <strong>"🔄 Refresh Categories"</strong> বাটনে ক্লিক করে তাৎক্ষণিক আপডেট করতে পারবেন।
                     </p>
                 </div>
             </div>
@@ -492,7 +507,7 @@ Route::get('/get-categories', function (Request $request) {
                 </span>
             </div>
             <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">
-                Field Name Mappings (ফিল্ড নেম ম্যাপিং)
+                পেলোড ফিল্ড নেম ম্যাপিং (Field Mapping)
             </h2>
             <p class="text-slate-400 mb-6 font-bangla text-sm">
                 যদি আপনার ওয়েবসাইট বা API তে প্যারামিটারের নাম আলাদা হয় (যেমন <code class="text-indigo-300">title</code> এর বদলে <code class="text-indigo-300">news_headline</code>), তবে আপনি কাস্টম ম্যাপিং JSON ব্যবহার করে যেকোনো ফিল্ডের নাম পরিবর্তন করতে পারেন:
@@ -511,39 +526,39 @@ Route::get('/get-categories', function (Request $request) {
                     <tbody class="font-bangla text-xs">
                         <tr>
                             <td><code class="code-font text-sky-400 text-sm">"title"</code></td>
-                            <td>সংবাদের প্রধান শিরোনাম (AI Rewritten News Headline)</td>
+                            <td>সংবাদের প্রধান শিরোনাম (Article Headline)</td>
                             <td><span class="code-font text-slate-400">string</span></td>
-                            <td><span class="badge-required">আবশ্যক</span></td>
+                            <td><span class="badge-required">Required</span></td>
                         </tr>
                         <tr>
                             <td><code class="code-font text-sky-400 text-sm">"content"</code></td>
                             <td>সম্পূর্ণ সংবাদ বডি HTML ফরম্যাটে (Full Article Body HTML)</td>
                             <td><span class="code-font text-slate-400">HTML string</span></td>
-                            <td><span class="badge-required">আবশ্যক</span></td>
+                            <td><span class="badge-required">Required</span></td>
                         </tr>
                         <tr>
                             <td><code class="code-font text-sky-400 text-sm">"image"</code></td>
                             <td>ফিচার্ড ইমেজ (Multipart File Upload)</td>
                             <td><span class="code-font text-slate-400">file</span></td>
-                            <td><span class="badge-optional">ঐচ্ছিক</span></td>
+                            <td><span class="badge-optional">Optional</span></td>
                         </tr>
                         <tr>
                             <td><code class="code-font text-sky-400 text-sm">"category"</code> / <code class="code-font text-sky-400 text-sm">"category_id"</code></td>
                             <td>টার্গেট ওয়েবসাইটের ক্যাটাগরি আইডি (Category ID)</td>
                             <td><span class="code-font text-slate-400">int / int[]</span></td>
-                            <td><span class="badge-optional">ঐচ্ছিক</span></td>
+                            <td><span class="badge-optional">Optional</span></td>
                         </tr>
                         <tr>
                             <td><code class="code-font text-sky-400 text-sm">"tags"</code></td>
-                            <td>কমা দিয়ে বিভক্ত হ্যাশট্যাগ তালিকা (Comma-separated tags)</td>
+                            <td>কমা দিয়ে বিভক্ত ট্যাগের তালিকা (Comma-separated tags)</td>
                             <td><span class="code-font text-slate-400">string</span></td>
-                            <td><span class="badge-optional">ঐচ্ছিক</span></td>
+                            <td><span class="badge-optional">Optional</span></td>
                         </tr>
                         <tr>
                             <td><code class="code-font text-sky-400 text-sm">"slug"</code></td>
                             <td>ইউআরএল ফ্রেন্ডলি স্লাগ (URL Slug)</td>
                             <td><span class="code-font text-slate-400">string</span></td>
-                            <td><span class="badge-optional">ঐচ্ছিক</span></td>
+                            <td><span class="badge-optional">Optional</span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -555,15 +570,15 @@ Route::get('/get-categories', function (Request $request) {
         <!-- ========================================================================= -->
         <section id="expected-response" class="border-t border-slate-800 pt-8">
             <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">
-                Expected Response (আপনার API যে রেসপন্স রিটার্ন করবে)
+                Expected Response (প্রত্যাশিত API রেসপন্স ফরম্যাট)
             </h2>
             <p class="text-slate-400 mb-6 font-bangla text-sm">
-                আপনার ওয়েবসাইট সফলভাবে সংবাদ রিসিভ করার পর HTTP <strong class="text-emerald-400">200</strong> বা <strong class="text-emerald-400">201</strong> স্ট্যাটাস সহ নিচের যেকোনো একটি JSON ফরম্যাটে রেসপন্স দিতে হবে:
+                সংবাদ সফলভাবে রিসিভ করার পর আপনার এন্ডপয়েন্ট থেকে HTTP <strong class="text-emerald-400">200</strong> বা <strong class="text-emerald-400">201</strong> স্ট্যাটাস কোড সহ নিচের যেকোনো একটি ফরম্যাটে JSON রেসপন্স পাঠাতে হবে:
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="glass-card rounded-2xl p-5">
-                    <p class="text-xs font-bold text-emerald-400 mb-2">✅ সেরা ফরম্যাট (Standard & Recommended):</p>
+                    <p class="text-xs font-bold text-emerald-400 mb-2">✅ স্ট্যান্ডার্ড ফরম্যাট (Standard & Recommended):</p>
                     <pre><code><span class="text-slate-500">{</span>
   <span class="text-sky-400">"success"</span>: <span class="text-amber-400">true</span>,
   <span class="text-sky-400">"post_id"</span>: <span class="text-amber-400">101</span>,
@@ -593,14 +608,14 @@ Route::get('/get-categories', function (Request $request) {
                     <i class="fab fa-wordpress mr-1"></i> WordPress Integration
                 </span>
             </div>
-            <h2 class="text-2xl font-bold text-white mb-2">WordPress (Custom Endpoint via functions.php)</h2>
-            <p class="text-slate-400 mb-4 font-bangla text-xs">আপনার থিমের <code>functions.php</code> ফাইলে এই কোড যুক্ত করলে WordPress এ রিসিভার চালু হবে:</p>
+            <h2 class="text-2xl font-bold text-white mb-2">WordPress (Custom REST Endpoint via functions.php)</h2>
+            <p class="text-slate-400 mb-4 font-bangla text-xs">আপনার অ্যাক্টিভ থিমের <code>functions.php</code> ফাইলে অথবা কাস্টম প্লাগইনে নিচের কোড যুক্ত করে এন্ডপয়েন্ট তৈরি করুন:</p>
             <div class="glass-card rounded-2xl p-5 relative">
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 <pre><code class="text-emerald-300">add_action('rest_api_init', function () {
     register_rest_route('subeditor/v1', '/post-news', [
-        'methods'  => 'POST',
-        'callback' => 'handle_subeditor_post',
+        'methods'             => 'POST',
+        'callback'            => 'handle_subeditor_post',
         'permission_callback' => '__return_true'
     ]);
 });
@@ -613,11 +628,15 @@ function handle_subeditor_post($request) {
 
     $params = $request->get_params();
     $post_id = wp_insert_post([
-        'post_title'   => sanitize_text_field($params['title']),
-        'post_content' => wp_kses_post($params['content']),
+        'post_title'   => sanitize_text_field($params['title'] ?? ''),
+        'post_content' => wp_kses_post($params['content'] ?? ''),
         'post_status'  => 'publish',
         'post_author'  => 1
     ]);
+
+    if (is_wp_error($post_id)) {
+        return new WP_Error('db_error', $post_id->get_error_message(), ['status' => 500]);
+    }
 
     return rest_ensure_response([
         'success' => true,
@@ -652,7 +671,7 @@ export async function POST(req: NextRequest) {
   const title = formData.get('title') as string;
   const content = formData.get('content') as string;
 
-  // TODO: Save to your DB (Prisma / Drizzle / MongoDB)
+  // আপনার ডাটাবেসে সেভ করুন (Prisma / Drizzle / MongoDB / PostgreSQL)
   const postId = 101;
 
   return NextResponse.json({
@@ -671,7 +690,7 @@ export async function POST(req: NextRequest) {
                     <i class="fab fa-node-js mr-1"></i> Node.js (Express.js)
                 </span>
             </div>
-            <h2 class="text-2xl font-bold text-white mb-2">Express.js API Route</h2>
+            <h2 class="text-2xl font-bold text-white mb-2">Express.js API Router</h2>
             <div class="glass-card rounded-2xl p-5 relative">
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 <pre><code class="text-emerald-300">const express = require('express');
@@ -684,7 +703,8 @@ router.post('/api/external-news-post', (req, res) => {
   }
 
   const { title, content, category_id, tags } = req.body;
-  // TODO: Insert into database
+  
+  // আপনার ডাটাবেসে ইনসার্ট করুন
   return res.json({
     success: true,
     post_id: 101,
@@ -704,7 +724,7 @@ module.exports = router;
                 </span>
             </div>
             <h2 class="text-2xl font-bold text-white mb-2">Single File Drop-in (public/news-receiver.php)</h2>
-            <p class="text-slate-400 mb-4 font-bangla text-xs">কোনো ফ্রেমওয়ার্ক ছাড়া সাধারণ PHP সাইটের <code>public</code> ফোল্ডারে এই ফাইলটি রেখে দিন:</p>
+            <p class="text-slate-400 mb-4 font-bangla text-xs">কোনো ফ্রেমওয়ার্ক ছাড়া সাধারণ PHP সাইটের <code>public</code> ফোল্ডারে এই ফাইলটি রেখে ব্যবহার করুন:</p>
             <div class="glass-card rounded-2xl p-5 relative">
                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 <pre><code class="text-purple-300">&lt;?php
@@ -728,7 +748,7 @@ if (empty($title)) {
     exit;
 }
 
-// TODO: PDO Database Insert
+// ডাটাবেসে সংরক্ষণ করুন (PDO Example)
 // $pdo = new PDO("mysql:host=localhost;dbname=news", "user", "pass");
 // $stmt = $pdo->prepare("INSERT INTO posts (title, content) VALUES (?, ?)");
 // $stmt->execute([$title, $content]);
@@ -765,8 +785,8 @@ async def receive_news(
     if authorization != "Bearer YOUR_SECRET_TOKEN":
         raise HTTPException(status_code=401, detail="Unauthorized")
     
-    # Save to database
-    return {"success": True, "post_id": 101, "url": f"https://mywebsite.com/news/101"}
+    # ডাটাবেসে সংরক্ষণ করুন
+    return {"success": True, "post_id": 101, "url": "https://mywebsite.com/news/101"}
 </code></pre>
             </div>
         </section>
@@ -780,8 +800,8 @@ async def receive_news(
                     <i class="fas fa-magic mr-1"></i> Visual Generator
                 </span>
             </div>
-            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">🛠️ Build Your Mapping JSON</h2>
-            <p class="text-slate-400 mb-6 font-bangla text-sm">আপনার ওয়েবসাইটের প্যারামিটার নাম লিখুন — তাৎক্ষণিক JSON তৈরি হয়ে যাবে। তারপর Copy করে Settings পেজে বসিয়ে দিন:</p>
+            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">🛠️ Custom Payload Mapping Generator</h2>
+            <p class="text-slate-400 mb-6 font-bangla text-sm">আপনার ওয়েবসাইটের API ফিল্ড নেমগুলো লিখুন — রিয়েলটাইমে ম্যাপিং JSON তৈরি হয়ে যাবে। এরপর Copy করে Settings পেজে সংরক্ষণ করুন:</p>
 
             <div class="glass-card rounded-2xl p-6 sm:p-8">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -841,7 +861,7 @@ async def receive_news(
                                 </label>
                                 <label class="flex items-center gap-2 cursor-pointer text-slate-300">
                                     <input type="radio" name="auth_type" value="body" onchange="buildJson()" class="text-indigo-500">
-                                    <span>Body Token</span>
+                                    <span>Body Token Parameter</span>
                                 </label>
                             </div>
                             <div id="token_field_wrap" class="hidden items-center gap-3">
@@ -866,7 +886,7 @@ async def receive_news(
 
                         @auth
                         <button onclick="applyToSettings()" class="mt-4 w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-2.5 rounded-xl transition-all text-xs font-bangla cursor-pointer">
-                            ✅ Apply to My Settings (সেটিংসে যুক্ত করুন)
+                            ✅ Apply to Settings (সেটিংসে যুক্ত করুন)
                         </button>
                         @endauth
                     </div>
@@ -879,8 +899,9 @@ async def receive_news(
         <!-- ========================================================================= -->
         <section id="faq-troubleshooting" class="border-t border-slate-800 pt-8">
             <h2 class="text-2xl sm:text-3xl font-bold text-white mb-6">
-                ❓ Troubleshooting & FAQ (সমস্যা ও সমাধান)
+                ❓ সাধারণ সমস্যা ও সমাধান (Troubleshooting & FAQ)
             </h2>
+
             <div class="space-y-3 font-bangla" id="faq-list">
 
                 <!-- FAQ 1: 401 -->
@@ -888,16 +909,16 @@ async def receive_news(
                     <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-5 text-left hover:bg-slate-800/50 transition-colors">
                         <p class="font-bold text-white text-sm pr-4 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-red-400"></span>
-                            HTTP 401 Unauthorized এরর দেখালে কি করব?
+                            HTTP 401 Unauthorized এরর আসলে কি করতে হবে?
                         </p>
                         <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
                     </button>
                     <div class="faq-body hidden px-5 pb-5 text-xs text-slate-300 leading-relaxed space-y-2">
-                        <p><strong>কারণ:</strong> Subeditor24 এর সেটিংসের টোকেন এবং আপনার Laravel <code>.env</code> ফাইলের টোকেন ম্যাচ করছে না, অথবা Apache/Nginx সার্ভার <code>Authorization</code> হেডার ফিল্টার করে দিচ্ছে।</p>
+                        <p><strong>সম্ভাব্য কারণ:</strong> Subeditor24 সেটিংসের টোকেন এবং আপনার সার্ভারের <code>.env</code> ফাইলের টোকেন ম্যাচ করছে না, অথবা Apache/Nginx সার্ভার <code>Authorization</code> হেডার ফিল্টার করে দিচ্ছে।</p>
                         <p><strong>সমাধান:</strong></p>
                         <ul class="list-disc list-inside space-y-1 ml-2 text-slate-400">
                             <li>আপনার <code>.env</code> ফাইলে <code class="text-indigo-300">SUBEDITOR_API_SECRET</code> মিলিয়ে নিন এবং <code>php artisan config:clear</code> দিন।</li>
-                            <li>Apache সার্ভার হলে <code>.htaccess</code> ফাইলে <code class="text-indigo-300">CGIPassAuth on</code> যোগ করুন।</li>
+                            <li>Apache সার্ভার হলে <code>public/.htaccess</code> ফাইলে <code class="text-indigo-300">CGIPassAuth on</code> লাইনটি যোগ করুন।</li>
                         </ul>
                     </div>
                 </div>
@@ -907,13 +928,13 @@ async def receive_news(
                     <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-5 text-left hover:bg-slate-800/50 transition-colors">
                         <p class="font-bold text-white text-sm pr-4 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                            HTTP 404 Not Found এরর আসলে কি চেক করব?
+                            HTTP 404 Not Found এরর দেখালে কি চেক করব?
                         </p>
                         <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
                     </button>
                     <div class="faq-body hidden px-5 pb-5 text-xs text-slate-300 leading-relaxed space-y-2">
-                        <p><strong>কারণ:</strong> API রুটটি আপনার প্রজেক্টের <code>routes/api.php</code> তে যোগ করা হয়নি অথবা Base URL এর শেষে অতিরিক্ত স্ল্যাশ (/) পড়েছে।</p>
-                        <p><strong>সমাধান:</strong> নিশ্চিত করুন যে আপনার <code>routes/api.php</code> ফাইলে <code>Route::post('/external-news-post', ...)</code> রুটটি ডিফাইন করা আছে এবং Settings এ Base URL সঠিকভাবে দেওয়া আছে (যেমন <code>https://mywebsite.com</code>)।</p>
+                        <p><strong>সম্ভাব্য কারণ:</strong> API রুটটি আপনার প্রজেক্টের <code>routes/api.php</code> তে যোগ করা হয়নি অথবা Settings পেজে Base URL এর ফরম্যাটে ভুল রয়েছে।</p>
+                        <p><strong>সমাধান:</strong> নিশ্চিত করুন যে আপনার <code>routes/api.php</code> ফাইলে <code>Route::post('/external-news-post', ...)</code> রুটটি উপস্থিত রয়েছে এবং Settings পেজে Base URL ঠিকভাবে লেখা হয়েছে (যেমন <code>https://mywebsite.com</code>)।</p>
                     </div>
                 </div>
 
@@ -922,12 +943,12 @@ async def receive_news(
                     <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-5 text-left hover:bg-slate-800/50 transition-colors">
                         <p class="font-bold text-white text-sm pr-4 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-purple-400"></span>
-                            HTTP 419 Page Expired বা CSRF এরর আসলে কি করতে হবে?
+                            HTTP 419 Page Expired বা CSRF Token Mismatch কেন হয়?
                         </p>
                         <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
                     </button>
                     <div class="faq-body hidden px-5 pb-5 text-xs text-slate-300 leading-relaxed space-y-2">
-                        <p>Laravel এ <code>routes/api.php</code> ফাইলের রুটগুলোতে কোনো CSRF যাচাই লাগে না (Stateless)। আপনি যদি ভুল করে <code>routes/web.php</code> তে রুট লিখে থাকেন, তবে তা সরিয়ে <code>routes/api.php</code> ফাইলে লিখুন।</p>
+                        <p>Laravel এ <code>routes/api.php</code> ফাইলের রুটগুলোতে কোনো CSRF যাচাই লাগে না (Stateless)। আপনি যদি ভুলবশত <code>routes/web.php</code> তে রুট লিখে থাকেন, তবে তা সরিয়ে <code>routes/api.php</code> ফাইলে যুক্ত করুন।</p>
                     </div>
                 </div>
 
@@ -936,12 +957,12 @@ async def receive_news(
                     <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-5 text-left hover:bg-slate-800/50 transition-colors">
                         <p class="font-bold text-white text-sm pr-4 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
-                            HTTP 422 Unprocessable Content এর কারণ কি?
+                            HTTP 422 Unprocessable Content এরর কেন দেখায়?
                         </p>
                         <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
                     </button>
                     <div class="faq-body hidden px-5 pb-5 text-xs text-slate-300 leading-relaxed space-y-2">
-                        <p>আপনার Laravel রিসিভারের ভ্যালিডেশন রুলসে এমন কোনো ফিল্ড <code class="text-indigo-300">required</code> করা আছে যা Subeditor24 পাঠায়নি (যেমন author_id বা custom field)। সেগুলোকে <code class="text-indigo-300">nullable</code> করুন অথবা ডিফল্ট মান সেট করুন।</p>
+                        <p>আপনার Laravel রিসিভারের ভ্যালিডেশন রুলসে এমন কোনো ফিল্ড <code class="text-indigo-300">required</code> করা রয়েছে যা Subeditor24 পাঠায়নি (যেমন author_id, views ইত্যাদি)। সেগুলোকে <code class="text-indigo-300">nullable</code> করুন অথবা রিসিভারে ডিফল্ট ভ্যালু সেট করুন।</p>
                     </div>
                 </div>
 
@@ -950,12 +971,12 @@ async def receive_news(
                     <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-5 text-left hover:bg-slate-800/50 transition-colors">
                         <p class="font-bold text-white text-sm pr-4 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-rose-400"></span>
-                            HTTP 500 Internal Server Error আসলে কিভাবে ফিক্স করব?
+                            HTTP 500 Internal Server Error আসলে কিভাবে ডিবাগ করব?
                         </p>
                         <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
                     </button>
                     <div class="faq-body hidden px-5 pb-5 text-xs text-slate-300 leading-relaxed space-y-2">
-                        <p>আপনার সার্ভারের <code>storage/logs/laravel.log</code> ফাইলটি দেখুন। সাধারণত ডাটাবেস কলাম অনুপস্থিত থাকা (Unknown column), মডেল Fillable মিসিং, অথবা <code>storage/</code> ডিরেক্টরির ফাইল পারমিশনজনিত কারণে এই ত্রুটি ঘটে।</p>
+                        <p>আপনার সার্ভারের <code>storage/logs/laravel.log</code> ফাইলটি ওপেন করে এরর মেসেজ চেক করুন। সাধারণত ডাটাবেস কলাম অনুপস্থিত থাকা (Column not found), মডেল <code>$fillable</code> অ্যারেতে ফিল্ড মিসিং থাকা, অথবা <code>storage/</code> ডিরেক্টরির ফাইল পারমিশনের কারণে এই সমস্যা ঘটে।</p>
                     </div>
                 </div>
 
@@ -964,12 +985,12 @@ async def receive_news(
                     <button onclick="toggleFaq(this)" class="w-full flex justify-between items-center p-5 text-left hover:bg-slate-800/50 transition-colors">
                         <p class="font-bold text-white text-sm pr-4 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            লোকালহোস্ট বা সেলফ-সাইন্ড SSL এ কাজ করবে কি?
+                            লোকালহোস্ট (Localhost / Staging) বা সেলফ-সাইন্ড SSL এ কাজ করবে কি?
                         </p>
                         <i class="fas fa-chevron-down text-slate-500 transition-transform"></i>
                     </button>
                     <div class="faq-body hidden px-5 pb-5 text-xs text-slate-300 leading-relaxed space-y-2">
-                        <p>হ্যাঁ! Subeditor24 স্বয়ংক্রিয়ভাবে লোকাল ডেভেলপমেন্ট এবং সেলফ-সাইন্ড SSL সার্টিফিকেট বাইপাস করে কাজ করে। Ngrok বা লোকাল সার্ভার লিঙ্ক সরাসরি ব্যবহার করতে পারবেন।</p>
+                        <p>হ্যাঁ, Subeditor24 লোকাল ডেভেলপমেন্ট এবং সেলফ-সাইন্ড SSL সার্টিফিকেট ভ্যালিডেশন হ্যান্ডল করে। আপনি DDEV, Laragon, Ngrok বা লোকাল সার্ভার লিঙ্ক সরাসরি ব্যবহার করতে পারবেন।</p>
                     </div>
                 </div>
 
@@ -978,7 +999,7 @@ async def receive_news(
 
         <!-- ===== FOOTER ===== -->
         <div class="border-t border-slate-800 pt-8 text-center text-xs text-slate-500">
-            <p>Subeditor24 Universal API Integration System · Engineered for Developers & News Organizations</p>
+            <p>Subeditor24 Integration & Webhook System · Technical Documentation</p>
             <p class="text-slate-600 text-[11px] mt-1">© {{ date('Y') }} Subeditor24. All rights reserved.</p>
         </div>
 

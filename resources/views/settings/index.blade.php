@@ -1053,6 +1053,10 @@
                             <p class="text-slate-300 leading-relaxed">
                                 আপনার Laravel প্রজেক্টের <code class="text-indigo-300 font-mono">routes/api.php</code> ফাইলে নিউজ রিসিভার এবং ক্যাটাগরি ফেচিং রুট যুক্ত করুন:
                             </p>
+                            <div class="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] text-slate-300 space-y-1">
+                                <p><strong class="text-emerald-400">Laravel 10 ও পূর্ববর্তী:</strong> <code class="text-indigo-300">routes/api.php</code> ফাইলটি ডিফল্টভাবেই থাকে।</p>
+                                <p><strong class="text-amber-400">Laravel 11 ও 12:</strong> ডিফল্ট না থাকলে টার্মিনালে রান করুন: <code class="text-amber-300 font-mono">php artisan install:api</code></p>
+                            </div>
                             <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 font-mono text-[11px] text-slate-300 space-y-1">
                                 <p class="text-indigo-400 font-bold">// 1. News Receiver Route</p>
                                 <p>Route::post('/external-news-post', function (Request $request) { ... });</p>
@@ -1060,7 +1064,7 @@
                                 <p>Route::get('/get-categories', function (Request $request) { ... });</p>
                             </div>
                             <div class="pt-1 flex gap-2">
-                                <button type="button" onclick="openCodeGeneratorModal(); closeAssistantHelpModal();" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1 font-sans">
+                                <button type="button" onclick="openCodeGeneratorModal(); closeAssistantHelpModal();" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1 font-sans cursor-pointer">
                                     <i class="fas fa-code"></i> Open Code Generator to Copy Complete Laravel Code →
                                 </button>
                             </div>
@@ -1953,7 +1957,7 @@
         const pathBox = document.getElementById('cg_target_file_path');
 
         if (langKey === 'laravel') {
-            pathBox.innerText = 'Target File: routes/api.php';
+            pathBox.innerText = 'Target File: routes/api.php (Laravel 10 এ ডিফল্ট থাকে | Laravel 11/12 এ না থাকলে: php artisan install:api)';
             codeBox.innerText = '<\x3Fphp\n\n' +
 `use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
