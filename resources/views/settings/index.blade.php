@@ -7,12 +7,12 @@
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <div>
             <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2.5">
-                ⚙️ Profile & Settings
+                <i class="fas fa-sliders text-indigo-600"></i> Settings & Integrations
             </h1>
-            <p class="text-gray-500 mt-1 text-sm">News card customization, AI integrations, proxies, and automation settings</p>
+            <p class="text-gray-500 mt-1 text-sm">Configure user profile, AI models, website webhooks, scrapers, and publishing preferences.</p>
         </div>
         <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl shadow-lg text-center">
-            <p class="text-xs opacity-80 uppercase tracking-wider">Current Balance</p>
+            <p class="text-xs opacity-80 uppercase tracking-wider">Available Balance</p>
             <p class="text-2xl font-bold">{{ auth()->user()->credits }} <span class="text-sm font-normal">Credits</span></p>
         </div>
     </div>
@@ -21,11 +21,11 @@
     <div class="flex flex-wrap justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm mb-6 gap-3">
         <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-slate-400 font-semibold">
             <i class="fas fa-layer-group text-indigo-600 text-sm"></i>
-            <span>Settings sections are collapsed by default.</span>
+            <span>Settings sections are grouped by category.</span>
         </div>
         <div class="flex items-center gap-2">
             <button type="button" onclick="runDiagnosticsModal()" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition cursor-pointer">
-                <i class="fa-solid fa-heart-pulse animate-pulse"></i> 🩺 1-Click Health Check
+                <i class="fa-solid fa-heart-pulse"></i> System Diagnostics
             </button>
             <button type="button" onclick="expandAllSettings()" class="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 flex items-center gap-1.5 transition cursor-pointer shadow-sm">
                 <i class="fas fa-expand-alt"></i> Expand All
@@ -64,9 +64,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            👤 My Profile & Password
+                            User Profile & Security
                         </h2>
-                        <p class="text-xs text-gray-500">Change your name, email, and password</p>
+                        <p class="text-xs text-gray-500">Update account name, email address, and login credentials</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -111,7 +111,7 @@
         @csrf
 
         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_proxy'))
-        {{-- 🔥 SCRAPER PROXY & DECODO SETTINGS (Collapsible) --}}
+        {{-- SCRAPER PROXY & DECODO SETTINGS (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-blue-50/40 hover:bg-blue-50/80 transition" onclick="toggleSettingsAccordion(this)">
                 <div class="flex items-center gap-3">
@@ -120,13 +120,13 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🌐 Scraper & Proxy Settings (Decodo Universal API)
+                            Scraper & Proxy Configuration
                         </h2>
-                        <p class="text-xs text-gray-500">Decodo Universal API, Puppeteer Proxy, and Auto Clean</p>
+                        <p class="text-xs text-gray-500">Configure proxies, scraping API tokens, and automatic cleanup schedules</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs bg-blue-100 text-blue-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Decodo / Proxy</span>
+                    <span class="text-xs bg-blue-100 text-blue-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Scraper / Proxy</span>
                     <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
                 </div>
             </div>
@@ -135,7 +135,7 @@
                 <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
                     <p class="text-xs text-gray-600 font-medium">Configure custom proxies and Decodo Universal Scraping API for scraping news. Leave empty to use system defaults.</p>
                     <button type="button" onclick="testDecodoProxy()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-lg transition font-bold shadow-sm flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
-                        <i class="fas fa-vial"></i> <span>⚡ Test Connection</span>
+                        <i class="fas fa-vial"></i> <span>Test Connection</span>
                     </button>
                 </div>
                 <div id="decodo_proxy_status_msg" class="text-xs font-bold mb-4 whitespace-pre-line"></div>
@@ -169,8 +169,8 @@
                     <!-- Universal Scraping API -->
                     <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-between">
                         <div>
-                            <h3 class="font-bold text-blue-700 mb-3 border-b pb-1">🚀 Decodo / SmartProxy Universal API</h3>
-                            <p class="text-xs mb-3 text-gray-500">Powerful API token for scraping Cloudflare-protected news portals and protected sources.</p>
+                            <h3 class="font-bold text-blue-700 mb-3 border-b pb-1">Decodo Universal Scraping API</h3>
+                            <p class="text-xs mb-3 text-gray-500">API token for scraping Cloudflare-protected news portals and protected sources.</p>
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 mb-1">Decodo API Token (Basic Auth Token)</label>
                                 <input type="password" id="smartproxy_api_token" name="smartproxy_api_token" value="{{ old('smartproxy_api_token', $settings->smartproxy_api_token ?? '') }}" placeholder="Basic VTAwM..." class="w-full border-gray-300 rounded shadow-sm focus:border-blue-500 focus:ring-blue-500 font-mono text-xs">
@@ -183,14 +183,14 @@
                 {{-- Auto Clean Section --}}
                 <div class="mt-5 pt-4 border-t border-gray-200">
                     <label class="block text-xs font-bold text-gray-700 mb-1">
-                        🧹 Auto Clean Pending News After (Days)
+                        Auto-Cleanup Unprocessed Articles (Days)
                     </label>
                     <div class="flex items-center gap-3">
                         <input type="number" name="auto_clean_days"
                                min="1" max="90"
                                value="{{ $settings->auto_clean_days ?? 7 }}"
                                class="w-28 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-center font-bold text-base">
-                        <p class="text-xs text-gray-500">Unpublished news older than this will be automatically deleted (Default: 7 days).</p>
+                        <p class="text-xs text-gray-500">Unpublished articles older than this threshold will be automatically pruned (Default: 7 days).</p>
                     </div>
                 </div>
             </div>
@@ -210,13 +210,13 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            💰 ROI Calculator Config (Super Admin)
+                            Editorial Metrics & Cost Calculation (Super Admin)
                         </h2>
-                        <p class="text-xs text-gray-500">Configure estimated cost savings metrics</p>
+                        <p class="text-xs text-gray-500">Configure estimated editorial workload and cost metrics</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs bg-green-100 text-green-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">ROI Settings</span>
+                    <span class="text-xs bg-green-100 text-green-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Editorial Metrics</span>
                     <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
                 </div>
             </div>
@@ -239,7 +239,7 @@
             </div>
         </div>
 
-        {{-- 🎨 Studio Template & Media Manager Links (Collapsible) --}}
+        {{-- Studio Template & Media Manager Links (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-slate-50 hover:bg-slate-100 transition" onclick="toggleSettingsAccordion(this)">
                 <div class="flex items-center gap-3">
@@ -248,13 +248,13 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🎨 Studio Templates & Media Manager Shortcut
+                            Template Studio & Asset Manager
                         </h2>
-                        <p class="text-xs text-gray-500">Manage template layout creation, frames, and font uploads</p>
+                        <p class="text-xs text-gray-500">Manage news card templates, frames, and font assets</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs bg-indigo-100 text-indigo-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Templates & Fonts</span>
+                    <span class="text-xs bg-indigo-100 text-indigo-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Templates & Assets</span>
                     <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
                 </div>
             </div>
@@ -263,22 +263,22 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
                         <div>
-                            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">🎨 Studio Template Manager</h3>
-                            <p class="text-xs text-gray-500 mt-1 mb-4">Add new templates from dashboard — configure frame URL, positions all in one place.</p>
+                            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">News Card Templates</h3>
+                            <p class="text-xs text-gray-500 mt-1 mb-4">Manage layout templates, frame overlays, and typography positions.</p>
                         </div>
                         <div class="flex gap-2">
-                            <a href="{{ route('admin.templates.index') }}" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 rounded-lg transition shadow-sm text-center">🎨 Templates</a>
-                            <a href="{{ route('admin.templates.create') }}" class="flex-1 bg-slate-600 hover:bg-slate-700 text-white font-bold text-xs py-2 rounded-lg transition text-center">+ Add New</a>
+                            <a href="{{ route('admin.templates.index') }}" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 rounded-lg transition shadow-sm text-center">Templates</a>
+                            <a href="{{ route('admin.templates.create') }}" class="flex-1 bg-slate-600 hover:bg-slate-700 text-white font-bold text-xs py-2 rounded-lg transition text-center">+ New Template</a>
                         </div>
                     </div>
 
                     <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
                         <div>
-                            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">📁 Media & Assets Manager</h3>
-                            <p class="text-xs text-gray-500 mt-1 mb-4">Upload, rename, and copy URLs for template frame PNGs and custom fonts (.ttf, .woff).</p>
+                            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">Media & Asset Storage</h3>
+                            <p class="text-xs text-gray-500 mt-1 mb-4">Upload and manage frame overlays (PNG) and custom typography fonts (.ttf, .woff).</p>
                         </div>
                         <div>
-                            <a href="{{ route('admin.media.index') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2 rounded-lg transition shadow-sm text-center">📁 Open Media Manager</a>
+                            <a href="{{ route('admin.media.index') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2 rounded-lg transition shadow-sm text-center">Open Asset Manager</a>
                         </div>
                     </div>
                 </div>
@@ -296,9 +296,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🎨 Branding & News Card Styles
+                            Newsroom Branding & Identity
                         </h2>
-                        <p class="text-xs text-gray-500">Brand Name, default theme colors, and logo</p>
+                        <p class="text-xs text-gray-500">Publication name, primary visual palette, and masthead logo</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -310,11 +310,11 @@
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Brand Name (e.g. Dhaka Post)</label>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Publication Name (e.g. Dhaka Post)</label>
                         <input type="text" name="brand_name" value="{{ old('brand_name', $settings->brand_name ?? 'My News') }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Default Color Theme</label>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Default Visual Theme</label>
                         <select name="default_theme_color" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs font-semibold">
                             <option value="red" {{ ($settings->default_theme_color ?? '') == 'red' ? 'selected' : '' }}>Red (Breaking)</option>
                             <option value="blue" {{ ($settings->default_theme_color ?? '') == 'blue' ? 'selected' : '' }}>Blue (Standard)</option>
@@ -324,9 +324,9 @@
                         </select>
                     </div>
                     <div class="col-span-1 md:col-span-2">
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Logo URL (Optional)</label>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Publication Logo URL (Optional)</label>
                         <input type="url" name="logo_url" value="{{ old('logo_url', $settings->logo_url ?? '') }}" placeholder="https://example.com/logo.png" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
-                        <p class="text-[11px] text-gray-500 mt-1">You can also upload your logo directly from the Studio.</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Enter public image URL or upload directly inside Template Studio.</p>
                     </div>
                 </div>
             </div>
@@ -334,7 +334,7 @@
         @endif
 
         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_target_language'))
-        {{-- 🔥 TARGET LANGUAGE SETTINGS (Collapsible) --}}
+        {{-- TARGET LANGUAGE SETTINGS (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-teal-50/40 hover:bg-teal-50/80 transition" onclick="toggleSettingsAccordion(this)">
                 <div class="flex items-center gap-3">
@@ -343,9 +343,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🌍 Target Language (Default News Language)
+                            Default News Language
                         </h2>
-                        <p class="text-xs text-gray-500">Default language for news processing and scraping</p>
+                        <p class="text-xs text-gray-500">Default language for article processing and aggregation</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -357,18 +357,18 @@
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="bg-white p-4 rounded-lg border border-teal-200 shadow-sm">
                     <select name="target_language" class="w-full border-gray-300 rounded shadow-sm focus:border-teal-500 focus:ring-teal-500 font-semibold text-xs">
-                        <option value="" {{ empty($settings->target_language) ? 'selected' : '' }}>Website Default (Based on website settings)</option>
-                        <option value="bn" {{ ($settings->target_language ?? '') == 'bn' ? 'selected' : '' }}>Always Bengali</option>
-                        <option value="en" {{ ($settings->target_language ?? '') == 'en' ? 'selected' : '' }}>Always English</option>
+                        <option value="" {{ empty($settings->target_language) ? 'selected' : '' }}>Inherit Website Default</option>
+                        <option value="bn" {{ ($settings->target_language ?? '') == 'bn' ? 'selected' : '' }}>Bengali (বাংলা)</option>
+                        <option value="en" {{ ($settings->target_language ?? '') == 'en' ? 'selected' : '' }}>English</option>
                     </select>
-                    <p class="text-[11px] text-gray-500 mt-2">When you scrape a news item, it will be processed in this language (website-specific language settings will take precedence).</p>
+                    <p class="text-[11px] text-gray-500 mt-2">Standard incoming articles will be drafted in this language unless overridden by a website-specific profile.</p>
                 </div>
             </div>
         </div>
         @endif
 
         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_ai') || auth()->user()->hasPermission('can_settings_ai_prompt'))
-        {{-- ✍️ CUSTOM NEWS REWRITE PROMPT (Collapsible) --}}
+        {{-- EDITORIAL REWRITE PROMPT (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-teal-50/40 hover:bg-teal-50/80 transition" onclick="toggleSettingsAccordion(this)">
                 <div class="flex items-center gap-3">
@@ -377,13 +377,13 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            ✍️ Custom News Rewrite Prompt (AI System Prompt)
+                            Editorial Writing Rules & AI Prompt
                         </h2>
-                        <p class="text-xs text-gray-500">Configure custom sub-editor writing rules, tone, and formatting rules</p>
+                        <p class="text-xs text-gray-500">Configure sub-editor rewrite guidelines, tone, and formatting rules</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs bg-teal-100 text-teal-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">AI Prompt</span>
+                    <span class="text-xs bg-teal-100 text-teal-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Editorial Prompt</span>
                     <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
                 </div>
             </div>
@@ -391,8 +391,8 @@
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4 pb-3 border-b border-gray-200">
                     <div>
-                        <p class="text-xs font-semibold text-gray-700">Customize the system prompt instructions given to the AI when rewriting raw news reports.</p>
-                        <p class="text-[11px] text-gray-500 mt-0.5">Leave blank to use the built-in Bangladeshi/International Senior Sub-Editor prompt rules.</p>
+                        <p class="text-xs font-semibold text-gray-700">Define system-level editorial guidelines used when converting source reports into finished articles.</p>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Leave empty to use standard professional newsroom editorial rules.</p>
                     </div>
                     <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
                         <button type="button" onclick="insertDefaultPrompt('bn')" class="text-[11px] bg-teal-50 hover:bg-teal-100 text-teal-700 font-bold px-3 py-1.5 rounded-lg border border-teal-200 transition cursor-pointer flex items-center gap-1.5 shadow-sm">
@@ -408,14 +408,14 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-xs font-bold text-gray-700 mb-2">Custom System Prompt</label>
-                    <textarea id="custom_rewrite_prompt" name="custom_rewrite_prompt" rows="12" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-teal-500 focus:ring-teal-500 text-xs font-mono bg-white p-3.5 leading-relaxed placeholder-gray-400" placeholder="Leave blank to use the built-in Bangladeshi Senior Sub-Editor prompt rules...">{{ old('custom_rewrite_prompt', $settings->custom_rewrite_prompt ?? '') }}</textarea>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">Custom Editorial System Prompt</label>
+                    <textarea id="custom_rewrite_prompt" name="custom_rewrite_prompt" rows="12" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-teal-500 focus:ring-teal-500 text-xs font-mono bg-white p-3.5 leading-relaxed placeholder-gray-400" placeholder="Leave blank to use built-in newsroom sub-editor guidelines...">{{ old('custom_rewrite_prompt', $settings->custom_rewrite_prompt ?? '') }}</textarea>
                 </div>
 
                 <div class="text-[11px] text-teal-900 flex items-start gap-2 bg-teal-50/70 p-3 rounded-lg border border-teal-200">
                     <i class="fas fa-info-circle text-teal-600 mt-0.5 text-sm"></i>
                     <div>
-                        <strong>Automatic JSON Enforcement:</strong> The strict output formatting rules (<code>title</code>, <code>content</code>, <code>meta_description</code>, <code>focus_keyword</code>, <code>tags</code>) are automatically appended by the system, ensuring valid news data across all AI models without syntax breakage.
+                        <strong>Structured Output Enforcement:</strong> Standard article structure fields (<code>title</code>, <code>content</code>, <code>meta_description</code>, <code>focus_keyword</code>, <code>tags</code>) are enforced by the engine across all models.
                     </div>
                 </div>
             </div>
@@ -423,7 +423,7 @@
         @endif
 
         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_ai'))
-        {{-- 🔥 AI CONFIGURATION (Collapsible) --}}
+        {{-- AI CONFIGURATION (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-indigo-50/40 hover:bg-indigo-50/80 transition" onclick="toggleSettingsAccordion(this)">
                 <div class="flex items-center gap-3">
@@ -432,22 +432,22 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🤖 AI Optimization Settings (DeepSeek, Gemini, OpenAI)
+                            AI Models & Providers
                         </h2>
-                        <p class="text-xs text-gray-500">Select Primary AI and manage AI API Keys & Models</p>
+                        <p class="text-xs text-gray-500">Configure primary model provider, fallback models, and provider credentials</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs bg-indigo-100 text-indigo-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">AI Engines</span>
+                    <span class="text-xs bg-indigo-100 text-indigo-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">AI Providers</span>
                     <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
                 </div>
             </div>
             
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
-                <p class="text-xs text-indigo-700 mb-5 font-medium">Configure API Key and Model for each provider (leaves default .env fallback if empty).</p>
+                <p class="text-xs text-indigo-700 mb-5 font-medium">Set custom credentials and model variants per provider. If left blank, environment defaults from <code>.env</code> are used.</p>
 
                 <div class="mb-6 bg-white p-4 rounded-lg border border-indigo-200 shadow-sm">
-                    <label class="block text-xs font-bold text-gray-800 mb-2">⭐ Primary AI Provider</label>
+                    <label class="block text-xs font-bold text-gray-800 mb-2">Primary AI Provider</label>
                     <select name="primary_ai" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-semibold text-indigo-900 text-xs">
                         <option value="deepseek" {{ ($settings->primary_ai ?? 'deepseek') == 'deepseek' ? 'selected' : '' }}>DeepSeek</option>
                         <option value="qwen" {{ ($settings->primary_ai ?? '') == 'qwen' ? 'selected' : '' }}>Qwen (Alibaba / DashScope)</option>
@@ -456,7 +456,7 @@
                         <option value="openai" {{ ($settings->primary_ai ?? '') == 'openai' ? 'selected' : '' }}>OpenAI (ChatGPT)</option>
                         <option value="gemini" {{ ($settings->primary_ai ?? '') == 'gemini' ? 'selected' : '' }}>Gemini (Google)</option>
                     </select>
-                    <p class="text-[11px] text-gray-500 mt-2">The system will prioritize the selected primary AI when generating news. If it fails, fallback AI models will be tried automatically.</p>
+                    <p class="text-[11px] text-gray-500 mt-2">Articles are processed using this primary provider. If the request encounters rate limits or errors, configured fallbacks are attempted sequentially.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -536,9 +536,9 @@
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">Model Selection</label>
                                 <select id="qwen_model" name="qwen_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
                                     <option value="">Default (qwen-turbo)</option>
-                                    <option value="qwen-turbo" {{ ($settings->qwen_model ?? '') == 'qwen-turbo' ? 'selected' : '' }}>Qwen Turbo (Fast & Cheap)</option>
+                                    <option value="qwen-turbo" {{ ($settings->qwen_model ?? '') == 'qwen-turbo' ? 'selected' : '' }}>Qwen Turbo (Fast & Cost-Effective)</option>
                                     <option value="qwen-plus" {{ ($settings->qwen_model ?? '') == 'qwen-plus' ? 'selected' : '' }}>Qwen Plus (Balanced)</option>
-                                    <option value="qwen-max" {{ ($settings->qwen_model ?? '') == 'qwen-max' ? 'selected' : '' }}>Qwen Max (Best Quality)</option>
+                                    <option value="qwen-max" {{ ($settings->qwen_model ?? '') == 'qwen-max' ? 'selected' : '' }}>Qwen Max (High Quality)</option>
                                 </select>
                             </div>
                         </div>
@@ -549,7 +549,7 @@
                     <div class="bg-white p-4 rounded-xl border border-indigo-100 shadow-sm col-span-1 md:col-span-2">
                         <div class="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
                             <h3 class="font-bold text-gray-800 text-xs flex items-center gap-1.5">
-                                <i class="fas fa-bolt text-yellow-500"></i> Groq (Ultra-Fast LPU)
+                                <i class="fas fa-bolt text-yellow-500"></i> Groq (Fast Inference)
                             </h3>
                             <button type="button" onclick="testAiProvider('groq')" class="text-[11px] bg-yellow-50 hover:bg-yellow-100 text-yellow-800 font-bold px-3 py-1 rounded border border-yellow-200 transition cursor-pointer flex items-center gap-1">
                                 <i class="fas fa-vial"></i> <span>Test Connection</span>
@@ -565,7 +565,7 @@
                                 <select id="groq_model" name="groq_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
                                     <option value="">Default (llama-3.3-70b-versatile)</option>
                                     <option value="llama-3.3-70b-versatile" {{ ($settings->groq_model ?? '') == 'llama-3.3-70b-versatile' ? 'selected' : '' }}>Llama 3.3 70B (Versatile)</option>
-                                    <option value="llama-3.1-8b-instant" {{ ($settings->groq_model ?? '') == 'llama-3.1-8b-instant' ? 'selected' : '' }}>Llama 3.1 8B (Instant Speed)</option>
+                                    <option value="llama-3.1-8b-instant" {{ ($settings->groq_model ?? '') == 'llama-3.1-8b-instant' ? 'selected' : '' }}>Llama 3.1 8B (Low Latency)</option>
                                     <option value="mixtral-8x7b-32768" {{ ($settings->groq_model ?? '') == 'mixtral-8x7b-32768' ? 'selected' : '' }}>Mixtral 8x7B (MoE)</option>
                                 </select>
                             </div>
@@ -615,8 +615,8 @@
                                 <label class="block text-[11px] font-bold text-gray-600 mb-1">Model Selection</label>
                                 <select id="openai_model" name="openai_model" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
                                     <option value="">Default (gpt-4o-mini)</option>
-                                    <option value="gpt-4o-mini" {{ ($settings->openai_model ?? '') == 'gpt-4o-mini' ? 'selected' : '' }}>GPT-4o Mini (Fast & Cheap)</option>
-                                    <option value="gpt-4o" {{ ($settings->openai_model ?? '') == 'gpt-4o' ? 'selected' : '' }}>GPT-4o (Smartest)</option>
+                                    <option value="gpt-4o-mini" {{ ($settings->openai_model ?? '') == 'gpt-4o-mini' ? 'selected' : '' }}>GPT-4o Mini (Cost-Effective)</option>
+                                    <option value="gpt-4o" {{ ($settings->openai_model ?? '') == 'gpt-4o' ? 'selected' : '' }}>GPT-4o (High Performance)</option>
                                     <option value="o1-mini" {{ ($settings->openai_model ?? '') == 'o1-mini' ? 'selected' : '' }}>o1-mini (Reasoning)</option>
                                     <option value="o3-mini" {{ ($settings->openai_model ?? '') == 'o3-mini' ? 'selected' : '' }}>o3-mini (Advanced Reasoning)</option>
                                 </select>
@@ -630,7 +630,7 @@
         @endif
 
         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_ai'))
-        {{-- 🔥 PHOTOROOM API SETTINGS (Collapsible) --}}
+        {{-- PHOTOROOM API SETTINGS (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-purple-50/40 hover:bg-purple-50/80 transition" onclick="toggleSettingsAccordion(this)">
                 <div class="flex items-center gap-3">
@@ -639,19 +639,19 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            📸 PhotoRoom API (AI Background Removal)
+                            Background Removal API (PhotoRoom)
                         </h2>
-                        <p class="text-xs text-gray-500">1-Click background removal when creating custom photo cards</p>
+                        <p class="text-xs text-gray-500">Automatic subject isolation and background removal for photo cards</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs bg-purple-100 text-purple-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Background Remover</span>
+                    <span class="text-xs bg-purple-100 text-purple-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Background Removal</span>
                     <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
                 </div>
             </div>
             
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
-                <p class="text-xs text-purple-700 mb-4 font-medium">Provide a PhotoRoom API Key for 1-Click background removal (cutout) in custom photo cards. Settings configured by Super Admin will be automatically available to all sub-editors and staff.</p>
+                <p class="text-xs text-purple-700 mb-4 font-medium">Enter your PhotoRoom API key for subject isolation in news photo cards. Super Admin configuration applies globally across all editorial accounts.</p>
 
                 <div class="bg-white p-5 rounded-lg border border-purple-200 shadow-sm">
                     <label class="block text-xs font-bold text-gray-700 mb-1">PhotoRoom API Key (x-api-key)</label>
@@ -680,9 +680,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🔗 WordPress Connection
+                            WordPress REST API Integration
                         </h2>
-                        <p class="text-xs text-gray-500">WordPress Site URL, username, and Application Password</p>
+                        <p class="text-xs text-gray-500">Endpoint URL, editorial username, and Application Password</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -693,9 +693,9 @@
             
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="flex justify-between items-center mb-3">
-                    <p class="text-xs text-gray-500">Test your WordPress connection before saving:</p>
+                    <p class="text-xs text-gray-500">Verify WordPress REST API connectivity and authentication:</p>
                     <button type="button" onclick="testWordPress()" class="text-xs bg-gray-100 text-gray-700 px-3.5 py-2 rounded-lg hover:bg-gray-200 transition font-bold border border-gray-300 cursor-pointer">
-                        ⚡ Test Connection
+                        Test Connection
                     </button>
                 </div>
                 
@@ -719,7 +719,7 @@
             </div>
         </div>
         
-        {{-- 🔥 UNIVERSAL & CUSTOM WEBSITE CONNECTION SECTION (Collapsible) --}}
+        {{-- EXTERNAL & CUSTOM WEBSITE CONNECTION SECTION (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-slate-50 hover:bg-slate-100 transition" onclick="toggleSettingsAccordion(this)">
                 <div class="flex items-center gap-3">
@@ -728,9 +728,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            🔌 Website API Integration (Laravel / Next.js / Custom CMS)
+                            External Website API & Webhooks (Laravel / Next.js / Custom CMS)
                         </h2>
-                        <p class="text-xs text-gray-500">REST API, Webhooks, Field Mapping, and Code Generator</p>
+                        <p class="text-xs text-gray-500">REST API publishing, webhooks, payload mapping, and integration snippets</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -741,14 +741,14 @@
             
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="flex flex-wrap justify-between items-center mb-4 border-b border-gray-200 pb-3 gap-2">
-                    <p class="text-xs text-gray-600 font-medium">Configure automatic news publishing connections with your custom website.</p>
+                    <p class="text-xs text-gray-600 font-medium">Configure REST endpoints for automated publishing to your Laravel, Next.js, or custom newsroom CMS.</p>
                     
                     <div class="flex items-center gap-2">
                         <button type="button" onclick="openCodeGeneratorModal()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-3.5 py-1.5 rounded-lg hover:bg-indigo-100 transition shadow-sm cursor-pointer">
-                            <i class="fas fa-code"></i> Code Generator
+                            <i class="fas fa-code"></i> Integration Snippets
                         </button>
                         <a href="{{ route('docs.api-guide') }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-300 px-3.5 py-1.5 rounded-lg hover:bg-slate-200 transition">
-                            <i class="fas fa-book-open text-slate-500"></i> Documentation
+                            <i class="fas fa-book-open text-slate-500"></i> API Documentation
                         </a>
                     </div>
                 </div>
@@ -774,7 +774,7 @@
                     <div>
                         <div class="flex items-center gap-1.5 mb-1">
                             <label class="block text-xs font-bold text-gray-700">API Secret Token</label>
-                            <button type="button" onclick="showFieldHelp('laravel_api_token')" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-600 transition text-[10px] font-bold cursor-pointer animate-pulse" title="Click to see where & how to paste this token in your Laravel project">
+                            <button type="button" onclick="showFieldHelp('laravel_api_token')" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-600 transition text-[10px] font-bold cursor-pointer" title="Click to see where & how to configure this token in your Laravel project">
                                 <i class="fas fa-info"></i>
                             </button>
                         </div>
@@ -812,12 +812,12 @@
                             <input type="checkbox" name="post_to_laravel" value="1" {{ ($settings->post_to_laravel ?? false) ? 'checked' : '' }} class="toggle-checkbox w-5 h-5 text-indigo-600 rounded">
                             <div class="flex-1">
                                 <div class="flex items-center gap-1.5">
-                                    <span class="font-bold text-gray-800 text-xs block">Enable Auto-Publish to Website</span>
+                                    <span class="font-bold text-gray-800 text-xs block">Enable Automatic Publishing</span>
                                     <button type="button" onclick="event.stopPropagation(); showFieldHelp('post_to_laravel');" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-200 hover:bg-indigo-200 text-slate-500 hover:text-indigo-700 transition text-[10px] cursor-pointer" title="Click for details">
                                         <i class="fas fa-info"></i>
                                     </button>
                                 </div>
-                                <span class="text-[11px] text-gray-500 block">When enabled, news is automatically published to your website upon approval.</span>
+                                <span class="text-[11px] text-gray-500 block">When active, approved articles are immediately dispatched to your external website API.</span>
                             </div>
                         </label>
                     </div>
@@ -825,7 +825,7 @@
 
                 <!-- Test Connection Button -->
                 <div class="mt-4 pt-3 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
-                    <span class="text-xs text-slate-500">Verify endpoint connection before saving:</span>
+                    <span class="text-xs text-slate-500">Test endpoint availability and authentication handshake:</span>
                     <button type="button" onclick="testCustomApiConnection()" id="btn_test_custom_api" class="inline-flex items-center gap-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg transition shadow-sm cursor-pointer">
                         <i class="fas fa-plug"></i> Test Connection
                     </button>
@@ -836,15 +836,15 @@
                     <div class="bg-slate-100 p-4 border-b border-slate-200 flex justify-between items-center cursor-pointer select-none" onclick="toggleCustomApiVisual()">
                         <div class="flex items-center gap-2">
                             <i id="mapper_chevron" class="fas fa-chevron-down text-slate-500 text-xs transition-transform"></i>
-                            <span class="font-bold text-slate-800 text-xs">Advanced Field Mapping & Custom Endpoints</span>
+                            <span class="font-bold text-slate-800 text-xs">Payload Field Mapping & Custom Endpoints</span>
                             <span class="text-[10px] bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded">Optional</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-xs text-indigo-600 font-semibold hover:underline flex items-center gap-1">
-                                <i class="fas fa-sliders-h"></i> Configure Fields
+                                <i class="fas fa-sliders-h"></i> Field Mapping
                             </span>
                             <button type="button" onclick="event.stopPropagation(); openAssistantHelpModal();" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 px-3 py-1 rounded-lg transition shadow-sm">
-                                <i class="fas fa-info-circle text-indigo-600"></i> Guide & FAQ
+                                <i class="fas fa-info-circle text-indigo-600"></i> Setup Guide
                             </button>
                         </div>
                     </div>
@@ -853,10 +853,10 @@
                         <div class="flex flex-wrap justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-lg text-xs text-slate-700 gap-2">
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-info-circle text-slate-500 text-sm"></i>
-                                <span>Configure custom paths or non-standard database column names below if necessary.</span>
+                                <span>Specify custom endpoint routes or map internal payload keys to match your database schema.</span>
                             </div>
                             <button type="button" onclick="openAssistantHelpModal()" class="text-indigo-600 font-semibold hover:underline flex items-center gap-1 text-[11px]">
-                                View Integration Guide <i class="fas fa-arrow-right text-[10px]"></i>
+                                Open Setup Guide <i class="fas fa-arrow-right text-[10px]"></i>
                             </button>
                         </div>
 
@@ -864,7 +864,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <div class="flex items-center gap-1.5 mb-1">
-                                    <label class="block text-xs font-bold text-slate-700">Custom News Post Endpoint URL (Optional)</label>
+                                    <label class="block text-xs font-bold text-slate-700">Custom Article Post Endpoint (Optional)</label>
                                     <button type="button" onclick="showFieldHelp('custom_api_url')" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-200 hover:bg-indigo-100 text-slate-500 hover:text-indigo-600 transition text-[10px] cursor-pointer" title="Click for help on Custom News Post Endpoint">
                                         <i class="fas fa-info"></i>
                                     </button>
@@ -875,7 +875,7 @@
                             </div>
                             <div>
                                 <div class="flex items-center gap-1.5 mb-1">
-                                    <label class="block text-xs font-bold text-slate-700">Custom Category Fetch URL (Optional)</label>
+                                    <label class="block text-xs font-bold text-slate-700">Custom Category Endpoint (Optional)</label>
                                     <button type="button" onclick="showFieldHelp('custom_category_url')" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-200 hover:bg-indigo-100 text-slate-500 hover:text-indigo-600 transition text-[10px] cursor-pointer" title="Click for help on Category Fetch URL">
                                         <i class="fas fa-info"></i>
                                     </button>
@@ -889,7 +889,7 @@
                         <!-- Auth & Format Options -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Authentication Method</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Authentication Type</label>
                                 <select id="v_auth_type" onchange="syncVisualToMappingJson()" class="w-full border-slate-300 rounded shadow-sm text-xs focus:ring-indigo-500">
                                     <option value="Bearer">Bearer Token (Authorization: Bearer ...)</option>
                                     <option value="custom_header">Custom Header (e.g. X-API-KEY)</option>
@@ -902,25 +902,25 @@
                                 <input type="text" id="v_auth_header_name" oninput="syncVisualToMappingJson()" placeholder="X-API-KEY" class="w-full border-slate-300 rounded shadow-sm text-xs font-mono">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Image Format</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Image Delivery Mode</label>
                                 <select id="v_image_format" onchange="syncVisualToMappingJson()" class="w-full border-slate-300 rounded shadow-sm text-xs focus:ring-indigo-500">
-                                    <option value="url">Image URL String (https://...)</option>
-                                    <option value="file">Direct Binary File Upload (Multipart)</option>
-                                    <option value="base64">Base64 Encoded Image Data</option>
+                                    <option value="url">Image URL (Remote link)</option>
+                                    <option value="file">Binary File Upload (Multipart)</option>
+                                    <option value="base64">Base64 Encoded String</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Category Format</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Category Identifier Type</label>
                                 <select id="v_category_type" onchange="syncVisualToMappingJson()" class="w-full border-slate-300 rounded shadow-sm text-xs focus:ring-indigo-500">
-                                    <option value="id">Numeric Category ID (e.g. [1, 2])</option>
-                                    <option value="name">Text Category Name (e.g. "National")</option>
+                                    <option value="id">Category ID (Integer)</option>
+                                    <option value="name">Category Name (String)</option>
                                 </select>
                             </div>
                         </div>
 
                         <!-- Visual Field Name Mapper -->
                         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Field Name Mappings (Default Payload ➔ Your API Parameter)</h4>
+                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Field Mapping (Default Payload Key ➔ Target API Parameter)</h4>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                                 <div>
                                     <label class="block font-bold text-slate-600 mb-1">Title (Headline)</label>
@@ -960,12 +960,12 @@
                         <!-- Extra Static Key-Value Fields -->
                         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                             <div class="flex justify-between items-center mb-2">
-                                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Additional Static Parameters (Optional Fields)</h4>
+                                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Additional Payload Parameters (Optional)</h4>
                                 <button type="button" onclick="addExtraFieldRow()" class="text-xs bg-white hover:bg-slate-100 text-slate-700 font-semibold px-2.5 py-1 rounded border border-slate-300 cursor-pointer">
                                     + Add Parameter
                                 </button>
                             </div>
-                            <p class="text-[11px] text-slate-500 mb-3">E.g., if your database requires static values like <code>author_id = 1</code> or <code>status = published</code>, add them here.</p>
+                            <p class="text-[11px] text-slate-500 mb-3">Define fixed parameters required by your receiving controller (e.g. <code>author_id = 1</code> or <code>status = published</code>).</p>
                             
                             <div id="extra_fields_container" class="space-y-2">
                                 <!-- Dynamic rows appended via JS -->
@@ -975,7 +975,7 @@
                         <!-- Raw JSON Mapping (Hidden sync & toggle) -->
                         <div>
                             <div class="flex justify-between items-center mb-1">
-                                <label class="text-[11px] font-bold text-slate-500">Raw JSON Mapping (Synchronized)</label>
+                                <label class="text-[11px] font-bold text-slate-500">Raw JSON Configuration (Synchronized)</label>
                                 <button type="button" onclick="toggleRawJson()" class="text-[11px] text-indigo-600 hover:underline cursor-pointer">View / Edit JSON</button>
                             </div>
                             <textarea id="custom_api_mapping" name="custom_api_mapping" rows="3" 
@@ -999,9 +999,9 @@
                         </div>
                         <div>
                             <h3 class="font-bold text-base sm:text-lg text-white font-sans">
-                                Website Integration Guide & FAQ (ওয়েবসাইট কানেকশন সহায়িকা)
+                                Website Integration & Publishing Guide
                             </h3>
-                            <p class="text-xs text-slate-400">Laravel, WordPress ও কাস্টম ওয়েবসাইট যুক্ত করার সম্পূর্ণ নির্দেশিকা ও সমস্যার সমাধান।</p>
+                            <p class="text-xs text-slate-400">Laravel, WordPress ও কাস্টম ফ্রন্টএন্ড সংযোগের বিস্তারিত নির্দেশিকা ও ট্রাবলশুটিং।</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -1017,13 +1017,13 @@
                 <!-- Tabs -->
                 <div class="flex border-b border-slate-800 bg-slate-950 px-5 gap-2 text-xs font-bold font-sans">
                     <button type="button" onclick="switchHelpTab('walkthrough')" class="help-tab-btn px-4 py-3 border-b-2 border-indigo-500 text-indigo-400 flex items-center gap-2 cursor-pointer" id="htab_walkthrough">
-                        <i class="fas fa-list-ol"></i> Step-by-Step Guide
+                        <i class="fas fa-list-ol"></i> Setup Steps
                     </button>
                     <button type="button" onclick="switchHelpTab('faq')" class="help-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 cursor-pointer" id="htab_faq">
-                        <i class="fas fa-question-circle"></i> Frequently Asked Questions (FAQ)
+                        <i class="fas fa-question-circle"></i> Frequently Asked Questions
                     </button>
                     <button type="button" onclick="switchHelpTab('diagnostics')" class="help-tab-btn px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 cursor-pointer" id="htab_diagnostics">
-                        <i class="fas fa-wrench"></i> Troubleshooting (ত্রুটি ও সমাধান)
+                        <i class="fas fa-wrench"></i> Troubleshooting & Errors
                     </button>
                 </div>
 
@@ -1175,8 +1175,8 @@
                             <i class="fas fa-code"></i>
                         </div>
                         <div>
-                            <h3 class="font-bold text-lg text-white">Instant API Receiver Code Generator</h3>
-                            <p class="text-xs text-slate-400">Copy drop-in receiver code for your stack.</p>
+                            <h3 class="font-bold text-lg text-white">API Receiver Code Generator</h3>
+                            <p class="text-xs text-slate-400">Select your backend framework to get clean, copy-pasteable receiver code.</p>
                         </div>
                     </div>
                     <button type="button" onclick="closeCodeGeneratorModal()" class="text-slate-400 hover:text-white text-xl p-2 rounded-lg hover:bg-slate-700 cursor-pointer">
@@ -1208,7 +1208,7 @@
             </div>
         </div>
 
-        {{-- 💡 INTERACTIVE FIELD HELP & SETUP MODAL --}}
+        {{-- INTERACTIVE FIELD HELP & SETUP MODAL --}}
         <div id="fieldInfoModal" class="fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
             <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden text-slate-100 animate-in fade-in zoom-in-95 duration-150">
                 {{-- Modal Header --}}
@@ -1239,7 +1239,7 @@
                     {{-- Step-by-Step Setup --}}
                     <div id="fieldInfoStepsContainer" class="space-y-3">
                         <h4 class="font-bold text-white text-xs flex items-center gap-2 uppercase tracking-wider text-indigo-400">
-                            <i class="fas fa-layer-group"></i> আপনার Laravel প্রজেক্টে যেভাবে বসাবেন:
+                            <i class="fas fa-layer-group"></i> আপনার প্রজেক্টে যেভাবে কনফিগার করবেন:
                         </h4>
                         <div id="fieldInfoSteps" class="space-y-2">
                             <!-- Injected -->
@@ -1280,13 +1280,13 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            📂 Category Mapping
+                            Category & Topic Mapping
                         </h2>
-                        <p class="text-xs text-gray-500">Map AI-detected topics to target website categories</p>
+                        <p class="text-xs text-gray-500">Map editorial topics to external website categories</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xs bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Category Map</span>
+                    <span class="text-xs bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Category Mapping</span>
                     <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
                 </div>
             </div>
@@ -1294,10 +1294,10 @@
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
                     <p class="text-xs text-gray-500">
-                        Select the target website category for each AI-detected topic.
+                        Assign corresponding website taxonomy categories to detected editorial topics.
                     </p>
                     <button type="button" id="refresh-cat-btn" onclick="fetchWPCategories(true)" class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-bold flex items-center gap-1 transition cursor-pointer">
-                        🔄 Refresh Categories
+                        🔄 Sync Categories
                     </button>
                 </div>
 
@@ -1350,9 +1350,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            ✈️ Telegram Notifications
+                            Telegram Alert Channel
                         </h2>
-                        <p class="text-xs text-gray-500">Telegram channel ID and alert settings</p>
+                        <p class="text-xs text-gray-500">Channel ID and editorial notification dispatch</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -1365,7 +1365,7 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">Channel ID</label>
                     <input type="text" name="telegram_channel_id" value="{{ old('telegram_channel_id', $settings->telegram_channel_id ?? '') }}" placeholder="-100xxxxxxxxxx" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
-                    <p class="text-[11px] text-gray-500 mt-1">Add your bot as an admin to the channel and enter Channel ID.</p>
+                    <p class="text-[11px] text-gray-500 mt-1">Add your configured Telegram bot as an administrator to your channel and enter the Channel ID.</p>
                 </div>
             </div>
         </div>
@@ -1373,7 +1373,7 @@
         <!-- Sticky or Bottom Save Bar -->
         <div class="flex justify-end pt-4 sticky bottom-4 z-20">
             <button type="submit" class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-3 rounded-xl font-bold text-base hover:shadow-xl transition transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer shadow-lg">
-                <i class="fas fa-save"></i> <span>💾 Save Settings</span>
+                <i class="fas fa-save"></i> <span>Save Changes</span>
             </button>
         </div>
     </form>
@@ -2298,7 +2298,7 @@ async def get_categories(authorization: Optional[str] = Header(None)):
     });
 
     // ==========================================================
-    // 🩺 1-CLICK SYSTEM HEALTH & DIAGNOSTICS ENGINE
+    // SYSTEM HEALTH & DIAGNOSTICS
     // ==========================================================
     function runDiagnosticsModal() {
         const modal = document.getElementById('systemDiagnosticsModal');
@@ -2372,7 +2372,7 @@ async def get_categories(authorization: Optional[str] = Header(None)):
     }
 
     // ==========================================================
-    // 💡 FIELD HELP & INTEGRATION MODAL ENGINE
+    // FIELD HELP & INTEGRATION MODAL ENGINE
     // ==========================================================
     const fieldHelpData = {
         laravel_api_token: {
@@ -2570,7 +2570,7 @@ https://yourdomain.com/api/external-news-post`
     }
 </script>
 
-{{-- 🩺 SYSTEM HEALTH & DIAGNOSTICS MODAL --}}
+{{-- SYSTEM HEALTH & DIAGNOSTICS MODAL --}}
 <div id="systemDiagnosticsModal" class="fixed inset-0 bg-slate-950/70 hidden items-center justify-center z-[110] backdrop-blur-md transition-all">
     <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]">
         <div class="px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex justify-between items-center">
@@ -2580,7 +2580,7 @@ https://yourdomain.com/api/external-news-post`
                 </div>
                 <div>
                     <h3 class="text-base font-black">System Health Diagnostics</h3>
-                    <p class="text-[11px] text-white/80 font-semibold" id="diagnosticsTimestamp">1-Click Live System Status</p>
+                    <p class="text-[11px] text-white/80 font-semibold" id="diagnosticsTimestamp">Live Service & Connectivity Check</p>
                 </div>
             </div>
             <button type="button" onclick="closeDiagnosticsModal()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition cursor-pointer">
@@ -2602,7 +2602,7 @@ https://yourdomain.com/api/external-news-post`
         </div>
 
         <div class="p-4 bg-slate-50 dark:bg-slate-850 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center font-bangla">
-            <span class="text-xs text-slate-400 font-semibold">Automated live connection audit</span>
+            <span class="text-xs text-slate-400 font-semibold">Automated live connectivity audit</span>
             <div class="flex items-center gap-2">
                 <button type="button" onclick="runDiagnosticsModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-rotate-right"></i> Re-test

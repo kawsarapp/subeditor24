@@ -46,15 +46,15 @@
         <div class="relative z-10">
             <div class="flex items-center gap-2 mb-2">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span> LIVE WIRE POOL
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span> LIVE WIRE STREAM
                 </span>
-                <span class="text-xs text-slate-300 font-semibold">100% Real-time (AJAX Auto-Sync)</span>
+                <span class="text-xs text-slate-300 font-semibold">Real-time Ingestion</span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-3">
-                ⚡ Central Live Feed (Live Wire Pool)
+                Central Live Wire Feed
             </h1>
             <p class="text-slate-300 text-xs sm:text-sm font-medium mt-1.5 max-w-2xl leading-relaxed">
-                Monitor real-time breaking news across 60+ sources with zero page reload, and 1-click AI rewrite to your dashboard.
+                Incoming news stream across monitored sources. Review articles, generate photo cards, or import stories directly to your drafts.
             </p>
         </div>
 

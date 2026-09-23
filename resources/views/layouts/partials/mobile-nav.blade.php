@@ -53,7 +53,7 @@
             <span class="absolute bottom-1 text-[10px] font-bold text-slate-600">Create</span>
         </div>
         <a href="{{ route('news.drafts') }}" class="flex flex-col items-center justify-center h-full gap-1 transition-all relative {{ request()->routeIs('news.drafts') ? 'text-indigo-600 transform -translate-y-1 font-bold' : 'text-slate-500 hover:text-slate-700' }}">
-            <i class="fa-solid fa-wand-magic-sparkles text-xl"></i><span class="text-[10px] font-bold">AI</span>
+            <i class="fa-regular fa-file-lines text-xl"></i><span class="text-[10px] font-bold">Drafts</span>
             @if(request()->routeIs('news.drafts')) <div class="w-1 h-1 bg-indigo-600 rounded-full absolute bottom-1"></div> @endif
         </a>
         <button onclick="toggleMobileDrawer(event)" class="flex flex-col items-center justify-center h-full gap-1 text-slate-500 hover:text-slate-700 transition-colors relative cursor-pointer">
@@ -99,11 +99,11 @@
             <p class="px-3 pt-2 pb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">General Menu</p>
             
             <a href="{{ route('news.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('news.index') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                <i class="fa-solid fa-newspaper text-indigo-500 w-5 text-center text-sm"></i> Feed
+                <i class="fa-solid fa-newspaper text-indigo-500 w-5 text-center text-sm"></i> Latest News
             </a>
 
             <a href="{{ route('central-feed.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('central-feed.*') ? 'bg-indigo-600 text-white' : 'text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100' }}">
-                <i class="fa-solid fa-bolt text-indigo-500 w-5 text-center text-sm"></i> ⚡ Live Wire (Central)
+                <i class="fa-solid fa-bolt text-indigo-500 w-5 text-center text-sm"></i> Live Wire
             </a>
             
             <a href="{{ route('news.published') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('news.published') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
@@ -112,26 +112,26 @@
 
             @if(auth()->user()->hasPermission('can_direct_publish'))
             <a href="{{ route('news.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('news.create') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                <i class="fa-solid fa-pen-to-square text-indigo-500 w-5 text-center text-sm"></i> Create New Post
+                <i class="fa-solid fa-pen-to-square text-indigo-500 w-5 text-center text-sm"></i> Create Post
             </a>
             @endif
 
             @if(auth()->user()->hasPermission('can_ai'))
             <a href="{{ route('news.drafts') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('news.drafts') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                <i class="fa-solid fa-wand-magic-sparkles text-amber-500 w-5 text-center text-sm"></i> AI Rewrite Drafts
+                <i class="fa-regular fa-file-lines text-amber-500 w-5 text-center text-sm"></i> Drafts & Articles
             </a>
             @endif
 
             @if(auth()->user()->hasPermission('can_scrape'))
             <a href="{{ route('websites.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('websites.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                <i class="fa-solid fa-globe text-cyan-500 w-5 text-center text-sm"></i> Observe (Sources)
+                <i class="fa-solid fa-globe text-cyan-500 w-5 text-center text-sm"></i> News Sources
             </a>
             @endif
 
-            {{-- 🔥 AI Viral Predictor --}}
+            {{-- Trending Stories --}}
             @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_viral_predictor'))
             <a href="{{ route('trending.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('trending.*') ? 'bg-amber-500 text-white' : 'text-amber-700 bg-amber-50 hover:bg-amber-100' }}">
-                <i class="fa-solid fa-fire text-amber-500 w-5 text-center text-sm"></i> Viral Predictor
+                <i class="fa-solid fa-fire text-amber-500 w-5 text-center text-sm"></i> Trending Stories
             </a>
             @endif
 
@@ -143,14 +143,14 @@
             @endif
             @endif
 
-            {{-- 🎨 Custom Photo Card & AI BG Remover --}}
+            {{-- 🎨 Custom Photo Card Studio --}}
             <a href="{{ route('custom-photo-card.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('custom-photo-card.*') ? 'bg-indigo-600 text-white' : 'text-violet-700 bg-violet-50 hover:bg-violet-100' }}">
-                <i class="fa-solid fa-wand-magic-sparkles text-violet-500 w-5 text-center text-sm"></i> Custom Photo Card (AI)
+                <i class="fa-solid fa-paintbrush text-violet-500 w-5 text-center text-sm"></i> Photo Card Studio
             </a>
 
-            {{-- ⚡ Free Photo Card Generator --}}
+            {{-- ⚡ Quick Card Generator --}}
             <a href="{{ route('free-photocard.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('free-photocard.*') ? 'bg-indigo-600 text-white' : 'text-amber-700 bg-amber-50 hover:bg-amber-100' }}">
-                <i class="fa-solid fa-bolt text-amber-500 w-5 text-center text-sm"></i> Free Photo Card (Link-to-Card)
+                <i class="fa-solid fa-clone text-amber-500 w-5 text-center text-sm"></i> Quick Card Generator
             </a>
 
             @php
@@ -165,19 +165,19 @@
             
             @if($canStaff && Route::has('client.staff.index'))
             <a href="{{ route('client.staff.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('client.staff.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                <i class="fa-solid fa-users-gear text-indigo-500 w-5 text-center text-sm"></i> Staff Management
+                <i class="fa-solid fa-users-gear text-indigo-500 w-5 text-center text-sm"></i> Staff & Roles
             </a>
             @endif
 
             @if($canReporters && Route::has('manage.reporters.news'))
             <a href="{{ route('manage.reporters.news') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('manage.reporters.news') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                <i class="fa-solid fa-satellite-dish text-rose-500 w-5 text-center text-sm"></i> Reporter Feed (Team News)
+                <i class="fa-solid fa-inbox text-rose-500 w-5 text-center text-sm"></i> Reporter Submissions
             </a>
             @endif
             
             @if($canReporters && Route::has('manage.reporters.index'))
             <a href="{{ route('manage.reporters.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('manage.reporters.index') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                <i class="fa-solid fa-users text-blue-500 w-5 text-center text-sm"></i> Team Members
+                <i class="fa-solid fa-users text-blue-500 w-5 text-center text-sm"></i> Reporters
             </a>
             @endif
             @endif
@@ -194,13 +194,13 @@
 
             @if(Route::has('admin.analytics.index'))
             <a href="{{ route('admin.analytics.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.analytics.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                <i class="fa-solid fa-chart-line text-emerald-500 w-5 text-center text-sm"></i> Analytics Report
+                <i class="fa-solid fa-chart-line text-emerald-500 w-5 text-center text-sm"></i> Analytics & Reports
             </a>
             @endif
 
             @if(Route::has('admin.scraper-monitor'))
             <a href="{{ route('admin.scraper-monitor') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.scraper-monitor') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                <i class="fa-solid fa-headset text-amber-500 w-5 text-center text-sm"></i> Scraper Monitor
+                <i class="fa-solid fa-heart-pulse text-amber-500 w-5 text-center text-sm"></i> Scraper Monitor
             </a>
             @endif
             @endif
@@ -210,7 +210,7 @@
                 <i class="fa-solid fa-sliders text-slate-500 w-5 text-center text-sm"></i> Settings & API
             </a>
             <a href="{{ route('feedback.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('feedback.*') ? 'bg-emerald-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                <i class="fa-solid fa-lightbulb text-emerald-500 w-5 text-center text-sm"></i> Feature Requests & Roadmap
+                <i class="fa-solid fa-lightbulb text-emerald-500 w-5 text-center text-sm"></i> Feedback & Roadmap
             </a>
         </div>
     </div>

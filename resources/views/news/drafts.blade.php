@@ -14,7 +14,7 @@
 <div class="max-w-7xl mx-auto py-6">
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            📝 Drafts & AI Rewritten News 
+            📝 Drafts & Articles 
             <span class="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">{{ $drafts->total() }}</span>
         </h2>
         <a href="{{ route('news.index') }}" class="text-indigo-600 hover:underline font-bold text-sm">← Back to News Feed</a>

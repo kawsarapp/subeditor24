@@ -24,13 +24,13 @@
     <div class="luxe-card p-6 md:p-8 rounded-3xl border border-indigo-200/80 mb-8 bg-gradient-to-r from-indigo-900 via-indigo-800 to-violet-900 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div class="relative z-10 max-w-3xl">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-amber-300 text-xs font-black uppercase tracking-wider mb-3 backdrop-blur-md border border-white/10">
-                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span> Real-Time External & Internal Intelligence Engine
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span> Real-Time Topic & Trend Signals
             </div>
             <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight mb-2">
-                🌐 AI Viral Predictor & Social Buzz Engine
+                Trending Stories & Topic Signals
             </h1>
             <p class="text-xs sm:text-sm text-indigo-100 font-medium">
-                Spot next 3-hour viral trends by analyzing 35+ major news portals along with real-time Facebook Buzz, Twitter/X Trends, and Google Search Spikes.
+                Identify fast-developing stories by analyzing coverage spikes across major news sources and social engagement trends.
             </p>
         </div>
 
