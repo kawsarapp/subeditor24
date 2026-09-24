@@ -57,6 +57,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/stop-impersonate', [AdminController::class, 'stopImpersonate'])->name('stop.impersonate');
 
+    // 🤖 AI Assistant Copilot Route
+    Route::post('/ai-assistant/chat', [\App\Http\Controllers\AiAssistantController::class, 'chat'])->name('ai-assistant.chat');
+
     // নোটিফিকেশন রিড
     Route::get('/notifications/read', function () {
         auth()->user()->unreadNotifications->markAsRead();

@@ -13,6 +13,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Services\PhotoRoomService;
+use App\Services\ConnectionDiagnosticsService;
 use Illuminate\Support\Str;
 
 class SettingsController extends Controller
@@ -329,7 +330,7 @@ class SettingsController extends Controller
     /**
      * ৫. ওয়ার্ডপ্রেস কানেকশন টেস্ট
      */
-    public function testWordPressConnection(Request $request)
+    public function testWordPressConnection(Request $request, ConnectionDiagnosticsService $diagnosticsService)
     {
         $url      = $request->input('wp_url');
         $username = $request->input('wp_username');
@@ -341,7 +342,7 @@ class SettingsController extends Controller
 
         try {
             $apiUrl   = rtrim($url, '/') . '/wp-json/wp/v2/users/me';
-            $response = Http::withBasicAuth($username, $password)->get($apiUrl);
+            $response = Http::withBasicAuth($username, $password)->withOptions(['verify' => false])->timeout(15)->get($apiUrl);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -350,20 +351,29 @@ class SettingsController extends Controller
                     'message' => "✅ ওয়ার্ডপ্রেস কানেক্টেড!\nUser: " . ($data['name'] ?? $username),
                 ]);
             } else {
+                $statusCode = $response->status();
+                $body = $response->body();
+                $diagnostics = $diagnosticsService->diagnoseError($statusCode, $body, $apiUrl, ['platform' => 'wordpress'], Auth::id());
                 return response()->json([
                     'success' => false,
-                    'message' => "❌ কানেকশন ফেইল্ড! স্ট্যাটাস কোড: " . $response->status(),
+                    'message' => "❌ কানেকশন ফেইল্ড! স্ট্যাটাস কোড: " . $statusCode,
+                    'ai_diagnostics' => $diagnostics,
                 ]);
             }
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'WP Error: ' . $e->getMessage()]);
+            $diagnostics = $diagnosticsService->diagnoseError(0, $e->getMessage(), $apiUrl ?? $url, ['platform' => 'wordpress'], Auth::id());
+            return response()->json([
+                'success' => false,
+                'message' => 'WP Error: ' . $e->getMessage(),
+                'ai_diagnostics' => $diagnostics,
+            ]);
         }
     }
 
     /**
      * ⚡ কাস্টম এপিআই / লারাভেল / Next.js কানেকশন টেস্ট
      */
-    public function testCustomApiConnection(Request $request)
+    public function testCustomApiConnection(Request $request, ConnectionDiagnosticsService $diagnosticsService)
     {
         $customApiUrl = $request->input('custom_api_url');
         $baseUrl      = $request->input('laravel_site_url');
@@ -454,32 +464,30 @@ class SettingsController extends Controller
                         'message' => "✅ কাস্টম API কানেকশন সফল! (HTTP {$statusCode})\nসার্ভার রেসপন্স ID: {$postId}",
                         'data'    => $respData
                     ]);
-                } elseif ($statusCode === 401 || $statusCode === 403) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "❌ অথেনটিকেশন ফেইল্ড! (HTTP {$statusCode})\nআপনার Secret Token বা Auth Headers চেক করুন।\nসার্ভার রেসপন্স: " . \Illuminate\Support\Str::limit($responseBody, 150)
-                    ]);
-                } elseif ($statusCode === 404) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "❌ এন্ডপয়েন্ট পাওয়া যায়নি! (HTTP 404)\nAPI URL ঠিক আছে কিনা এবং সার্ভারে রাউট রেজিস্টার্ড কিনা চেক করুন।"
-                    ]);
-                } elseif ($statusCode === 422) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "❌ ডাটা ভ্যালিডেশন এরর! (HTTP 422)\nম্যাপিং ফিল্ডের নামগুলো ক্লায়েন্ট সাইটের রিকোয়ার্ড ফিল্ডের সাথে মিলছে না।\nসার্ভার এরর: " . \Illuminate\Support\Str::limit($responseBody, 150)
-                    ]);
                 } else {
+                    $diagnostics = $diagnosticsService->diagnoseError($statusCode, $responseBody, $apiUrl, $mapping, Auth::id());
+                    $errMsg = "❌ কানেকশন ব্যর্থ হয়েছে (HTTP {$statusCode})";
+                    if ($statusCode === 401 || $statusCode === 403) {
+                        $errMsg = "❌ অথেনটিকেশন ফেইল্ড! (HTTP {$statusCode}) API Token বা হেডার মিলছে না।";
+                    } elseif ($statusCode === 404) {
+                        $errMsg = "❌ এন্ডপয়েন্ট পাওয়া যায়নি! (HTTP 404) API URL বা রুট চেক করুন।";
+                    } elseif ($statusCode === 422) {
+                        $errMsg = "❌ ডাটা ভ্যালিডেশন এরর! (HTTP 422) ফিল্ড ম্যাপিং চেক করুন।";
+                    }
+
                     return response()->json([
                         'success' => false,
-                        'message' => "❌ রেসপন্স এরর! (HTTP {$statusCode})\nসার্ভার রেসপন্স: " . \Illuminate\Support\Str::limit($responseBody, 200)
+                        'message' => $errMsg . "\nসার্ভার রেসপন্স: " . \Illuminate\Support\Str::limit($responseBody, 180),
+                        'ai_diagnostics' => $diagnostics,
                     ]);
                 }
 
             } catch (\Exception $e) {
+                $diagnostics = $diagnosticsService->diagnoseError(0, $e->getMessage(), $apiUrl, $mapping, Auth::id());
                 return response()->json([
                     'success' => false,
-                    'message' => '❌ নেটওয়ার্ক বা কানেকশন এরর: ' . $e->getMessage()
+                    'message' => '❌ নেটওয়ার্ক বা কানেকশন এরর: ' . $e->getMessage(),
+                    'ai_diagnostics' => $diagnostics,
                 ]);
             }
         }
@@ -500,16 +508,20 @@ class SettingsController extends Controller
             ];
 
             try {
+                $headers = [
+                    'Accept'        => 'application/json',
+                    'User-Agent'    => 'Subeditor24-Publisher/2.0',
+                    'Authorization' => 'Bearer ' . $token,
+                ];
+
                 $response = Http::timeout(20)
                     ->withOptions(['verify' => false])
-                    ->withHeaders([
-                        'Accept'     => 'application/json',
-                        'User-Agent' => 'Subeditor24-Publisher/2.0'
-                    ])
+                    ->withHeaders($headers)
                     ->post($apiUrl, $payload);
 
-                $statusCode = $response->status();
-                $respData   = $response->json();
+                $statusCode   = $response->status();
+                $responseBody = $response->body();
+                $respData     = $response->json();
 
                 if ($response->successful()) {
                     $postId = $respData['post_id'] ?? ($respData['id'] ?? 'OK');
@@ -518,21 +530,27 @@ class SettingsController extends Controller
                         'message' => "✅ লারাভেল API কানেকশন সফল! (HTTP {$statusCode})\nপোস্ট আইডি: {$postId}",
                         'data'    => $respData
                     ]);
-                } elseif ($statusCode === 401) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "❌ অথেনটিকেশন ফেইল্ড (HTTP 401)! API Token অমিল।"
-                    ]);
                 } else {
+                    $diagnostics = $diagnosticsService->diagnoseError($statusCode, $responseBody, $apiUrl, ['platform' => 'laravel'], Auth::id());
+                    $errMsg = "❌ কানেকশন ফেইল্ড (HTTP {$statusCode})";
+                    if ($statusCode === 401) {
+                        $errMsg = "❌ অথেনটিকেশন ফেইল্ড (HTTP 401)! API Token অমিল বা Apache হেডার ব্লক করেছে।";
+                    } elseif ($statusCode === 404) {
+                        $errMsg = "❌ API রুট খুঁজে পাওয়া যায়নি (HTTP 404)! routes/api.php চেক করুন।";
+                    }
+
                     return response()->json([
                         'success' => false,
-                        'message' => "❌ কানেকশন ফেইল্ড! HTTP {$statusCode}: " . \Illuminate\Support\Str::limit($response->body(), 150)
+                        'message' => $errMsg . "\nসার্ভার রেসপন্স: " . \Illuminate\Support\Str::limit($responseBody, 180),
+                        'ai_diagnostics' => $diagnostics,
                     ]);
                 }
             } catch (\Exception $e) {
+                $diagnostics = $diagnosticsService->diagnoseError(0, $e->getMessage(), $apiUrl, ['platform' => 'laravel'], Auth::id());
                 return response()->json([
                     'success' => false,
-                    'message' => '❌ কানেকশন এরর: ' . $e->getMessage()
+                    'message' => '❌ কানেকশন এরর: ' . $e->getMessage(),
+                    'ai_diagnostics' => $diagnostics,
                 ]);
             }
         }
@@ -964,37 +982,47 @@ class SettingsController extends Controller
 
         $categories = Cache::remember($cacheKey, now()->addHours(24), function () use ($settings, $wpService) {
             
-            if ($settings->post_to_laravel && $settings->laravel_site_url && $settings->laravel_api_token) {
+            // ১. লারাভেল বা কাস্টম ওয়েবসাইট থেকে ক্যাটাগরি ফেচ
+            if (!empty($settings->laravel_site_url) && !empty($settings->laravel_api_token)) {
                 try {
-                    if (!empty($settings->custom_category_url)) {
-                        $apiUrl  = $settings->custom_category_url;
-                        $headers = [];
-                        if (!empty($settings->laravel_api_token)) {
-                            $headers['Authorization'] = 'Bearer ' . $settings->laravel_api_token;
-                        }
+                    $headers = [
+                        'Accept'        => 'application/json',
+                        'User-Agent'    => 'Subeditor24-Publisher/2.0',
+                        'Authorization' => 'Bearer ' . $settings->laravel_api_token,
+                    ];
 
-                        $response = Http::withHeaders($headers)->timeout(10)->get($apiUrl);
-                        
-                        if ($response->successful()) {
-                            $resData = $response->json();
-                            if (isset($resData['data']) && is_array($resData['data'])) {
-                                return collect($resData['data'])->map(function ($item) {
-                                    return [
-                                        'id'   => $item['CategoryID'] ?? $item['id'] ?? null,
-                                        'name' => $item['CategoryName'] ?? $item['name'] ?? 'Unknown',
-                                    ];
-                                })->toArray();
-                            }
-                            return $resData;
-                        }
+                    if (!empty($settings->custom_category_url)) {
+                        $apiUrl = $settings->custom_category_url;
                     } else {
-                        $baseUrl  = rtrim($settings->laravel_site_url, '/');
-                        $apiUrl   = $baseUrl . '/api/get-categories';
-                        $response = Http::timeout(10)->get($apiUrl, ['token' => $settings->laravel_api_token]);
-                        
-                        if ($response->successful()) {
-                            return $response->json();
+                        $baseUrl = rtrim($settings->laravel_site_url, '/');
+                        $apiUrl  = $baseUrl . '/api/get-categories';
+                    }
+
+                    $response = Http::withHeaders($headers)
+                        ->withOptions(['verify' => false])
+                        ->timeout(15)
+                        ->get($apiUrl, ['token' => $settings->laravel_api_token]);
+                    
+                    if ($response->successful()) {
+                        $resData = $response->json();
+                        if (isset($resData['data']) && is_array($resData['data'])) {
+                            return collect($resData['data'])->map(function ($item) {
+                                return [
+                                    'id'   => $item['CategoryID'] ?? $item['id'] ?? null,
+                                    'name' => $item['CategoryName'] ?? $item['title'] ?? $item['name'] ?? 'Unknown',
+                                ];
+                            })->toArray();
                         }
+                        
+                        if (is_array($resData)) {
+                            return collect($resData)->map(function ($item) {
+                                return [
+                                    'id'   => $item['id'] ?? $item['CategoryID'] ?? null,
+                                    'name' => $item['name'] ?? $item['title'] ?? $item['CategoryName'] ?? 'Unknown',
+                                ];
+                            })->toArray();
+                        }
+                        return $resData;
                     }
                 } catch (\Exception $e) {
                     Log::error("Laravel Category Fetch Error: " . $e->getMessage());

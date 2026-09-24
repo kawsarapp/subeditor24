@@ -1504,6 +1504,7 @@
         btn.innerHTML = "Checking...";
         btn.disabled = true;
         statusMsg.innerHTML = "⏳ Connecting...";
+        statusMsg.className = "text-xs font-bold mt-2 text-blue-600 p-2.5 rounded bg-blue-50 border border-blue-200 block";
 
         fetch(`/settings/test/${type}`, {
             method: "POST",
@@ -1515,8 +1516,22 @@
         })
         .then(res => res.json())
         .then(data => {
-            statusMsg.innerText = data.message;
-            statusMsg.className = data.success ? "text-xs font-bold mt-2 text-green-600 whitespace-pre-line" : "text-xs font-bold mt-2 text-red-600 whitespace-pre-line";
+            if (data.success) {
+                statusMsg.innerText = data.message;
+                statusMsg.className = "text-xs font-bold mt-2 text-green-700 bg-green-50 p-3 rounded-lg border border-green-300 block whitespace-pre-line";
+            } else {
+                if (data.ai_diagnostics) {
+                    statusMsg.innerHTML = renderDiagnosticsHtml(data.ai_diagnostics, data.message);
+                    statusMsg.className = "mt-3 p-4 rounded-2xl bg-rose-50/95 text-rose-900 border border-rose-300 shadow-sm block text-left";
+                } else {
+                    statusMsg.innerText = data.message;
+                    statusMsg.className = "text-xs font-bold mt-2 text-red-700 bg-red-50 p-3 rounded-lg border border-red-300 block whitespace-pre-line";
+                }
+            }
+        })
+        .catch(err => {
+            statusMsg.innerText = "❌ Network error: " + err.message;
+            statusMsg.className = "text-xs font-bold mt-2 text-red-700 bg-red-50 p-2.5 rounded border border-red-300 block";
         })
         .finally(() => {
             btn.innerHTML = originalBtnText;
@@ -1852,8 +1867,91 @@
     }
 
     // ==========================================================
-    // 2. Custom API Live Test
+    // 2. Custom API Live Test & AI Diagnostics Renderer
     // ==========================================================
+    function renderDiagnosticsHtml(diag, fallbackMsg = '') {
+        if (!diag) {
+            return `<div class="font-bold whitespace-pre-line">${fallbackMsg}</div>`;
+        }
+
+        const badge = diag.badge || 'Connection Diagnostic';
+        const problem = diag.problem || fallbackMsg;
+        const reason = diag.reason || '';
+        const fixInstructions = diag.fix_instructions || '';
+        const fixCode = diag.fix_code || '';
+        const codeId = 'diag_code_' + Math.random().toString(36).substring(2, 9);
+
+        let html = `
+        <div class="space-y-3 font-sans">
+            <div class="flex items-center justify-between gap-2 border-b border-rose-200 pb-2.5">
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-rose-600 text-white text-xs shadow-sm">
+                        <i class="fas fa-robot"></i>
+                    </span>
+                    <div>
+                        <span class="font-bold text-rose-950 text-sm block leading-none">AI কানেকশন ডায়াগনস্টিকস</span>
+                        <span class="text-[10px] text-rose-700">স্বয়ংক্রিয় সমস্যা বিশ্লেষণ ও সমাধান</span>
+                    </div>
+                </div>
+                <span class="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-md bg-rose-100 text-rose-800 border border-rose-300 shadow-xs">${badge}</span>
+            </div>
+
+            <div class="text-xs space-y-2.5 pt-1">
+                <div>
+                    <div class="font-bold text-rose-950 flex items-center gap-1.5 mb-0.5">
+                        <i class="fas fa-circle-exclamation text-rose-600"></i> সমস্যা:
+                    </div>
+                    <div class="pl-4 text-slate-800 font-semibold leading-relaxed">${problem}</div>
+                </div>
+
+                ${reason ? `
+                <div>
+                    <div class="font-bold text-rose-950 flex items-center gap-1.5 mb-0.5">
+                        <i class="fas fa-magnifying-glass text-indigo-600"></i> কারণ:
+                    </div>
+                    <div class="pl-4 text-slate-700 leading-relaxed">${reason}</div>
+                </div>
+                ` : ''}
+
+                ${fixInstructions ? `
+                <div>
+                    <div class="font-bold text-rose-950 flex items-center gap-1.5 mb-0.5">
+                        <i class="fas fa-wrench text-emerald-600"></i> সমাধানের উপায়:
+                    </div>
+                    <div class="pl-4 text-slate-700 leading-relaxed">${fixInstructions}</div>
+                </div>
+                ` : ''}
+            </div>
+
+            ${fixCode ? `
+            <div class="mt-3 pt-2.5 border-t border-rose-200">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[11px] font-bold text-slate-800 flex items-center gap-1">
+                        <i class="fas fa-code text-indigo-600"></i> ড্রপ-ইন কোড ফিক্স (কপি করে আপনার প্রজেক্টে বসান):
+                    </span>
+                    <button type="button" onclick="copyDiagSnippet('${codeId}', this)" class="text-[11px] bg-slate-800 hover:bg-slate-900 text-white font-bold px-3 py-1 rounded-md transition flex items-center gap-1 cursor-pointer shadow-sm">
+                        <i class="fas fa-copy"></i> Copy Code
+                    </button>
+                </div>
+                <pre id="${codeId}" class="p-3.5 bg-slate-950 text-emerald-400 font-mono text-[11px] rounded-xl border border-slate-800 overflow-x-auto whitespace-pre leading-relaxed">${fixCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+            </div>
+            ` : ''}
+        </div>
+        `;
+
+        return html;
+    }
+
+    function copyDiagSnippet(id, btn) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        navigator.clipboard.writeText(el.innerText).then(() => {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check text-emerald-400"></i> Copied!';
+            setTimeout(() => { btn.innerHTML = orig; }, 2000);
+        });
+    }
+
     function testCustomApiConnection() {
         const btn = document.getElementById('btn_test_custom_api');
         const box = document.getElementById('custom_api_status_box');
@@ -1892,11 +1990,16 @@
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                box.className = 'mb-4 p-3.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 block whitespace-pre-line';
-                box.innerText = data.message;
+                box.className = 'mb-4 p-4 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 block whitespace-pre-line shadow-sm';
+                box.innerHTML = `<div class="flex items-start gap-2.5"><i class="fas fa-circle-check text-emerald-600 text-base mt-0.5"></i><div>${data.message.replace(/\n/g, '<br>')}</div></div>`;
             } else {
-                box.className = 'mb-4 p-3.5 rounded-lg text-xs font-bold bg-red-50 text-red-800 border border-red-300 block whitespace-pre-line';
-                box.innerText = data.message;
+                if (data.ai_diagnostics) {
+                    box.className = 'mb-5 p-5 rounded-2xl bg-rose-50/95 text-rose-900 border border-rose-300 shadow-md block text-left';
+                    box.innerHTML = renderDiagnosticsHtml(data.ai_diagnostics, data.message);
+                } else {
+                    box.className = 'mb-4 p-4 rounded-xl text-xs font-bold bg-red-50 text-red-800 border border-red-300 block whitespace-pre-line shadow-sm';
+                    box.innerText = data.message;
+                }
             }
         })
         .catch(err => {

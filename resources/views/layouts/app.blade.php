@@ -169,6 +169,7 @@
 
     {{-- Modals & Overlays --}}
     @include('layouts.partials.shortcuts-modal')
+    @include('layouts.partials.ai-copilot')
 
     {{-- Scripts --}}
     @include('layouts.partials.scripts')
