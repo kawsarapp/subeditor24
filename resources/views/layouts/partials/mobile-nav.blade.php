@@ -128,6 +128,11 @@
             </a>
             @endif
 
+            {{-- YouTube AI Automation --}}
+            <a href="{{ route('youtube.channels.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('youtube.*') ? 'bg-red-600 text-white' : 'text-red-700 bg-red-50 hover:bg-red-100' }}">
+                <i class="fa-brands fa-youtube text-red-600 w-5 text-center text-sm"></i> YouTube AI Studio
+            </a>
+
             {{-- Trending Stories --}}
             @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_viral_predictor'))
             <a href="{{ route('trending.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('trending.*') ? 'bg-amber-500 text-white' : 'text-amber-700 bg-amber-50 hover:bg-amber-100' }}">

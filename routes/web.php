@@ -305,3 +305,7 @@ Route::middleware(['auth', 'nocache', AdminMiddleware::class])->group(function (
 // Load Isolated SEO Intelligence Module Routes
 require __DIR__ . '/seo.php';
 
+// Load Isolated YouTube AI Automation Module Routes
+require __DIR__ . '/youtube.php';
+
+

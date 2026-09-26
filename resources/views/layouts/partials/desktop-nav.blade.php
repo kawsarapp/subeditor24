@@ -70,7 +70,12 @@
 
                         {{-- 5.5 Free Photo Card --}}
                         <a href="{{ route('free-photocard.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('free-photocard.*') ? 'bg-white text-indigo-600 shadow-md border border-slate-200/60 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white/60' }}">
-                            <i class="fa-solid fa-image text-indigo-500"></i> Photo Cards
+                            <i class="fa-solid fa-image text-indigo-500"></i> Cards
+                        </a>
+
+                        {{-- 5.6 YouTube AI Studio --}}
+                        <a href="{{ route('youtube.channels.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('youtube.*') ? 'bg-red-600 text-white shadow-md shadow-red-600/30 scale-[1.02]' : 'text-red-600 hover:bg-red-50 hover:text-red-700' }}" title="YouTube AI Automation & Auto-Pilot">
+                            <i class="fa-brands fa-youtube text-sm"></i> YouTube
                         </a>
 
                         {{-- VERTICAL DIVIDER --}}
@@ -85,6 +90,12 @@
                             </button>
 
                             <div id="toolsMenuDropdown" class="hidden absolute left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200/90 py-2.5 z-[100]">
+                                {{-- YouTube AI Studio in Dropdown --}}
+                                <a href="{{ route('youtube.channels.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                    <i class="fa-brands fa-youtube text-red-600 w-4 text-center text-sm"></i>
+                                    <span>YouTube AI Automation</span>
+                                </a>
+
                                 {{-- 1. Trending Stories --}}
                                 @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_viral_predictor'))
                                 <a href="{{ route('trending.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">

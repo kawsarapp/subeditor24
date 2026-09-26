@@ -62,4 +62,11 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', 'https://subeditor24.ddev.site/seo/google/callback'),
     ],
 
+    'youtube' => [
+        'client_id' => env('YOUTUBE_CLIENT_ID', env('GOOGLE_CLIENT_ID')),
+        'client_secret' => env('YOUTUBE_CLIENT_SECRET', env('GOOGLE_CLIENT_SECRET')),
+        'redirect' => env('YOUTUBE_REDIRECT_URI', env('APP_URL', 'https://newsmanage24.ddev.site') . '/youtube/auth/callback'),
+    ],
+
 ];
+

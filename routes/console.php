@@ -128,11 +128,23 @@ Artisan::command('news:process-scheduled', function () {
     }
 })->purpose('Publish scheduled news when due time arrives');
 
+// --- 🎬 YOUTUBE AUTO-PILOT CRON ---
+Artisan::command('youtube:autopilot-sync', function () {
+    $channels = \App\Modules\YouTubeAutomation\Models\YouTubeChannel::where('is_active', true)
+        ->where('auto_pilot_enabled', true)
+        ->get();
+
+    foreach ($channels as $channel) {
+        \App\Modules\YouTubeAutomation\Jobs\SyncChannelVideosJob::dispatch($channel->id);
+    }
+})->purpose('Auto-sync and process YouTube channels that have Auto-Pilot enabled');
+
 // শিডিউল সেটআপ
 Schedule::command('news:autopost')->everyMinute();
 Schedule::command('news:process-scheduled')->everyMinute();
 Schedule::command('news:check-inactivity')->everyThirtyMinutes();
 Schedule::command('news:central-pool-sync')->everyMinute();
+Schedule::command('youtube:autopilot-sync')->everyFiveMinutes();
 
 Schedule::call(function () {
     $settingsList = \App\Models\UserSetting::get();
