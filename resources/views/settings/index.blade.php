@@ -422,6 +422,99 @@
         </div>
         @endif
 
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_ai_prompt'))
+        {{-- 🧠 AI COPILOT TRAINING & SYSTEM KNOWLEDGE BASE (Super Admin) --}}
+        <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
+            <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-emerald-50/50 hover:bg-emerald-50/90 transition" onclick="toggleSettingsAccordion(this)">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-base">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                            AI Copilot Training & Knowledge Base
+                            <span class="text-[10px] bg-emerald-600 text-white font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">Super Admin</span>
+                        </h2>
+                        <p class="text-xs text-gray-500">Train your live on-site AI Assistant with custom guidelines, editorial rules, and zero-hallucination examples</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Live AI Training</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
+                </div>
+            </div>
+            
+            <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm space-y-6">
+                {{-- Knowledge Base Card --}}
+                <div>
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                                <i class="fas fa-book-reader text-emerald-600"></i>
+                                Custom Knowledge Base, Persona & Brand Rules (কাস্টম নলেজ ও নিয়মাবলী)
+                            </label>
+                            <p class="text-[11px] text-gray-500">এই বক্সে আপনার ওয়েবসাইট, ক্লায়েন্ট সাপোর্ট পলিসি, নিষিদ্ধ শব্দ এবং এআই-এর আচরণবিধি লিখে রাখুন।</p>
+                        </div>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <button type="button" onclick="insertTrainingTemplate('newsroom')" class="text-[10px] bg-white hover:bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded border border-emerald-200 transition cursor-pointer shadow-2xs flex items-center gap-1">
+                                <i class="fas fa-newspaper"></i> <span>Newsroom Rules</span>
+                            </button>
+                            <button type="button" onclick="insertTrainingTemplate('youtube')" class="text-[10px] bg-white hover:bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded border border-emerald-200 transition cursor-pointer shadow-2xs flex items-center gap-1">
+                                <i class="fab fa-youtube text-red-500"></i> <span>YouTube SEO Rules</span>
+                            </button>
+                            <button type="button" onclick="insertTrainingTemplate('troubleshooting')" class="text-[10px] bg-white hover:bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded border border-emerald-200 transition cursor-pointer shadow-2xs flex items-center gap-1">
+                                <i class="fas fa-tools text-amber-500"></i> <span>Support & Fixes</span>
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="ai_copilot_custom_knowledge" name="ai_copilot_custom_knowledge" rows="8" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs font-mono bg-white p-3.5 leading-relaxed placeholder-gray-400" placeholder="উদাহরণ:&#10;1. সবসময় শ্রদ্ধাশীল সাংবাদিকের ভাষায় উত্তর দেবে।&#10;2. অপ্রয়োজনীয় বা বিভ্রান্তিকর তথ্য দেবে না।&#10;3. কোনো জটিল টেকনিক্যাল এরর আসলে Settings পেজে গিয়ে টেস্ট কানেকশন করার পরামর্শ দেবে।">{{ old('ai_copilot_custom_knowledge', $settings->ai_copilot_custom_knowledge ?? '') }}</textarea>
+                </div>
+
+                {{-- Few Shot Examples Card --}}
+                <div>
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                                <i class="fas fa-lightbulb text-amber-500"></i>
+                                Few-Shot Examples (আদর্শ প্রশ্নোত্তর ও অ্যাকশন উদাহরণ)
+                            </label>
+                            <p class="text-[11px] text-gray-500">AI-কে বাস্তব উদাহরণ দিলে নির্ভুলতা বহুগুণ বাড়ে এবং ভুলভাল উত্তর দেওয়া সম্পূর্ণ বন্ধ হয়ে যায়।</p>
+                        </div>
+                        <button type="button" onclick="insertTrainingTemplate('few_shot')" class="text-[10px] bg-white hover:bg-amber-50 text-amber-700 font-bold px-2.5 py-1 rounded border border-amber-200 transition cursor-pointer shadow-2xs flex items-center gap-1 self-start sm:self-auto">
+                            <i class="fas fa-magic"></i> <span>Insert Example Template</span>
+                        </button>
+                    </div>
+                    <textarea id="ai_copilot_few_shot_examples" name="ai_copilot_few_shot_examples" rows="7" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs font-mono bg-white p-3.5 leading-relaxed placeholder-gray-400" placeholder="User: WordPress কানেকশন এরর দেখাচ্ছে, কী করব?&#10;Assistant: অনুগ্রহ করে Settings পেজে গিয়ে Application Password রি-জেনারেট করুন এবং সাইট URL-এর শেষে স্ল্যাশ (/) ছাড়া দিন।">{{ old('ai_copilot_few_shot_examples', $settings->ai_copilot_few_shot_examples ?? '') }}</textarea>
+                </div>
+
+                {{-- Temperature / Strictness Control --}}
+                <div class="bg-white p-4 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-800 mb-1 flex items-center gap-1.5">
+                            <i class="fas fa-sliders-h text-emerald-600"></i>
+                            AI Strictness / Temperature (নির্ভুলতার মাত্রা)
+                        </label>
+                        <p class="text-[11px] text-gray-500">
+                            <strong>0.1 - 0.3 (Strict & Fact-Based):</strong> কোনো কল্পনাপ্রসূত কথা বলবে না, সম্পূর্ণ তথ্যভিত্তিক উত্তর দেবে। (প্রস্তাবিত)<br>
+                            <strong>0.7 (Creative):</strong> ক্রিয়েটিভ পরামর্শ দেবে।
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="ai_copilot_temperature_range" min="0.1" max="1.0" step="0.05" value="{{ old('ai_copilot_temperature', $settings->ai_copilot_temperature ?? 0.30) }}" class="w-full accent-emerald-600 cursor-pointer" oninput="document.getElementById('ai_copilot_temperature').value = this.value">
+                        <input type="number" id="ai_copilot_temperature" name="ai_copilot_temperature" min="0.1" max="1.0" step="0.05" value="{{ old('ai_copilot_temperature', $settings->ai_copilot_temperature ?? 0.30) }}" class="w-20 border-gray-300 rounded-lg text-xs font-bold text-center text-emerald-700 bg-emerald-50 focus:border-emerald-500" oninput="document.getElementById('ai_copilot_temperature_range').value = this.value">
+                    </div>
+                </div>
+
+                <div class="text-[11px] text-emerald-950 flex items-start gap-2 bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                    <i class="fas fa-shield-alt text-emerald-600 mt-0.5 text-sm"></i>
+                    <div>
+                        <strong>Live Zero-Downtime Training:</strong> এখানে সেভ করার সাথে সাথে আপনার প্ল্যাটফর্মের সব পেজের অন-সাইট AI Copilot তাৎক্ষণিকভাবে এই নতুন জ্ঞান ও নির্দেশনা অনুযায়ী কাজ শুরু করবে।
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_ai'))
         {{-- AI CONFIGURATION (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
@@ -1674,6 +1767,53 @@
             return;
         }
         promptArea.value = '';
+    }
+
+    const trainingTemplates = {
+        newsroom: `1. সর্বদা শ্রদ্ধাশীল ও পেশাদার সিনিয়র সহ-সম্পাদকের ভাষায় মার্জিত বাংলায় কথা বলবে।
+2. কোনো সংবাদ রিরাইট বা বিশ্লেষণের সময় মূল তথ্যের কোনো বিকৃতি ঘটাবে না।
+3. চটকদার বা বিভ্রান্তিকর ক্লিকবেইট পরিহার করে আকর্ষণীয় ও এসইও-বান্ধব শিরোনাম সাজাবে।
+4. ইউজারের যেকোনো প্রশ্নের উত্তর স্পষ্ট ও পরিচ্ছন্ন পয়েন্ট আকারে উপস্থাপন করবে।`,
+        
+        youtube: `1. ইউটিউব ভিডিও এসইও-এর ক্ষেত্রে উচ্চ সার্চ ভলিউম (High Search Intent) ট্যাগ ও কিওয়ার্ড প্রাধান্য দেবে।
+2. টাইটেল ৬০-৭০ অক্ষরের মধ্যে রাখবে যাতে মোবাইল ও ডেস্কটপে পুরোটা দৃশ্যমান থাকে।
+3. ট্যাগের ক্ষেত্রে ৫০০ অক্ষরের সীমা বজায় রেখে ৪-টিয়ার সার্চ কুয়েরি সাজাবে।
+4. অডিয়েন্স এনগেজমেন্ট বাড়ানোর জন্য আকর্ষণীয় থাম্বনেইল পাঞ্চ লাইন ও কল-টু-অ্যাকশন পিন কমেন্ট তৈরি করবে।`,
+
+        troubleshooting: `1. WordPress কানেকশন ফেইল হলে ইউজারকে WP Admin > Users > Profile থেকে Application Password ব্যবহার করতে বলবে এবং URL-এর শেষে স্ল্যাশ (/) না দেওয়ার পরামর্শ দেবে।
+2. AI রিরাইট ব্যর্থ হলে Settings পেজে API Key এবং ব্যালেন্স চেক করতে বলবে।
+3. Google / YouTube 403 Error আসলে Google Cloud Console-এ "Test users" তালিকায় জিমেইল যোগ করতে বলবে।
+4. যেকোনো টেকনিক্যাল সমস্যায় ইউজারের বিভ্রান্তি না বাড়িয়ে সরাসরি Settings পেজে এসে "Test Connection" করার গাইডলাইন দেবে।`,
+
+        few_shot: `User: ওয়ার্ডপ্রেসের সাথে কানেকশন পাচ্ছে না, কী করব?
+Assistant: ১. আপনার ওয়ার্ডপ্রেস অ্যাডমিন প্যানেলে যান: Users > Profile।
+২. নিচে স্ক্রোল করে "Application Passwords"-এ একটি নতুন পাসওয়ার্ড তৈরি করুন (লগইন পাসওয়ার্ড ব্যবহার করবেন না)।
+৩. আমাদের Settings পেজে এসে সাইট URL (যেমন: https://yoursite.com) ও Application Password দিয়ে "Test Connection" বাটনে চাপুন।
+
+User: ইউটিউব ভিডিওর জন্য ক্লিক-থ্রু টাইটেল কীভাবে বানাব?
+Assistant: ১. ভিডিওর মূল চমক বা কিউরিওসিটি হুক প্রথমাংশে রাখুন।
+২. ৬০-৭০ অক্ষরের ভেতরে টাইটেল সীমাবদ্ধ রাখুন যাতে মোবাইল ব্যবহারকারীরা পুরোটা পড়তে পারেন।
+৩. আমাদের ইউটিউব স্টুডিওর "Generate Title" অপশনটি ব্যবহার করলে AI স্বয়ংক্রিয়ভাবে ৩টি আকর্ষণীয় টাইটেল ভ্যারিয়েশন তৈরি করে দেবে।`
+    };
+
+    function insertTrainingTemplate(type) {
+        const targetArea = (type === 'few_shot') 
+            ? document.getElementById('ai_copilot_few_shot_examples') 
+            : document.getElementById('ai_copilot_custom_knowledge');
+            
+        if (!targetArea) return;
+        
+        if (targetArea.value.trim() !== '' && !confirm('Are you sure you want to append/insert this training template?')) {
+            return;
+        }
+
+        const template = trainingTemplates[type] || '';
+        if (targetArea.value.trim() === '') {
+            targetArea.value = template;
+        } else {
+            targetArea.value = targetArea.value.trim() + "\n\n" + template;
+        }
+        targetArea.focus();
     }
 
     function testAiProvider(provider) {

@@ -233,6 +233,7 @@
                     'can_scrape'         => '🌐 News Scraper Access',
                     'can_direct_publish' => '📝 Direct Create (News Feed)',
                     'can_ai'             => '🤖 AI Content Rewriter',
+                    'can_youtube_automate' => '🎬 YouTube AI Automation & Video SEO',
                     'can_studio'         => '🎨 Studio Design Access',
                     'can_custom_photo_card' => '🪄 Custom Photo Card & AI BG Remove',
                     'can_auto_post'      => '🚀 Automation & Auto Post',

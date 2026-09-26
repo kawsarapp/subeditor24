@@ -613,6 +613,7 @@
                         'can_central_feed'      => '⚡ Central Live Feed & Wire Pool',
                         'can_direct_publish'    => '📝 Direct Create (News Feed)',
                         'can_ai'                => '🤖 AI Content Rewriter & Drafts',
+                        'can_youtube_automate'  => '🎬 YouTube AI Automation & Video SEO',
                         'can_fact_check'        => '🔍 Fact Check & Plagiarism Finder',
                         'can_studio'            => '🎨 Studio Design Access',
                         'can_custom_photo_card' => '🪄 Custom Photo Card & AI BG Remove',

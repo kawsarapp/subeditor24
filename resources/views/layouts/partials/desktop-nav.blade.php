@@ -74,9 +74,11 @@
                         </a>
 
                         {{-- 5.6 YouTube AI Studio --}}
+                        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_youtube_automate'))
                         <a href="{{ route('youtube.channels.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('youtube.*') ? 'bg-red-600 text-white shadow-md shadow-red-600/30 scale-[1.02]' : 'text-red-600 hover:bg-red-50 hover:text-red-700' }}" title="YouTube AI Automation & Auto-Pilot">
                             <i class="fa-brands fa-youtube text-sm"></i> YouTube
                         </a>
+                        @endif
 
                         {{-- VERTICAL DIVIDER --}}
                         <div class="w-[1px] h-4 bg-slate-300 mx-1"></div>
@@ -91,10 +93,12 @@
 
                             <div id="toolsMenuDropdown" class="hidden absolute left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200/90 py-2.5 z-[100]">
                                 {{-- YouTube AI Studio in Dropdown --}}
+                                @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_youtube_automate'))
                                 <a href="{{ route('youtube.channels.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
                                     <i class="fa-brands fa-youtube text-red-600 w-4 text-center text-sm"></i>
                                     <span>YouTube AI Automation</span>
                                 </a>
+                                @endif
 
                                 {{-- 1. Trending Stories --}}
                                 @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_viral_predictor'))

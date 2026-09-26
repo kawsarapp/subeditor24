@@ -89,9 +89,12 @@ class SettingsController extends Controller
             'qwen_model'           => 'nullable|string',
             'huggingface_api_key'  => 'nullable|string',
             'huggingface_model'    => 'nullable|string',
-            'photoroom_api_key'    => 'nullable|string',
-            'target_language'      => 'nullable|in:bn,en',
-            'custom_rewrite_prompt'=> 'nullable|string|max:10000',
+            'photoroom_api_key'            => 'nullable|string',
+            'target_language'              => 'nullable|in:bn,en',
+            'custom_rewrite_prompt'        => 'nullable|string|max:10000',
+            'ai_copilot_custom_knowledge'  => 'nullable|string|max:30000',
+            'ai_copilot_few_shot_examples' => 'nullable|string|max:30000',
+            'ai_copilot_temperature'       => 'nullable|numeric|min:0|max:1',
         ]);
         
         $settings = UserSetting::firstOrCreate(['user_id' => Auth::id()]);
@@ -191,6 +194,17 @@ class SettingsController extends Controller
             }
             if ($request->has('custom_rewrite_prompt')) {
                 $settings->custom_rewrite_prompt = $request->custom_rewrite_prompt;
+            }
+            if ($isSuperAdmin || $user->hasPermission('can_settings_ai_prompt')) {
+                if ($request->has('ai_copilot_custom_knowledge')) {
+                    $settings->ai_copilot_custom_knowledge = $request->ai_copilot_custom_knowledge;
+                }
+                if ($request->has('ai_copilot_few_shot_examples')) {
+                    $settings->ai_copilot_few_shot_examples = $request->ai_copilot_few_shot_examples;
+                }
+                if ($request->filled('ai_copilot_temperature')) {
+                    $settings->ai_copilot_temperature = (float) $request->ai_copilot_temperature;
+                }
             }
         }
 
@@ -901,17 +915,21 @@ class SettingsController extends Controller
                     $response = Http::withHeaders([
                         'Authorization' => 'Bearer ' . $apiKey,
                         'Content-Type'  => 'application/json',
-                    ])->timeout(25)->post("https://api-inference.huggingface.co/models/{$selectedModel}", [
-                        "inputs" => "Ping test. Reply with: Connected successfully.",
-                        "parameters" => ["max_new_tokens" => 30]
+                    ])->timeout(25)->post("https://router.huggingface.co/v1/chat/completions", [
+                        "model" => $selectedModel,
+                        "messages" => [
+                            ["role" => "user", "content" => "Ping test. Reply with: OK"]
+                        ],
+                        "max_tokens" => 30
                     ]);
 
                     $elapsed = round(microtime(true) - $startTime, 2);
 
                     if ($response->successful()) {
+                        $reply = $response->json('choices.0.message.content') ?? 'OK';
                         return response()->json([
                             'success' => true,
-                            'message' => "✅ {$displayName} কানেকশন ১০০% সফল ও সক্রিয়!\n🤖 মডেল: {$selectedModel}\n⚡ রেসপন্স টাইম: {$elapsed} সেকেন্ড"
+                            'message' => "✅ {$displayName} কানেকশন ১০০% সফল ও সক্রিয়!\n🤖 মডেল: {$selectedModel}\n⚡ রেসপন্স টাইম: {$elapsed} সেকেন্ড\n💬 এআই টেস্ট রেসপন্স: " . trim($reply)
                         ]);
                     }
                     break;

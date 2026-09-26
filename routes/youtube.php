@@ -14,7 +14,7 @@ use App\Modules\YouTubeAutomation\Controllers\{
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'nocache'])->prefix('youtube')->name('youtube.')->group(function () {
+Route::middleware(['auth', 'nocache', 'permission:can_youtube_automate'])->prefix('youtube')->name('youtube.')->group(function () {
 
     // 1. Google OAuth Authentication & Channel Connection
     Route::get('/auth/connect', [YouTubeConnectController::class, 'redirect'])->name('auth.redirect');

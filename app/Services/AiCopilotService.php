@@ -22,23 +22,37 @@ class AiCopilotService
     public function chat(string $message, array $context = [], array $history = [], int $userId = 1): array
     {
         $primaryAi = 'gemini';
+        $temperature = 0.3;
         try {
             $settings = UserSetting::where('user_id', $userId)->first();
-            if ($settings && !empty($settings->primary_ai)) {
-                $primaryAi = $settings->primary_ai;
+            if (!$settings) {
+                // Fallback to Super Admin setting
+                $superAdmin = User::where('role', 'super_admin')->first();
+                if ($superAdmin) {
+                    $settings = UserSetting::where('user_id', $superAdmin->id)->first();
+                }
+            }
+
+            if ($settings) {
+                if (!empty($settings->primary_ai)) {
+                    $primaryAi = $settings->primary_ai;
+                }
+                if (!empty($settings->ai_copilot_temperature)) {
+                    $temperature = (float) $settings->ai_copilot_temperature;
+                }
             }
         } catch (\Exception $e) {
             Log::debug("UserSetting query fallback in AiCopilotService: " . $e->getMessage());
         }
 
-        $systemPrompt = $this->buildContextAwareSystemPrompt($context);
+        $systemPrompt = $this->buildContextAwareSystemPrompt($context, $userId);
         $userPrompt = $this->buildContextAwareUserPrompt($message, $context, $history);
 
-        $providers = array_unique(array_filter([$primaryAi, 'gemini', 'deepseek', 'openai', 'groq']));
+        $providers = array_unique(array_filter([$primaryAi, 'deepseek', 'gemini', 'openai', 'groq']));
 
         foreach ($providers as $provider) {
             try {
-                $response = $this->callProvider($provider, $systemPrompt, $userPrompt, $userId);
+                $response = $this->callProvider($provider, $systemPrompt, $userPrompt, $userId, $temperature);
                 if (!empty($response)) {
                     return [
                         'success'  => true,
@@ -60,11 +74,33 @@ class AiCopilotService
     /**
      * 🧑‍💼 Context-Aware System Prompt with Cross-Page Redirection Rules
      */
-    private function buildContextAwareSystemPrompt(array $context): string
+    private function buildContextAwareSystemPrompt(array $context, int $userId = 1): string
     {
         $pageKey = $context['page_key'] ?? 'general';
         $pageName = $context['page_name'] ?? 'Dashboard';
         $pageUrl = $context['page_url'] ?? '';
+
+        $customKnowledge = '';
+        $fewShotExamples = '';
+        try {
+            $settings = UserSetting::where('user_id', $userId)->first();
+            if (!$settings) {
+                $superAdmin = User::where('role', 'super_admin')->first();
+                if ($superAdmin) {
+                    $settings = UserSetting::where('user_id', $superAdmin->id)->first();
+                }
+            }
+            if ($settings) {
+                if (!empty($settings->ai_copilot_custom_knowledge)) {
+                    $customKnowledge = "\n\n═══════════════════════════════════════════════════════════════════\n🎓 SUPER ADMIN CUSTOM KNOWLEDGE BASE & EDITORIAL POLICIES\n═══════════════════════════════════════════════════════════════════\n" . $settings->ai_copilot_custom_knowledge;
+                }
+                if (!empty($settings->ai_copilot_few_shot_examples)) {
+                    $fewShotExamples = "\n\n═══════════════════════════════════════════════════════════════════\n💡 FEW-SHOT EXAMPLES (PERFECT RESPONSE PATTERNS)\n═══════════════════════════════════════════════════════════════════\n" . $settings->ai_copilot_few_shot_examples;
+                }
+            }
+        } catch (\Exception $e) {
+            Log::debug("Custom knowledge injection fallback: " . $e->getMessage());
+        }
 
         return <<<EOT
 YOU ARE:
@@ -88,6 +124,9 @@ CURRENT ACTIVE PAGE CONTEXT:
   👉 Politely tell them:
      "আপনি বর্তমানে **{$pageName}** পেজে আছেন। ওয়েবসাইট API কানেকশন টেস্ট, টোকেন ও ফেসবুক কনফিগারেশন সরাসরি চেক করতে অনুগ্রহ করে **[সেটিংস পেজে যান](/admin/settings)**। সেখানে গিয়ে 'Test Connection' বাটনে চাপ দিলে আমি সরাসরি লাইভ এরর কোড বিশ্লেষণ করে ড্রপ-ইন সমাধান বলে দেব।"
 
+- If the user asks about YouTube Video SEO, auto-pilot, video script optimization, or publishing:
+  👉 Point them to **[ইউটিউব চ্যানেল হাব](/youtube/channels)** অথবা **[ভিডিও ম্যানেজার](/youtube/videos)**।
+
 - If the user asks about Live Trends or Viral Engagement Scoring while on Settings/Editor:
   👉 Point them to **[ভাইরাল ট্রেন্ডস পেজ](/trending)**।
 
@@ -109,14 +148,19 @@ If the user asks how to use features of Subeditor24, explain clearly with direct
    - ৫টি স্টাইলে এআই রিরাইট (Neutral, Urgent, Investigative, Click-worthy, SEO)।
    - অটো-সেভ ড্রাফট রিকভারি সুবিধা।
 
-3. 🔥 **ভাইরাল প্রেডিকশন ও ট্রেন্ডস (/trending)**:
+3. 🎬 **ইউটিউব এআই অটোমেশন ও ভিডিও এসইও স্টুডিও (/youtube/channels)**:
+   - ৫+ ইউটিউব চ্যানেল কানেক্ট ও ম্যানেজ করা।
+   - ভিডিও স্ক্রিপ্ট দিয়ে হাই-সার্চ ভলিউম ট্যাগ, ক্লিক-থ্রু টাইটেল ও চ্যাপ্টার টাইমস্ট্যাম্প তৈরি।
+   - ১-ক্লিকে ইউটিউবে পাবলিশ এবং অটো-পাইলট ব্যাকগ্রাউন্ড সিঙ্ক।
+
+4. 🔥 **ভাইরাল প্রেডিকশন ও ট্রেন্ডস (/trending)**:
    - আজকের হট সোশ্যাল ট্রেন্ড বিশ্লেষণ।
    - ভাইরাল এঙ্গেজমেন্ট স্কোর ও ফেসবুক/ইউটিউব ভিডিও স্ক্রিপ্ট তৈরি।
 
-4. 🎨 **ফ্রি ফটো কার্ড জেনারেটর (/free-photocard)**:
+5. 🎨 **ফ্রি ফটো কার্ড জেনারেটর (/free-photocard)**:
    - যেকোনো নিউজ লিংক পেস্ট করলে ছবির সাথে লোগো ও ফ্রেম যুক্ত ফটো কার্ড তৈরি এবং ডাউনলোড।
 
-5. ⚙️ **সেটিংস ও অটো-পাবলিশিং (/admin/settings)**:
+6. ⚙️ **সেটিংস ও অটো-পাবলিশিং (/admin/settings)**:
    - Laravel / WordPress / Custom API কানেকশন।
    - এপ্রুভালের সাথে সাথে ওয়েবসাইটে অটো-পোস্টিং।
    - ক্যাটাগরি স্বয়ংক্রিয় ম্যাপিং ও রিফ্রেশ।
@@ -128,7 +172,7 @@ If the user asks how to use features of Subeditor24, explain clearly with direct
 - Never dump generic guesswork if the problem is unclear.
 - Ask 1-2 focused, polite questions to understand the exact situation before providing the ultimate solution.
 
-Tone: Professional, warm, respectful, concise, structured with clean Markdown bullets.
+Tone: Professional, warm, respectful, concise, structured with clean Markdown bullets.{$customKnowledge}{$fewShotExamples}
 EOT;
     }
 
@@ -170,7 +214,7 @@ EOT;
     /**
      * 🌐 Call Provider
      */
-    private function callProvider(string $provider, string $systemPrompt, string $userPrompt, int $userId): ?string
+    private function callProvider(string $provider, string $systemPrompt, string $userPrompt, int $userId, float $temperature = 0.3): ?string
     {
         switch ($provider) {
             case 'gemini':
@@ -184,7 +228,7 @@ EOT;
                         ['parts' => [['text' => "{$systemPrompt}\n\n{$userPrompt}"]]]
                     ],
                     'generationConfig' => [
-                        'temperature' => 0.5,
+                        'temperature' => $temperature,
                         'maxOutputTokens' => 1500
                     ]
                 ]);
@@ -206,7 +250,7 @@ EOT;
                             ["role" => "system", "content" => $systemPrompt],
                             ["role" => "user", "content" => $userPrompt]
                         ],
-                        "temperature" => 0.5,
+                        "temperature" => $temperature,
                         "max_tokens" => 1500
                     ]);
 
@@ -227,7 +271,7 @@ EOT;
                             ["role" => "system", "content" => $systemPrompt],
                             ["role" => "user", "content" => $userPrompt]
                         ],
-                        "temperature" => 0.5,
+                        "temperature" => $temperature,
                         "max_tokens" => 1500
                     ]);
 
@@ -248,7 +292,7 @@ EOT;
                             ["role" => "system", "content" => $systemPrompt],
                             ["role" => "user", "content" => $userPrompt]
                         ],
-                        "temperature" => 0.5,
+                        "temperature" => $temperature,
                         "max_tokens" => 1500
                     ]);
 

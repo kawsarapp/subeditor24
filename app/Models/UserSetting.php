@@ -64,6 +64,9 @@ class UserSetting extends Model
         'photoroom_api_key',
         'target_language',
         'custom_rewrite_prompt',
+        'ai_copilot_custom_knowledge',
+        'ai_copilot_few_shot_examples',
+        'ai_copilot_temperature',
     ];
 
 
