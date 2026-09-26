@@ -60,6 +60,15 @@ class FreePhotocardController extends Controller
         ]);
 
         $url = trim($request->url);
+
+        // 🛡️ SSRF Defense: Block private/internal networks, loopback, and cloud metadata
+        if (!$this->isSafeExternalUrl($url)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'অননুমোদিত বা অনিরাপদ URL। দয়া করে একটি সঠিক পাবলিক নিউজ লিঙ্ক দিন।',
+            ], 400);
+        }
+
         $userId = Auth::id();
 
         $metadata = [
@@ -168,6 +177,8 @@ class FreePhotocardController extends Controller
                     CURLOPT_FOLLOWLOCATION => true,
                     CURLOPT_MAXREDIRS      => 5,
                     CURLOPT_TIMEOUT        => 12,
+                    CURLOPT_PROTOCOLS      => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                    CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
                     CURLOPT_SSL_VERIFYPEER => false,
                     CURLOPT_SSL_VERIFYHOST => false,
                     CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -386,8 +397,8 @@ class FreePhotocardController extends Controller
     public function proxyImage(Request $request)
     {
         $imageUrl = $request->query('url');
-        if (empty($imageUrl) || !filter_var($imageUrl, FILTER_VALIDATE_URL)) {
-            return response('Invalid image URL', 400);
+        if (empty($imageUrl) || !$this->isSafeExternalUrl($imageUrl)) {
+            return response('Invalid or disallowed image URL', 400);
         }
 
         try {
@@ -501,7 +512,9 @@ class FreePhotocardController extends Controller
      */
     private function convertImageToBase64(?string $imageUrl, ?string $refererUrl = null): ?string
     {
-        if (empty($imageUrl)) return null;
+        if (empty($imageUrl) || !$this->isSafeExternalUrl($imageUrl)) {
+            return null;
+        }
         try {
             $resp = Http::withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -517,5 +530,65 @@ class FreePhotocardController extends Controller
             Log::warning("Could not convert image to base64: " . $e->getMessage());
         }
         return null;
+    }
+
+    /**
+     * Validate that a given URL points to a safe public internet address
+     * to strictly prevent Server-Side Request Forgery (SSRF).
+     */
+    private function isSafeExternalUrl(?string $url): bool
+    {
+        if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        $parsed = parse_url($url);
+        $scheme = strtolower($parsed['scheme'] ?? '');
+        $host = strtolower($parsed['host'] ?? '');
+
+        // Only allow standard HTTP/HTTPS schemes
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            return false;
+        }
+
+        if (empty($host)) {
+            return false;
+        }
+
+        // Block obvious loopback/internal hosts and cloud metadata endpoints
+        $blockedHosts = [
+            'localhost',
+            '127.0.0.1',
+            '0.0.0.0',
+            '[::1]',
+            '::1',
+            '169.254.169.254',
+            'metadata.google.internal',
+            'instance-data',
+        ];
+
+        if (in_array($host, $blockedHosts, true) || str_ends_with($host, '.local') || str_ends_with($host, '.internal') || str_ends_with($host, '.ddev.site')) {
+            return false;
+        }
+
+        // If host is a raw IP address, validate it directly against private/reserved ranges
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
+        }
+
+        // Resolve DNS to IP addresses and verify none point to private/reserved networks
+        $resolvedIps = @gethostbynamel($host);
+        if ($resolvedIps === false || empty($resolvedIps)) {
+            // If DNS resolution fails, block request
+            return false;
+        }
+
+        foreach ($resolvedIps as $ip) {
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

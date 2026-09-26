@@ -40,13 +40,13 @@ Route::post('/telegram/webhook', [TelegramBotController::class, 'handle']);
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth-login')->name('login.post');
 
     // 🔐 Forgot & Reset Password
     Route::get('/forgot-password', [AuthController::class, 'showForgotForm'])->name('password.request');
-    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:auth-forgot')->name('password.email');
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:auth-login')->name('password.update');
 });
 
 
@@ -79,8 +79,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // 🎨 Free Photo Card Generator (Link to Photo Card)
     Route::get('/free-photocard', [\App\Http\Controllers\FreePhotocardController::class, 'index'])->name('free-photocard.index');
-    Route::post('/free-photocard/fetch-url', [\App\Http\Controllers\FreePhotocardController::class, 'fetchUrl'])->name('free-photocard.fetch-url');
-    Route::get('/free-photocard/proxy-image', [\App\Http\Controllers\FreePhotocardController::class, 'proxyImage'])->name('free-photocard.proxy-image');
+    Route::post('/free-photocard/fetch-url', [\App\Http\Controllers\FreePhotocardController::class, 'fetchUrl'])->middleware('throttle:photocard-fetch')->name('free-photocard.fetch-url');
+    Route::get('/free-photocard/proxy-image', [\App\Http\Controllers\FreePhotocardController::class, 'proxyImage'])->middleware('throttle:photocard-fetch')->name('free-photocard.proxy-image');
     Route::post('/free-photocard/template', [\App\Http\Controllers\FreePhotocardController::class, 'saveTemplate'])->name('free-photocard.save-template');
     Route::delete('/free-photocard/template/{id}', [\App\Http\Controllers\FreePhotocardController::class, 'deleteTemplate'])->name('free-photocard.delete-template');
 

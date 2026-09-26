@@ -344,9 +344,37 @@ EOT;
         $cleanJson = $this->cleanJsonString($rawContent);
         $json = json_decode($cleanJson, true);
 
-        if (json_last_error() === JSON_ERROR_NONE && isset($json['title'])) {
-            $json['content'] = strip_tags($json['content'], '<p>'); 
+        if (json_last_error() === JSON_ERROR_NONE && is_array($json) && !empty($json['title'])) {
+            $json['content'] = strip_tags($json['content'] ?? '', '<p>'); 
             return $json;
+        }
+
+        // 🛡️ Advanced JSON Rescue Strategy: Extract fields using Regex if LLM produces malformed JSON
+        if (preg_match('/"title"\s*:\s*"([^"\r\n]+)"/u', $cleanJson, $tMatch)) {
+            $title = trim($tMatch[1]);
+            
+            // Extract content
+            $content = '';
+            if (preg_match('/"content"\s*:\s*"(.*?)(?=",\s*"(?:category|tags|hashtags|meta_description|focus_keyword)"|\}\s*$)/su', $cleanJson, $cMatch)) {
+                $content = trim($cMatch[1]);
+                $content = stripcslashes($content);
+            } elseif (preg_match('/"content"\s*:\s*"(.*?)"\s*[\},]/su', $cleanJson, $cMatch2)) {
+                $content = trim($cMatch2[1]);
+                $content = stripcslashes($content);
+            }
+
+            if (!empty($title) && !empty($content)) {
+                Log::info("🛠️ Successfully recovered JSON output using Regex fallback for $providerName");
+                return [
+                    'title'            => $title,
+                    'content'          => strip_tags($content, '<p>'),
+                    'category'         => $json['category'] ?? 'News',
+                    'tags'             => $json['tags'] ?? [],
+                    'hashtags'         => $json['hashtags'] ?? '',
+                    'meta_description' => $json['meta_description'] ?? mb_substr(strip_tags($content), 0, 150),
+                    'focus_keyword'    => $json['focus_keyword'] ?? ''
+                ];
+            }
         }
 
         throw new \Exception("$providerName returned invalid format");
