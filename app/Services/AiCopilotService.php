@@ -34,7 +34,9 @@ class AiCopilotService
             }
 
             if ($settings) {
-                if (!empty($settings->primary_ai)) {
+                if (!empty($settings->ai_copilot_provider) && $settings->ai_copilot_provider !== 'default') {
+                    $primaryAi = $settings->ai_copilot_provider;
+                } elseif (!empty($settings->primary_ai)) {
                     $primaryAi = $settings->primary_ai;
                 }
                 if (!empty($settings->ai_copilot_temperature)) {
@@ -48,7 +50,7 @@ class AiCopilotService
         $systemPrompt = $this->buildContextAwareSystemPrompt($context, $userId);
         $userPrompt = $this->buildContextAwareUserPrompt($message, $context, $history);
 
-        $providers = array_unique(array_filter([$primaryAi, 'deepseek', 'gemini', 'openai', 'groq']));
+        $providers = array_unique(array_filter([$primaryAi, 'deepseek', 'gemini', 'openai', 'groq', 'huggingface']));
 
         foreach ($providers as $provider) {
             try {
@@ -287,6 +289,27 @@ EOT;
 
                 $resp = Http::withHeaders(['Authorization' => 'Bearer ' . $apiKey])
                     ->timeout(25)->post("https://api.groq.com/openai/v1/chat/completions", [
+                        "model" => $model,
+                        "messages" => [
+                            ["role" => "system", "content" => $systemPrompt],
+                            ["role" => "user", "content" => $userPrompt]
+                        ],
+                        "temperature" => $temperature,
+                        "max_tokens" => 1500
+                    ]);
+
+                if ($resp->successful()) {
+                    return $resp->json('choices.0.message.content');
+                }
+                break;
+
+            case 'huggingface':
+                $apiKey = UserSetting::getSettingWithFallback($userId, 'huggingface_api_key') ?? env('HUGGINGFACE_API_KEY');
+                $model  = UserSetting::getSettingWithFallback($userId, 'huggingface_model') ?? 'Qwen/Qwen2.5-72B-Instruct';
+                if (!$apiKey) return null;
+
+                $resp = Http::withHeaders(['Authorization' => 'Bearer ' . $apiKey])
+                    ->timeout(25)->post("https://router.huggingface.co/v1/chat/completions", [
                         "model" => $model,
                         "messages" => [
                             ["role" => "system", "content" => $systemPrompt],

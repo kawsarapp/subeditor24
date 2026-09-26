@@ -95,6 +95,7 @@ class SettingsController extends Controller
             'ai_copilot_custom_knowledge'  => 'nullable|string|max:30000',
             'ai_copilot_few_shot_examples' => 'nullable|string|max:30000',
             'ai_copilot_temperature'       => 'nullable|numeric|min:0|max:1',
+            'ai_copilot_provider'          => 'nullable|string|in:default,deepseek,openai,gemini,groq,huggingface,qwen',
         ]);
         
         $settings = UserSetting::firstOrCreate(['user_id' => Auth::id()]);
@@ -204,6 +205,9 @@ class SettingsController extends Controller
                 }
                 if ($request->filled('ai_copilot_temperature')) {
                     $settings->ai_copilot_temperature = (float) $request->ai_copilot_temperature;
+                }
+                if ($request->filled('ai_copilot_provider')) {
+                    $settings->ai_copilot_provider = $request->ai_copilot_provider;
                 }
             }
         }
@@ -943,25 +947,26 @@ class SettingsController extends Controller
 
             $status = $response->status();
             $body = $response->body();
+            $errorDetail = $response->json('error.message') ?? $response->json('error') ?? $response->json('message') ?? Str::limit($body, 200);
 
             if ($status === 401 || $status === 403) {
                 return response()->json([
                     'success' => false,
-                    'message' => "❌ {$displayName} অথেনটিকেশন ফেইল্ড (HTTP {$status})! API Key টি সঠিক নয় বা ইনভ্যালিড।"
+                    'message' => "❌ {$displayName} অথেনটিকেশন ফেইল্ড (HTTP {$status})! API Key টি সঠিক নয় বা প্রয়োজনীয় পারমিশন নেই।\nবিবরণ: " . $errorDetail
                 ]);
             }
 
             if ($status === 429) {
                 return response()->json([
                     'success' => false,
-                    'message' => "⚠️ {$displayName} কোটা লিমিট অতিক্রম করেছে (HTTP 429)! আপনার অ্যাকাউন্টের ব্যালেন্স/ক্রেডিট শেষ অথবা রেট লিমিট হয়েছে।"
+                    'message' => "⚠️ {$displayName} কোটা লিমিট অতিক্রম করেছে (HTTP 429)! আপনার অ্যাকাউন্টের ব্যালেন্স/ক্রেডিট শেষ অথবা রেট লিমিট হয়েছে।\nবিবরণ: " . $errorDetail
                 ]);
             }
 
             if ($status === 404) {
                 return response()->json([
                     'success' => false,
-                    'message' => "❌ {$displayName} মডেল বা এন্ডপয়েন্ট পাওয়া যায়নি (HTTP 404)! মডেল নামটি সঠিক কি না যাচাই করুন।"
+                    'message' => "❌ {$displayName} মডেল বা এন্ডপয়েন্ট পাওয়া যায়নি (HTTP 404)! মডেল নামটি সঠিক কি না যাচাই করুন।\nবিবরণ: " . $errorDetail
                 ]);
             }
 

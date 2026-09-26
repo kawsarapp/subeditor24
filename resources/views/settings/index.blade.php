@@ -487,21 +487,38 @@
                     <textarea id="ai_copilot_few_shot_examples" name="ai_copilot_few_shot_examples" rows="7" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs font-mono bg-white p-3.5 leading-relaxed placeholder-gray-400" placeholder="User: WordPress কানেকশন এরর দেখাচ্ছে, কী করব?&#10;Assistant: অনুগ্রহ করে Settings পেজে গিয়ে Application Password রি-জেনারেট করুন এবং সাইট URL-এর শেষে স্ল্যাশ (/) ছাড়া দিন।">{{ old('ai_copilot_few_shot_examples', $settings->ai_copilot_few_shot_examples ?? '') }}</textarea>
                 </div>
 
-                {{-- Temperature / Strictness Control --}}
-                <div class="bg-white p-4 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                {{-- Engine & Strictness Control --}}
+                <div class="bg-white p-4 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-800 mb-1 flex items-center gap-1.5">
+                            <i class="fas fa-microchip text-emerald-600"></i>
+                            Copilot AI Engine (অন-সাইট এআই মডেল নির্বাচন)
+                        </label>
+                        <p class="text-[11px] text-gray-500 mb-2">
+                            চ্যাট অ্যাসিস্ট্যান্ট কোন এআই দিয়ে চলবে তা নির্দিষ্ট করে দিন (যেমন: DeepSeek, ChatGPT, Gemini, Groq, HuggingFace)।
+                        </p>
+                        <select name="ai_copilot_provider" id="ai_copilot_provider" class="w-full border-gray-300 rounded-lg text-xs font-bold focus:border-emerald-500 focus:ring-emerald-500 bg-emerald-50/50 p-2.5">
+                            <option value="default" {{ ($settings->ai_copilot_provider ?? 'default') === 'default' ? 'selected' : '' }}>⚡ Auto / Follow Primary AI (সিস্টেম প্রাইমারি এআই)</option>
+                            <option value="deepseek" {{ ($settings->ai_copilot_provider ?? '') === 'deepseek' ? 'selected' : '' }}>🤖 DeepSeek-V3 (অত্যন্ত বুদ্ধিমান ও সাশ্রয়ী - প্রস্তাবিত)</option>
+                            <option value="openai" {{ ($settings->ai_copilot_provider ?? '') === 'openai' ? 'selected' : '' }}>🧠 OpenAI (GPT-4o-mini / GPT-4o)</option>
+                            <option value="gemini" {{ ($settings->ai_copilot_provider ?? '') === 'gemini' ? 'selected' : '' }}>✨ Google Gemini (1.5 Flash)</option>
+                            <option value="groq" {{ ($settings->ai_copilot_provider ?? '') === 'groq' ? 'selected' : '' }}>⚡ Groq (Llama 3.3 - আল্ট্রা ফাস্ট স্পিড)</option>
+                            <option value="huggingface" {{ ($settings->ai_copilot_provider ?? '') === 'huggingface' ? 'selected' : '' }}>🤗 Hugging Face (Qwen / Llama Open-Source)</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-bold text-gray-800 mb-1 flex items-center gap-1.5">
                             <i class="fas fa-sliders-h text-emerald-600"></i>
                             AI Strictness / Temperature (নির্ভুলতার মাত্রা)
                         </label>
-                        <p class="text-[11px] text-gray-500">
-                            <strong>0.1 - 0.3 (Strict & Fact-Based):</strong> কোনো কল্পনাপ্রসূত কথা বলবে না, সম্পূর্ণ তথ্যভিত্তিক উত্তর দেবে। (প্রস্তাবিত)<br>
-                            <strong>0.7 (Creative):</strong> ক্রিয়েটিভ পরামর্শ দেবে।
+                        <p class="text-[11px] text-gray-500 mb-2">
+                            <strong>0.1 - 0.3 (Strict & Fact-Based):</strong> কোনো বানিয়ে কথা বলবে না। (প্রস্তাবিত)
                         </p>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <input type="range" id="ai_copilot_temperature_range" min="0.1" max="1.0" step="0.05" value="{{ old('ai_copilot_temperature', $settings->ai_copilot_temperature ?? 0.30) }}" class="w-full accent-emerald-600 cursor-pointer" oninput="document.getElementById('ai_copilot_temperature').value = this.value">
-                        <input type="number" id="ai_copilot_temperature" name="ai_copilot_temperature" min="0.1" max="1.0" step="0.05" value="{{ old('ai_copilot_temperature', $settings->ai_copilot_temperature ?? 0.30) }}" class="w-20 border-gray-300 rounded-lg text-xs font-bold text-center text-emerald-700 bg-emerald-50 focus:border-emerald-500" oninput="document.getElementById('ai_copilot_temperature_range').value = this.value">
+                        <div class="flex items-center gap-3">
+                            <input type="range" id="ai_copilot_temperature_range" min="0.1" max="1.0" step="0.05" value="{{ old('ai_copilot_temperature', $settings->ai_copilot_temperature ?? 0.30) }}" class="w-full accent-emerald-600 cursor-pointer" oninput="document.getElementById('ai_copilot_temperature').value = this.value">
+                            <input type="number" id="ai_copilot_temperature" name="ai_copilot_temperature" min="0.1" max="1.0" step="0.05" value="{{ old('ai_copilot_temperature', $settings->ai_copilot_temperature ?? 0.30) }}" class="w-20 border-gray-300 rounded-lg text-xs font-bold text-center text-emerald-700 bg-emerald-50 focus:border-emerald-500" oninput="document.getElementById('ai_copilot_temperature_range').value = this.value">
+                        </div>
                     </div>
                 </div>
 
