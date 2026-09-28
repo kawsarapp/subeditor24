@@ -451,14 +451,24 @@
     }
 
     // Text formatting helpers
-    function changeActiveFont(fontFamily) {
+    async function changeActiveFont(fontFamily) {
         if (!fontFamily) return;
         const cleanFont = window.customStudio ? window.customStudio.cleanFontFamily(fontFamily) : fontFamily.replace(/['",]/g, '').trim();
         const active = window.customStudio ? window.customStudio.canvas.getActiveObject() : null;
         if (active && (active.type === 'i-text' || active.type === 'textbox')) {
+            if (window.customStudio) {
+                await window.customStudio.ensureFontLoaded(cleanFont, active.fontSize || 44);
+            }
             active.set('fontFamily', cleanFont);
+            if (active.__lineWidths) active.__lineWidths = [];
+            if (active._clearCache) active._clearCache();
+            if (active.initDimensions) active.initDimensions();
+            active.setCoords();
             window.customStudio.canvas.renderAll();
             window.customStudio.saveState();
+            if (active.isQuoteText || active.customName === '💬 মূল উক্তি') {
+                window.customStudio.recalculateQuoteCardLayout();
+            }
         }
     }
 

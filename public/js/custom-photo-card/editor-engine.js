@@ -51,6 +51,22 @@
         }
 
         /**
+         * Ensure font is fully loaded in document.fonts before rendering text geometry
+         */
+        async ensureFontLoaded(fontFamily, fontSize = 44) {
+            const cleanFont = this.cleanFontFamily(fontFamily);
+            if (document.fonts && document.fonts.load) {
+                try {
+                    await document.fonts.load(`bold ${fontSize}px "${cleanFont}"`);
+                    await document.fonts.load(`normal ${fontSize}px "${cleanFont}"`);
+                    if (document.fonts.ready) await document.fonts.ready;
+                } catch (e) {
+                    console.warn("Font loading fallback check:", cleanFont, e);
+                }
+            }
+        }
+
+        /**
          * Initialize the Fabric Canvas and setup event listeners
          */
         init() {
@@ -102,7 +118,7 @@
         }
 
         /**
-         * Custom Canva-style circular handles and styling
+         * Custom Canva-style circular handles and styling + Bengali typography alignment patch
          */
         setupCustomControls() {
             fabric.Object.prototype.transparentCorners = false;
@@ -116,6 +132,44 @@
             fabric.Object.prototype.borderDashArray = [5, 5];
             fabric.Object.prototype.padding = 10;
             fabric.Object.prototype.touchCornerSize = 32;
+
+            // 🔤 Precision Right & Center Alignment Patch:
+            // Fabric.js by default includes trailing space of wrapped lines in line-width calculation,
+            // which causes right-aligned lines in multi-line Bangla text to be unevenly indented.
+            const origGetLineLeftOffset = fabric.Text.prototype._getLineLeftOffset;
+            fabric.Text.prototype._getLineLeftOffset = function (lineIndex) {
+                if (this.textAlign === 'right' || this.textAlign === 'justify-right') {
+                    const line = this._textLines ? this._textLines[lineIndex] : '';
+                    if (!line) return 0;
+                    if (/\s+$/.test(line)) {
+                        const trimmed = line.replace(/\s+$/, '');
+                        const ctx = this.canvas ? this.canvas.getContext() : null;
+                        if (ctx) {
+                            ctx.save();
+                            this._setTextStyles(ctx);
+                            const trimmedWidth = ctx.measureText(trimmed).width;
+                            ctx.restore();
+                            return this.width - trimmedWidth;
+                        }
+                    }
+                    return this.width - this.getLineWidth(lineIndex);
+                }
+                if (this.textAlign === 'center' || this.textAlign === 'justify-center') {
+                    const line = this._textLines ? this._textLines[lineIndex] : '';
+                    if (line && /\s+$/.test(line)) {
+                        const trimmed = line.replace(/\s+$/, '');
+                        const ctx = this.canvas ? this.canvas.getContext() : null;
+                        if (ctx) {
+                            ctx.save();
+                            this._setTextStyles(ctx);
+                            const trimmedWidth = ctx.measureText(trimmed).width;
+                            ctx.restore();
+                            return (this.width - trimmedWidth) / 2;
+                        }
+                    }
+                }
+                return origGetLineLeftOffset.call(this, lineIndex);
+            };
         }
 
         /**
@@ -1419,7 +1473,10 @@
             const nameFontSize = Math.max(20, Math.round(canvasH * 0.028));
             const rawNameText = nameObj ? (nameObj.text || '') : '';
             let nameActualTextW = 120;
-            if (nameObj && typeof nameObj.getLineWidth === 'function') {
+            if (nameObj) {
+                nameObj.__lineWidths = [];
+                nameObj._clearCache();
+                nameObj.initDimensions();
                 nameActualTextW = nameObj.getLineWidth(0) || 120;
             } else {
                 const mCanvas = document.createElement('canvas');
@@ -1438,8 +1495,11 @@
                         width: quoteWidth,
                         textAlign: 'right',
                     });
+                    nameObj.__lineWidths = [];
+                    nameObj._clearCache();
                     nameObj.initDimensions();
                     nameObj.setCoords();
+                    nameActualTextW = nameObj.getLineWidth(0) || nameActualTextW;
                     nameH = Math.max(26, nameObj.getScaledHeight());
                 }
                 if (barRect) {
@@ -1458,6 +1518,8 @@
                         width: quoteWidth,
                         textAlign: 'right',
                     });
+                    desigObj.__lineWidths = [];
+                    desigObj._clearCache();
                     desigObj.initDimensions();
                     desigObj.setCoords();
                 }
@@ -1539,7 +1601,7 @@
             this.canvas.renderAll();
         }
 
-        recalculateQuoteCardLayout(options = {}) {
+        async recalculateQuoteCardLayout(options = {}) {
             const canvasW = this.canvas.getWidth();
             const canvasH = this.canvas.getHeight();
 
@@ -1582,6 +1644,9 @@
                 else if (rawQuoteText.length > 90) initialFontSize = Math.round(canvasH * 0.036);
                 else if (rawQuoteText.length < 40) initialFontSize = Math.round(canvasH * 0.048);
             }
+
+            // Ensure font is loaded in browser memory before measuring text
+            await this.ensureFontLoaded(fontVal, initialFontSize);
 
             const quoteMarkTop = this._quoteCustomTop !== undefined ? (this._quoteCustomTop - 60) : Math.max(70, Math.round(canvasH * 0.08));
             const quoteMarkSize = Math.max(48, Math.round(canvasH * 0.065));
@@ -1636,6 +1701,8 @@
                     splitByGrapheme: false,
                     lockRotation: true,
                 });
+                quoteBox.__lineWidths = [];
+                quoteBox._clearCache();
                 quoteBox.initDimensions();
                 quoteBox.setCoords();
             } else {
