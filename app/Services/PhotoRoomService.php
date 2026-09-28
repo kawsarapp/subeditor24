@@ -119,10 +119,57 @@ class PhotoRoomService
                 $outputFileName = 'cutout_' . time() . '_' . Str::random(10) . '.png';
                 $outputPath = $this->outputDir . '/' . $outputFileName;
 
-                file_put_contents($outputPath, $resultPng);
+                // Auto-crop empty transparent borders so the cutout bounds are tight around the person
+                $savedTrimmed = false;
+                if (function_exists('imagecreatefromstring')) {
+                    $im = @imagecreatefromstring($resultPng);
+                    if ($im !== false) {
+                        $w = imagesx($im);
+                        $h = imagesy($im);
+                        $minX = $w; $minY = $h; $maxX = 0; $maxY = 0;
+                        $found = false;
+
+                        for ($y = 0; $y < $h; $y++) {
+                            for ($x = 0; $x < $w; $x++) {
+                                $rgba = imagecolorat($im, $x, $y);
+                                $alpha = ($rgba >> 24) & 0x7F; // in GD: 0 is opaque, 127 is transparent
+                                if ($alpha < 120) { // non-transparent
+                                    if ($x < $minX) $minX = $x;
+                                    if ($x > $maxX) $maxX = $x;
+                                    if ($y < $minY) $minY = $y;
+                                    if ($y > $maxY) $maxY = $y;
+                                    $found = true;
+                                }
+                            }
+                        }
+
+                        if ($found) {
+                            $minX = max(0, $minX - 2);
+                            $minY = max(0, $minY - 2);
+                            $maxX = min($w - 1, $maxX + 2);
+                            $maxY = min($h - 1, $maxY + 2);
+
+                            $cropW = $maxX - $minX + 1;
+                            $cropH = $maxY - $minY + 1;
+
+                            $cropped = imagecreatetruecolor($cropW, $cropH);
+                            imagealphablending($cropped, false);
+                            imagesavealpha($cropped, true);
+                            imagecopy($cropped, $im, 0, 0, $minX, $minY, $cropW, $cropH);
+                            imagepng($cropped, $outputPath);
+                            imagedestroy($cropped);
+                            $savedTrimmed = true;
+                        }
+                        imagedestroy($im);
+                    }
+                }
+
+                if (!$savedTrimmed) {
+                    file_put_contents($outputPath, $resultPng);
+                }
 
                 $outputUrl = asset('uploads/cutouts/' . $outputFileName);
-                Log::info("✅ PhotoRoom: Background removed successfully -> " . $outputUrl);
+                Log::info("✅ PhotoRoom: Background removed and auto-trimmed successfully -> " . $outputUrl);
 
                 return [
                     'success' => true,

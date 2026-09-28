@@ -138,105 +138,101 @@
             // Indic/Bengali ligatures, vowel signs (কার), and conjuncts (যুক্তাক্ষর), overestimating line widths
             // and causing right-aligned lines to be severely displaced leftwards.
 
-            // 1. Line Width Measure Override (Measures whole string using 2D canvas context)
+            const origGetLineWidth = fabric.Text.prototype.getLineWidth;
+            const origGetLineLeftOffset = fabric.Text.prototype._getLineLeftOffset;
+            const origMeasureWord = fabric.Textbox.prototype._measureWord;
+
+            // Safe helper to measure text with 2D canvas context
+            function safeMeasureTextWidth(obj, textStr) {
+                if (!textStr) return 0;
+                try {
+                    const ctx = (obj.getMeasuringContext && obj.getMeasuringContext()) || 
+                                (obj.canvas && obj.canvas.getContext && obj.canvas.getContext()) ||
+                                (fabric.util && fabric.util.createCanvasElement && fabric.util.createCanvasElement().getContext('2d'));
+                    if (ctx) {
+                        ctx.save();
+                        if (typeof obj._setTextStyles === 'function') {
+                            obj._setTextStyles(ctx);
+                        }
+                        const w = ctx.measureText(String(textStr)).width;
+                        ctx.restore();
+                        return w;
+                    }
+                } catch (err) {
+                    console.warn("safeMeasureTextWidth error fallback:", err);
+                }
+                return null;
+            }
+
+            // 1. Line Width Measure Override
             fabric.Text.prototype.getLineWidth = function (lineIndex) {
                 if (this.__lineWidths && this.__lineWidths[lineIndex] !== undefined) {
                     return this.__lineWidths[lineIndex];
                 }
                 if (!this.__lineWidths) this.__lineWidths = [];
 
-                const line = this._textLines ? this._textLines[lineIndex] : null;
-                if (line === undefined || line === null) return 0;
-
-                let width;
-                const isSimpleStyle = this.isEmptyStyles ? this.isEmptyStyles(lineIndex) : true;
-                if (isSimpleStyle) {
-                    const ctx = this.getMeasuringContext ? this.getMeasuringContext() : (this.canvas ? this.canvas.getContext() : null);
-                    if (ctx) {
-                        ctx.save();
-                        this._setTextStyles(ctx);
+                try {
+                    const line = this._textLines ? this._textLines[lineIndex] : null;
+                    if (line !== undefined && line !== null) {
                         const lineStr = Array.isArray(line) ? line.join('') : String(line || '');
-                        width = ctx.measureText(lineStr).width;
-                        ctx.restore();
+                        const measuredW = safeMeasureTextWidth(this, lineStr);
+                        if (measuredW !== null && !isNaN(measuredW)) {
+                            this.__lineWidths[lineIndex] = measuredW;
+                            return measuredW;
+                        }
                     }
+                } catch (e) {
+                    console.warn("getLineWidth error, using fallback:", e);
                 }
 
-                if (width === undefined) {
-                    var lineInfo = this.measureLine(lineIndex);
-                    width = lineInfo.width;
-                }
-
-                this.__lineWidths[lineIndex] = width;
-                return width;
+                return origGetLineWidth.call(this, lineIndex);
             };
 
             // 2. Line Left Offset Override (Flush Right & Center Alignment)
             fabric.Text.prototype._getLineLeftOffset = function (lineIndex) {
-                const line = this._textLines ? this._textLines[lineIndex] : '';
-                const lineStr = Array.isArray(line) ? line.join('') : String(line || '');
-                
-                let lineWidth = 0;
-                const ctx = this.getMeasuringContext ? this.getMeasuringContext() : (this.canvas ? this.canvas.getContext() : null);
-                
-                const isRight = (this.textAlign === 'right' || this.textAlign === 'justify-right');
-                const isCenter = (this.textAlign === 'center' || this.textAlign === 'justify-center');
-                const isSimpleStyle = this.isEmptyStyles ? this.isEmptyStyles(lineIndex) : true;
+                try {
+                    const line = this._textLines ? this._textLines[lineIndex] : '';
+                    const lineStr = Array.isArray(line) ? line.join('') : String(line || '');
+                    const isRight = (this.textAlign === 'right' || this.textAlign === 'justify-right');
+                    const isCenter = (this.textAlign === 'center' || this.textAlign === 'justify-center');
 
-                if (ctx && isSimpleStyle) {
-                    ctx.save();
-                    this._setTextStyles(ctx);
-                    // For right and center alignment, strip trailing space on wrapped lines so they align flush against right margin
-                    const measureStr = (isRight || isCenter) ? lineStr.replace(/\s+$/, '') : lineStr;
-                    lineWidth = ctx.measureText(measureStr).width;
-                    ctx.restore();
-                } else {
-                    lineWidth = this.getLineWidth(lineIndex);
+                    if (isRight || isCenter) {
+                        // Strip trailing whitespace so wrapped lines hit flush boundary
+                        const measureStr = lineStr.replace(/\s+$/, '');
+                        const measuredW = safeMeasureTextWidth(this, measureStr);
+                        const lineWidth = (measuredW !== null && !isNaN(measuredW)) ? measuredW : this.getLineWidth(lineIndex);
+                        const lineDiff = this.width - lineWidth;
+                        let leftOffset = isCenter ? (lineDiff / 2) : lineDiff;
+
+                        const isEndOfWrapping = (typeof this.isEndOfWrapping === 'function') ? this.isEndOfWrapping(lineIndex) : true;
+                        if ((this.textAlign === 'justify-center' || this.textAlign === 'justify-right') && !isEndOfWrapping) {
+                            return 0;
+                        }
+                        if (this.direction === 'rtl') {
+                            leftOffset -= lineDiff;
+                        }
+                        return leftOffset;
+                    }
+                } catch (e) {
+                    console.warn("_getLineLeftOffset error, using fallback:", e);
                 }
 
-                const lineDiff = this.width - lineWidth;
-                let leftOffset = 0;
-                const isEndOfWrapping = this.isEndOfWrapping ? this.isEndOfWrapping(lineIndex) : true;
-
-                if (this.textAlign === 'justify'
-                    || (this.textAlign === 'justify-center' && !isEndOfWrapping)
-                    || (this.textAlign === 'justify-right' && !isEndOfWrapping)
-                    || (this.textAlign === 'justify-left' && !isEndOfWrapping)
-                ) {
-                    return 0;
-                }
-                if (isCenter) {
-                    leftOffset = lineDiff / 2;
-                } else if (isRight) {
-                    leftOffset = lineDiff;
-                }
-                if (this.direction === 'rtl') {
-                    leftOffset -= lineDiff;
-                }
-                return leftOffset;
+                return origGetLineLeftOffset.call(this, lineIndex);
             };
 
             // 3. Word Wrap Width Measure Override (For Textbox word-wrapping)
             fabric.Textbox.prototype._measureWord = function (word, lineIndex, charOffset) {
-                const isSimpleStyle = this.isEmptyStyles ? this.isEmptyStyles(lineIndex) : true;
-                if (isSimpleStyle) {
-                    const ctx = this.getMeasuringContext ? this.getMeasuringContext() : (this.canvas ? this.canvas.getContext() : null);
-                    if (ctx) {
-                        ctx.save();
-                        this._setTextStyles(ctx);
-                        const wordStr = Array.isArray(word) ? word.join('') : String(word || '');
-                        const w = ctx.measureText(wordStr).width;
-                        ctx.restore();
-                        return w;
+                try {
+                    const wordStr = Array.isArray(word) ? word.join('') : String(word || '');
+                    const measuredW = safeMeasureTextWidth(this, wordStr);
+                    if (measuredW !== null && !isNaN(measuredW)) {
+                        return measuredW;
                     }
+                } catch (e) {
+                    console.warn("_measureWord error, using fallback:", e);
                 }
-                var width = 0, prevGrapheme, skipLeft = true;
-                charOffset = charOffset || 0;
-                for (var i = 0, len = word.length; i < len; i++) {
-                    var box = this._getGraphemeBox(word[i], lineIndex, i + charOffset, prevGrapheme, skipLeft);
-                    width += box.kernedWidth;
-                    prevGrapheme = word[i];
-                }
-                return width;
+
+                return origMeasureWord.call(this, word, lineIndex, charOffset);
             };
         }
 
@@ -513,69 +509,78 @@
          * Trim empty transparent padding around any image
          */
         trimTransparentImage(sourceImgOrElement) {
-            const tempCanvas = document.createElement('canvas');
             const w = sourceImgOrElement.naturalWidth || sourceImgOrElement.width || 100;
             const h = sourceImgOrElement.naturalHeight || sourceImgOrElement.height || 100;
-            tempCanvas.width = w;
-            tempCanvas.height = h;
-            const ctx = tempCanvas.getContext('2d', { willReadFrequently: true });
-            ctx.drawImage(sourceImgOrElement, 0, 0);
 
-            const imgData = ctx.getImageData(0, 0, w, h);
-            const data = imgData.data;
-
-            let minX = w, minY = h, maxX = 0, maxY = 0;
-            let found = false;
-
-            for (let y = 0; y < h; y++) {
-                for (let x = 0; x < w; x++) {
-                    const alpha = data[(y * w + x) * 4 + 3];
-                    if (alpha > 15) { // Non-transparent pixel
-                        if (x < minX) minX = x;
-                        if (x > maxX) maxX = x;
-                        if (y < minY) minY = y;
-                        if (y > maxY) maxY = y;
-                        found = true;
-                    }
-                }
-            }
-
-            if (!found) {
-                return {
-                    dataUrl: tempCanvas.toDataURL('image/png'),
-                    offsetX: 0,
-                    offsetY: 0,
-                    trimmedW: w,
-                    trimmedH: h,
-                    origW: w,
-                    origH: h
-                };
-            }
-
-            // Margin of 2px
-            minX = Math.max(0, minX - 2);
-            minY = Math.max(0, minY - 2);
-            maxX = Math.min(w - 1, maxX + 2);
-            maxY = Math.min(h - 1, maxY + 2);
-
-            const trimmedW = maxX - minX + 1;
-            const trimmedH = maxY - minY + 1;
-
-            const trimmedCanvas = document.createElement('canvas');
-            trimmedCanvas.width = trimmedW;
-            trimmedCanvas.height = trimmedH;
-            const tctx = trimmedCanvas.getContext('2d');
-            tctx.drawImage(tempCanvas, minX, minY, trimmedW, trimmedH, 0, 0, trimmedW, trimmedH);
-
-            return {
-                dataUrl: trimmedCanvas.toDataURL('image/png'),
-                offsetX: minX,
-                offsetY: minY,
-                trimmedW: trimmedW,
-                trimmedH: trimmedH,
+            const fallback = {
+                dataUrl: sourceImgOrElement.src || (sourceImgOrElement.toDataURL ? sourceImgOrElement.toDataURL() : ''),
+                offsetX: 0,
+                offsetY: 0,
+                trimmedW: w,
+                trimmedH: h,
                 origW: w,
                 origH: h
             };
+
+            try {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = w;
+                tempCanvas.height = h;
+                const ctx = tempCanvas.getContext('2d', { willReadFrequently: true });
+                ctx.drawImage(sourceImgOrElement, 0, 0);
+
+                const imgData = ctx.getImageData(0, 0, w, h);
+                const data = imgData.data;
+
+                let minX = w, minY = h, maxX = 0, maxY = 0;
+                let found = false;
+
+                for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        const alpha = data[(y * w + x) * 4 + 3];
+                        if (alpha > 15) { // Non-transparent pixel
+                            if (x < minX) minX = x;
+                            if (x > maxX) maxX = x;
+                            if (y < minY) minY = y;
+                            if (y > maxY) maxY = y;
+                            found = true;
+                        }
+                    }
+                }
+
+                if (!found) {
+                    fallback.dataUrl = tempCanvas.toDataURL('image/png');
+                    return fallback;
+                }
+
+                // Margin of 2px
+                minX = Math.max(0, minX - 2);
+                minY = Math.max(0, minY - 2);
+                maxX = Math.min(w - 1, maxX + 2);
+                maxY = Math.min(h - 1, maxY + 2);
+
+                const trimmedW = maxX - minX + 1;
+                const trimmedH = maxY - minY + 1;
+
+                const trimmedCanvas = document.createElement('canvas');
+                trimmedCanvas.width = trimmedW;
+                trimmedCanvas.height = trimmedH;
+                const tctx = trimmedCanvas.getContext('2d');
+                tctx.drawImage(tempCanvas, minX, minY, trimmedW, trimmedH, 0, 0, trimmedW, trimmedH);
+
+                return {
+                    dataUrl: trimmedCanvas.toDataURL('image/png'),
+                    offsetX: minX,
+                    offsetY: minY,
+                    trimmedW: trimmedW,
+                    trimmedH: trimmedH,
+                    origW: w,
+                    origH: h
+                };
+            } catch (err) {
+                console.warn("trimTransparentImage fallback due to CORS / read restriction:", err);
+                return fallback;
+            }
         }
 
         trimActiveImageTransparent() {
@@ -1180,16 +1185,24 @@
             this.showLoader("ছবি যুক্ত হচ্ছে...");
 
             fabric.Image.fromURL(url, (img) => {
-                const maxDim = Math.min(this.canvas.getWidth(), this.canvas.getHeight()) * 0.7;
-                const scale = Math.min(maxDim / img.width, maxDim / img.height, 1);
+                const canvasW = this.canvas.getWidth();
+                const canvasH = this.canvas.getHeight();
+                const targetDim = Math.min(canvasW, canvasH) * 0.65;
+                const scale = Math.min(targetDim / img.width, targetDim / img.height);
 
                 img.set({
-                    left: this.canvas.getWidth() / 2,
-                    top: this.canvas.getHeight() / 2,
+                    left: canvasW / 2,
+                    top: canvasH / 2,
                     originX: 'center',
                     originY: 'center',
                     scaleX: scale,
                     scaleY: scale,
+                    cornerColor: '#ffffff',
+                    cornerStrokeColor: '#4f46e5',
+                    borderColor: '#6366f1',
+                    cornerSize: 13,
+                    cornerStyle: 'circle',
+                    padding: 8,
                 });
 
                 this.canvas.add(img);
@@ -1241,18 +1254,23 @@
             const tempImg = new Image();
             tempImg.crossOrigin = 'anonymous';
             tempImg.onload = () => {
-                const trimmed = this.trimTransparentImage(tempImg);
+                const trimResult = this.trimTransparentImage(tempImg);
+                const finalDataUrl = (trimResult && trimResult.dataUrl) ? trimResult.dataUrl : dataUrl;
 
                 // If portrait already exists on canvas (e.g. in saved template), replace in-place!
                 if (existingImg) {
-                    this.replaceImageObject(existingImg, trimmed.dataUrl);
+                    this.replaceImageObject(existingImg, finalDataUrl);
                     return;
                 }
 
-                fabric.Image.fromURL(trimmed.dataUrl, (img) => {
-                    const maxW = canvasW * 0.44;
-                    const maxH = canvasH * 0.85;
-                    const scale = Math.min(maxW / img.width, maxH / img.height);
+                fabric.Image.fromURL(finalDataUrl, (img) => {
+                    const targetHeight = canvasH * 0.82;
+                    const maxAllowedWidth = canvasW * 0.46;
+                    let scale = targetHeight / img.height;
+                    if ((img.width * scale) > maxAllowedWidth) {
+                        scale = maxAllowedWidth / img.width;
+                    }
+
                     const scaledW = img.width * scale;
                     const scaledH = img.height * scale;
 
@@ -1271,6 +1289,12 @@
                         selectable: true,
                         isQuotePortrait: true,
                         customName: '👤 ' + nameVal,
+                        cornerColor: '#ffffff',
+                        cornerStrokeColor: '#4f46e5',
+                        borderColor: '#6366f1',
+                        cornerSize: 13,
+                        cornerStyle: 'circle',
+                        padding: 8,
                     });
 
                     this.canvas.add(img);
@@ -1989,7 +2013,41 @@
                     }
                 }
 
-                // 2. Setup Canvas Dimensions & Theme Styles
+                // In-place Update for Reused Templates & Existing Cards:
+                const existingQuoteBox = this.canvas.getObjects().find(o => o.isQuoteText || o.customName === '💬 মূল উক্তি');
+                const existingNameObj = this.canvas.getObjects().find(o => o.isQuoteName || (o.customName && o.customName.startsWith('🏷️')));
+
+                if (existingQuoteBox || existingNameObj || existingImg) {
+                    if (existingImg && finalImageUrl && imageSource) {
+                        this.replaceImageObject(existingImg, finalImageUrl);
+                    }
+                    if (existingQuoteBox) existingQuoteBox.quoteRawText = quote;
+                    if (existingNameObj) {
+                        existingNameObj.set('text', name);
+                        existingNameObj.set('customName', '🏷️ ' + name);
+                    }
+                    const existingDesig = this.canvas.getObjects().find(o => o.isQuoteDesig || (o.customName && o.customName.startsWith('📋')));
+                    if (existingDesig) {
+                        existingDesig.set('text', designation);
+                        if (!designation || !designation.trim()) this.canvas.remove(existingDesig);
+                    } else if (designation && designation.trim()) {
+                        this.updateQuoteLiveField('designation', designation);
+                    }
+
+                    if (existingImg && flipPhoto !== undefined) {
+                        existingImg.set('flipX', flipPhoto);
+                    }
+
+                    await this.recalculateQuoteCardLayout();
+                    this.canvas.renderAll();
+                    this.hideLoader();
+                    this.saveState();
+                    this.renderLayersList();
+                    this.showNotification("success", "উক্তি কার্ড সফলভাবে আপডেট হয়েছে!");
+                    return;
+                }
+
+                // 2. Setup Canvas Dimensions & Theme Styles (Only for fresh/blank cards)
                 const canvasW = this.canvas.getWidth();
                 const canvasH = this.canvas.getHeight();
 
@@ -2538,26 +2596,36 @@
                     let scaledH = 0;
 
                     if (portraitImg) {
-                        const maxW = canvasW * 0.44;
-                        const maxH = canvasH * 0.85;
+                        const targetHeight = canvasH * 0.82;
+                        const maxAllowedWidth = canvasW * 0.46;
+                        let portraitScale = targetHeight / portraitImg.height;
+                        if ((portraitImg.width * portraitScale) > maxAllowedWidth) {
+                            portraitScale = maxAllowedWidth / portraitImg.width;
+                        }
 
-                        const scale = Math.min(maxW / portraitImg.width, maxH / portraitImg.height);
-                        scaledW = portraitImg.width * scale;
-                        scaledH = portraitImg.height * scale;
+                        scaledW = portraitImg.width * portraitScale;
+                        scaledH = portraitImg.height * portraitScale;
 
                         const imgLeft = position === 'left' ? (scaledW / 2 + 25) : (canvasW - (scaledW / 2) - 25);
                         const imgTop = canvasH - (scaledH / 2);
 
                         portraitImg.set({
-                            scaleX: scale,
-                            scaleY: scale,
+                            scaleX: portraitScale,
+                            scaleY: portraitScale,
                             flipX: flipPhoto,
                             left: imgLeft,
                             top: imgTop,
                             originX: 'center',
                             originY: 'center',
                             selectable: true,
+                            isQuotePortrait: true,
                             customName: '👤 ' + name,
+                            cornerColor: '#ffffff',
+                            cornerStrokeColor: '#4f46e5',
+                            borderColor: '#6366f1',
+                            cornerSize: 13,
+                            cornerStyle: 'circle',
+                            padding: 8,
                         });
                         this.canvas.add(portraitImg);
                     }
@@ -3258,8 +3326,17 @@
 
             this.showLoader("ছবি পরিবর্তন (Replace) হচ্ছে...");
 
-            const prevTargetWidth = (targetImgObj.width || 100) * (targetImgObj.scaleX || 1);
-            const prevTargetHeight = (targetImgObj.height || 100) * (targetImgObj.scaleY || 1);
+            const canvasW = this.canvas.getWidth();
+            const canvasH = this.canvas.getHeight();
+
+            // Precise display measurements on canvas
+            const prevDisplayW = (typeof targetImgObj.getScaledWidth === 'function') 
+                ? targetImgObj.getScaledWidth() 
+                : ((targetImgObj.width || 100) * (targetImgObj.scaleX || 1));
+
+            const prevDisplayH = (typeof targetImgObj.getScaledHeight === 'function') 
+                ? targetImgObj.getScaledHeight() 
+                : ((targetImgObj.height || 100) * (targetImgObj.scaleY || 1));
 
             const isPortrait = targetImgObj.isQuotePortrait || 
                                targetImgObj.originY === 'bottom' || 
@@ -3268,14 +3345,20 @@
             const isBg = targetImgObj.isBackground || 
                          (targetImgObj.customName && (targetImgObj.customName.includes('ব্যাকগ্রাউন্ড') || targetImgObj.customName.includes('Background')));
 
+            const prevOriginY = targetImgObj.originY || 'center';
+            const prevOriginX = targetImgObj.originX || 'center';
+            const prevTop = targetImgObj.top;
+            const prevLeft = targetImgObj.left;
+            const bottomEdge = prevOriginY === 'bottom' ? prevTop : (prevTop + (prevDisplayH / 2));
+            const leftEdge = prevOriginX === 'left' ? prevLeft : (prevOriginX === 'right' ? (prevLeft - prevDisplayW) : (prevLeft - (prevDisplayW / 2)));
+            const rightEdge = prevOriginX === 'right' ? prevLeft : (prevOriginX === 'left' ? (prevLeft + prevDisplayW) : (prevLeft + (prevDisplayW / 2)));
+
             const prevProps = {
-                left: targetImgObj.left,
-                top: targetImgObj.top,
                 angle: targetImgObj.angle || 0,
                 flipX: targetImgObj.flipX || false,
                 flipY: targetImgObj.flipY || false,
-                originX: targetImgObj.originX || 'center',
-                originY: targetImgObj.originY || 'center',
+                originX: prevOriginX,
+                originY: prevOriginY,
                 customName: targetImgObj.customName || 'ছবি',
                 isQuotePortrait: isPortrait,
                 isBackground: isBg,
@@ -3285,58 +3368,103 @@
 
             const zIndex = this.canvas.getObjects().indexOf(targetImgObj);
 
-            fabric.Image.fromURL(newSourceUrl, (newImg) => {
-                let newScaleX, newScaleY;
+            const tempImg = new Image();
+            tempImg.crossOrigin = 'anonymous';
+            tempImg.onload = () => {
+                const trimResult = this.trimTransparentImage(tempImg);
+                const finalUrl = (trimResult && trimResult.dataUrl) ? trimResult.dataUrl : newSourceUrl;
 
-                if (isPortrait) {
-                    // Speaker Portrait: Match previous target height exactly so it doesn't shrink
-                    const scale = prevTargetHeight / newImg.height;
-                    newScaleX = scale;
-                    newScaleY = scale;
-                } else if (isBg) {
-                    // Background Image: Cover previous bounding space
-                    const scale = Math.max(prevTargetWidth / newImg.width, prevTargetHeight / newImg.height);
-                    newScaleX = scale;
-                    newScaleY = scale;
-                } else {
-                    // Standard Object: Proportionately match bounding box
-                    const scale = Math.min(prevTargetWidth / newImg.width, prevTargetHeight / newImg.height) || (prevTargetHeight / newImg.height);
-                    newScaleX = scale;
-                    newScaleY = scale;
-                }
+                fabric.Image.fromURL(finalUrl, (newImg) => {
+                    let scale;
 
-                newImg.set(Object.assign({}, prevProps, {
-                    scaleX: newScaleX,
-                    scaleY: newScaleY,
-                    cornerColor: '#ffffff',
-                    cornerStrokeColor: '#4f46e5',
-                    borderColor: '#6366f1',
-                    cornerSize: 13,
-                    cornerStyle: 'circle',
-                    padding: 8,
-                }));
+                    if (isPortrait) {
+                        // Maintain target portrait visual height exactly regardless of whether source is 200px or 4000px
+                        const targetHeight = prevDisplayH || (canvasH * 0.82);
+                        const maxWidth = canvasW * 0.50;
+                        const heightScale = targetHeight / newImg.height;
 
-                // Keep bottom alignment anchored if portrait
-                if (isPortrait && prevProps.originY === 'bottom') {
-                    newImg.set('top', prevProps.top);
-                }
+                        if ((newImg.width * heightScale) > maxWidth) {
+                            scale = maxWidth / newImg.width;
+                        } else {
+                            scale = heightScale;
+                        }
+                    } else if (isBg) {
+                        scale = Math.max(canvasW / newImg.width, canvasH / newImg.height);
+                    } else {
+                        // Standard object: proportionately match previous visual display box
+                        scale = Math.min(prevDisplayW / newImg.width, prevDisplayH / newImg.height);
+                    }
 
-                this.canvas.remove(targetImgObj);
-                this.canvas.insertAt(newImg, zIndex >= 0 ? zIndex : 0);
-                this.canvas.setActiveObject(newImg);
-                this.canvas.renderAll();
+                    const newScaledW = newImg.width * scale;
+                    const newScaledH = newImg.height * scale;
 
+                    let newLeft = prevLeft;
+                    let newTop = prevTop;
+
+                    if (isPortrait) {
+                        // Anchor bottom edge firmly to the base
+                        if (prevOriginY === 'bottom') {
+                            newTop = bottomEdge;
+                        } else if (prevOriginY === 'center') {
+                            newTop = bottomEdge - (newScaledH / 2);
+                        }
+
+                        // Maintain side alignment
+                        if (prevOriginX === 'center') {
+                            if (prevLeft < canvasW / 2) {
+                                newLeft = leftEdge + (newScaledW / 2);
+                            } else {
+                                newLeft = rightEdge - (newScaledW / 2);
+                            }
+                        }
+                    }
+
+                    newImg.set(Object.assign({}, prevProps, {
+                        left: newLeft,
+                        top: newTop,
+                        scaleX: scale,
+                        scaleY: scale,
+                        cornerColor: '#ffffff',
+                        cornerStrokeColor: '#4f46e5',
+                        borderColor: '#6366f1',
+                        cornerSize: 13,
+                        cornerStyle: 'circle',
+                        padding: 8,
+                    }));
+
+                    this.canvas.remove(targetImgObj);
+                    this.canvas.insertAt(newImg, zIndex >= 0 ? zIndex : 0);
+                    this.canvas.setActiveObject(newImg);
+                    this.canvas.renderAll();
+
+                    if (isPortrait) {
+                        this.recalculateQuoteCardLayout();
+                    }
+
+                    this.hideLoader();
+                    this.saveState();
+                    this.renderLayersList();
+                    this.showNotification("success", "🖼️ ছবি সফলভাবে সঠিক সাইজে প্রতিস্থাপন (Replace) করা হয়েছে!");
+                }, { crossOrigin: 'anonymous' });
+            };
+            tempImg.onerror = () => {
                 this.hideLoader();
-                this.saveState();
-                this.renderLayersList();
-                this.showNotification("success", "🖼️ ছবি সফলভাবে সঠিক সাইজে প্রতিস্থাপন (Replace) করা হয়েছে!");
-            }, { crossOrigin: 'anonymous' });
+                this.showNotification("error", "ছবি লোড করতে সমস্যা হয়েছে।");
+            };
+            tempImg.src = newSourceUrl;
         }
 
         triggerReplaceActiveImage() {
-            const active = this.canvas.getActiveObject();
+            let active = this.canvas.getActiveObject();
             if (!active || active.type !== 'image') {
-                this.showNotification("warning", "দয়া করে একটি ছবি সিলেক্ট করুন যা পরিবর্তন করতে চান।");
+                // Auto-detect portrait or primary image if user hasn't selected anything
+                active = this.canvas.getObjects().find(o => o.isQuotePortrait || (o.customName && (o.customName.includes('👤') || o.customName.includes('বক্তা'))));
+                if (!active) {
+                    active = this.canvas.getObjects().find(o => o.type === 'image' && !o.isFrame);
+                }
+            }
+            if (!active || active.type !== 'image') {
+                this.showNotification("warning", "দয়া করে ক্যানভাসে যে ছবিটি পরিবর্তন করতে চান সেটি সিলেক্ট করুন।");
                 return;
             }
 
@@ -4772,50 +4900,69 @@
 
             this.showLoader(`"${tpl.name}" টেমপ্লেট লোড হচ্ছে...`);
 
-            if (tpl.width && tpl.height) {
-                this.setCanvasDimensions(tpl.width, tpl.height);
-            }
-
-            const json = typeof tpl.canvasJson === 'string' ? JSON.parse(tpl.canvasJson) : tpl.canvasJson;
-
-            this.canvas.loadFromJSON(json, () => {
-                // Auto-update Date text to TODAY's date when reusing a template
-                const todayDate = new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
-                const dateObj = this.canvas.getObjects().find(o => o.isDate || (o.customName && (o.customName.includes('তারিখ') || o.customName.includes('📅'))));
-                if (dateObj) {
-                    dateObj.set('text', todayDate);
-                    if (typeof dateObj.initDimensions === 'function') dateObj.initDimensions();
-                    dateObj.setCoords();
-                }
-
-                this.canvas.renderAll();
-                this.activeFrame = tpl.activeFrame || null;
+            // Safety timeout to guarantee loader always closes even on network lag
+            const loaderTimeout = setTimeout(() => {
                 this.hideLoader();
-                this.fitToScreen();
-                this.saveState();
-                this.renderLayersList();
+            }, 5000);
 
-                // If template had quote settings, restore quote inputs in sidebar
-                if (tpl.quoteParams) {
-                    const qText = document.getElementById('quote-card-text');
-                    const qName = document.getElementById('quote-card-name');
-                    const qDesig = document.getElementById('quote-card-desig');
-                    const qFont = document.getElementById('quote-card-font');
-                    const qTheme = document.getElementById('quote-card-theme');
-                    const qPos = document.getElementById('quote-card-pos');
-                    const qFlip = document.getElementById('quote-card-flip-check');
-
-                    if (qText && tpl.quoteParams.quote) qText.value = tpl.quoteParams.quote;
-                    if (qName && tpl.quoteParams.name) qName.value = tpl.quoteParams.name;
-                    if (qDesig && tpl.quoteParams.designation) qDesig.value = tpl.quoteParams.designation;
-                    if (qFont && tpl.quoteParams.fontFamily) qFont.value = tpl.quoteParams.fontFamily;
-                    if (qTheme && tpl.quoteParams.theme) qTheme.value = tpl.quoteParams.theme;
-                    if (qPos && tpl.quoteParams.position) qPos.value = tpl.quoteParams.position;
-                    if (qFlip) qFlip.checked = (tpl.quoteParams.flipPhoto === true);
+            try {
+                if (tpl.width && tpl.height) {
+                    this.setCanvasDimensions(tpl.width, tpl.height);
                 }
 
-                this.showNotification("success", `"${tpl.name}" টেমপ্লেট সফলভাবে লোড হয়েছে!`);
-            });
+                const json = typeof tpl.canvasJson === 'string' ? JSON.parse(tpl.canvasJson) : tpl.canvasJson;
+
+                this.canvas.loadFromJSON(json, () => {
+                    clearTimeout(loaderTimeout);
+                    try {
+                        // Auto-update Date text to TODAY's date when reusing a template
+                        const todayDate = new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
+                        const dateObj = this.canvas.getObjects().find(o => o.isDate || (o.customName && (o.customName.includes('তারিখ') || o.customName.includes('📅'))));
+                        if (dateObj) {
+                            dateObj.set('text', todayDate);
+                            if (typeof dateObj.initDimensions === 'function') dateObj.initDimensions();
+                            dateObj.setCoords();
+                        }
+
+                        this.canvas.renderAll();
+                        this.activeFrame = tpl.activeFrame || null;
+                        this.hideLoader();
+                        this.fitToScreen();
+                        this.saveState();
+                        this.renderLayersList();
+
+                        // If template had quote settings, restore quote inputs in sidebar
+                        if (tpl.quoteParams) {
+                            const qText = document.getElementById('quote-card-text');
+                            const qName = document.getElementById('quote-card-name');
+                            const qDesig = document.getElementById('quote-card-desig');
+                            const qFont = document.getElementById('quote-card-font');
+                            const qTheme = document.getElementById('quote-card-theme');
+                            const qPos = document.getElementById('quote-card-pos');
+                            const qFlip = document.getElementById('quote-card-flip-check');
+
+                            if (qText && tpl.quoteParams.quote) qText.value = tpl.quoteParams.quote;
+                            if (qName && tpl.quoteParams.name) qName.value = tpl.quoteParams.name;
+                            if (qDesig && tpl.quoteParams.designation) qDesig.value = tpl.quoteParams.designation;
+                            if (qFont && tpl.quoteParams.fontFamily) qFont.value = tpl.quoteParams.fontFamily;
+                            if (qTheme && tpl.quoteParams.theme) qTheme.value = tpl.quoteParams.theme;
+                            if (qPos && tpl.quoteParams.position) qPos.value = tpl.quoteParams.position;
+                            if (qFlip) qFlip.checked = (tpl.quoteParams.flipPhoto === true);
+                        }
+
+                        this.showNotification("success", `"${tpl.name}" টেমপ্লেট সফলভাবে লোড হয়েছে!`);
+                    } catch (err) {
+                        console.error("Error during post-loadFromJSON processing:", err);
+                        this.hideLoader();
+                        this.canvas.renderAll();
+                    }
+                });
+            } catch (err) {
+                clearTimeout(loaderTimeout);
+                console.error("Failed to load template JSON:", err);
+                this.hideLoader();
+                this.showNotification("error", "টেমপ্লেট লোড করতে সমস্যা হয়েছে।");
+            }
         }
 
         deleteCustomTemplate(templateId) {
