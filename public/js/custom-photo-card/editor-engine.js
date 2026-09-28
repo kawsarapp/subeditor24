@@ -133,42 +133,110 @@
             fabric.Object.prototype.padding = 10;
             fabric.Object.prototype.touchCornerSize = 32;
 
-            // 🔤 Precision Right & Center Alignment Patch:
-            // Fabric.js by default includes trailing space of wrapped lines in line-width calculation,
-            // which causes right-aligned lines in multi-line Bangla text to be unevenly indented.
-            const origGetLineLeftOffset = fabric.Text.prototype._getLineLeftOffset;
+            // 🔤 Comprehensive Bengali / Complex Script Typography & Alignment Fix:
+            // Fabric.js default measures text character-by-character (_measureChar), which breaks on complex
+            // Indic/Bengali ligatures, vowel signs (কার), and conjuncts (যুক্তাক্ষর), overestimating line widths
+            // and causing right-aligned lines to be severely displaced leftwards.
+
+            // 1. Line Width Measure Override (Measures whole string using 2D canvas context)
+            fabric.Text.prototype.getLineWidth = function (lineIndex) {
+                if (this.__lineWidths && this.__lineWidths[lineIndex] !== undefined) {
+                    return this.__lineWidths[lineIndex];
+                }
+                if (!this.__lineWidths) this.__lineWidths = [];
+
+                const line = this._textLines ? this._textLines[lineIndex] : null;
+                if (line === undefined || line === null) return 0;
+
+                let width;
+                const isSimpleStyle = this.isEmptyStyles ? this.isEmptyStyles(lineIndex) : true;
+                if (isSimpleStyle) {
+                    const ctx = this.getMeasuringContext ? this.getMeasuringContext() : (this.canvas ? this.canvas.getContext() : null);
+                    if (ctx) {
+                        ctx.save();
+                        this._setTextStyles(ctx);
+                        const lineStr = Array.isArray(line) ? line.join('') : String(line || '');
+                        width = ctx.measureText(lineStr).width;
+                        ctx.restore();
+                    }
+                }
+
+                if (width === undefined) {
+                    var lineInfo = this.measureLine(lineIndex);
+                    width = lineInfo.width;
+                }
+
+                this.__lineWidths[lineIndex] = width;
+                return width;
+            };
+
+            // 2. Line Left Offset Override (Flush Right & Center Alignment)
             fabric.Text.prototype._getLineLeftOffset = function (lineIndex) {
-                if (this.textAlign === 'right' || this.textAlign === 'justify-right') {
-                    const line = this._textLines ? this._textLines[lineIndex] : '';
-                    if (!line) return 0;
-                    if (/\s+$/.test(line)) {
-                        const trimmed = line.replace(/\s+$/, '');
-                        const ctx = this.canvas ? this.canvas.getContext() : null;
-                        if (ctx) {
-                            ctx.save();
-                            this._setTextStyles(ctx);
-                            const trimmedWidth = ctx.measureText(trimmed).width;
-                            ctx.restore();
-                            return this.width - trimmedWidth;
-                        }
-                    }
-                    return this.width - this.getLineWidth(lineIndex);
+                const line = this._textLines ? this._textLines[lineIndex] : '';
+                const lineStr = Array.isArray(line) ? line.join('') : String(line || '');
+                
+                let lineWidth = 0;
+                const ctx = this.getMeasuringContext ? this.getMeasuringContext() : (this.canvas ? this.canvas.getContext() : null);
+                
+                const isRight = (this.textAlign === 'right' || this.textAlign === 'justify-right');
+                const isCenter = (this.textAlign === 'center' || this.textAlign === 'justify-center');
+                const isSimpleStyle = this.isEmptyStyles ? this.isEmptyStyles(lineIndex) : true;
+
+                if (ctx && isSimpleStyle) {
+                    ctx.save();
+                    this._setTextStyles(ctx);
+                    // For right and center alignment, strip trailing space on wrapped lines so they align flush against right margin
+                    const measureStr = (isRight || isCenter) ? lineStr.replace(/\s+$/, '') : lineStr;
+                    lineWidth = ctx.measureText(measureStr).width;
+                    ctx.restore();
+                } else {
+                    lineWidth = this.getLineWidth(lineIndex);
                 }
-                if (this.textAlign === 'center' || this.textAlign === 'justify-center') {
-                    const line = this._textLines ? this._textLines[lineIndex] : '';
-                    if (line && /\s+$/.test(line)) {
-                        const trimmed = line.replace(/\s+$/, '');
-                        const ctx = this.canvas ? this.canvas.getContext() : null;
-                        if (ctx) {
-                            ctx.save();
-                            this._setTextStyles(ctx);
-                            const trimmedWidth = ctx.measureText(trimmed).width;
-                            ctx.restore();
-                            return (this.width - trimmedWidth) / 2;
-                        }
+
+                const lineDiff = this.width - lineWidth;
+                let leftOffset = 0;
+                const isEndOfWrapping = this.isEndOfWrapping ? this.isEndOfWrapping(lineIndex) : true;
+
+                if (this.textAlign === 'justify'
+                    || (this.textAlign === 'justify-center' && !isEndOfWrapping)
+                    || (this.textAlign === 'justify-right' && !isEndOfWrapping)
+                    || (this.textAlign === 'justify-left' && !isEndOfWrapping)
+                ) {
+                    return 0;
+                }
+                if (isCenter) {
+                    leftOffset = lineDiff / 2;
+                } else if (isRight) {
+                    leftOffset = lineDiff;
+                }
+                if (this.direction === 'rtl') {
+                    leftOffset -= lineDiff;
+                }
+                return leftOffset;
+            };
+
+            // 3. Word Wrap Width Measure Override (For Textbox word-wrapping)
+            fabric.Textbox.prototype._measureWord = function (word, lineIndex, charOffset) {
+                const isSimpleStyle = this.isEmptyStyles ? this.isEmptyStyles(lineIndex) : true;
+                if (isSimpleStyle) {
+                    const ctx = this.getMeasuringContext ? this.getMeasuringContext() : (this.canvas ? this.canvas.getContext() : null);
+                    if (ctx) {
+                        ctx.save();
+                        this._setTextStyles(ctx);
+                        const wordStr = Array.isArray(word) ? word.join('') : String(word || '');
+                        const w = ctx.measureText(wordStr).width;
+                        ctx.restore();
+                        return w;
                     }
                 }
-                return origGetLineLeftOffset.call(this, lineIndex);
+                var width = 0, prevGrapheme, skipLeft = true;
+                charOffset = charOffset || 0;
+                for (var i = 0, len = word.length; i < len; i++) {
+                    var box = this._getGraphemeBox(word[i], lineIndex, i + charOffset, prevGrapheme, skipLeft);
+                    width += box.kernedWidth;
+                    prevGrapheme = word[i];
+                }
+                return width;
             };
         }
 

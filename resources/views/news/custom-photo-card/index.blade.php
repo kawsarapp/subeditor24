@@ -533,11 +533,18 @@
     }
 
     function changeActiveTextAlign(align) {
-        const active = window.customStudio.canvas.getActiveObject();
+        const active = window.customStudio ? window.customStudio.canvas.getActiveObject() : null;
         if (active && (active.type === 'i-text' || active.type === 'textbox')) {
             active.set('textAlign', align);
+            if (active.__lineWidths) active.__lineWidths = [];
+            if (active._clearCache) active._clearCache();
+            if (active.initDimensions) active.initDimensions();
+            active.setCoords();
             window.customStudio.canvas.renderAll();
             window.customStudio.saveState();
+            if (active.isQuoteText || active.customName === '💬 মূল উক্তি') {
+                window.customStudio.recalculateQuoteCardLayout();
+            }
         }
     }
 
