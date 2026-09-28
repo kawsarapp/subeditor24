@@ -67,6 +67,10 @@
                 <span class="text-indigo-300 font-black text-sm">{{ $stats['active_sources'] }}</span>
                 <span class="text-slate-300">Active Sources</span>
             </div>
+            <button onclick="syncCentralFeedNow()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-1.5 shadow-md transition transform hover:scale-105 cursor-pointer" id="syncNowBtn">
+                <span id="syncSpinner" class="hidden animate-spin">⚡</span>
+                <span id="syncText">⚡ Sync Sources Now</span>
+            </button>
             <button onclick="fetchCentralFeedAjax()" class="bg-white hover:bg-slate-100 text-slate-900 px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 shadow-md transition transform hover:scale-105 cursor-pointer" id="manualRefreshBtn">
                 <span id="refreshSpinner" class="hidden animate-spin">🔄</span>
                 <span>🔄 Refresh</span>
@@ -347,6 +351,52 @@
             btn.disabled = false;
             btn.innerText = '📥 Import Selected to Drafts';
             showToast('Network error occurred.', true);
+        });
+    }
+
+    // ⚡ Dynamic On-Demand Central Feed Sync
+    function syncCentralFeedNow() {
+        const btn = document.getElementById('syncNowBtn');
+        const spinner = document.getElementById('syncSpinner');
+        const text = document.getElementById('syncText');
+
+        if (btn) btn.disabled = true;
+        if (spinner) spinner.classList.remove('hidden');
+        if (text) text.innerText = 'Syncing Sources...';
+
+        showToast('🔄 Syncing active news sources into Central Pool...');
+
+        fetch('{{ route("central-feed.sync-now") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (btn) btn.disabled = false;
+            if (spinner) spinner.classList.add('hidden');
+            if (text) text.innerText = '⚡ Sync Sources Now';
+
+            if (data.success) {
+                showToast('✅ ' + data.message);
+                if (data.total_today && document.getElementById('statToday')) {
+                    document.getElementById('statToday').innerText = data.total_today;
+                }
+                // Refresh grid to show new news items immediately
+                fetchCentralFeedAjax();
+            } else {
+                showToast(data.message || 'Sync failed.', true);
+            }
+        })
+        .catch(err => {
+            if (btn) btn.disabled = false;
+            if (spinner) spinner.classList.add('hidden');
+            if (text) text.innerText = '⚡ Sync Sources Now';
+            showToast('Sync completed / Refreshing feed...');
+            fetchCentralFeedAjax();
         });
     }
 

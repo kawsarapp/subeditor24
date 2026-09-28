@@ -30,7 +30,47 @@ class SettingsController extends Controller
 
         $settings = $user->settings ?? new UserSetting(['user_id' => $user->id]);
         $fbPages  = $user->facebookPages()->orderByDesc('is_active')->get();
-        return view('settings.index', compact('settings', 'fbPages'));
+        $cronHealth = app(\App\Services\DynamicCronService::class)->getHealthStatus();
+
+        return view('settings.index', compact('settings', 'fbPages', 'cronHealth'));
+    }
+
+    /**
+     * ⚡ Dynamic Cron & Scheduler Action (Install, Test Run, Status)
+     */
+    public function cronAction(Request $request, \App\Services\DynamicCronService $cronService)
+    {
+        if (Auth::user()->role !== 'super_admin' && !Auth::user()->hasPermission('can_settings')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $action = $request->get('action', 'status');
+
+        if ($action === 'install') {
+            \Illuminate\Support\Facades\Artisan::call('cron:manage', ['action' => 'install']);
+            $output = \Illuminate\Support\Facades\Artisan::output();
+            return response()->json([
+                'success' => true,
+                'message' => 'সার্ভার ক্রনট্যাব স্বয়ংক্রিয়ভাবে ইনস্টল করা হয়েছে!',
+                'output'  => $output,
+                'health'  => $cronService->getHealthStatus()
+            ]);
+        }
+
+        if ($action === 'test_run') {
+            \Illuminate\Support\Facades\Artisan::call('schedule:run');
+            $cronService->recordHeartbeat('manual_admin');
+            return response()->json([
+                'success' => true,
+                'message' => 'শিডিউলার সফলভাবে এক্সিকিউট হয়েছে!',
+                'health'  => $cronService->getHealthStatus()
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'health'  => $cronService->getHealthStatus()
+        ]);
     }
 
     /**

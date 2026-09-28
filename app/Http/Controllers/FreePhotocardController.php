@@ -65,8 +65,24 @@ class FreePhotocardController extends Controller
         if (!$this->isSafeExternalUrl($url)) {
             return response()->json([
                 'success' => false,
-                'message' => 'অননুমোদিত বা অনিরাপদ URL। দয়া করে একটি সঠিক পাবলিক নিউজ লিঙ্ক দিন।',
+                'message' => 'অননুমোদিত বা অনিরাপদ URL। দয়া করে একটি সঠিক পাবলিক লিঙ্ক দিন।',
             ], 400);
+        }
+
+        // 🖼️ Direct Image URL Check (e.g. .jpg, .jpeg, .png, .webp, .gif, .svg)
+        $parsedPath = parse_url($url, PHP_URL_PATH);
+        $ext = strtolower(pathinfo($parsedPath ?? '', PATHINFO_EXTENSION));
+        if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'])) {
+            return response()->json([
+                'success'         => true,
+                'is_direct_image' => true,
+                'title'           => null,
+                'image_url'       => $url,
+                'proxy_image_url' => route('free-photocard.proxy-image', ['url' => $url]),
+                'category'        => 'News',
+                'date'            => date('d M Y'),
+                'message'         => 'Direct image loaded successfully.',
+            ]);
         }
 
         $userId = Auth::id();

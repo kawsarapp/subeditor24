@@ -34,11 +34,15 @@
             </p>
         </div>
 
-        {{-- SOUND ALERT TOGGLE BUTTON --}}
-        <div class="relative z-10 shrink-0">
-            <button id="alertSoundToggleBtn" onclick="toggleAlertSound()" class="bg-white/10 hover:bg-white/20 text-white font-extrabold px-4 py-2.5 rounded-2xl text-xs flex items-center gap-2 border border-white/20 backdrop-blur-md shadow-md transition">
+        {{-- ACTIONS IN HEADER --}}
+        <div class="relative z-10 shrink-0 flex items-center gap-2">
+            <a href="{{ route('trending.index', ['timeframe' => $timeframe, 'refresh' => 1]) }}" class="bg-white/10 hover:bg-white/20 text-white font-extrabold px-3.5 py-2.5 rounded-2xl text-xs flex items-center gap-1.5 border border-white/20 backdrop-blur-md shadow-md transition" title="Refresh Live Data">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <span>Sync Trends</span>
+            </a>
+            <button id="alertSoundToggleBtn" onclick="toggleAlertSound()" class="bg-white/10 hover:bg-white/20 text-white font-extrabold px-3.5 py-2.5 rounded-2xl text-xs flex items-center gap-1.5 border border-white/20 backdrop-blur-md shadow-md transition">
                 <i id="alertSoundIcon" class="fa-solid fa-bell text-amber-400"></i>
-                <span id="alertSoundText">🔔 Alert Sound: On</span>
+                <span id="alertSoundText">Sound: On</span>
             </button>
         </div>
 
@@ -100,15 +104,30 @@
         <div class="trending-card luxe-card rounded-3xl p-5 border border-slate-200/90 shadow-md hover:shadow-xl transition-all flex flex-col justify-between h-full bg-white relative group" data-category="{{ $item->category ?? 'general' }}" data-viral-score="{{ $item->viral_score }}" data-title="{{ addslashes($item->title) }}">
             
             <div>
-                {{-- Viral Velocity Header --}}
+                {{-- Viral Velocity & Momentum Header --}}
                 <div class="flex items-center justify-between gap-2 mb-3">
-                    <span class="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wide shadow-sm {{ $item->viral_badge_color }}">
-                        {{ $item->viral_level }}
-                    </span>
-                    <div class="flex items-center gap-1 text-xs font-black text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wide shadow-sm {{ $item->viral_badge_color }}">
+                            {{ $item->viral_level }}
+                        </span>
+                        @if(!empty($item->velocity_growth))
+                        <span class="text-[9px] font-black px-2 py-0.5 rounded-md shadow-2xs {{ $item->velocity_growth_badge ?? 'bg-slate-800 text-white' }}">
+                            {{ $item->velocity_growth }}
+                        </span>
+                        @endif
+                    </div>
+                    <div class="flex items-center gap-1 text-xs font-black text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200 shrink-0">
                         <i class="fa-solid fa-fire text-amber-500"></i> Score: <span class="text-indigo-600 font-extrabold">{{ $item->viral_score }}/100</span>
                     </div>
                 </div>
+
+                {{-- Google Trends Verified Pill (If Matched) --}}
+                @if(!empty($item->google_trends_matched))
+                <div class="mb-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 px-2.5 py-1 rounded-xl flex items-center gap-1.5 text-[10px] font-black text-blue-700">
+                    <i class="fa-brands fa-google text-blue-500"></i>
+                    <span>Google Search Trends BD Verified Topic</span>
+                </div>
+                @endif
 
                 {{-- Category Pill & Multi-Portal Coverage --}}
                 <div class="mb-3 bg-indigo-50/60 p-2.5 rounded-2xl border border-indigo-100">
@@ -162,14 +181,33 @@
                     </span>
                 </div>
 
-                {{-- Title --}}
+                {{-- Master Topic Title --}}
                 <h3 class="font-extrabold text-slate-900 text-base leading-snug mb-3 group-hover:text-indigo-600 transition-colors">
                     {{ $item->title }}
                 </h3>
+
+                {{-- Google News-Style Multi-Portal Coverage Expansion (If multiple articles in cluster) --}}
+                @if(!empty($item->cluster_articles) && count($item->cluster_articles) > 1)
+                <div class="mt-2 mb-3 bg-slate-100/70 p-2 rounded-xl border border-slate-200">
+                    <div class="text-[10px] font-extrabold text-slate-600 mb-1.5 flex items-center justify-between">
+                        <span>📰 অন্যান্য পত্রিকার রিপোর্ট ({{ count($item->cluster_articles) }} টি):</span>
+                    </div>
+                    <div class="space-y-1">
+                        @foreach(array_slice($item->cluster_articles, 1, 3) as $subArt)
+                        <div class="text-[11px] text-slate-700 flex items-start gap-1 leading-tight">
+                            <span class="text-[9px] font-black text-indigo-600 bg-white px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
+                                {{ is_object($subArt) ? ($subArt->source ?? ($subArt->website->name ?? 'Portal')) : ($subArt['source'] ?? 'Portal') }}
+                            </span>
+                            <span class="line-clamp-1 font-medium">{{ is_object($subArt) ? $subArt->title : $subArt['title'] }}</span>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
             </div>
 
             {{-- Action Button --}}
-            <div class="pt-4 border-t border-slate-100 mt-2">
+            <div class="pt-3 border-t border-slate-100 mt-2">
                 <button onclick="generateViralScript('{{ $item->id ?? 'ext' }}', '{{ addslashes($item->title) }}', '{{ addslashes($item->description ?? $item->title) }}')" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-indigo-500/20 transition-all active:scale-95">
                     <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i> ⚡ Viral Script, Photocard & Package
                 </button>

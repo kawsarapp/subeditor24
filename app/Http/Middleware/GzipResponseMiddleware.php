@@ -55,4 +55,17 @@ class GzipResponseMiddleware
 
         return $response;
     }
+
+    /**
+     * Handle tasks after the response has been sent to the browser (Zero Latency Dynamic Cron).
+     */
+    public function terminate(Request $request, Response $response): void
+    {
+        try {
+            // Trigger dynamic cron if due without impacting user response time
+            app(\App\Services\DynamicCronService::class)->triggerDynamicCronIfDue();
+        } catch (\Throwable $e) {
+            // Silent catch to prevent any post-response disruption
+        }
+    }
 }

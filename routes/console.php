@@ -140,11 +140,13 @@ Artisan::command('youtube:autopilot-sync', function () {
 })->purpose('Auto-sync and process YouTube channels that have Auto-Pilot enabled');
 
 // শিডিউল সেটআপ
+Schedule::call(fn() => app(\App\Services\DynamicCronService::class)->recordHeartbeat('cli'))->everyMinute();
 Schedule::command('news:autopost')->everyMinute();
 Schedule::command('news:process-scheduled')->everyMinute();
 Schedule::command('news:check-inactivity')->everyThirtyMinutes();
 Schedule::command('news:central-pool-sync')->everyMinute();
 Schedule::command('youtube:autopilot-sync')->everyFiveMinutes();
+Schedule::command('trends:sync')->everyFiveMinutes()->withoutOverlapping();
 
 Schedule::call(function () {
     $settingsList = \App\Models\UserSetting::get();

@@ -35,38 +35,48 @@ class TrendingController extends Controller
         }
 
         $timeframe = $request->get('timeframe', '6');
+        $forceRefresh = $request->has('refresh');
 
         if ($timeframe === 'external') {
+            if ($forceRefresh) {
+                \Illuminate\Support\Facades\Cache::forget('external_live_trends_cache_v5');
+            }
             // Fetch live real-time internet trends from external feeds & Google News BD
             $trendingList = collect($this->externalLiveService->fetchLiveExternalTrends());
             return view('trending.index', compact('trendingList', 'timeframe'));
         }
         
-        $query = NewsItem::with('website');
-
-        if (in_array($timeframe, ['1', '3', '6', '12', '24'])) {
-            $hours = (int) $timeframe;
-            $cutoff = now()->subHours($hours);
-
-            $query->where(function ($q) use ($cutoff) {
-                $q->where('created_at', '>=', $cutoff)
-                  ->orWhere('published_at', '>=', $cutoff);
-            });
-        } elseif ($timeframe === 'all') {
-            // No time filter - show all news
-        } else {
-            $timeframe = '6';
-            $cutoff = now()->subHours(6);
-            $query->where(function ($q) use ($cutoff) {
-                $q->where('created_at', '>=', $cutoff)
-                  ->orWhere('published_at', '>=', $cutoff);
-            });
+        $cacheKey = "trending_internal_cache_{$timeframe}";
+        if ($forceRefresh) {
+            \Illuminate\Support\Facades\Cache::forget($cacheKey);
         }
 
-        $newsItems = $query->latest()->take(50)->get();
+        $trendingList = \Illuminate\Support\Facades\Cache::remember($cacheKey, 120, function () use ($timeframe) {
+            $query = NewsItem::with('website');
 
-        // Compute Multi-Portal Event Clustering & Social Buzz Gauges via ViralPredictionEngine
-        $trendingList = $this->viralEngine->calculateViralPredictions($newsItems);
+            if (in_array($timeframe, ['1', '3', '6', '12', '24'])) {
+                $hours = (int) $timeframe;
+                $cutoff = now()->subHours($hours);
+
+                $query->where(function ($q) use ($cutoff) {
+                    $q->where('created_at', '>=', $cutoff)
+                      ->orWhere('published_at', '>=', $cutoff);
+                });
+            } elseif ($timeframe === 'all') {
+                // No time filter - show all news
+            } else {
+                $cutoff = now()->subHours(6);
+                $query->where(function ($q) use ($cutoff) {
+                    $q->where('created_at', '>=', $cutoff)
+                      ->orWhere('published_at', '>=', $cutoff);
+                });
+            }
+
+            $newsItems = $query->latest()->take(60)->get();
+
+            // Compute Master Story Clustering & Deterministic Signals via ViralPredictionEngine
+            return $this->viralEngine->calculateViralPredictions($newsItems);
+        });
 
         return view('trending.index', compact('trendingList', 'timeframe'));
     }

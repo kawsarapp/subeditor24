@@ -164,12 +164,29 @@
                         <span class="text-[10px] text-indigo-600 font-semibold">Drag & Resize on Canvas</span>
                     </div>
 
-                    <div class="flex items-center gap-2">
-                        <input type="file" id="localImageInput" accept="image/*" onchange="handleLocalImageUpload(event)" class="hidden">
-                        <button type="button" onclick="document.getElementById('localImageInput').click()" class="w-full py-2 px-3 bg-white hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 transition cursor-pointer flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-arrow-up-from-bracket text-indigo-500"></i>
-                            <span>Upload / Replace Photo</span>
-                        </button>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <input type="file" id="localImageInput" accept="image/*" onchange="handleLocalImageUpload(event)" class="hidden">
+                            <button type="button" onclick="document.getElementById('localImageInput').click()" class="w-full py-2 px-3 bg-white hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 transition cursor-pointer flex items-center justify-center gap-2 shadow-xs">
+                                <i class="fa-solid fa-arrow-up-from-bracket text-indigo-500"></i>
+                                <span>Upload Image File</span>
+                            </button>
+                        </div>
+
+                        {{-- 🔗 Direct Image Link / URL Fetch Input --}}
+                        <div class="space-y-1">
+                            <div class="flex gap-1.5">
+                                <div class="relative flex-1">
+                                    <i class="fa-solid fa-link absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                    <input type="url" id="directImageUrlInput" onkeydown="if(event.key==='Enter'){event.preventDefault();loadDirectImageUrl();}" placeholder="ছবির লিঙ্ক (Image URL) দিন..." class="w-full pl-8 pr-2.5 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden">
+                                </div>
+                                <button type="button" id="loadDirectImageBtn" onclick="loadDirectImageUrl()" class="px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs">
+                                    <i class="fa-solid fa-cloud-arrow-down"></i>
+                                    <span>Load</span>
+                                </button>
+                            </div>
+                            <p id="directImageStatusMsg" class="hidden text-[11px] font-semibold"></p>
+                        </div>
                     </div>
 
                     {{-- Image Height & Size Sliders --}}
@@ -607,6 +624,76 @@ function handleLocalImageUpload(e) {
     reader.readAsDataURL(file);
 }
 
+// 🖼️ Load Direct Image from URL
+function loadDirectImageUrl(customUrl) {
+    const input = document.getElementById('directImageUrlInput');
+    const statusMsg = document.getElementById('directImageStatusMsg');
+    const btn = document.getElementById('loadDirectImageBtn');
+    const url = (customUrl || (input ? input.value : '')).trim();
+
+    if (!url) {
+        alert('দয়া করে একটি সঠিক ছবির লিঙ্ক (Image URL) দিন।');
+        return;
+    }
+
+    if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+    }
+    if (statusMsg) {
+        statusMsg.className = 'text-[11px] font-semibold text-indigo-600 block animate-pulse';
+        statusMsg.innerText = 'ছবি লোড করা হচ্ছে...';
+    }
+
+    const proxyUrl = '{{ route("free-photocard.proxy-image") }}?url=' + encodeURIComponent(url);
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+        currentNewsImage = img;
+        renderCanvas();
+        if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> <span>Load</span>';
+            btn.disabled = false;
+        }
+        if (statusMsg) {
+            statusMsg.className = 'text-[11px] font-semibold text-emerald-600 block';
+            statusMsg.innerText = '✅ ছবি সফলভাবে লোড হয়েছে!';
+            setTimeout(() => { if (statusMsg) statusMsg.classList.add('hidden'); }, 3000);
+        }
+    };
+    img.onerror = () => {
+        // Direct image fallback
+        const directImg = new Image();
+        directImg.crossOrigin = "anonymous";
+        directImg.onload = () => {
+            currentNewsImage = directImg;
+            renderCanvas();
+            if (btn) {
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> <span>Load</span>';
+                btn.disabled = false;
+            }
+            if (statusMsg) {
+                statusMsg.className = 'text-[11px] font-semibold text-emerald-600 block';
+                statusMsg.innerText = '✅ ছবি লোড হয়েছে!';
+                setTimeout(() => { if (statusMsg) statusMsg.classList.add('hidden'); }, 3000);
+            }
+        };
+        directImg.onerror = () => {
+            if (btn) {
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> <span>Load</span>';
+                btn.disabled = false;
+            }
+            if (statusMsg) {
+                statusMsg.className = 'text-[11px] font-semibold text-rose-600 block';
+                statusMsg.innerText = '❌ ছবিটি লোড করা সম্ভব হয়নি। লিঙ্কটি সঠিক কিনা চেক করুন।';
+            }
+        };
+        directImg.src = url;
+    };
+    img.src = proxyUrl;
+}
+
 // ⚡ Fetch news from URL with Base64 & CORS auto-handling
 function fetchNewsFromUrl() {
     const urlInput = document.getElementById('newsUrlInput');
@@ -637,7 +724,7 @@ function fetchNewsFromUrl() {
     .then(data => {
         if (data.success) {
             statusMsg.className = 'text-xs font-semibold text-emerald-600 block';
-            statusMsg.innerText = '✅ Article successfully loaded!';
+            statusMsg.innerText = data.is_direct_image ? '✅ ছবি সফলভাবে লোড হয়েছে!' : '✅ Article successfully loaded!';
             
             if (data.title) {
                 document.getElementById('headlineInput').value = data.title;

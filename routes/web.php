@@ -94,6 +94,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/admin/settings', [SettingsController::class, 'update'])->name('settings.update');
         Route::post('/admin/settings/upload-logo', [SettingsController::class, 'uploadLogo'])->name('settings.upload-logo');
         Route::post('/admin/settings/diagnostics', [SettingsController::class, 'runSystemDiagnostics'])->name('settings.diagnostics');
+        Route::post('/admin/settings/cron-action', [SettingsController::class, 'cronAction'])->name('settings.cron-action');
         
         Route::prefix('settings/test')->name('settings.')->group(function () {
             Route::post('/facebook', [SettingsController::class, 'testFacebookConnection'])->name('test-facebook');
@@ -190,6 +191,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::controller(\App\Http\Controllers\CentralFeedController::class)->prefix('central-feed')->name('central-feed.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/check-new', 'checkNewFeed')->middleware('throttle:live-polling')->name('check-new');
+        Route::post('/sync-now', 'syncNow')->name('sync-now');
         Route::post('/import/{id}', 'importNews')->name('import');
         Route::post('/bulk-import', 'bulkImport')->name('bulk-import');
     });
@@ -307,5 +309,10 @@ require __DIR__ . '/seo.php';
 
 // Load Isolated YouTube AI Automation Module Routes
 require __DIR__ . '/youtube.php';
+
+// 🔥 Dynamic Web-Cron & Health Endpoints
+Route::get('/cron/run', [\App\Http\Controllers\CronController::class, 'handleWebCron'])->name('cron.web-run');
+Route::get('/cron/health', [\App\Http\Controllers\CronController::class, 'health'])->name('cron.health');
+
 
 

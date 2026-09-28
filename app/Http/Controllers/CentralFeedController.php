@@ -77,6 +77,33 @@ class CentralFeedController extends Controller
     }
 
     /**
+     * ⚡ Trigger immediate live dynamic sync of central pool sources (On-Demand & Background)
+     */
+    public function syncNow(Request $request)
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('news:central-pool-sync', ['--limit' => 15]);
+            $output = \Illuminate\Support\Facades\Artisan::output();
+
+            $totalToday = CentralNewsPool::where('created_at', '>=', now()->startOfDay())->count();
+            $latestId = CentralNewsPool::latest('id')->value('id') ?? 0;
+
+            return response()->json([
+                'success'     => true,
+                'message'     => 'Central Live Feed synchronized successfully!',
+                'output'      => $output,
+                'total_today' => $totalToday,
+                'latest_id'   => $latestId
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sync error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Instant check & fetch for new central pool items (Live AJAX Injection).
      */
     public function checkNewFeed(Request $request)

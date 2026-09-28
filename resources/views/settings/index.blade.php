@@ -106,6 +106,106 @@
         </div>
     </form>
 
+    {{-- ⚡ DYNAMIC CRON & AUTOMATION SCHEDULER (Collapsible) --}}
+    @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings'))
+    <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-emerald-200 overflow-hidden transition-all duration-200 mb-6">
+        <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-emerald-50/50 hover:bg-emerald-50/80 transition" onclick="toggleSettingsAccordion(this)">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-base font-black">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div>
+                    <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                        Dynamic Cron & Automation Scheduler
+                        <span id="cronHealthPill" class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full {{ ($cronHealth['healthy'] ?? false) ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300' }}">
+                            {{ $cronHealth['status_label'] ?? '🟢 Active' }}
+                        </span>
+                    </h2>
+                    <p class="text-xs text-gray-500">Self-healing web-cron, 1-click Linux server installer, and real-time scheduler health</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-emerald-700 font-semibold hidden sm:inline">Scheduler Monitor</span>
+                <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
+            </div>
+        </div>
+
+        <div class="settings-accordion-body hidden p-6 border-t border-emerald-100 bg-emerald-50/20 text-sm space-y-4">
+            
+            {{-- Metrics Grid --}}
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-xs">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Health Status</span>
+                    <span id="cronMetricStatus" class="font-extrabold text-xs text-emerald-700 block mt-0.5">{{ $cronHealth['status_label'] ?? 'Active' }}</span>
+                </div>
+                <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-xs">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Last Executed</span>
+                    <span id="cronMetricLastRun" class="font-bold text-xs text-gray-800 block mt-0.5">{{ $cronHealth['last_run_at'] ?? 'Never' }}</span>
+                </div>
+                <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-xs">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Last Source</span>
+                    <span id="cronMetricSource" class="font-bold text-xs text-indigo-700 block mt-0.5 uppercase">{{ $cronHealth['last_source'] ?? 'CLI / Web' }}</span>
+                </div>
+                <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-xs">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Total Recorded Runs</span>
+                    <span id="cronMetricRuns" class="font-extrabold text-xs text-gray-900 block mt-0.5">{{ $cronHealth['total_runs'] ?? 0 }} times</span>
+                </div>
+            </div>
+
+            {{-- Action Buttons --}}
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+                <button type="button" id="btnTestRunCron" onclick="triggerCronAdminAction('test_run')" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Run Scheduler Now (Test Run)</span>
+                </button>
+                <button type="button" id="btnInstallCron" onclick="triggerCronAdminAction('install')" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                    <i class="fa-solid fa-server"></i>
+                    <span>1-Click Auto Install Server Crontab</span>
+                </button>
+                <button type="button" id="btnRefreshCron" onclick="triggerCronAdminAction('status')" class="px-3.5 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>Refresh Health</span>
+                </button>
+            </div>
+
+            {{-- Live Status Alert Box --}}
+            <div id="cronActionAlertBox" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+
+            {{-- Technical Details Box --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                {{-- Web-Cron URL --}}
+                <div class="bg-white p-4 rounded-xl border border-gray-200">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">
+                        <i class="fa-solid fa-link text-indigo-500"></i> External Web-Cron URL (UptimeRobot / Cron-Job.org):
+                    </label>
+                    <div class="flex gap-1.5">
+                        <input type="text" readonly value="{{ route('cron.web-run') }}" id="webCronUrlInput" class="w-full bg-gray-50 border border-gray-200 rounded-lg text-xs font-mono px-2.5 py-1.5 text-gray-700">
+                        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('webCronUrlInput').value);alert('Web-Cron URL Copied!');" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg text-xs shrink-0 cursor-pointer">
+                            Copy
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-1">Free ping service দিয়ে প্রতি ১ বা ৫ মিনিট পর পর এই লিঙ্কে GET রিকোয়েস্ট পাঠাতে পারেন।</p>
+                </div>
+
+                {{-- Server Crontab Command --}}
+                <div class="bg-white p-4 rounded-xl border border-gray-200">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">
+                        <i class="fa-solid fa-terminal text-emerald-600"></i> Linux Server Crontab Command:
+                    </label>
+                    <div class="flex gap-1.5">
+                        <input type="text" readonly value="* * * * * cd {{ base_path() }} && php artisan schedule:run >> /dev/null 2>&1" id="serverCrontabCommandInput" class="w-full bg-gray-50 border border-gray-200 rounded-lg text-xs font-mono px-2.5 py-1.5 text-gray-700">
+                        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('serverCrontabCommandInput').value);alert('Crontab Command Copied!');" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg text-xs shrink-0 cursor-pointer">
+                            Copy
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-1">টার্মিনালে <code>crontab -e</code> দিয়ে পেস্ট করতে পারেন অথবা উপরের <strong>1-Click Install</strong> চাপুন।</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    @endif
+
     {{-- 2. Main Settings Form Start --}}
     <form action="{{ route('settings.update') }}" method="POST" class="space-y-6">
         @csrf
@@ -2827,6 +2927,73 @@ https://yourdomain.com/api/external-news-post`
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
+    // ⚡ Dynamic Cron Action Handler
+    function triggerCronAdminAction(action) {
+        const alertBox = document.getElementById('cronActionAlertBox');
+        const testBtn = document.getElementById('btnTestRunCron');
+        const installBtn = document.getElementById('btnInstallCron');
+        const refreshBtn = document.getElementById('btnRefreshCron');
+
+        if (alertBox) {
+            alertBox.className = 'p-3 rounded-xl text-xs font-semibold bg-indigo-50 text-indigo-700 block animate-pulse border border-indigo-200';
+            alertBox.innerText = action === 'install' ? 'সার্ভার ক্রনট্যাব ইনস্টল করা হচ্ছে...' : (action === 'test_run' ? 'শিডিউলার এক্সিকিউট করা হচ্ছে...' : 'স্ট্যাটাস আপডেট করা হচ্ছে...');
+            alertBox.classList.remove('hidden');
+        }
+
+        if (testBtn) testBtn.disabled = true;
+        if (installBtn) installBtn.disabled = true;
+        if (refreshBtn) refreshBtn.disabled = true;
+
+        fetch('{{ route("settings.cron-action") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ action: action })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (testBtn) testBtn.disabled = false;
+            if (installBtn) installBtn.disabled = false;
+            if (refreshBtn) refreshBtn.disabled = false;
+
+            if (data.success) {
+                if (data.health) {
+                    const h = data.health;
+                    if (document.getElementById('cronMetricStatus')) document.getElementById('cronMetricStatus').innerText = h.status_label;
+                    if (document.getElementById('cronMetricLastRun')) document.getElementById('cronMetricLastRun').innerText = h.last_run_at;
+                    if (document.getElementById('cronMetricSource')) document.getElementById('cronMetricSource').innerText = (h.last_source || '').toUpperCase();
+                    if (document.getElementById('cronMetricRuns')) document.getElementById('cronMetricRuns').innerText = h.total_runs + ' times';
+                    if (document.getElementById('cronHealthPill')) {
+                        const pill = document.getElementById('cronHealthPill');
+                        pill.innerText = h.status_label;
+                        pill.className = 'text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ' + (h.healthy ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300');
+                    }
+                }
+
+                if (alertBox) {
+                    alertBox.className = 'p-3 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 block';
+                    alertBox.innerText = '✅ ' + (data.message || 'স্ট্যাটাস সফলভাবে আপডেট হয়েছে!');
+                    setTimeout(() => { if(alertBox) alertBox.classList.add('hidden'); }, 6000);
+                }
+            } else {
+                if (alertBox) {
+                    alertBox.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 block';
+                    alertBox.innerText = '❌ ' + (data.message || 'কিছু সমস্যা হয়েছে।');
+                }
+            }
+        })
+        .catch(err => {
+            if (testBtn) testBtn.disabled = false;
+            if (installBtn) installBtn.disabled = false;
+            if (refreshBtn) refreshBtn.disabled = false;
+            if (alertBox) {
+                alertBox.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 block';
+                alertBox.innerText = '❌ নেটওয়ার্ক ত্রুটি: ' + err.message;
+            }
+        });
     }
 </script>
 
