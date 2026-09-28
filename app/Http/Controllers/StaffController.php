@@ -180,7 +180,7 @@ class StaffController extends Controller
                 'role' => 'staff',
                 'parent_id' => $admin->id,
                 'is_active' => true,
-                'permissions' => $adminPermissions, // ডিফল্টভাবে অ্যাডমিনের পারমিশন
+                'permissions' => [], // ডিফল্টভাবে কোনো পারমিশন থাকবে না, অ্যাডমিনকে ম্যানুয়ালি পারমিশন দিতে হবে
                 'department_id' => $request->department_id,
                 'designation_id' => $request->designation_id,
                 'joining_date' => $request->joining_date,

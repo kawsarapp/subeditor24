@@ -107,7 +107,7 @@
     </form>
 
     {{-- ⚡ DYNAMIC CRON & AUTOMATION SCHEDULER (Collapsible) --}}
-    @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings'))
+    @if(auth()->user()->role === 'super_admin')
     <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-emerald-200 overflow-hidden transition-all duration-200 mb-6">
         <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-emerald-50/50 hover:bg-emerald-50/80 transition" onclick="toggleSettingsAccordion(this)">
             <div class="flex items-center gap-3">
@@ -1551,6 +1551,7 @@
         </div>
         @endif
 
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_social'))
         {{-- Telegram Notifications (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-white hover:bg-gray-50 transition" onclick="toggleSettingsAccordion(this)">
@@ -1579,6 +1580,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <!-- Sticky or Bottom Save Bar -->
         <div class="flex justify-end pt-4 sticky bottom-4 z-20">
