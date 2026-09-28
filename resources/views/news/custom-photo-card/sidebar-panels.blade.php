@@ -3,11 +3,7 @@
     
     {{-- NAVIGATION TABS --}}
     <div class="flex border-b border-slate-200 bg-slate-50/80 p-1.5 gap-1 shrink-0 overflow-x-auto no-scrollbar">
-        <button type="button" onclick="switchStudioTab('frames')" id="tab-btn-frames" class="studio-tab-btn active flex-1 py-2 px-1.5 rounded-xl text-[11px] font-black transition-all flex flex-col items-center gap-1 text-indigo-600 bg-white shadow-sm">
-            <span class="text-base">🖼️</span>
-            <span>Frames</span>
-        </button>
-        <button type="button" onclick="switchStudioTab('quote')" id="tab-btn-quote" class="studio-tab-btn flex-1 py-2 px-1.5 rounded-xl text-[11px] font-black transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-indigo-600 hover:bg-white/60">
+        <button type="button" onclick="switchStudioTab('quote')" id="tab-btn-quote" class="studio-tab-btn active flex-1 py-2 px-1.5 rounded-xl text-[11px] font-black transition-all flex flex-col items-center gap-1 text-indigo-600 bg-white shadow-sm">
             <span class="text-base">🎙️</span>
             <span>Quote Card</span>
         </button>
@@ -39,7 +35,7 @@
         {{-- ========================================================= --}}
         {{-- 🎙️ SMART STATEMENT / QUOTE CARD TAB --}}
         {{-- ========================================================= --}}
-        <div id="panel-quote" class="studio-panel space-y-4 hidden">
+        <div id="panel-quote" class="studio-panel space-y-4">
             <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-4 rounded-2xl text-white shadow-lg space-y-1.5">
                 <h3 class="text-xs font-black flex items-center gap-1.5">
                     <i class="fa-solid fa-quote-left"></i> 1-Click Quote & Statement Card Generator
@@ -81,18 +77,19 @@
             <div>
                 <label class="text-[10px] font-bold text-slate-500 block mb-1">🔤 Quote Typography (Font Family)</label>
                 <select id="quote-card-font" onchange="onQuoteFieldChange('font', this.value)" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none bg-slate-50 focus:bg-white focus:border-indigo-500">
-                    <option value="'SolaimanLipi'" selected>SolaimanLipi </option>
-                    <option value="'Hind Siliguri', sans-serif">Hind Siliguri </option>
-                    <option value="'Noto Sans Bengali', sans-serif">Noto Sans Bengali</option>
-                    <option value="'Baloo Da 2', cursive">Baloo Da 2</option>
-                    <option value="'Anek Bangla', sans-serif">Anek Bangla</option>
-                    <option value="'Li Alinur Banglaborno'">Li Alinur Banglaborno</option>
-                    <option value="'Tiro Bangla', serif">Tiro Bangla</option>
-                    <option value="'Galada', cursive">Galada</option>
+                    <option value="SolaimanLipi" selected>SolaimanLipi</option>
+                    <option value="Hind Siliguri">Hind Siliguri</option>
+                    <option value="Noto Sans Bengali">Noto Sans Bengali</option>
+                    <option value="Noto Serif Bengali">Noto Serif Bengali</option>
+                    <option value="Baloo Da 2">Baloo Da 2</option>
+                    <option value="Anek Bangla">Anek Bangla</option>
+                    <option value="Li Alinur Banglaborno">Li Alinur Banglaborno</option>
+                    <option value="Tiro Bangla">Tiro Bangla</option>
+                    <option value="Galada">Galada</option>
                     @if(isset($dynamicMediaFonts) && count($dynamicMediaFonts) > 0)
                         <optgroup label="📂 Media Library Fonts">
                             @foreach($dynamicMediaFonts as $dmf)
-                                <option value="'{{ $dmf['family'] }}'">{{ $dmf['family'] }}</option>
+                                <option value="{{ $dmf['family'] }}">{{ $dmf['family'] }}</option>
                             @endforeach
                         </optgroup>
                     @endif
@@ -122,9 +119,9 @@
                     <div>
                         <div class="flex justify-between text-[10px] font-bold text-slate-600 mb-1">
                             <span>↕️ Line Height</span>
-                            <span id="quote-line-height-val" class="text-indigo-600 font-black text-[10px]">1.2</span>
+                            <span id="quote-line-height-val" class="text-indigo-600 font-black text-[10px]">1.35</span>
                         </div>
-                        <input type="range" id="quote-card-line-height" min="1.0" max="1.8" step="0.05" value="1.2" 
+                        <input type="range" id="quote-card-line-height" min="1.1" max="2.0" step="0.05" value="1.35" 
                             oninput="document.getElementById('quote-line-height-val').innerText = this.value; onQuoteFieldChange('lineHeight', this.value)" 
                             class="w-full accent-indigo-600">
                     </div>
@@ -270,6 +267,29 @@
                 </div>
             </div>
 
+            {{-- 📐 Canvas Dimensions Preset for Quote Cards --}}
+            <div class="border-t border-slate-100 pt-3 space-y-2">
+                <label class="text-[10px] font-black text-slate-700 uppercase tracking-wider block">📐 Card Size & Aspect Ratio</label>
+                <div class="grid grid-cols-2 gap-1.5">
+                    <button type="button" onclick="setCanvasPreset(1080, 1080)" class="flex flex-col items-start p-2 rounded-xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/30 transition text-left">
+                        <span class="text-xs font-bold text-slate-800">1:1 Square</span>
+                        <span class="text-[9px] text-slate-400">1080 × 1080 px (FB/Insta)</span>
+                    </button>
+                    <button type="button" onclick="setCanvasPreset(1200, 675)" class="flex flex-col items-start p-2 rounded-xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/30 transition text-left">
+                        <span class="text-xs font-bold text-slate-800">16:9 Landscape</span>
+                        <span class="text-[9px] text-slate-400">1200 × 675 px (News/YT)</span>
+                    </button>
+                    <button type="button" onclick="setCanvasPreset(1080, 1350)" class="flex flex-col items-start p-2 rounded-xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/30 transition text-left">
+                        <span class="text-xs font-bold text-slate-800">4:5 Portrait</span>
+                        <span class="text-[9px] text-slate-400">1080 × 1350 px (Feed)</span>
+                    </button>
+                    <button type="button" onclick="setCanvasPreset(1080, 1920)" class="flex flex-col items-start p-2 rounded-xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/30 transition text-left">
+                        <span class="text-xs font-bold text-slate-800">9:16 Story / Reel</span>
+                        <span class="text-[9px] text-slate-400">1080 × 1920 px (Vertical)</span>
+                    </button>
+                </div>
+            </div>
+
             {{-- Submit Action Button --}}
             <div class="pt-2">
                 <button type="button" onclick="submitQuoteCardForm()" class="w-full py-3 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-black text-xs rounded-xl shadow-lg shadow-indigo-500/25 transition transform active:scale-95 flex items-center justify-center gap-2">
@@ -277,144 +297,6 @@
                     <span>✨ Generate Quote Card in 1-Click</span>
                 </button>
             </div>
-        </div>
-
-        {{-- ========================================================= --}}
-        {{-- 1. FRAMES & TEMPLATES TAB --}}
-        {{-- ========================================================= --}}
-        <div id="panel-frames" class="studio-panel space-y-5">
-            
-            {{-- Save Customized Design as Template Button --}}
-            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-3.5 rounded-2xl text-white shadow-md flex items-center justify-between">
-                <div>
-                    <h4 class="text-xs font-black flex items-center gap-1.5">
-                        <i class="fa-solid fa-bookmark"></i> Save Custom Template
-                    </h4>
-                    <p class="text-[10px] text-white/80 mt-0.5">Save current layout for future reuse</p>
-                </div>
-                <button type="button" onclick="openSaveTemplateModal()" class="px-3 py-1.5 bg-white text-emerald-800 font-black text-xs rounded-xl shadow hover:bg-emerald-50 transition transform active:scale-95">
-                    + Save
-                </button>
-            </div>
-
-            {{-- Saved Custom Templates Section --}}
-            @if(isset($dbTemplates) && count($dbTemplates) > 0)
-            <div class="border-t border-slate-100 pt-3">
-                <div class="flex items-center justify-between mb-2">
-                    <label class="text-xs font-black text-slate-700 flex items-center gap-1.5">
-                        <span>⭐ Saved Templates</span>
-                        <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded-md">{{ count($dbTemplates) }}</span>
-                    </label>
-                </div>
-                <div id="saved-templates-container" class="grid grid-cols-2 gap-2.5 max-h-[220px] overflow-y-auto custom-scrollbar p-1">
-                    @foreach($dbTemplates as $tpl)
-                        <div class="saved-template-card cursor-pointer border border-slate-200 rounded-xl p-1.5 bg-slate-50 hover:bg-white hover:border-emerald-500 hover:shadow-md transition-all group relative flex flex-col items-center">
-                            <div onclick="window.customStudio.loadCustomTemplate({{ json_encode($tpl->layout_data) }}, '{{ $tpl->frame_url }}')" 
-                                class="w-full h-20 rounded-lg overflow-hidden bg-slate-200 flex items-center justify-center p-1 relative">
-                                <img src="{{ $tpl->thumbnail_url ?: ($tpl->frame_url ?: asset('placeholder.png')) }}" alt="{{ $tpl->name }}" loading="lazy" class="w-full h-full object-contain">
-                            </div>
-                            <div class="flex items-center justify-between w-full mt-1.5 px-1">
-                                <span class="text-[10px] font-bold text-slate-700 truncate">{{ $tpl->name }}</span>
-                                <button type="button" onclick="window.customStudio.deleteCustomTemplate({{ $tpl->id }}, this)" class="text-red-400 hover:text-red-600 p-0.5 text-xs" title="Delete">🗑️</button>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
-            {{-- Custom PNG Frame Upload --}}
-            <div class="border-t border-slate-100 pt-3">
-                <label class="text-xs font-black text-slate-700 flex items-center justify-between mb-2">
-                    <span>📤 Upload Custom PNG Frame</span>
-                    <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Auto-Resize Size</span>
-                </label>
-                <label class="cursor-pointer border-2 border-dashed border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 hover:border-indigo-400 p-3.5 rounded-2xl text-center font-black text-xs text-indigo-700 transition-all flex flex-col items-center justify-center gap-1.5 group shadow-sm">
-                    <input type="file" class="hidden" accept="image/png,image/webp" onchange="uploadCustomFrameFile(this)">
-                    <div class="w-9 h-9 rounded-xl bg-white shadow flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-cloud-arrow-up text-base"></i>
-                    </div>
-                    <span>Select Frame (PNG)</span>
-                    <span class="text-[10px] text-slate-400 font-normal">Canvas automatically conforms to original frame dimensions</span>
-                </label>
-            </div>
-
-            {{-- Preset Aspect Ratios --}}
-            <div class="border-t border-slate-100 pt-3">
-                <label class="text-xs font-black text-slate-700 block mb-2">📐 Canvas Dimensions Preset</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button type="button" onclick="setCanvasPreset(1200, 675)" class="flex flex-col items-start p-2.5 rounded-xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/30 transition text-left">
-                        <span class="text-xs font-bold text-slate-800">16:9 Landscape</span>
-                        <span class="text-[10px] text-slate-400">1200 × 675 px (News/YT)</span>
-                    </button>
-                    <button type="button" onclick="setCanvasPreset(1080, 1080)" class="flex flex-col items-start p-2.5 rounded-xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/30 transition text-left">
-                        <span class="text-xs font-bold text-slate-800">1:1 Square Post</span>
-                        <span class="text-[10px] text-slate-400">1080 × 1080 px (FB/Insta)</span>
-                    </button>
-                    <button type="button" onclick="setCanvasPreset(1080, 1350)" class="flex flex-col items-start p-2.5 rounded-xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/30 transition text-left">
-                        <span class="text-xs font-bold text-slate-800">4:5 Portrait Feed</span>
-                        <span class="text-[10px] text-slate-400">1080 × 1350 px</span>
-                    </button>
-                    <button type="button" onclick="setCanvasPreset(1080, 1920)" class="flex flex-col items-start p-2.5 rounded-xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/30 transition text-left">
-                        <span class="text-xs font-bold text-slate-800">9:16 Story / Reel</span>
-                        <span class="text-[10px] text-slate-400">1080 × 1920 px (Vertical)</span>
-                    </button>
-                </div>
-            </div>
-
-            {{-- Custom Width & Height Inputs --}}
-            <div class="border-t border-slate-100 pt-3">
-                <div class="flex items-center gap-2">
-                    <div class="flex-1">
-                        <label class="text-[10px] font-bold text-slate-500 block mb-1">Width (px)</label>
-                        <input type="number" id="custom-width-input" value="1080" class="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
-                    </div>
-                    <div class="flex-1">
-                        <label class="text-[10px] font-bold text-slate-500 block mb-1">Height (px)</label>
-                        <input type="number" id="custom-height-input" value="1080" class="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500">
-                    </div>
-                    <button type="button" onclick="applyCustomDimensions()" class="mt-4 px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition">
-                        Set
-                    </button>
-                </div>
-            </div>
-
-            {{-- Available Admin Media Frames --}}
-            <div class="border-t border-slate-100 pt-3">
-                <div class="flex items-center justify-between mb-2">
-                    <label class="text-xs font-black text-slate-700 flex items-center gap-1.5">
-                        <span>🖼️ Media Frame Library</span>
-                        <span class="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded-md">{{ count($frames) }}</span>
-                    </label>
-                    <button type="button" onclick="window.customStudio.removeFrame()" class="text-[10px] font-bold text-red-500 hover:text-red-700 hover:underline">
-                        Remove Frame
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2.5 max-h-[260px] overflow-y-auto custom-scrollbar p-1">
-                    @forelse($frames as $f)
-                        <div onclick="window.customStudio.applyFrame('{{ $f['url'] }}')" 
-                            class="cursor-pointer border border-slate-200 rounded-xl p-1.5 bg-slate-50 hover:bg-white hover:border-indigo-500 hover:shadow-md transition-all group flex flex-col items-center">
-                            <div class="w-full h-20 rounded-lg overflow-hidden bg-slate-200 flex items-center justify-center p-1 relative">
-                                <img src="{{ $f['url'] }}" alt="{{ $f['name'] }}" loading="lazy" class="w-full h-full object-contain">
-                                @if($f['width'] && $f['height'])
-                                    <span class="absolute bottom-1 right-1 bg-black/70 text-white text-[8px] font-bold px-1 py-0.5 rounded backdrop-blur-xs">
-                                        {{ $f['width'] }}×{{ $f['height'] }}
-                                    </span>
-                                @endif
-                            </div>
-                            <span class="text-[10px] font-bold text-slate-600 group-hover:text-indigo-600 truncate w-full text-center mt-1.5">
-                                {{ $f['name'] }}
-                            </span>
-                        </div>
-                    @empty
-                        <div class="col-span-2 text-center py-6 text-slate-400 text-xs">
-                            No frames found. Upload a custom PNG frame above.
-                        </div>
-                    @endforelse
-                </div>
-            </div>
-
         </div>
 
         {{-- ========================================================= --}}
@@ -653,28 +535,30 @@
                 <label class="text-xs font-black text-slate-700 block mb-1.5">🅰️ Typography & Font Selection</label>
                 <select id="studio-font-select" onchange="changeActiveFont(this.value)" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 bg-slate-50">
                     <optgroup label="🔥 Li Series (Stylish)">
-                        <option value="'Li Alinur Banglaborno'">Li Alinur Banglaborno</option>
-                        <option value="'Li Alinur Kuyasha'">Li Alinur Kuyasha</option>
-                        <option value="'Li Alinur Sangbadpatra'">Li Alinur Sangbadpatra</option>
-                        <option value="'Li Alinur Tumatul'">Li Alinur Tumatul</option>
-                        <option value="'Li MA Hai'">Li M.A. Hai</option>
-                        <option value="'Li Purno Pran'">Li Purno Pran</option>
-                        <option value="'Li Sabbir Sorolota'">Li Sabbir Sorolota</option>
-                        <option value="'Li Shohid Abu Sayed'">Li Shohid Abu Sayed</option>
-                        <option value="'Li Shadhinata'">Li Shadhinata</option>
+                        <option value="Li Alinur Banglaborno">Li Alinur Banglaborno</option>
+                        <option value="Li Alinur Kuyasha">Li Alinur Kuyasha</option>
+                        <option value="Li Alinur Sangbadpatra">Li Alinur Sangbadpatra</option>
+                        <option value="Li Alinur Tumatul">Li Alinur Tumatul</option>
+                        <option value="Li MA Hai">Li M.A. Hai</option>
+                        <option value="Li Purno Pran">Li Purno Pran</option>
+                        <option value="Li Sabbir Sorolota">Li Sabbir Sorolota</option>
+                        <option value="Li Shohid Abu Sayed">Li Shohid Abu Sayed</option>
+                        <option value="Li Shadhinata">Li Shadhinata</option>
                     </optgroup>
                     <optgroup label="📰 Popular Bangla">
-                        <option value="'SolaimanLipi'" selected>SolaimanLipi</option>
-                        <option value="'Hind Siliguri', sans-serif">Hind Siliguri</option>
-                        <option value="'Noto Sans Bengali', sans-serif">Noto Sans Bengali</option>
-                        <option value="'Noto Serif Bengali', serif">Noto Serif Bengali</option>
-                        <option value="'Anek Bangla', sans-serif">Anek Bangla</option>
-                        <option value="'Kalpurush', sans-serif">Kalpurush</option>
+                        <option value="SolaimanLipi" selected>SolaimanLipi</option>
+                        <option value="Hind Siliguri">Hind Siliguri</option>
+                        <option value="Noto Sans Bengali">Noto Sans Bengali</option>
+                        <option value="Noto Serif Bengali">Noto Serif Bengali</option>
+                        <option value="Baloo Da 2">Baloo Da 2</option>
+                        <option value="Anek Bangla">Anek Bangla</option>
+                        <option value="Tiro Bangla">Tiro Bangla</option>
+                        <option value="Galada">Galada</option>
                     </optgroup>
                     @if(isset($dynamicMediaFonts) && count($dynamicMediaFonts) > 0)
                         <optgroup label="📂 Media Library Fonts">
                             @foreach($dynamicMediaFonts as $dmf)
-                                <option value="'{{ $dmf['family'] }}'">{{ $dmf['family'] }}</option>
+                                <option value="{{ $dmf['family'] }}">{{ $dmf['family'] }}</option>
                             @endforeach
                         </optgroup>
                     @endif

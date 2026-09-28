@@ -38,6 +38,19 @@
         }
 
         /**
+         * Clean font family name from quotes, commas, or CSS fallback keywords
+         */
+        cleanFontFamily(font) {
+            if (!font) return 'SolaimanLipi';
+            let cleaned = font.toString().trim();
+            if (cleaned.includes(',')) {
+                cleaned = cleaned.split(',')[0].trim();
+            }
+            cleaned = cleaned.replace(/^['"]+|['"]+$/g, '').trim();
+            return cleaned || 'SolaimanLipi';
+        }
+
+        /**
          * Initialize the Fabric Canvas and setup event listeners
          */
         init() {
@@ -910,7 +923,7 @@
                 defaultColor = '#ffffff';
             }
 
-            const currentFont = document.getElementById('studio-font-select')?.value || 'SolaimanLipi';
+            const currentFont = this.cleanFontFamily(document.getElementById('studio-font-select')?.value || 'SolaimanLipi');
 
             const defaultOptions = {
                 left: this.canvas.getWidth() / 2,
@@ -920,10 +933,12 @@
                 fontFamily: currentFont,
                 fontSize: 48,
                 fill: defaultColor,
+                lineHeight: 1.4,
                 textAlign: 'center',
                 editable: true,
                 width: Math.min(800, this.canvas.getWidth() * 0.85),
-                breakWords: true,
+                breakWords: false,
+                splitByGrapheme: false,
                 customName: '💬 ' + (text.length > 15 ? text.substring(0, 15) + '...' : text),
             };
 
@@ -1074,7 +1089,12 @@
             const reader = new FileReader();
 
             reader.onload = (e) => {
-                this.addImageFromUrl(e.target.result);
+                const active = this.canvas.getActiveObject();
+                if (active && active.type === 'image') {
+                    this.replaceImageObject(active, e.target.result);
+                } else {
+                    this.addImageFromUrl(e.target.result);
+                }
                 fileInput.value = '';
             };
 
@@ -1091,15 +1111,22 @@
             const canvasW = this.canvas.getWidth();
             const canvasH = this.canvas.getHeight();
 
-            let existingImg = this.canvas.getObjects().find(o => o.isQuotePortrait || (o.customName && o.customName.includes('👤')));
-            if (existingImg) {
-                this.canvas.remove(existingImg);
+            let existingImg = this.canvas.getActiveObject();
+            if (!existingImg || existingImg.type !== 'image') {
+                existingImg = this.canvas.getObjects().find(o => o.isQuotePortrait || (o.customName && (o.customName.includes('👤') || o.customName.includes('বক্তা'))));
             }
 
             const tempImg = new Image();
             tempImg.crossOrigin = 'anonymous';
             tempImg.onload = () => {
                 const trimmed = this.trimTransparentImage(tempImg);
+
+                // If portrait already exists on canvas (e.g. in saved template), replace in-place!
+                if (existingImg) {
+                    this.replaceImageObject(existingImg, trimmed.dataUrl);
+                    return;
+                }
+
                 fabric.Image.fromURL(trimmed.dataUrl, (img) => {
                     const maxW = canvasW * 0.44;
                     const maxH = canvasH * 0.85;
@@ -1243,9 +1270,9 @@
             const portraitImg = this.canvas.getObjects().find(o => o.isQuotePortrait || (o.customName && o.customName.includes('👤')));
 
             let fontSize = fontConfig.fontSize || 44;
-            const fontFamily = fontConfig.fontFamily || 'SolaimanLipi';
+            const fontFamily = this.cleanFontFamily(fontConfig.fontFamily || 'SolaimanLipi');
             const fontWeight = fontConfig.fontWeight || 'bold';
-            const lineHeightRatio = fontConfig.lineHeightRatio || 1.2;
+            const lineHeightRatio = fontConfig.lineHeightRatio || 1.35;
             let lineHeightPx = Math.round(fontSize * lineHeightRatio);
 
             const mCanvas = document.createElement('canvas');
@@ -1259,7 +1286,7 @@
             const maxAttempts = allowAutoShrink ? 10 : 1;
 
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                mCtx.font = `${fontWeight} ${fontSize}px ${fontFamily}, SolaimanLipi, sans-serif`;
+                mCtx.font = `${fontWeight} ${fontSize}px "${fontFamily}", SolaimanLipi, sans-serif`;
                 lineHeightPx = Math.round(fontSize * lineHeightRatio);
                 lines = [];
                 let wordIdx = 0;
@@ -1364,7 +1391,7 @@
             const alignMode = document.getElementById('quote-card-align')?.value || 'star-news';
             const isRightAlign = (alignMode === 'right' || alignMode === 'star-news');
             const isCenterAlign = (alignMode === 'center');
-            const fontVal = document.getElementById('quote-card-font')?.value || (quoteObj.fontFamily || 'SolaimanLipi');
+            const fontVal = this.cleanFontFamily(document.getElementById('quote-card-font')?.value || (quoteObj.fontFamily || 'SolaimanLipi'));
 
             quoteObj.setCoords();
             const qb = quoteObj.getBoundingRect();
@@ -1397,7 +1424,7 @@
             } else {
                 const mCanvas = document.createElement('canvas');
                 const mCtx = mCanvas.getContext('2d');
-                mCtx.font = `bold ${nameFontSize}px ${fontVal}, SolaimanLipi, sans-serif`;
+                mCtx.font = `bold ${nameFontSize}px "${fontVal}", SolaimanLipi, sans-serif`;
                 nameActualTextW = mCtx.measureText(rawNameText).width || 120;
             }
             let nameH = 28;
@@ -1534,7 +1561,7 @@
             const wrapMargin = parseInt(document.getElementById('quote-card-wrap-margin')?.value) || 25;
             const alignMode = document.getElementById('quote-card-align')?.value || 'star-news';
             const position = document.getElementById('quote-card-pos')?.value || 'left';
-            const fontVal = document.getElementById('quote-card-font')?.value || (quoteBox ? quoteBox.fontFamily : 'SolaimanLipi');
+            const fontVal = this.cleanFontFamily(document.getElementById('quote-card-font')?.value || (quoteBox ? quoteBox.fontFamily : 'SolaimanLipi'));
             let rawQuoteText = document.getElementById('quote-card-text')?.value || (quoteBox ? (quoteBox.quoteRawText || quoteBox.text) : '') || 'এখানে আপনার উক্তি লিখুন...';
             rawQuoteText = this.formatBengaliQuoteText(rawQuoteText);
 
@@ -1545,7 +1572,7 @@
 
             // 1. Initial Font Sizing & Typography Controls
             const customFontSize = this._quoteCustomFontSize || (document.getElementById('quote-card-font-size') ? parseInt(document.getElementById('quote-card-font-size').value) : null);
-            const customLineHeight = this._quoteCustomLineHeight || (document.getElementById('quote-card-line-height') ? parseFloat(document.getElementById('quote-card-line-height').value) : 1.2);
+            const customLineHeight = this._quoteCustomLineHeight || (document.getElementById('quote-card-line-height') ? parseFloat(document.getElementById('quote-card-line-height').value) : 1.35);
             const customFontWeight = this._quoteCustomFontWeight || (document.getElementById('quote-card-font-weight') ? document.getElementById('quote-card-font-weight').value : 'bold');
 
             let initialFontSize = customFontSize || Math.round(canvasH * 0.044);
@@ -1606,6 +1633,7 @@
                     lineHeight: customLineHeight,
                     textAlign: textAlignVal,
                     breakWords: false,
+                    splitByGrapheme: false,
                     lockRotation: true,
                 });
                 quoteBox.initDimensions();
@@ -1623,6 +1651,7 @@
                     lineHeight: customLineHeight,
                     textAlign: textAlignVal,
                     breakWords: false,
+                    splitByGrapheme: false,
                     selectable: true,
                     isQuoteText: true,
                     quoteRawText: rawQuoteText,
@@ -1654,7 +1683,7 @@
                 const quoteVal = document.getElementById('quote-card-text')?.value || 'এখানে আপনার উক্তি লিখুন...';
                 const nameVal = document.getElementById('quote-card-name')?.value || 'বক্তার নাম';
                 const desigVal = document.getElementById('quote-card-desig')?.value || '';
-                const fontVal = document.getElementById('quote-card-font')?.value || "'SolaimanLipi'";
+                const fontVal = this.cleanFontFamily(document.getElementById('quote-card-font')?.value || 'SolaimanLipi');
                 const themeVal = document.getElementById('quote-card-theme')?.value || 'soft-sky';
                 const posVal = document.getElementById('quote-card-pos')?.value || 'left';
                 const flipVal = document.getElementById('quote-card-flip-check')?.checked === true;
@@ -1680,7 +1709,7 @@
                 this.recalculateQuoteCardLayout();
                 return;
             } else if (field === 'lineHeight') {
-                this._quoteCustomLineHeight = parseFloat(value) || 1.2;
+                this._quoteCustomLineHeight = parseFloat(value) || 1.35;
                 this.recalculateQuoteCardLayout();
                 return;
             } else if (field === 'fontWeight') {
@@ -1707,8 +1736,9 @@
                         top: (nameObj ? nameObj.top + 35 : 200),
                         width: quoteBox ? quoteBox.width - 25 : 300,
                         fontSize: 18,
-                        fontFamily: document.getElementById('quote-card-font')?.value || 'SolaimanLipi',
+                        fontFamily: this.cleanFontFamily(document.getElementById('quote-card-font')?.value || 'SolaimanLipi'),
                         fontWeight: 'normal',
+                        lineHeight: 1.35,
                         fill: '#64748b',
                         selectable: true,
                         isQuoteDesig: true,
@@ -1717,9 +1747,11 @@
                     this.canvas.add(newDesig);
                 }
             } else if (field === 'font') {
-                if (quoteBox) quoteBox.fontFamily = value;
-                if (nameObj) nameObj.set('fontFamily', value);
-                if (desigObj) desigObj.set('fontFamily', value);
+                const cleanFont = this.cleanFontFamily(value);
+                if (quoteBox) quoteBox.set('fontFamily', cleanFont);
+                if (nameObj) nameObj.set('fontFamily', cleanFont);
+                if (desigObj) desigObj.set('fontFamily', cleanFont);
+                this.canvas.renderAll();
             } else if (field === 'flip' && portraitImg) {
                 portraitImg.set('flipX', value);
             } else if (field === 'position') {
@@ -2428,7 +2460,7 @@
                     this.canvas.add(quoteMark);
 
                     // 6. Add Quote Textbox
-                    const quoteFont = params.fontFamily || 'SolaimanLipi';
+                    const quoteFont = this.cleanFontFamily(params.fontFamily || 'SolaimanLipi');
                     const quoteTextbox = new fabric.Textbox(quote, {
                         left: textLeft,
                         top: quoteMarkTop + Math.round(canvasH * 0.065) + 14,
@@ -2439,7 +2471,8 @@
                         fill: themeConfig.quoteTextColor,
                         lineHeight: 1.4,
                         textAlign: 'left',
-                        breakWords: true,
+                        breakWords: false,
+                        splitByGrapheme: false,
                         selectable: true,
                         isQuoteText: true,
                         customName: '💬 মূল উক্তি',
@@ -2470,6 +2503,9 @@
                         fontFamily: quoteFont,
                         fontWeight: 'bold',
                         fill: themeConfig.nameTextColor,
+                        lineHeight: 1.35,
+                        breakWords: false,
+                        splitByGrapheme: false,
                         selectable: true,
                         isQuoteName: true,
                         customName: '🏷️ ' + name,
@@ -2486,6 +2522,9 @@
                             fontFamily: quoteFont,
                             fontWeight: 'normal',
                             fill: themeConfig.desigTextColor,
+                            lineHeight: 1.35,
+                            breakWords: false,
+                            splitByGrapheme: false,
                             selectable: true,
                             isQuoteDesig: true,
                             customName: '📋 ' + designation,
@@ -2743,7 +2782,10 @@
             // 1. Text Properties Sync
             if (active.type === 'i-text' || active.type === 'textbox' || active.type === 'text') {
                 const fontSelect = document.getElementById('studio-font-select');
-                if (fontSelect && active.fontFamily) fontSelect.value = active.fontFamily;
+                const floatFontSelect = document.getElementById('floating-font-select');
+                const cleanFont = this.cleanFontFamily(active.fontFamily);
+                if (fontSelect && cleanFont) fontSelect.value = cleanFont;
+                if (floatFontSelect && cleanFont) floatFontSelect.value = cleanFont;
 
                 const sizeSlider = document.getElementById('text-font-size-slider');
                 const sizeInput = document.getElementById('text-font-size-input');
@@ -3081,36 +3123,56 @@
 
             this.showLoader("ছবি পরিবর্তন (Replace) হচ্ছে...");
 
+            const prevTargetWidth = (targetImgObj.width || 100) * (targetImgObj.scaleX || 1);
+            const prevTargetHeight = (targetImgObj.height || 100) * (targetImgObj.scaleY || 1);
+
+            const isPortrait = targetImgObj.isQuotePortrait || 
+                               targetImgObj.originY === 'bottom' || 
+                               (targetImgObj.customName && (targetImgObj.customName.includes('বক্তা') || targetImgObj.customName.includes('Portrait') || targetImgObj.customName.includes('ছবি')));
+
+            const isBg = targetImgObj.isBackground || 
+                         (targetImgObj.customName && (targetImgObj.customName.includes('ব্যাকগ্রাউন্ড') || targetImgObj.customName.includes('Background')));
+
             const prevProps = {
                 left: targetImgObj.left,
                 top: targetImgObj.top,
-                scaleX: targetImgObj.scaleX,
-                scaleY: targetImgObj.scaleY,
-                angle: targetImgObj.angle,
-                flipX: targetImgObj.flipX,
-                flipY: targetImgObj.flipY,
+                angle: targetImgObj.angle || 0,
+                flipX: targetImgObj.flipX || false,
+                flipY: targetImgObj.flipY || false,
                 originX: targetImgObj.originX || 'center',
                 originY: targetImgObj.originY || 'center',
                 customName: targetImgObj.customName || 'ছবি',
-                isQuotePortrait: targetImgObj.isQuotePortrait || false,
+                isQuotePortrait: isPortrait,
+                isBackground: isBg,
                 isHeadline: targetImgObj.isHeadline || false,
+                shadow: targetImgObj.shadow || null,
             };
 
             const zIndex = this.canvas.getObjects().indexOf(targetImgObj);
 
             fabric.Image.fromURL(newSourceUrl, (newImg) => {
-                // Adjust scale to match previous target bounding size nicely if aspect ratio differs
-                const prevTargetWidth = (targetImgObj.width || 100) * (targetImgObj.scaleX || 1);
-                const prevTargetHeight = (targetImgObj.height || 100) * (targetImgObj.scaleY || 1);
+                let newScaleX, newScaleY;
 
-                const newScale = Math.min(
-                    prevTargetWidth / newImg.width,
-                    prevTargetHeight / newImg.height
-                );
+                if (isPortrait) {
+                    // Speaker Portrait: Match previous target height exactly so it doesn't shrink
+                    const scale = prevTargetHeight / newImg.height;
+                    newScaleX = scale;
+                    newScaleY = scale;
+                } else if (isBg) {
+                    // Background Image: Cover previous bounding space
+                    const scale = Math.max(prevTargetWidth / newImg.width, prevTargetHeight / newImg.height);
+                    newScaleX = scale;
+                    newScaleY = scale;
+                } else {
+                    // Standard Object: Proportionately match bounding box
+                    const scale = Math.min(prevTargetWidth / newImg.width, prevTargetHeight / newImg.height) || (prevTargetHeight / newImg.height);
+                    newScaleX = scale;
+                    newScaleY = scale;
+                }
 
                 newImg.set(Object.assign({}, prevProps, {
-                    scaleX: newScale || prevProps.scaleX,
-                    scaleY: newScale || prevProps.scaleY,
+                    scaleX: newScaleX,
+                    scaleY: newScaleY,
                     cornerColor: '#ffffff',
                     cornerStrokeColor: '#4f46e5',
                     borderColor: '#6366f1',
@@ -3119,15 +3181,20 @@
                     padding: 8,
                 }));
 
+                // Keep bottom alignment anchored if portrait
+                if (isPortrait && prevProps.originY === 'bottom') {
+                    newImg.set('top', prevProps.top);
+                }
+
                 this.canvas.remove(targetImgObj);
-                this.canvas.insertAt(newImg, zIndex);
+                this.canvas.insertAt(newImg, zIndex >= 0 ? zIndex : 0);
                 this.canvas.setActiveObject(newImg);
                 this.canvas.renderAll();
 
                 this.hideLoader();
                 this.saveState();
                 this.renderLayersList();
-                this.showNotification("success", "ছবি সফলভাবে প্রতিস্থাপন (Replace) করা হয়েছে!");
+                this.showNotification("success", "🖼️ ছবি সফলভাবে সঠিক সাইজে প্রতিস্থাপন (Replace) করা হয়েছে!");
             }, { crossOrigin: 'anonymous' });
         }
 
@@ -3464,7 +3531,7 @@
                     top: 14,
                     fontSize: 22,
                     fontWeight: '900',
-                    fontFamily: "'Hind Siliguri', sans-serif",
+                    fontFamily: 'Hind Siliguri',
                     fill: '#ffffff',
                 });
 
@@ -3505,7 +3572,7 @@
                     top: 13,
                     fontSize: 20,
                     fontWeight: '900',
-                    fontFamily: "'Hind Siliguri', sans-serif",
+                    fontFamily: 'Hind Siliguri',
                     fill: '#ffffff',
                 });
 
@@ -3583,7 +3650,7 @@
             const text = new fabric.Text('📍 ' + locName, {
                 fontSize: 16,
                 fontWeight: '700',
-                fontFamily: "'Hind Siliguri', sans-serif",
+                fontFamily: 'Hind Siliguri',
                 fill: '#ffffff',
                 originX: 'center',
                 originY: 'center',

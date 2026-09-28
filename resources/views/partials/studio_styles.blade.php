@@ -4,7 +4,7 @@
        ========================================= */
     
     /* Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;600;700;800&family=Atma:wght@400;600;700&family=Baloo+Da+2:wght@400;500;600;700;800&family=Galada&family=Hind+Siliguri:wght@300;400;500;600;700&family=Mina:wght@400;700&family=Noto+Sans+Bengali:wght@400;600;700;800&family=Noto+Serif+Bengali:wght@400;600;700;800&family=Tiro+Bangla:ital@0;1&display=swap');
 
     .font-bangla { font-family: 'Hind Siliguri', sans-serif; }
     

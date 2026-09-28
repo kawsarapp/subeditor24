@@ -172,10 +172,10 @@
 
                 {{-- Text Quick Font --}}
                 <select id="floating-font-select" onchange="changeActiveFont(this.value)" class="text-xs font-bold text-slate-700 border border-slate-200 rounded-lg px-2 py-1 outline-none bg-slate-50">
-                    <option value="'SolaimanLipi'">SolaimanLipi</option>
-                    <option value="'Hind Siliguri', sans-serif">Hind Siliguri</option>
-                    <option value="'Li Alinur Banglaborno'">Li Alinur</option>
-                    <option value="'Noto Sans Bengali', sans-serif">Noto Sans</option>
+                    <option value="SolaimanLipi">SolaimanLipi</option>
+                    <option value="Hind Siliguri">Hind Siliguri</option>
+                    <option value="Li Alinur Banglaborno">Li Alinur</option>
+                    <option value="Noto Sans Bengali">Noto Sans</option>
                 </select>
 
                 <div class="w-[1px] h-4 bg-slate-200"></div>
@@ -452,9 +452,11 @@
 
     // Text formatting helpers
     function changeActiveFont(fontFamily) {
-        const active = window.customStudio.canvas.getActiveObject();
+        if (!fontFamily) return;
+        const cleanFont = window.customStudio ? window.customStudio.cleanFontFamily(fontFamily) : fontFamily.replace(/['",]/g, '').trim();
+        const active = window.customStudio ? window.customStudio.canvas.getActiveObject() : null;
         if (active && (active.type === 'i-text' || active.type === 'textbox')) {
-            active.set('fontFamily', fontFamily);
+            active.set('fontFamily', cleanFont);
             window.customStudio.canvas.renderAll();
             window.customStudio.saveState();
         }
@@ -641,7 +643,7 @@
         const designation = document.getElementById('quote-card-desig')?.value;
         const pos = document.getElementById('quote-card-pos')?.value || 'left';
         const theme = document.getElementById('quote-card-theme')?.value || 'soft-blue';
-        const font = document.getElementById('quote-card-font')?.value || "'SolaimanLipi'";
+        const font = document.getElementById('quote-card-font')?.value || 'SolaimanLipi';
         const flipPhoto = document.getElementById('quote-card-flip-check')?.checked === true;
         const removeBg = document.getElementById('quote-card-bg-check')?.checked !== false;
         const photoInput = document.getElementById('quote-card-photo');
