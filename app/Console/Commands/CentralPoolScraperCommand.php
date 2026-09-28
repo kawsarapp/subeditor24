@@ -55,10 +55,19 @@ class CentralPoolScraperCommand extends Command
         $this->line("→ Scanning: {$website->name} ({$website->url})");
 
         try {
+            $forceApiDomains = [
+                'prothomalo.com', 'somoynews.tv', 'bangla.bdnews24.com', 'bdnews24.com', 
+                'jamuna.tv', 'kalerkantho.com', 'dawn.com', 'aninews.in', 'thedailystar.net', 
+                'starnews.com.bd', 'samakal.com', 'bartabazar.com', 'bd-pratidin.com', 
+                'rtvonline.com', 'jagonews24.com', 'dailyamardesh.com', 'itvbd.com', 
+                'bvnews24.com', 'dbcnews.tv', 'jugantor.com', 'japantimes.co.jp', 'thediplomat.com'
+            ];
+            $shouldUseApi = $website->use_scraping_api || collect($forceApiDomains)->some(fn($d) => str_contains($website->url, $d));
+
             // Fetch list page HTML using NewsScraperService
             $html = null;
 
-            if ($website->use_scraping_api) {
+            if ($shouldUseApi) {
                 $html = $scraper->fetchWithUniversalScrapingApi($website->url, null);
             }
 
@@ -82,8 +91,9 @@ class CentralPoolScraperCommand extends Command
             }
 
             $crawler = new Crawler($html);
-            $containerSelector = $website->selector_container ?: 'article a, .post a, .news a, .card a, h1 a, h2 a, h3 a, a[href*="/news/"]';
-            $titleSelector = $website->selector_title;
+            $domainConfig = $this->getDomainConfig($website->url);
+            $containerSelector = $website->selector_container ?: ($domainConfig['container'] ?? 'article a, .post a, .news a, .card a, h1 a, h2 a, h3 a, a[href*="/news/"], a[href*="/article/"]');
+            $titleSelector = $website->selector_title ?: ($domainConfig['title'] ?? null);
 
             $nodes = $crawler->filter($containerSelector);
             if ($nodes->count() === 0) {
@@ -133,9 +143,25 @@ class CentralPoolScraperCommand extends Command
                     return;
                 }
 
-                $skipPatterns = ['/category/', '/tag/', '/archive/', '/author/', '/search/', 'facebook.com', 'twitter.com', 'youtube.com'];
+                // Skip social / video links
+                $skipDomains = ['facebook.com', 'twitter.com', 'youtube.com', 'instagram.com', 'linkedin.com'];
+                foreach ($skipDomains as $sd) {
+                    if (str_contains($link, $sd)) return;
+                }
+
+                // Skip obvious non-news archive/search/tag pages
+                $skipPatterns = ['/archive/', '/author/', '/search/', '/tag/'];
                 foreach ($skipPatterns as $sp) {
                     if (str_contains($link, $sp)) return;
+                }
+
+                // Skip generic root category links if they don't contain article id / slug
+                $cleanPath = trim(parse_url($link, PHP_URL_PATH) ?? '', '/');
+                if (!empty($cleanPath)) {
+                    $pathSegments = explode('/', $cleanPath);
+                    if (count($pathSegments) === 1 && !preg_match('/\d/', $cleanPath) && !str_contains($cleanPath, '-') && strlen($cleanPath) < 20) {
+                        return; // Pure root category e.g. /sports, /bangladesh
+                    }
                 }
 
                 $slugHash = CentralNewsPool::generateHash($link);
@@ -152,7 +178,8 @@ class CentralPoolScraperCommand extends Command
                     if ($imgNode->count() > 0) {
                         $listImage = $imgNode->first()->attr('data-src')
                             ?: ($imgNode->first()->attr('data-original')
-                            ?: $imgNode->first()->attr('src'));
+                            ?: ($imgNode->first()->attr('data-lazy-src')
+                            ?: $imgNode->first()->attr('src')));
                     }
                 } catch (\Exception $e) {}
 
@@ -175,5 +202,59 @@ class CentralPoolScraperCommand extends Command
             Log::warning("⚠️ Central pool scan error for {$website->name}: " . $e->getMessage());
             $this->error("  ✕ Error: " . $e->getMessage());
         }
+    }
+
+    /**
+     * 🔥 Specific portal selectors fallback
+     */
+    private function getDomainConfig($url)
+    {
+        if (str_contains($url, 'samakal.com')) {
+            return [
+                'container' => '.latest-news-list .cat-post-item, .main-ticker a, a[href*="/article/"], .media a, .news-item a, article a, h2 a, h3 a',
+                'title'     => 'h4.media-heading a, h3 a, h2 a, .title a'
+            ];
+        }
+        if (str_contains($url, 'jamuna.tv')) {
+            return [
+                'container' => '.latest-news-list .news-item, .category-news-list a, .recent-news a, article a, h2 a, h3 a',
+                'title'     => 'h3.title > a'
+            ];
+        }
+        if (str_contains($url, 'prothomalo.com')) {
+            return [
+                'container' => '.news_with_item a, .content-area a, .story-card a, .story-data a, .headline-title a, article a',
+                'title'     => null
+            ];
+        }
+        if (str_contains($url, 'somoynews.tv')) {
+            return [
+                'container' => 'a[href*="/news/"], a[href*="/article/"], h2 a, h3 a, .card a, article a',
+                'title'     => null
+            ];
+        }
+        if (str_contains($url, 'dhakapost.com')) {
+            return [
+                'container' => 'a.group, .category-lead a, .section-content a',
+                'title'     => 'h2'
+            ];
+        }
+        if (str_contains($url, 'kalerkantho.com')) {
+            return [
+                'container' => 'div.card h5.card-title a, .col-md-3 a, .col-sm-6 a, h5 a, h4 a, h3 a, h2 a, .card a',
+                'title'     => null
+            ];
+        }
+        if (str_contains($url, 'jugantor.com')) {
+            return [
+                'container' => 'a[href*="jugantor.com/"], a[href*="/national/"], a[href*="/politics/"], .media a, .card a, article a',
+                'title'     => null
+            ];
+        }
+
+        return [
+            'container' => 'article a, .post a, .news a, .card a, h1 a, h2 a, h3 a, a[href*="/news/"], a[href*="/article/"]',
+            'title'     => null
+        ];
     }
 }

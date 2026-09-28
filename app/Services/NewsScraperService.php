@@ -28,7 +28,13 @@ class NewsScraperService
         $useApi = $website ? $website->use_scraping_api : false;
 
         // 🔥 Force Universal API for CF-protected Nuxt/React SSR sites regardless of dashboard toggle
-        $forceApiDomains = ['somoynews.tv', 'bangla.bdnews24.com', 'dawn.com', 'aninews.in', 'thedailystar.net'];
+        $forceApiDomains = [
+            'prothomalo.com', 'somoynews.tv', 'bangla.bdnews24.com', 'bdnews24.com', 
+            'jamuna.tv', 'kalerkantho.com', 'dawn.com', 'aninews.in', 'thedailystar.net', 
+            'starnews.com.bd', 'samakal.com', 'bartabazar.com', 'bd-pratidin.com', 
+            'rtvonline.com', 'jagonews24.com', 'dailyamardesh.com', 'itvbd.com', 
+            'bvnews24.com', 'dbcnews.tv', 'jugantor.com', 'japantimes.co.jp', 'thediplomat.com'
+        ];
         if (!$useApi && collect($forceApiDomains)->some(fn($d) => str_contains($url, $d))) {
             Log::info("🔐 Force-API domain detected ($url) — overriding to Universal Scraping API.");
             $useApi = true;

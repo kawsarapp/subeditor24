@@ -151,7 +151,7 @@ trait NewsPublishingTrait
 
     public function confirmPublish(Request $request, $id)
     {
-        $request->validate(['title' => 'required', 'content' => 'required', 'category' => 'nullable']);
+        $request->validate(['title' => 'required', 'content' => 'required', 'category' => 'nullable', 'extra_categories' => 'nullable|array']);
         $adminUser = $this->getEffectiveAdmin();
         $staffId = Auth::id() !== $adminUser->id ? Auth::id() : null; // 🔥 Staff ID
         
@@ -161,9 +161,15 @@ trait NewsPublishingTrait
         $news = NewsItem::findOrFail($id);
         $news->update(['status' => 'publishing', 'staff_id' => $staffId]); // 🔥 স্টাফ আইডি সেভ
         
+        $categories = [];
+        if ($request->filled('category')) $categories[] = $request->category;
+        if ($request->filled('extra_categories') && is_array($request->extra_categories)) $categories = array_merge($categories, $request->extra_categories);
+        $categories = array_values(array_unique($categories));
+        if(empty($categories)) $categories = [1];
+
         ProcessNewsPost::dispatch($news->id, Auth::id(), [
             'title' => $request->title, 'content' => $request->content, 
-            'category_ids' => $request->category ? [$request->category] : [1]
+            'category_ids' => $categories
         ]);
         
         return response()->json(['success' => true, 'message' => 'পাবলিশিং শুরু হয়েছে!']);
