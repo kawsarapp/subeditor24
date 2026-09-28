@@ -102,13 +102,17 @@
                 <i class="fa-solid fa-newspaper text-indigo-500 w-5 text-center text-sm"></i> Latest News
             </a>
 
+            @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_central_feed'))
             <a href="{{ route('central-feed.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('central-feed.*') ? 'bg-indigo-600 text-white' : 'text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100' }}">
                 <i class="fa-solid fa-bolt text-indigo-500 w-5 text-center text-sm"></i> Live Wire
             </a>
+            @endif
             
+            @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_view_published'))
             <a href="{{ route('news.published') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('news.published') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-circle-check text-emerald-500 w-5 text-center text-sm"></i> Published News
             </a>
+            @endif
 
             @if(auth()->user()->hasPermission('can_direct_publish'))
             <a href="{{ route('news.create') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('news.create') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
@@ -142,6 +146,15 @@
             </a>
             @endif
 
+            {{-- SEO & Website Intelligence --}}
+            @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_seo_intelligence'))
+            @if(Route::has('seo.index'))
+            <a href="{{ route('seo.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('seo.*') ? 'bg-indigo-600 text-white' : 'text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100' }}">
+                <i class="fa-solid fa-chart-simple text-indigo-500 w-5 text-center text-sm"></i> SEO & Traffic Insights
+            </a>
+            @endif
+            @endif
+
             @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_templates'))
             @if(Route::has('admin.templates.index'))
             <a href="{{ route('admin.templates.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.templates.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
@@ -150,7 +163,8 @@
             @endif
             @endif
 
-            {{-- 🎨 Custom Photo Card Studio --}}
+            {{-- 🎨 Custom Photo Card Studio & Quick Cards --}}
+            @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_custom_photo_card') || auth()->user()->hasPermission('can_studio'))
             <a href="{{ route('custom-photo-card.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('custom-photo-card.*') ? 'bg-indigo-600 text-white' : 'text-violet-700 bg-violet-50 hover:bg-violet-100' }}">
                 <i class="fa-solid fa-paintbrush text-violet-500 w-5 text-center text-sm"></i> Photo Card Studio
             </a>
@@ -159,6 +173,14 @@
             <a href="{{ route('free-photocard.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('free-photocard.*') ? 'bg-indigo-600 text-white' : 'text-amber-700 bg-amber-50 hover:bg-amber-100' }}">
                 <i class="fa-solid fa-clone text-amber-500 w-5 text-center text-sm"></i> Quick Card Generator
             </a>
+            @endif
+
+            {{-- 📊 Analytics & Reports --}}
+            @if(Route::has('admin.analytics.index') && (auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_analytics')))
+            <a href="{{ route('admin.analytics.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.analytics.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
+                <i class="fa-solid fa-chart-line text-emerald-500 w-5 text-center text-sm"></i> Analytics & Reports
+            </a>
+            @endif
 
             @php
                 $userPerms = is_array(auth()->user()->permissions) ? auth()->user()->permissions : (json_decode(auth()->user()->permissions, true) ?? []);
@@ -199,12 +221,6 @@
             </a>
             @endif
 
-            @if(Route::has('admin.analytics.index'))
-            <a href="{{ route('admin.analytics.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.analytics.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
-                <i class="fa-solid fa-chart-line text-emerald-500 w-5 text-center text-sm"></i> Analytics & Reports
-            </a>
-            @endif
-
             @if(Route::has('admin.scraper-monitor'))
             <a href="{{ route('admin.scraper-monitor') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.scraper-monitor') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-heart-pulse text-amber-500 w-5 text-center text-sm"></i> Scraper Monitor
@@ -213,9 +229,11 @@
             @endif
 
             <div class="border-t border-slate-100 my-2"></div>
+            @if(Route::has('settings.index') && (auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings')))
             <a href="{{ route('settings.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('settings.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-sliders text-slate-500 w-5 text-center text-sm"></i> Settings & API
             </a>
+            @endif
             <a href="{{ route('feedback.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('feedback.*') ? 'bg-emerald-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-lightbulb text-emerald-500 w-5 text-center text-sm"></i> Feedback & Roadmap
             </a>

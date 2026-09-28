@@ -3,160 +3,211 @@
         <div class="max-w-[1440px] mx-auto px-4 xl:px-6 h-16 flex items-center justify-between gap-3">
             
             {{-- BRAND & LOGO --}}
-            <div class="flex items-center gap-4 xl:gap-6 shrink-0">
-                <a href="{{ auth()->user()->role === 'reporter' ? route('reporter.news.index') : route('news.index') }}" class="flex items-center gap-2.5 group">
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform duration-300 font-black">
-                        <i class="fa-solid fa-bolt text-lg"></i>
+            <div class="flex items-center gap-3 xl:gap-5 shrink-0">
+                <a href="{{ auth()->user()->role === 'reporter' ? route('reporter.news.index') : route('news.index') }}" class="flex items-center gap-2 group">
+                    <div class="w-9 h-9 xl:w-10 xl:h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform duration-300 font-black">
+                        <i class="fa-solid fa-bolt text-base xl:text-lg"></i>
                     </div>
                     <div class="flex flex-col">
-                        <span class="font-black text-xl tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors leading-none">Subeditor<span class="text-indigo-600">24</span></span>
-                        <span class="text-[9px] font-extrabold text-slate-400 tracking-wider uppercase mt-1 flex items-center gap-1">
+                        <span class="font-black text-lg xl:text-xl tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors leading-none">Subeditor<span class="text-indigo-600">24</span></span>
+                        <span class="text-[9px] font-extrabold text-slate-400 tracking-wider uppercase mt-1 hidden xl:flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Newsroom CMS
                         </span>
                     </div>
                 </a>
             </div>
 
-            {{-- CENTER NAVIGATION PILLS (NO SCROLLBAR) --}}
+            {{-- CENTER NAVIGATION PILLS (CLEAN, COMPACT & NON-GATHERING) --}}
             @auth
             <div class="flex items-center py-1">
                 @if(auth()->user()->role === 'reporter')
-                    <div class="flex items-center bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 gap-1.5 shadow-inner">
-                        <a href="{{ route('reporter.news.create') }}" class="flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('reporter.news.create') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white' }}">
+                    <div class="flex items-center bg-slate-100/90 dark:bg-slate-800/80 p-1 xl:p-1.5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 gap-1 xl:gap-1.5 shadow-inner">
+                        <a href="{{ route('reporter.news.create') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('reporter.news.create') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25 scale-[1.02]' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700' }}">
                             <i class="fa-solid fa-pen-to-square"></i> Submit News
                         </a>
-                        <a href="{{ route('reporter.news.index') }}" class="flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('reporter.news.index') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white' }}">
+                        <a href="{{ route('reporter.news.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('reporter.news.index') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25 scale-[1.02]' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700' }}">
                             <i class="fa-solid fa-list-check"></i> My Articles
                         </a>
                     </div>
                 @else
-                    <div class="flex items-center bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 gap-1 shadow-inner shrink-0">
+                    @php
+                        $isToolsActive = request()->routeIs('free-photocard.*') 
+                            || request()->routeIs('custom-photo-card.*')
+                            || request()->routeIs('admin.templates.*')
+                            || request()->routeIs('youtube.*')
+                            || request()->routeIs('websites.*')
+                            || request()->routeIs('trending.*')
+                            || request()->routeIs('seo.*')
+                            || request()->routeIs('client.staff.*')
+                            || request()->routeIs('manage.reporters.*')
+                            || request()->routeIs('admin.scraper-monitor*')
+                            || request()->routeIs('admin.analytics.*')
+                            || request()->routeIs('admin.posts.*')
+                            || request()->routeIs('feedback.*');
+                    @endphp
+                    <div class="flex items-center bg-slate-100/90 dark:bg-slate-800/80 p-1 xl:p-1.5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 gap-0.5 xl:gap-1 shadow-inner shrink-0">
                         {{-- 1. Feed --}}
-                        <a href="{{ route('news.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('news.index') ? 'bg-white text-indigo-600 shadow-md border border-slate-200/60 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white/60' }}">
+                        <a href="{{ route('news.index') }}" class="flex items-center gap-1 px-3 xl:px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('news.index') ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md border border-slate-200/60 dark:border-slate-600 scale-[1.02]' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 hover:bg-white/60 dark:hover:bg-slate-700/60' }}">
                             Latest News
                         </a>
 
                         {{-- 1.5 Central Live Wire Feed --}}
-                        <a href="{{ route('central-feed.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('central-feed.*') ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md scale-[1.02]' : 'text-indigo-700 hover:text-indigo-800 hover:bg-white/60' }}" title="Central Live Wire Feed">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_central_feed'))
+                        <a href="{{ route('central-feed.index') }}" class="flex items-center gap-1.5 px-3 xl:px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('central-feed.*') ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md scale-[1.02]' : 'text-indigo-700 dark:text-indigo-400 hover:text-indigo-800 hover:bg-white/60 dark:hover:bg-slate-700/60' }}" title="Central Live Wire Feed">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                             Live Wire
                         </a>
+                        @endif
 
                         {{-- 2. Published --}}
-                        <a href="{{ route('news.published') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('news.published') ? 'bg-white text-indigo-600 shadow-md border border-slate-200/60 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white/60' }}">
+                        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_view_published'))
+                        <a href="{{ route('news.published') }}" class="flex items-center gap-1 px-3 xl:px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('news.published') ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md border border-slate-200/60 dark:border-slate-600 scale-[1.02]' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 hover:bg-white/60 dark:hover:bg-slate-700/60' }}">
                             Published
                         </a>
+                        @endif
                         
                         {{-- 3. Create --}}
                         @if(auth()->user()->hasPermission('can_direct_publish'))
-                        <a href="{{ route('news.create') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('news.create') ? 'bg-white text-indigo-600 shadow-md border border-slate-200/60 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white/60' }}">
+                        <a href="{{ route('news.create') }}" class="flex items-center gap-1 px-3 xl:px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('news.create') ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md border border-slate-200/60 dark:border-slate-600 scale-[1.02]' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 hover:bg-white/60 dark:hover:bg-slate-700/60' }}">
                             Create Post
                         </a>
                         @endif
                         
                         {{-- 4. Drafts --}}
                         @if(auth()->user()->hasPermission('can_ai'))
-                        <a href="{{ route('news.drafts') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('news.drafts') ? 'bg-white text-indigo-600 shadow-md border border-slate-200/60 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white/60' }}">
+                        <a href="{{ route('news.drafts') }}" class="flex items-center gap-1 px-3 xl:px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('news.drafts') ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md border border-slate-200/60 dark:border-slate-600 scale-[1.02]' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 hover:bg-white/60 dark:hover:bg-slate-700/60' }}">
                             Drafts
                         </a>
                         @endif
 
-                        {{-- 5. Sources --}}
-                        @if(auth()->user()->hasPermission('can_scrape'))
-                        <a href="{{ route('websites.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('websites.*') ? 'bg-white text-indigo-600 shadow-md border border-slate-200/60 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white/60' }}">
-                            Sources
-                        </a>
-                        @endif
-
-                        {{-- 5.5 Free Photo Card --}}
-                        <a href="{{ route('free-photocard.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('free-photocard.*') ? 'bg-white text-indigo-600 shadow-md border border-slate-200/60 scale-[1.02]' : 'text-slate-700 hover:text-indigo-600 hover:bg-white/60' }}">
-                            <i class="fa-solid fa-image text-indigo-500"></i> Cards
-                        </a>
-
-                        {{-- 5.6 YouTube AI Studio --}}
-                        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_youtube_automate'))
-                        <a href="{{ route('youtube.channels.index') }}" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('youtube.*') ? 'bg-red-600 text-white shadow-md shadow-red-600/30 scale-[1.02]' : 'text-red-600 hover:bg-red-50 hover:text-red-700' }}" title="YouTube AI Automation & Auto-Pilot">
-                            <i class="fa-brands fa-youtube text-sm"></i> YouTube
-                        </a>
-                        @endif
-
                         {{-- VERTICAL DIVIDER --}}
-                        <div class="w-[1px] h-4 bg-slate-300 mx-1"></div>
+                        <div class="w-[1px] h-4 bg-slate-300 dark:bg-slate-600 mx-1"></div>
 
                         {{-- EXTRA TOOLS DROPDOWN --}}
                         <div class="relative">
-                            <button id="toolsMenuBtn" onclick="toggleToolsDropdown(event)" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('trending.*') || request()->routeIs('admin.templates.*') || request()->routeIs('manage.reporters.*') || request()->routeIs('admin.analytics.*') || request()->routeIs('admin.posts.*') ? 'bg-indigo-600 text-white shadow-md' : 'text-indigo-700 hover:bg-indigo-50' }} cursor-pointer">
-                                <i class="fa-solid fa-toolbox text-indigo-500"></i>
+                            <button id="toolsMenuBtn" onclick="toggleToolsDropdown(event)" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ $isToolsActive ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25' : 'text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-700' }} cursor-pointer">
+                                <i class="fa-solid fa-toolbox text-xs {{ $isToolsActive ? 'text-white' : 'text-indigo-500' }}"></i>
                                 <span>Tools</span>
-                                <i class="fa-solid fa-chevron-down text-[10px] ml-0.5"></i>
+                                <i class="fa-solid fa-chevron-down text-[9px] ml-0.5 opacity-80"></i>
                             </button>
 
-                            <div id="toolsMenuDropdown" class="hidden absolute left-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200/90 py-2.5 z-[100]">
-                                {{-- YouTube AI Studio in Dropdown --}}
-                                @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_youtube_automate'))
-                                <a href="{{ route('youtube.channels.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
-                                    <i class="fa-brands fa-youtube text-red-600 w-4 text-center text-sm"></i>
-                                    <span>YouTube AI Automation</span>
+                            <div id="toolsMenuDropdown" class="hidden absolute left-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200/90 dark:border-slate-800 py-2 z-[100] max-h-[80vh] overflow-y-auto custom-scrollbar">
+                                {{-- Group 1: Creative & Studio --}}
+                                @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_custom_photo_card') || auth()->user()->hasPermission('can_studio') || auth()->user()->hasPermission('manage_templates') || auth()->user()->hasPermission('can_youtube_automate'))
+                                <div class="px-3.5 pt-1.5 pb-1">
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Creative & Automation</span>
+                                </div>
+
+                                {{-- Quick Card Generator --}}
+                                @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_custom_photo_card') || auth()->user()->hasPermission('can_studio'))
+                                <a href="{{ route('free-photocard.index') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('free-photocard.*') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-clone text-amber-500 w-4 text-center"></i>
+                                        <span>Quick Card Generator</span>
+                                    </div>
+                                    @if(request()->routeIs('free-photocard.*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    @endif
+                                </a>
+
+                                {{-- Custom Photo Card Studio --}}
+                                <a href="{{ route('custom-photo-card.index') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('custom-photo-card.*') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-paintbrush text-violet-500 w-4 text-center"></i>
+                                        <span>Photo Card Studio</span>
+                                    </div>
+                                    @if(request()->routeIs('custom-photo-card.*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    @endif
                                 </a>
                                 @endif
 
-                                {{-- 1. Trending Stories --}}
+                                {{-- Photocard Templates --}}
+                                @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_templates'))
+                                @if(Route::has('admin.templates.index'))
+                                <a href="{{ route('admin.templates.index') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('admin.templates.*') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-layer-group text-purple-500 w-4 text-center"></i>
+                                        <span>Card Templates</span>
+                                    </div>
+                                    @if(request()->routeIs('admin.templates.*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    @endif
+                                </a>
+                                @endif
+                                @endif
+
+                                {{-- YouTube AI Automation --}}
+                                @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_youtube_automate'))
+                                <a href="{{ route('youtube.channels.index') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('youtube.*') ? 'bg-red-50 dark:bg-red-950/60 text-red-600 font-extrabold' : 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-brands fa-youtube text-red-600 w-4 text-center text-sm"></i>
+                                        <span>YouTube AI Studio</span>
+                                    </div>
+                                    @if(request()->routeIs('youtube.*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                                    @endif
+                                </a>
+                                @endif
+
+                                {{-- Divider --}}
+                                <div class="my-1.5 border-t border-slate-100 dark:border-slate-800"></div>
+                                @endif
+
+                                {{-- Group 2: Editorial & Intelligence --}}
+                                <div class="px-3.5 pt-1.5 pb-1">
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Editorial & Intelligence</span>
+                                </div>
+
+                                {{-- Sources --}}
+                                @if(auth()->user()->hasPermission('can_scrape'))
+                                <a href="{{ route('websites.index') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('websites.*') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-globe text-indigo-500 w-4 text-center"></i>
+                                        <span>News Sources (Scrapers)</span>
+                                    </div>
+                                    @if(request()->routeIs('websites.*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    @endif
+                                </a>
+                                @endif
+
+                                {{-- Trending Stories --}}
                                 @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_viral_predictor'))
-                                <a href="{{ route('trending.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">
-                                    <i class="fa-solid fa-fire text-amber-500 w-4 text-center"></i>
-                                    <span>Trending Stories</span>
+                                <a href="{{ route('trending.index') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('trending.*') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-fire text-amber-500 w-4 text-center"></i>
+                                        <span>Trending Stories</span>
+                                    </div>
+                                    @if(request()->routeIs('trending.*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    @endif
                                 </a>
                                 @endif
 
                                 {{-- SEO Intelligence --}}
                                 @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_seo_intelligence'))
                                 @if(Route::has('seo.index'))
-                                <a href="{{ route('seo.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-                                    <i class="fa-solid fa-chart-simple text-indigo-500 w-4 text-center"></i>
-                                    <span>SEO & Traffic Insights</span>
+                                <a href="{{ route('seo.index') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('seo.*') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-chart-simple text-indigo-500 w-4 text-center"></i>
+                                        <span>SEO & Traffic Insights</span>
+                                    </div>
+                                    @if(request()->routeIs('seo.*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    @endif
                                 </a>
                                 @endif
                                 @endif
 
-                                {{-- 2. Photocard Templates --}}
-                                @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_templates'))
-                                @if(Route::has('admin.templates.index'))
-                                <a href="{{ route('admin.templates.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-purple-50 hover:text-purple-700 transition-colors">
-                                    <i class="fa-solid fa-layer-group text-purple-500 w-4 text-center"></i>
-                                    <span>Card Templates</span>
-                                </a>
-                                @endif
-                                @endif
+                                {{-- Divider --}}
+                                <div class="my-1.5 border-t border-slate-100 dark:border-slate-800"></div>
 
-                                {{-- 🎨 Custom Photo Card Studio --}}
-                                <a href="{{ route('custom-photo-card.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-violet-50 hover:text-violet-700 transition-colors">
-                                    <i class="fa-solid fa-paintbrush text-violet-500 w-4 text-center"></i>
-                                    <span>Photo Card Studio</span>
-                                </a>
+                                {{-- Group 3: Management & Roles --}}
+                                <div class="px-3.5 pt-1.5 pb-1">
+                                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">Management & System</span>
+                                </div>
 
-                                {{-- ⚡ Quick Card Generator --}}
-                                <a href="{{ route('free-photocard.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">
-                                    <i class="fa-solid fa-clone text-amber-500 w-4 text-center"></i>
-                                    <span>Quick Card Generator</span>
-                                </a>
-
-                                {{-- 3. Analytics & Reports --}}
-                                @if(Route::has('admin.analytics.index') && (auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_analytics')))
-                                <a href="{{ route('admin.analytics.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
-                                    <i class="fa-solid fa-chart-line text-emerald-500 w-4 text-center"></i>
-                                    <span>Analytics & Reports</span>
-                                </a>
-                                @endif
-
-                                {{-- 4. Auto Post Logs --}}
-                                @if(Route::has('admin.posts.index') && auth()->user()->role === 'super_admin')
-                                <a href="{{ route('admin.posts.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
-                                    <i class="fa-solid fa-clock-rotate-left text-blue-500 w-4 text-center"></i>
-                                    <span>Publish Logs</span>
-                                </a>
-                                @endif
-
-                                {{-- 5. Team Staff & Reporters --}}
                                 @php
                                     $userPerms = is_array(auth()->user()->permissions) ? auth()->user()->permissions : (json_decode(auth()->user()->permissions, true) ?? []);
                                     $canStaff = in_array('can_manage_staff', $userPerms) || auth()->user()->role === 'super_admin' || auth()->user()->role === 'client';
@@ -164,37 +215,73 @@
                                 @endphp
 
                                 @if($canStaff && Route::has('client.staff.index'))
-                                <a href="{{ route('client.staff.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-                                    <i class="fa-solid fa-users-gear text-indigo-500 w-4 text-center"></i>
-                                    <span>Staff & Roles</span>
+                                <a href="{{ route('client.staff.index') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('client.staff.*') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-users-gear text-indigo-500 w-4 text-center"></i>
+                                        <span>Staff & Roles</span>
+                                    </div>
+                                    @if(request()->routeIs('client.staff.*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    @endif
                                 </a>
                                 @endif
 
                                 @if($canReporters && Route::has('manage.reporters.index'))
-                                <a href="{{ route('manage.reporters.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-                                    <i class="fa-solid fa-users text-indigo-500 w-4 text-center"></i>
-                                    <span>Reporters</span>
-                                </a>
-                                @endif
-                                @if($canReporters && Route::has('manage.reporters.news'))
-                                <a href="{{ route('manage.reporters.news') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-rose-50 hover:text-rose-700 transition-colors">
-                                    <i class="fa-solid fa-inbox text-rose-500 w-4 text-center"></i>
-                                    <span>Reporter Submissions</span>
+                                <a href="{{ route('manage.reporters.index') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('manage.reporters.*') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-users text-indigo-500 w-4 text-center"></i>
+                                        <span>Reporters & Submissions</span>
+                                    </div>
+                                    @if(request()->routeIs('manage.reporters.*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    @endif
                                 </a>
                                 @endif
 
-                                {{-- 6. Scraper Monitor --}}
+                                @if(Route::has('admin.analytics.index') && (auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_analytics')))
+                                <a href="{{ route('admin.analytics.index') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('admin.analytics.*') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-chart-line text-emerald-500 w-4 text-center"></i>
+                                        <span>Analytics & Reports</span>
+                                    </div>
+                                    @if(request()->routeIs('admin.analytics.*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    @endif
+                                </a>
+                                @endif
+
+                                @if(Route::has('admin.posts.index') && auth()->user()->role === 'super_admin')
+                                <a href="{{ route('admin.posts.index') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('admin.posts.*') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-clock-rotate-left text-blue-500 w-4 text-center"></i>
+                                        <span>Publish Logs</span>
+                                    </div>
+                                    @if(request()->routeIs('admin.posts.*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    @endif
+                                </a>
+                                @endif
+
                                 @if(Route::has('admin.scraper-monitor') && auth()->user()->role === 'super_admin')
-                                <a href="{{ route('admin.scraper-monitor') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">
-                                    <i class="fa-solid fa-heart-pulse text-amber-500 w-4 text-center"></i>
-                                    <span>Scraper Monitor</span>
+                                <a href="{{ route('admin.scraper-monitor') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('admin.scraper-monitor*') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-heart-pulse text-rose-500 w-4 text-center"></i>
+                                        <span>Scraper Health Monitor</span>
+                                    </div>
+                                    @if(request()->routeIs('admin.scraper-monitor*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    @endif
                                 </a>
                                 @endif
 
-                                {{-- 7. Community Feedback & Roadmap --}}
-                                <a href="{{ route('feedback.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-extrabold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
-                                    <i class="fa-solid fa-lightbulb text-emerald-500 w-4 text-center"></i>
-                                    <span>Feedback & Roadmap</span>
+                                <a href="{{ route('feedback.index') }}" class="flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors {{ request()->routeIs('feedback.*') ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }}">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-lightbulb text-emerald-500 w-4 text-center"></i>
+                                        <span>Feedback & Roadmap</span>
+                                    </div>
+                                    @if(request()->routeIs('feedback.*'))
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
+                                    @endif
                                 </a>
                             </div>
                         </div>
@@ -205,16 +292,16 @@
             @endauth
 
             {{-- RIGHT CONTROL PANEL WITH USER PROFILE & CREDITS --}}
-            <div class="flex items-center gap-3 shrink-0">
+            <div class="flex items-center gap-2 xl:gap-3 shrink-0">
                 @auth
-                    {{-- 🎯 Daily Goal & Target Progress Tracker --}}
+                    {{-- 🎯 Daily Goal & Target Progress Tracker (Only on wide 2xl screens) --}}
                     @php
                         $todayPosts = auth()->user()->todays_post_count ?? 0;
                         $dailyTarget = auth()->user()->daily_post_limit ?? 20;
                         $isUnlimited = $dailyTarget >= 9999;
                         $percent = $isUnlimited ? 100 : min(100, round(($todayPosts / max($dailyTarget, 1)) * 100));
                     @endphp
-                    <div class="hidden xl:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 px-3 py-1.5 rounded-xl shadow-sm transition-all" title="Daily Posts & Target Progress">
+                    <div class="hidden 2xl:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 px-3 py-1.5 rounded-xl shadow-sm transition-all" title="Daily Posts & Target Progress">
                         <div class="flex flex-col gap-0.5">
                             <div class="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-bullseye text-indigo-500"></i> Today's Posts</span>

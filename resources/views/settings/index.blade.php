@@ -2927,6 +2927,8 @@ https://yourdomain.com/api/external-news-post`
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
+    }
+
     // ⚡ Dynamic Cron Action Handler
     function triggerCronAdminAction(action) {
         const alertBox = document.getElementById('cronActionAlertBox');

@@ -67,8 +67,10 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     })->name('notifications.read');
 
     // 🔥 AI Viral & Trending Predictor Routes
-    Route::get('/trending', [\App\Http\Controllers\TrendingController::class, 'index'])->name('trending.index');
-    Route::post('/trending/generate-script', [\App\Http\Controllers\TrendingController::class, 'generateScript'])->middleware('throttle:ai-operations')->name('trending.generate-script');
+    Route::middleware(['permission:can_viral_predictor'])->group(function () {
+        Route::get('/trending', [\App\Http\Controllers\TrendingController::class, 'index'])->name('trending.index');
+        Route::post('/trending/generate-script', [\App\Http\Controllers\TrendingController::class, 'generateScript'])->middleware('throttle:ai-operations')->name('trending.generate-script');
+    });
 
     // 💡 Feature Requests, Bugs & Community Feedback Board
     Route::get('/feedback', [\App\Http\Controllers\FeedbackController::class, 'index'])->name('feedback.index');
@@ -78,11 +80,13 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::delete('/feedback/{id}', [\App\Http\Controllers\FeedbackController::class, 'destroy'])->name('feedback.destroy');
 
     // 🎨 Free Photo Card Generator (Link to Photo Card)
-    Route::get('/free-photocard', [\App\Http\Controllers\FreePhotocardController::class, 'index'])->name('free-photocard.index');
-    Route::post('/free-photocard/fetch-url', [\App\Http\Controllers\FreePhotocardController::class, 'fetchUrl'])->middleware('throttle:photocard-fetch')->name('free-photocard.fetch-url');
-    Route::get('/free-photocard/proxy-image', [\App\Http\Controllers\FreePhotocardController::class, 'proxyImage'])->middleware('throttle:photocard-fetch')->name('free-photocard.proxy-image');
-    Route::post('/free-photocard/template', [\App\Http\Controllers\FreePhotocardController::class, 'saveTemplate'])->name('free-photocard.save-template');
-    Route::delete('/free-photocard/template/{id}', [\App\Http\Controllers\FreePhotocardController::class, 'deleteTemplate'])->name('free-photocard.delete-template');
+    Route::middleware(['permission:can_custom_photo_card'])->group(function () {
+        Route::get('/free-photocard', [\App\Http\Controllers\FreePhotocardController::class, 'index'])->name('free-photocard.index');
+        Route::post('/free-photocard/fetch-url', [\App\Http\Controllers\FreePhotocardController::class, 'fetchUrl'])->middleware('throttle:photocard-fetch')->name('free-photocard.fetch-url');
+        Route::get('/free-photocard/proxy-image', [\App\Http\Controllers\FreePhotocardController::class, 'proxyImage'])->middleware('throttle:photocard-fetch')->name('free-photocard.proxy-image');
+        Route::post('/free-photocard/template', [\App\Http\Controllers\FreePhotocardController::class, 'saveTemplate'])->name('free-photocard.save-template');
+        Route::delete('/free-photocard/template/{id}', [\App\Http\Controllers\FreePhotocardController::class, 'deleteTemplate'])->name('free-photocard.delete-template');
+    });
 
     // প্রোফাইল ও ক্রেডিট
     Route::get('/credits', [SettingsController::class, 'credits'])->name('credits.index');
@@ -153,7 +157,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/check-new-news', 'checkNewNews')->middleware('throttle:live-polling')->name('check-new-news');
         Route::post('/toggle-automation', 'toggleAutomation')->name('toggle-automation');
         Route::post('/check-draft-updates', 'checkDraftUpdates')->middleware('throttle:live-polling')->name('check-draft-updates');
-        Route::get('/published', 'published')->name('published');
+        
+        Route::middleware(['permission:can_view_published'])->group(function () {
+            Route::get('/published', 'published')->name('published');
+        });
+
         Route::get('/suggest-links', 'suggestLinks')->name('suggest-links');
         Route::post('/check-duplicates', 'checkDuplicates')->middleware('throttle:dedup-check')->name('check-duplicates');
         Route::post('/generate-headlines', 'generateHeadlines')->middleware('throttle:ai-operations')->name('generate-headlines');
@@ -188,12 +196,14 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // ⚡ Central Live Feed & Instant Wire Pool
-    Route::controller(\App\Http\Controllers\CentralFeedController::class)->prefix('central-feed')->name('central-feed.')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/check-new', 'checkNewFeed')->middleware('throttle:live-polling')->name('check-new');
-        Route::post('/sync-now', 'syncNow')->name('sync-now');
-        Route::post('/import/{id}', 'importNews')->name('import');
-        Route::post('/bulk-import', 'bulkImport')->name('bulk-import');
+    Route::middleware(['permission:can_central_feed'])->group(function () {
+        Route::controller(\App\Http\Controllers\CentralFeedController::class)->prefix('central-feed')->name('central-feed.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/check-new', 'checkNewFeed')->middleware('throttle:live-polling')->name('check-new');
+            Route::post('/sync-now', 'syncNow')->name('sync-now');
+            Route::post('/import/{id}', 'importNews')->name('import');
+            Route::post('/bulk-import', 'bulkImport')->name('bulk-import');
+        });
     });
 
     // নিউজ স্ক্র্যাপিং
@@ -210,20 +220,24 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::post('/settings/save-design', [SettingsController::class, 'saveDesign'])->name('settings.save-design');
     Route::post('/settings/upload-frame', [SettingsController::class, 'uploadFrame'])->name('settings.upload-frame');
 
-    // Admin / Analytics (Protected by controller logic)
-    Route::get('/admin/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('admin.analytics.index');
+    // Admin / Analytics
+    Route::middleware(['permission:can_analytics'])->group(function () {
+        Route::get('/admin/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('admin.analytics.index');
+    });
 
     // 🎨 Custom Photo Card Studio & AI Background Remover
-    Route::controller(\App\Http\Controllers\CustomPhotoCardController::class)->prefix('studio/custom-photo-card')->name('custom-photo-card.')->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::post('/remove-bg', 'removeBackground')->name('remove-bg');
-        Route::get('/media-frames', 'getMediaFrames')->name('media-frames');
-        Route::post('/upload-frame', 'uploadFrame')->name('upload-frame');
-        Route::post('/save', 'saveCard')->name('save');
-        Route::post('/save-template', 'saveTemplate')->name('save-template');
-        Route::delete('/delete-template/{id}', 'deleteTemplate')->name('delete-template');
-        Route::post('/publish-facebook', 'publishToFacebook')->name('publish-facebook');
-        Route::post('/attach-news', 'attachToNews')->name('attach-news');
+    Route::middleware(['permission:can_custom_photo_card'])->group(function () {
+        Route::controller(\App\Http\Controllers\CustomPhotoCardController::class)->prefix('studio/custom-photo-card')->name('custom-photo-card.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/remove-bg', 'removeBackground')->name('remove-bg');
+            Route::get('/media-frames', 'getMediaFrames')->name('media-frames');
+            Route::post('/upload-frame', 'uploadFrame')->name('upload-frame');
+            Route::post('/save', 'saveCard')->name('save');
+            Route::post('/save-template', 'saveTemplate')->name('save-template');
+            Route::delete('/delete-template/{id}', 'deleteTemplate')->name('delete-template');
+            Route::post('/publish-facebook', 'publishToFacebook')->name('publish-facebook');
+            Route::post('/attach-news', 'attachToNews')->name('attach-news');
+        });
     });
 });
 

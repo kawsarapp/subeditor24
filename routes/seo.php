@@ -10,7 +10,7 @@ use App\Modules\SeoIntelligence\Controllers\SeoConnectController;
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['web', 'auth', 'nocache'])->prefix('seo')->name('seo.')->group(function () {
+Route::middleware(['web', 'auth', 'nocache', 'permission:can_seo_intelligence'])->prefix('seo')->name('seo.')->group(function () {
     Route::get('/', [SeoDashboardController::class, 'index'])->name('index');
     Route::get('/guide', [SeoDashboardController::class, 'guide'])->name('guide');
     Route::get('/uptime-check-ajax/{id}', [SeoDashboardController::class, 'uptimeCheckAjax'])->name('uptime_check_ajax');
