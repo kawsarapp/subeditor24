@@ -54,8 +54,9 @@ class AutoPostNews extends Command
         $lastPostTime = $userSettings->last_auto_post_at ? \Carbon\Carbon::parse($userSettings->last_auto_post_at) : now()->subHour();
         $interval = $userSettings->auto_post_interval ?? 10;
         
-        if (now()->diffInMinutes($lastPostTime) < $interval) {
-            $this->info("Waiting for interval... Next post in " . ($interval - now()->diffInMinutes($lastPostTime)) . " mins");
+        if ($lastPostTime->gt(now()->subMinutes($interval))) {
+            $minsLeft = max(1, round(now()->diffInSeconds($lastPostTime->copy()->addMinutes($interval)) / 60));
+            $this->info("Waiting for interval... Next post in {$minsLeft} mins");
             return;
         }
 

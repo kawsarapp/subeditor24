@@ -30,7 +30,7 @@ class CentralPoolScraperCommand extends Command
                 if (!$site->last_scraped_at) return true;
                 $lastScraped = is_string($site->last_scraped_at) ? \Carbon\Carbon::parse($site->last_scraped_at) : $site->last_scraped_at;
                 $interval = (int) ($site->scrape_interval_minutes ?: 5);
-                return now()->diffInMinutes($lastScraped) >= $interval;
+                return $lastScraped->lte(now()->subMinutes($interval));
             })
             ->take($limit);
 
