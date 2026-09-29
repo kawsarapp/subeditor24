@@ -99,6 +99,15 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/admin/settings/upload-logo', [SettingsController::class, 'uploadLogo'])->name('settings.upload-logo');
         Route::post('/admin/settings/diagnostics', [SettingsController::class, 'runSystemDiagnostics'])->name('settings.diagnostics');
         Route::post('/admin/settings/cron-action', [SettingsController::class, 'cronAction'])->name('settings.cron-action');
+
+        // 🗄️ Full Database Backup & Disaster Recovery (Super Admin Only)
+        Route::prefix('admin/database-backups')->name('database.backups.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\DatabaseBackupController::class, 'index'])->name('index');
+            Route::post('/create', [\App\Http\Controllers\DatabaseBackupController::class, 'create'])->name('create');
+            Route::get('/download/{filename}', [\App\Http\Controllers\DatabaseBackupController::class, 'download'])->name('download');
+            Route::post('/restore', [\App\Http\Controllers\DatabaseBackupController::class, 'restore'])->name('restore');
+            Route::delete('/delete/{filename}', [\App\Http\Controllers\DatabaseBackupController::class, 'destroy'])->name('delete');
+        });
         
         Route::prefix('settings/test')->name('settings.')->group(function () {
             Route::post('/facebook', [SettingsController::class, 'testFacebookConnection'])->name('test-facebook');

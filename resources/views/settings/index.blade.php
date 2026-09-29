@@ -204,6 +204,146 @@
 
         </div>
     </div>
+
+    {{-- 🗄️ FULL DATABASE BACKUP & DISASTER RECOVERY (Super Admin Only) --}}
+    <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-cyan-200 overflow-hidden transition-all duration-200 mb-6" id="dbBackupAccordionCard">
+        <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-cyan-50/50 hover:bg-cyan-50/80 transition" onclick="toggleSettingsAccordion(this)">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center text-base font-black">
+                    <i class="fa-solid fa-database"></i>
+                </div>
+                <div>
+                    <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                        Full Database Backup & Disaster Recovery
+                        <span id="backupCountBadge" class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-cyan-100 text-cyan-800 border border-cyan-300">
+                            {{ count($dbBackups ?? []) }} Backups Available
+                        </span>
+                    </h2>
+                    <p class="text-xs text-gray-500">1-Click Full DB Export, GZIP Compression, Upload & Restore, and Auto-Safety snapshots</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-cyan-700 font-semibold hidden sm:inline">Backup Manager</span>
+                <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
+            </div>
+        </div>
+
+        <div class="settings-accordion-body hidden p-6 border-t border-cyan-100 bg-cyan-50/15 text-sm space-y-5">
+            
+            {{-- Action Toolbar --}}
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <button type="button" onclick="createDatabaseBackup(true)" id="btnBackupGzip" class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                        <i class="fa-solid fa-file-zipper"></i>
+                        <span>Create Compressed Backup (.sql.gz)</span>
+                    </button>
+                    <button type="button" onclick="createDatabaseBackup(false)" id="btnBackupSql" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-file-code text-indigo-500"></i>
+                        <span>Plain SQL (.sql)</span>
+                    </button>
+                    <button type="button" onclick="openRestoreUploadModal()" class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-upload"></i>
+                        <span>Upload & Restore (.sql / .sql.gz)</span>
+                    </button>
+                </div>
+                <div>
+                    <button type="button" onclick="refreshDatabaseBackupsList()" id="btnRefreshBackups" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition flex items-center gap-1 cursor-pointer">
+                        <i class="fa-solid fa-arrows-rotate" id="refreshBackupIcon"></i>
+                        <span>Refresh List</span>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Status/Alert Box --}}
+            <div id="dbBackupAlertBox" class="hidden p-3.5 rounded-xl text-xs font-semibold transition-all"></div>
+
+            {{-- Saved Backups Table --}}
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
+                <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-server text-cyan-600"></i> Server Saved Backups
+                    </h3>
+                    <span class="text-[11px] text-gray-400 font-semibold">Location: <code>storage/app/backups/</code></span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="backupsTable">
+                        <thead>
+                            <tr class="border-b border-gray-200 bg-gray-50/50 text-[11px] font-extrabold text-gray-500 uppercase tracking-wider">
+                                <th class="py-2.5 px-4">Backup File</th>
+                                <th class="py-2.5 px-4">Format</th>
+                                <th class="py-2.5 px-4">Size</th>
+                                <th class="py-2.5 px-4">Created Date</th>
+                                <th class="py-2.5 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="backupsTableBody" class="divide-y divide-gray-100 text-xs">
+                            @forelse($dbBackups ?? [] as $backup)
+                            <tr class="hover:bg-slate-50/80 transition" id="row-{{ md5($backup['filename']) }}">
+                                <td class="py-3 px-4 font-mono font-medium text-slate-800 flex items-center gap-2">
+                                    @if($backup['is_safety'])
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                            🛡️ Auto-Safety
+                                        </span>
+                                    @else
+                                        <i class="fa-solid fa-database text-cyan-600"></i>
+                                    @endif
+                                    <span>{{ $backup['filename'] }}</span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $backup['is_compressed'] ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700' }}">
+                                        {{ $backup['is_compressed'] ? 'GZIP (.sql.gz)' : 'SQL (.sql)' }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 font-semibold text-slate-600">
+                                    {{ $backup['formatted_size'] }}
+                                </td>
+                                <td class="py-3 px-4 text-slate-500">
+                                    <div>{{ $backup['created_at'] }}</div>
+                                    <div class="text-[10px] text-slate-400 font-semibold">{{ $backup['relative_time'] }}</div>
+                                </td>
+                                <td class="py-3 px-4 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <a href="{{ route('database.backups.download', $backup['filename']) }}" class="px-2.5 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                            <i class="fa-solid fa-download"></i> Download
+                                        </a>
+                                        <button type="button" onclick="confirmRestoreBackup('{{ $backup['filename'] }}')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                            <i class="fa-solid fa-rotate-left"></i> Restore
+                                        </button>
+                                        <button type="button" onclick="deleteBackupFile('{{ $backup['filename'] }}')" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr id="noBackupsRow">
+                                <td colspan="5" class="py-8 text-center text-gray-400 text-xs font-medium">
+                                    <i class="fa-solid fa-box-open text-2xl mb-1 block text-gray-300"></i>
+                                    কোনো ব্যাকআপ ফাইল এখনো তৈরি করা হয়নি। উপরের বাটনগুলো ব্যবহার করে ব্যাকআপ তৈরি করুন।
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- Help & Security Information Note --}}
+            <div class="bg-amber-50/60 border border-amber-200 p-4 rounded-xl flex items-start gap-3 text-xs text-amber-900 leading-relaxed">
+                <i class="fa-solid fa-shield-halved text-amber-600 text-base shrink-0 mt-0.5"></i>
+                <div>
+                    <strong class="font-bold">গুরুত্বপূর্ণ নিরাপত্তা নির্দেশিকা:</strong>
+                    <ul class="list-disc pl-4 mt-1 space-y-0.5 text-[11.5px] text-amber-800">
+                        <li>রিস্টোর (Restore) বাটনে চাপ দিলে বর্তমান ডেটাবেজের সমস্ত টেবিল ব্যাকআপ ফাইলের ডেটা দিয়ে প্রতিস্থাপিত হবে।</li>
+                        <li>যেকোনো রিস্টোর শুরু করার আগে সিস্টেম স্বয়ংক্রিয়ভাবে বর্তমান অবস্থার একটি <strong>Auto-Safety Snapshot</strong> ব্যাকআপ নিয়ে রাখে।</li>
+                        <li>ব্যাকআপ ফাইলগুলো স্ট্যান্ডার্ড SQL ফরম্যাটে তৈরি, যা phpMyAdmin, cPanel বা যেকোনো লিনাক্স টার্মিনালেও সরাসরি ইমপোর্ট করা যাবে।</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
     @endif
 
     {{-- 2. Main Settings Form Start --}}
@@ -2999,7 +3139,310 @@ https://yourdomain.com/api/external-news-post`
             }
         });
     }
+
+    // ==========================================================
+    // 🗄️ DATABASE BACKUP & RESTORE JAVASCRIPT ENGINE
+    // ==========================================================
+    function showDbAlert(msg, type = 'success') {
+        const box = document.getElementById('dbBackupAlertBox');
+        if (!box) return;
+        box.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-200', 'bg-rose-50', 'text-rose-800', 'border-rose-200', 'bg-amber-50', 'text-amber-800', 'border-amber-200');
+        
+        if (type === 'success') {
+            box.classList.add('bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-200', 'block');
+        } else if (type === 'warning') {
+            box.classList.add('bg-amber-50', 'text-amber-800', 'border', 'border-amber-200', 'block');
+        } else {
+            box.classList.add('bg-rose-50', 'text-rose-800', 'border', 'border-rose-200', 'block');
+        }
+        box.innerHTML = msg;
+        setTimeout(() => { if (box && type === 'success') box.classList.add('hidden'); }, 8000);
+    }
+
+    function createDatabaseBackup(compress = true) {
+        const btn = compress ? document.getElementById('btnBackupGzip') : document.getElementById('btnBackupSql');
+        const origHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'pointer-events-none');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Exporting ${compress ? 'GZIP' : 'SQL'}...</span>`;
+        }
+
+        showDbAlert(`⏳ সম্পূর্ণ ডেটাবেজ এক্সপোর্ট হচ্ছে (${compress ? '.sql.gz' : '.sql'}). অনুগ্রহ করে অপেক্ষা করুন...`, 'warning');
+
+        fetch('{{ route("database.backups.create") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ compress: compress })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showDbAlert(`✅ <strong>${data.message}</strong> ফাইল সাইজ: <strong>${data.backup.formatted_size}</strong> (${data.backup.filename})`, 'success');
+                if (data.backups) renderBackupTable(data.backups);
+            } else {
+                showDbAlert(`❌ ${data.message || 'ব্যাকআপ তৈরিতে সমস্যা হয়েছে।'}`, 'error');
+            }
+        })
+        .catch(err => {
+            showDbAlert(`❌ নেটওয়ার্ক ত্রুটি: ${err.message}`, 'error');
+        })
+        .finally(() => {
+            if (btn) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-70', 'pointer-events-none');
+                btn.innerHTML = origHtml;
+            }
+        });
+    }
+
+    function refreshDatabaseBackupsList() {
+        const icon = document.getElementById('refreshBackupIcon');
+        if (icon) icon.classList.add('fa-spin');
+
+        fetch('{{ route("database.backups.index") }}', {
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.backups) {
+                renderBackupTable(data.backups);
+                showDbAlert('🔄 ব্যাকআপ তালিকা রিফ্রেশ করা হয়েছে।', 'success');
+            }
+        })
+        .catch(err => console.error(err))
+        .finally(() => {
+            if (icon) icon.classList.remove('fa-spin');
+        });
+    }
+
+    function renderBackupTable(backups) {
+        const tbody = document.getElementById('backupsTableBody');
+        const badge = document.getElementById('backupCountBadge');
+        if (badge) badge.innerText = `${backups.length} Backups Available`;
+        if (!tbody) return;
+
+        if (backups.length === 0) {
+            tbody.innerHTML = `
+                <tr id="noBackupsRow">
+                    <td colspan="5" class="py-8 text-center text-gray-400 text-xs font-medium">
+                        <i class="fa-solid fa-box-open text-2xl mb-1 block text-gray-300"></i>
+                        কোনো ব্যাকআপ ফাইল এখনো তৈরি করা হয়নি। উপরের বাটনগুলো ব্যবহার করে ব্যাকআপ তৈরি করুন।
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        backups.forEach(b => {
+            const safetyTag = b.is_safety ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">🛡️ Auto-Safety</span>` : `<i class="fa-solid fa-database text-cyan-600"></i>`;
+            const formatTag = b.is_compressed ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">GZIP (.sql.gz)</span>` : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">SQL (.sql)</span>`;
+            const downloadUrl = `{{ url('/admin/database-backups/download') }}/${encodeURIComponent(b.filename)}`;
+
+            html += `
+                <tr class="hover:bg-slate-50/80 transition" id="row-${b.filename.replace(/[^a-zA-Z0-9]/g, '')}">
+                    <td class="py-3 px-4 font-mono font-medium text-slate-800 flex items-center gap-2">
+                        ${safetyTag}
+                        <span class="truncate max-w-xs" title="${b.filename}">${b.filename}</span>
+                    </td>
+                    <td class="py-3 px-4">${formatTag}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-600">${b.formatted_size}</td>
+                    <td class="py-3 px-4 text-slate-500">
+                        <div>${b.created_at}</div>
+                        <div class="text-[10px] text-slate-400 font-semibold">${b.relative_time}</div>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <a href="${downloadUrl}" class="px-2.5 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                <i class="fa-solid fa-download"></i> Download
+                            </a>
+                            <button type="button" onclick="confirmRestoreBackup('${b.filename}')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                <i class="fa-solid fa-rotate-left"></i> Restore
+                            </button>
+                            <button type="button" onclick="deleteBackupFile('${b.filename}')" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition cursor-pointer">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+
+    function confirmRestoreBackup(filename) {
+        if (!confirm(`⚠️ সতর্কবার্তা!\n\nআপনি কি নিশ্চিত যে "${filename}" ফাইলটি থেকে সম্পূর্ণ ডেটাবেজ রিস্টোর করতে চান?\n\nএটি বর্তমান টেবিলগুলোকে প্রতিস্থাপন করবে। তবে কাজ শুরুর পূর্বে স্বয়ংক্রিয়ভাবে একটি Auto-Safety Snapshot ব্যাকআপ তৈরি হবে।`)) {
+            return;
+        }
+
+        showDbAlert(`⏳ ডেটাবেজ রিস্টোর হচ্ছে (${filename}). অনুগ্রহ করে ব্রাউজার বন্ধ করবেন না...`, 'warning');
+
+        fetch('{{ route("database.backups.restore") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ filename: filename })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showDbAlert(`🎉 <strong>${data.message}</strong>` + (data.details.safety_backup ? `<br><small class="text-emerald-700">রিস্টোরের পূর্বে সেফটি ব্যাকআপ সংরক্ষিত হয়েছে: ${data.details.safety_backup}</small>` : ''), 'success');
+                if (data.backups) renderBackupTable(data.backups);
+            } else {
+                showDbAlert(`❌ ${data.message || 'রিস্টোরে সমস্যা হয়েছে।'}`, 'error');
+            }
+        })
+        .catch(err => {
+            showDbAlert(`❌ নেটওয়ার্ক ত্রুটি: ${err.message}`, 'error');
+        });
+    }
+
+    function deleteBackupFile(filename) {
+        if (!confirm(`🗑️ আপনি কি "${filename}" ব্যাকআপ ফাইলটি ডিলিট করতে চান?`)) {
+            return;
+        }
+
+        fetch(`{{ url('/admin/database-backups/delete') }}/${encodeURIComponent(filename)}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showDbAlert(data.message, 'success');
+                if (data.backups) renderBackupTable(data.backups);
+            } else {
+                showDbAlert(data.message, 'error');
+            }
+        })
+        .catch(err => showDbAlert(`❌ এরর: ${err.message}`, 'error'));
+    }
+
+    // Modal Handlers
+    function openRestoreUploadModal() {
+        const modal = document.getElementById('restoreUploadModal');
+        if (modal) modal.classList.remove('hidden'), modal.classList.add('flex');
+    }
+
+    function closeRestoreUploadModal() {
+        const modal = document.getElementById('restoreUploadModal');
+        if (modal) modal.classList.add('hidden'), modal.classList.remove('flex');
+    }
+
+    function submitRestoreUploadForm(event) {
+        event.preventDefault();
+        const fileInput = document.getElementById('restoreFileInput');
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            alert('অনুগ্রহ করে একটি .sql বা .sql.gz ফাইল সিলেক্ট করুন।');
+            return;
+        }
+
+        if (!confirm('⚠️ সতর্কবার্তা!\n\nআপনি কি আপলোডকৃত ব্যাকআপ ফাইলটি সরাসরি ডেটাবেজে ইমপোর্ট ও রিস্টোর করতে চান?\n\n(রিস্টোরের পূর্বে বর্তমান ডেটাবেজের একটি Auto-Safety Snapshot স্বয়ংক্রিয়ভাবে সংরক্ষিত হবে)')) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('backup_file', fileInput.files[0]);
+        formData.append('_token', '{{ csrf_token() }}');
+
+        const btn = document.getElementById('btnSubmitUploadRestore');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Uploading & Restoring...</span>`;
+        }
+
+        closeRestoreUploadModal();
+        showDbAlert(`⏳ ব্যাকআপ ফাইল আপলোড ও রিস্টোর হচ্ছে (${fileInput.files[0].name}). অনুগ্রহ করে অপেক্ষা করুন...`, 'warning');
+
+        fetch('{{ route("database.backups.restore") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showDbAlert(`🎉 <strong>${data.message}</strong>`, 'success');
+                if (data.backups) renderBackupTable(data.backups);
+            } else {
+                showDbAlert(`❌ ${data.message || 'রিস্টোরে সমস্যা হয়েছে।'}`, 'error');
+            }
+        })
+        .catch(err => {
+            showDbAlert(`❌ নেটওয়ার্ক ত্রুটি: ${err.message}`, 'error');
+        })
+        .finally(() => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-rotate-left"></i> <span>Upload & Restore Database</span>`;
+            }
+            if (fileInput) fileInput.value = '';
+        });
+    }
 </script>
+
+{{-- 📤 UPLOAD & RESTORE MODAL --}}
+<div id="restoreUploadModal" class="fixed inset-0 bg-slate-950/70 hidden items-center justify-center z-[110] backdrop-blur-md transition-all">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col">
+        <div class="px-6 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-lg shadow-inner">
+                    <i class="fa-solid fa-upload"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-black">Upload & Restore Database</h3>
+                    <p class="text-[11px] text-white/80 font-semibold">Import .sql or .sql.gz backup file</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeRestoreUploadModal()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition cursor-pointer">
+                ✕
+            </button>
+        </div>
+
+        <form onsubmit="submitRestoreUploadForm(event)" class="p-6 space-y-4">
+            <div class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6 text-center hover:border-amber-500 transition bg-slate-50 dark:bg-slate-800/50">
+                <i class="fa-solid fa-file-arrow-up text-3xl text-amber-500 mb-2"></i>
+                <label for="restoreFileInput" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 cursor-pointer">
+                    Click to select or drag backup file here
+                </label>
+                <p class="text-[11px] text-slate-400 mb-3">Supported formats: <strong>.sql</strong> or <strong>.sql.gz</strong> (Max: 100MB)</p>
+                <input type="file" id="restoreFileInput" name="backup_file" accept=".sql,.gz,.sql.gz" class="w-full text-xs text-slate-600 dark:text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200 cursor-pointer">
+            </div>
+
+            <div class="bg-rose-50 border border-rose-200 p-3.5 rounded-xl text-xs text-rose-800 flex items-start gap-2.5">
+                <i class="fa-solid fa-triangle-exclamation text-rose-600 text-sm mt-0.5 shrink-0"></i>
+                <div>
+                    <strong>সতর্কতা:</strong> ব্যাকআপ ফাইলটি আপলোড হয়ে রিস্টোর হওয়ার সাথে সাথে ডেটাবেজের বর্তমান টেবিলগুলো মুছে গিয়ে ব্যাকআপের ডেটা ইনসার্ট হবে। রিস্টোরের আগে স্বয়ংক্রিয় সেফটি স্ন্যাপশট সংরক্ষিত হবে।
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button type="button" onclick="closeRestoreUploadModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 rounded-xl text-xs font-bold transition cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" id="btnSubmitUploadRestore" class="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Upload & Restore Database</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 {{-- SYSTEM HEALTH & DIAGNOSTICS MODAL --}}
 <div id="systemDiagnosticsModal" class="fixed inset-0 bg-slate-950/70 hidden items-center justify-center z-[110] backdrop-blur-md transition-all">

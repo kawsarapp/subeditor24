@@ -31,8 +31,9 @@ class SettingsController extends Controller
         $settings = $user->settings ?? new UserSetting(['user_id' => $user->id]);
         $fbPages  = $user->facebookPages()->orderByDesc('is_active')->get();
         $cronHealth = app(\App\Services\DynamicCronService::class)->getHealthStatus();
+        $dbBackups = $user->role === 'super_admin' ? app(\App\Services\DatabaseBackupService::class)->listBackups() : [];
 
-        return view('settings.index', compact('settings', 'fbPages', 'cronHealth'));
+        return view('settings.index', compact('settings', 'fbPages', 'cronHealth', 'dbBackups'));
     }
 
     /**
