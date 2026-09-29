@@ -319,13 +319,20 @@ Route::middleware(['auth', 'nocache', AdminMiddleware::class])->group(function (
         });
         Route::post('/users/create', [AdminController::class, 'store'])->name('users.store');
 
-        // Route::controller(PaymentController::class)->prefix('payments')->name('payments.')->group(function () {
-        //     Route::get('/', 'adminIndex')->name('index');
-        //     Route::post('/{id}/approve', 'approve')->name('approve');
-        //     Route::post('/{id}/reject', 'reject')->name('reject');
-        // });
+        // 🏷️ Dynamic Pricing Plans & Coupons Management (Super Admin)
+        Route::prefix('pricing')->name('pricing.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\PricingAdminController::class, 'index'])->name('index');
+            Route::post('/plans/save', [\App\Http\Controllers\Admin\PricingAdminController::class, 'savePlan'])->name('plans.save');
+            Route::delete('/plans/{id}', [\App\Http\Controllers\Admin\PricingAdminController::class, 'deletePlan'])->name('plans.delete');
+            Route::post('/coupons/save', [\App\Http\Controllers\Admin\PricingAdminController::class, 'saveCoupon'])->name('coupons.save');
+            Route::delete('/coupons/{id}', [\App\Http\Controllers\Admin\PricingAdminController::class, 'deleteCoupon'])->name('coupons.delete');
+        });
     });
 });
+
+// 🏷️ Public / User-facing Dynamic Pricing Page
+Route::get('/pricing', [\App\Http\Controllers\PricingController::class, 'index'])->name('pricing.index');
+Route::post('/pricing/apply-coupon', [\App\Http\Controllers\PricingController::class, 'applyCoupon'])->name('pricing.apply-coupon');
 
 // Load Isolated SEO Intelligence Module Routes
 require __DIR__ . '/seo.php';

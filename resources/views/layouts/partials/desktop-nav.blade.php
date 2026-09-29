@@ -354,12 +354,18 @@
                                 </div>
                             </div>
                             
-                            <div class="py-1">
                                 @if(auth()->user()->role === 'super_admin')
                                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
                                     <i class="fa-solid fa-shield-halved text-indigo-500 w-4"></i> Admin Panel
                                 </a>
+                                <a href="{{ route('admin.pricing.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-600 transition-colors">
+                                    <i class="fa-solid fa-tags text-amber-500 w-4"></i> Pricing & Coupons
+                                </a>
                                 @endif
+
+                                <a href="{{ route('pricing.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                                    <i class="fa-solid fa-gem text-purple-500 w-4"></i> Special Pricing Plans
+                                </a>
 
                                 @if(Route::has('settings.index') && (auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings')))
                                 <a href="{{ route('settings.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
@@ -370,7 +376,6 @@
                                 <a href="{{ route('feedback.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
                                     <i class="fa-solid fa-lightbulb text-emerald-500 w-4"></i> Feature Requests & Roadmap
                                 </a>
-                            </div>
 
                             <div class="border-t border-slate-100 pt-1 mt-1">
                                 <form method="POST" action="{{ route('logout') }}">
