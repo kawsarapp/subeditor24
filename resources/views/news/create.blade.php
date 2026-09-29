@@ -106,6 +106,36 @@
                 </div>
             </div>
 
+            {{-- Category Selection & Live Fetch --}}
+            <div class="mb-6 p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/80">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-folder-tree text-indigo-500"></i> Category / বিভাগ
+                    </label>
+                    <button type="button" onclick="fetchLiveCategoriesForCreate()" id="btnFetchCategories" class="text-xs font-bold px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:hover:bg-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs">
+                        <i class="fa-solid fa-rotate text-[11px]" id="fetchCatIcon"></i> <span>Fetch Categories</span>
+                    </button>
+                </div>
+                
+                <div class="relative">
+                    <select name="category" id="newsCategorySelect" onchange="triggerAutoSaveDebounced()" class="w-full border border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 text-sm font-semibold bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-sm cursor-pointer">
+                        <option value="">-- Select Category (ক্যাটাগরি নির্বাচন করুন) --</option>
+                        @if(isset($settings->category_mapping) && is_array($settings->category_mapping))
+                            @foreach($settings->category_mapping as $aiCat => $wpId)
+                                @if(!empty($wpId))
+                                    <option value="{{ $wpId }}" {{ old('category') == $wpId ? 'selected' : '' }}>
+                                        📂 {{ $aiCat }} (ID: {{ $wpId }})
+                                    </option>
+                                @endif
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+                <p class="text-[11px] font-semibold text-slate-400 mt-1.5">
+                    Select a category or click "Fetch Categories" to load live categories from your WordPress / Custom CMS.
+                </p>
+            </div>
+
             {{-- Content --}}
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-2">
@@ -208,9 +238,11 @@
 
             const titleInput = document.getElementById('newsTitleInput');
             const imageInput = document.getElementById('newsImageUrlInput');
+            const categorySelect = document.getElementById('newsCategorySelect');
 
             if (titleInput && draft.title) titleInput.value = draft.title;
             if (imageInput && draft.image_url) imageInput.value = draft.image_url;
+            if (categorySelect && draft.category) categorySelect.value = draft.category;
             if (tinymce.get('newsContent') && draft.content) {
                 tinymce.get('newsContent').setContent(draft.content);
             } else {
@@ -241,8 +273,10 @@
     function performAutoSave() {
         const titleInput = document.getElementById('newsTitleInput');
         const imageInput = document.getElementById('newsImageUrlInput');
+        const categorySelect = document.getElementById('newsCategorySelect');
         const title = titleInput ? titleInput.value.trim() : '';
         const image_url = imageInput ? imageInput.value.trim() : '';
+        const category = categorySelect ? categorySelect.value : '';
         const content = tinymce.get('newsContent') ? tinymce.get('newsContent').getContent() : (document.getElementById('newsContent') ? document.getElementById('newsContent').value : '');
 
         if (!title && !content) return;
@@ -250,6 +284,7 @@
         const draft = {
             title: title,
             image_url: image_url,
+            category: category,
             content: content,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -415,6 +450,49 @@
             const box = document.getElementById('createViralHeadlineBox');
             if (box) box.classList.add('hidden');
         }
+    }
+
+    // ==========================================================
+    // 🔄 LIVE CATEGORY FETCHER
+    // ==========================================================
+    function fetchLiveCategoriesForCreate() {
+        const btn = document.getElementById('btnFetchCategories');
+        const icon = document.getElementById('fetchCatIcon');
+        const select = document.getElementById('newsCategorySelect');
+        
+        if (icon) icon.classList.add('fa-spin');
+        if (btn) btn.classList.add('opacity-70', 'pointer-events-none');
+
+        fetch("{{ route('settings.fetch-categories') }}?refresh=1")
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to fetch categories');
+                return res.json();
+            })
+            .then(data => {
+                if (!Array.isArray(data) || data.length === 0) {
+                    if (window.showToast) window.showToast('⚠️ No categories found on website.', 'warning');
+                    else alert('⚠️ No categories found on website.');
+                    return;
+                }
+                const currentVal = select ? select.value : '';
+                select.innerHTML = '<option value="">-- Select Category (ক্যাটাগরি নির্বাচন করুন) --</option>';
+                data.forEach(cat => {
+                    const isSelected = String(cat.id) === String(currentVal) ? 'selected' : '';
+                    select.innerHTML += `<option value="${cat.id}" ${isSelected}>📂 ${cat.name} (ID: ${cat.id})</option>`;
+                });
+                if (window.showToast) window.showToast('✅ Live categories fetched successfully!', 'success');
+                else alert('✅ Live categories fetched successfully!');
+                triggerAutoSaveDebounced();
+            })
+            .catch(err => {
+                console.error(err);
+                if (window.showToast) window.showToast('❌ Failed to fetch categories. Please check website API settings.', 'error');
+                else alert('❌ Failed to fetch categories. Please check website API settings.');
+            })
+            .finally(() => {
+                if (icon) icon.classList.remove('fa-spin');
+                if (btn) btn.classList.remove('opacity-70', 'pointer-events-none');
+            });
     }
 </script>
 @endsection

@@ -102,8 +102,28 @@
 </div>
 
 <script>
+    const COPILOT_STORAGE_KEY = 'subeditor24_copilot_chat_history_v2';
     let copilotChatHistory = [];
     let isCopilotExpanded = false;
+
+    // 🔄 Load persistent chat history from LocalStorage
+    try {
+        const saved = localStorage.getItem(COPILOT_STORAGE_KEY);
+        if (saved) {
+            copilotChatHistory = JSON.parse(saved);
+            if (!Array.isArray(copilotChatHistory)) copilotChatHistory = [];
+        }
+    } catch (e) {
+        copilotChatHistory = [];
+    }
+
+    function saveCopilotHistory() {
+        try {
+            localStorage.setItem(COPILOT_STORAGE_KEY, JSON.stringify(copilotChatHistory));
+        } catch (e) {
+            console.warn('Failed to save Copilot history:', e);
+        }
+    }
 
     // 📋 Page Registry & Scenarios
     const pageScenarios = {
@@ -160,12 +180,12 @@
             ]
         },
         news_feed: {
-            name: 'সেন্ট্রাল নিউজ ফিড ও স্ক্র্যাপার',
+            name: 'সেন্ট্রাল নিউজ ফিড ডেস্ক',
             badge: '📰 Live News Feed',
-            welcome: 'আপনি এখন <strong>সেন্ট্রাল নিউজ ফিডে</strong> আছেন। এখানে স্বয়ংক্রিয়ভাবে বিভিন্ন জাতীয় পোর্টাল থেকে লাইভ নিউজ পর্যবেক্ষণ ও স্ক্র্যাপ হচ্ছে।',
+            welcome: 'আপনি এখন <strong>সেন্ট্রাল নিউজ ফিডে</strong> আছেন। এখানে বিভিন্ন সংবাদ উৎসের লাইভ খবর পর্যবেক্ষণ, ড্রাফট তৈরি ও পাবলিশিং করা যায়।',
             chips: [
-                { label: '🔍 নিউজ কীভাবে স্ক্র্যাপ হয়?', prompt: 'সেন্ট্রাল ফিডে কীভাবে স্বয়ংক্রিয়ভাবে নিউজ স্ক্র্যাপ ও পর্যবেক্ষণ হয়?' },
                 { label: '⚡ ১-ক্লিকে AI প্রসেসিং কীভাবে?', prompt: 'ফিড থেকে কোনো নিউজকে ১-ক্লিকে কীভাবে AI রিরাইট কিউতে পাঠাব?' },
+                { label: '📋 ড্রাফট ও এডিট করার নিয়ম', prompt: 'ফিডের নিউজ কীভাবে ড্রাফট বা এডিটর বক্সে নিয়ে এডিট করব?' },
                 { label: '💡 এই পেজের সব ফিচার গাইড', prompt: 'নিউজ ফিড পেজের সব ফিচার ও ফিল্টারিং কীভাবে কাজ করে?' }
             ]
         },
@@ -211,20 +231,26 @@
         const scenario = pageScenarios[pageKey] || pageScenarios.general;
 
         // 1. Update Header & Location Labels
-        document.getElementById('copilotActiveModeText').innerText = scenario.badge;
-        document.getElementById('copilotPageLocationLabel').innerHTML = `📍 ডেস্ক: <strong>${scenario.name}</strong>`;
+        const modeEl = document.getElementById('copilotActiveModeText');
+        const locEl = document.getElementById('copilotPageLocationLabel');
+        if (modeEl) modeEl.innerText = scenario.badge;
+        if (locEl) locEl.innerHTML = `📍 ডেস্ক: <strong>${scenario.name}</strong>`;
 
         // 2. Render Dynamic Chips
         const chipsContainer = document.getElementById('copilotDynamicChips');
-        chipsContainer.innerHTML = scenario.chips.map(c => `
-            <button type="button" onclick="sendQuickPrompt('${escapeHtml(c.prompt)}')" class="bg-slate-850 hover:bg-slate-800 text-indigo-300 hover:text-white px-3 py-1.5 rounded-full border border-slate-700/80 transition flex items-center gap-1.5 cursor-pointer shadow-xs">
-                ${c.label}
-            </button>
-        `).join('');
+        if (chipsContainer) {
+            chipsContainer.innerHTML = scenario.chips.map(c => `
+                <button type="button" onclick="sendQuickPrompt('${escapeHtml(c.prompt)}')" class="bg-slate-850 hover:bg-slate-800 text-indigo-300 hover:text-white px-3 py-1.5 rounded-full border border-slate-700/80 transition flex items-center gap-1.5 cursor-pointer shadow-xs">
+                    ${c.label}
+                </button>
+            `).join('');
+        }
 
-        // 3. Render Welcome message if chat history is empty
+        // 3. Render Messages (Persisted History or Welcome)
+        const container = document.getElementById('copilotMessages');
+        if (!container) return;
+
         if (copilotChatHistory.length === 0) {
-            const container = document.getElementById('copilotMessages');
             container.innerHTML = `
                 <div class="flex items-start gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600/30 to-purple-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-400 text-sm shrink-0 mt-0.5 shadow-sm">
@@ -232,7 +258,7 @@
                     </div>
                     <div class="bg-slate-850 border border-slate-700/80 p-4 rounded-2xl rounded-tl-none leading-relaxed text-slate-200 space-y-2.5 max-w-[90%] shadow-md">
                         <div class="flex items-center justify-between border-b border-slate-750 pb-2">
-                            <span class="font-bold text-white text-xs">আসসালামু আলাইকুম! 👋</span>
+                            <span class="font-bold text-white text-xs">Subeditor24 AI Copilot</span>
                             <span class="text-[10px] text-indigo-300 font-semibold">${scenario.badge}</span>
                         </div>
                         <p class="text-slate-300 text-[11.5px] leading-relaxed">
@@ -245,6 +271,41 @@
                     </div>
                 </div>
             `;
+        } else {
+            container.innerHTML = '';
+            copilotChatHistory.forEach(item => {
+                if (item.role === 'user') {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-end';
+                    div.innerHTML = `
+                        <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-3.5 rounded-2xl rounded-tr-none text-xs max-w-[85%] leading-relaxed shadow-md">
+                            ${escapeHtml(item.content).replace(/\n/g, '<br>')}
+                        </div>
+                    `;
+                    container.appendChild(div);
+                } else if (item.role === 'assistant') {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-start gap-2.5';
+                    const formattedHtml = formatMarkdownForCopilot(item.content);
+                    const time = item.time || '';
+                    div.innerHTML = `
+                        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600/30 to-purple-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-400 text-sm shrink-0 mt-0.5 shadow-sm">
+                            <i class="fa-solid fa-user-pen"></i>
+                        </div>
+                        <div class="bg-slate-850 border border-slate-700/80 p-4 rounded-2xl rounded-tl-none text-slate-200 text-xs max-w-[90%] leading-relaxed shadow-md space-y-2.5">
+                            <div class="flex items-center justify-between border-b border-slate-750 pb-1.5">
+                                <span class="text-[9px] font-bold uppercase text-indigo-400 tracking-wider flex items-center gap-1.5">
+                                    <i class="fa-solid fa-bolt text-indigo-500"></i> ${item.provider ? item.provider.toUpperCase() : 'AI'} ASSISTANT
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-sans">${time}</span>
+                            </div>
+                            <div class="copilot-rendered-content text-[11.8px] leading-relaxed space-y-2">${formattedHtml}</div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                }
+            });
+            setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
         }
     }
 
@@ -286,7 +347,9 @@
 
     function clearCopilotChat() {
         copilotChatHistory = [];
+        localStorage.removeItem(COPILOT_STORAGE_KEY);
         renderActivePageEnvironment();
+        showCopilotToast('🧹 নতুন চ্যাট সেশন শুরু হয়েছে!');
     }
 
     function showCopilotToast(msg) {
@@ -340,9 +403,12 @@
         const msg = input.value.trim();
         if (!msg) return;
 
+        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
         appendUserMessage(msg);
-        copilotChatHistory.push({ role: 'user', content: msg });
-        if (copilotChatHistory.length > 12) copilotChatHistory.shift();
+        copilotChatHistory.push({ role: 'user', content: msg, time: timeStr });
+        if (copilotChatHistory.length > 20) copilotChatHistory.shift();
+        saveCopilotHistory();
 
         input.value = '';
         input.style.height = 'auto';
@@ -383,9 +449,16 @@
             typing.classList.add('hidden');
             sendBtn.disabled = false;
             if (data.reply) {
-                copilotChatHistory.push({ role: 'assistant', content: data.reply });
-                if (copilotChatHistory.length > 12) copilotChatHistory.shift();
-                appendAssistantMessage(data.reply, data.provider);
+                const replyTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                copilotChatHistory.push({ 
+                    role: 'assistant', 
+                    content: data.reply, 
+                    provider: data.provider || '', 
+                    time: replyTime 
+                });
+                if (copilotChatHistory.length > 20) copilotChatHistory.shift();
+                saveCopilotHistory();
+                appendAssistantMessage(data.reply, data.provider, replyTime);
             } else {
                 appendAssistantMessage('দুঃখিত, কোনো উত্তর পাওয়া যায়নি। একটু পরে আবার চেষ্টা করবেন কি?');
             }
@@ -410,12 +483,13 @@
         container.scrollTop = container.scrollHeight;
     }
 
-    function appendAssistantMessage(rawMarkdown, provider = '') {
+    function appendAssistantMessage(rawMarkdown, provider = '', time = '') {
         const container = document.getElementById('copilotMessages');
         const div = document.createElement('div');
         div.className = 'flex items-start gap-2.5';
 
         const formattedHtml = formatMarkdownForCopilot(rawMarkdown);
+        const timeDisplay = time || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
         div.innerHTML = `
             <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600/30 to-purple-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-400 text-sm shrink-0 mt-0.5 shadow-sm">
@@ -426,7 +500,7 @@
                     <span class="text-[9px] font-bold uppercase text-indigo-400 tracking-wider flex items-center gap-1.5">
                         <i class="fa-solid fa-bolt text-indigo-500"></i> ${provider ? provider.toUpperCase() : 'AI'} ASSISTANT
                     </span>
-                    <span class="text-[10px] text-slate-400 font-sans">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    <span class="text-[10px] text-slate-400 font-sans">${timeDisplay}</span>
                 </div>
                 <div class="copilot-rendered-content text-[11.8px] leading-relaxed space-y-2">${formattedHtml}</div>
             </div>

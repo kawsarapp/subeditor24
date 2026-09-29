@@ -191,11 +191,22 @@ class NewsController extends Controller
         return view('news.studio', compact('newsItem', 'settings', 'availableTemplates', 'mySavedTemplates', 'categories'));
     }
 
-    public function create() { return view('news.create'); }
+    public function create()
+    {
+        $adminUser = $this->getEffectiveAdmin();
+        $settings = $adminUser ? $adminUser->settings : null;
+        return view('news.create', compact('settings'));
+    }
 
     public function storeCustom(Request $request)
     {
-        $request->validate(['title' => 'required|max:255', 'content' => 'required', 'image_file' => 'nullable|image|max:5120', 'image_url' => 'nullable|url']);
+        $request->validate([
+            'title'      => 'required|max:255',
+            'content'    => 'required',
+            'image_file' => 'nullable|image|max:5120',
+            'image_url'  => 'nullable|url',
+            'category'   => 'nullable',
+        ]);
         
         $adminUser = $this->getEffectiveAdmin(); 
         $staffId = Auth::id() !== $adminUser->id ? Auth::id() : null; 
