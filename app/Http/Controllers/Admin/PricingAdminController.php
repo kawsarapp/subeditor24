@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PricingPlan;
 use App\Models\PricingCoupon;
+use App\Models\User;
+use App\Models\UserSetting;
+use App\Http\Controllers\PricingController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -29,10 +32,65 @@ class PricingAdminController extends Controller
     {
         $this->authorizeSuperAdmin();
 
-        $plans = PricingPlan::orderBy('sort_order', 'asc')->get();
+        $plans = PricingPlan::where('is_vip', false)->orderBy('sort_order', 'asc')->get();
         $coupons = PricingCoupon::orderByDesc('created_at')->get();
+        $config = PricingController::getPageConfig();
 
-        return view('admin.pricing.index', compact('plans', 'coupons'));
+        return view('admin.pricing.index', compact('plans', 'coupons', 'config'));
+    }
+
+    /**
+     * Save Global Pricing Page Layout & Text Settings
+     */
+    public function savePageConfig(Request $request)
+    {
+        $this->authorizeSuperAdmin();
+
+        $superAdmin = Auth::user();
+        $setting = UserSetting::firstOrCreate(['user_id' => $superAdmin->id]);
+
+        $vipFeatures = [];
+        if ($request->filled('vip_plan_features')) {
+            $vipFeatures = array_values(array_filter(array_map('trim', explode("\n", (string)$request->input('vip_plan_features')))));
+        }
+
+        $configData = [
+            'page_badge'                  => $request->input('page_badge'),
+            'page_title'                  => $request->input('page_title'),
+            'page_subtitle'               => $request->input('page_subtitle'),
+            'tab_special_title'           => $request->input('tab_special_title'),
+            'tab_regular_title'           => $request->input('tab_regular_title'),
+            'tab_standard_title'          => $request->input('tab_standard_title'),
+            'free_trial_banner_title'     => $request->input('free_trial_banner_title'),
+            'free_trial_banner_desc'      => $request->input('free_trial_banner_desc'),
+            'free_trial_banner_badge'     => $request->input('free_trial_banner_badge'),
+            'free_trial_btn_text'         => $request->input('free_trial_btn_text'),
+            'table_heading'               => $request->input('table_heading'),
+            'table_subheading'            => $request->input('table_subheading'),
+            'policy_card_1_title'         => $request->input('policy_card_1_title'),
+            'policy_card_1_desc'          => $request->input('policy_card_1_desc'),
+            'policy_card_2_title'         => $request->input('policy_card_2_title'),
+            'policy_card_2_desc'          => $request->input('policy_card_2_desc'),
+            'contact_email'               => $request->input('contact_email'),
+            'contact_phone'               => $request->input('contact_phone'),
+            'whatsapp_number'             => $request->input('whatsapp_number'),
+
+            // 👑 VIP Custom Premium Plan Settings
+            'vip_plan_enabled'            => $request->boolean('vip_plan_enabled', true),
+            'vip_plan_badge'              => $request->input('vip_plan_badge'),
+            'vip_plan_title'              => $request->input('vip_plan_title'),
+            'vip_plan_subtitle'           => $request->input('vip_plan_subtitle'),
+            'vip_plan_price_label'        => $request->input('vip_plan_price_label'),
+            'vip_plan_price_sub'          => $request->input('vip_plan_price_sub'),
+            'vip_plan_features'           => !empty($vipFeatures) ? $vipFeatures : ($setting->pricing_page_config['vip_plan_features'] ?? []),
+            'vip_plan_btn_text'           => $request->input('vip_plan_btn_text'),
+            'vip_plan_btn_url'            => $request->input('vip_plan_btn_url'),
+            'vip_plan_secondary_btn_text' => $request->input('vip_plan_secondary_btn_text'),
+        ];
+
+        $setting->update(['pricing_page_config' => $configData]);
+
+        return redirect()->back()->with('success', '✅ প্রাইসিং পেজের সকল টেক্সট ও লেআউট সেটিংস সফলভাবে সংরক্ষিত হয়েছে!');
     }
 
     /**
@@ -59,6 +117,7 @@ class PricingAdminController extends Controller
             'english_websites_limit' => 'nullable|integer',
             'features'               => 'nullable|string',
             'is_popular'             => 'nullable|boolean',
+            'is_vip'                 => 'nullable|boolean',
             'is_active'              => 'nullable|boolean',
             'sort_order'             => 'nullable|integer',
         ]);
@@ -99,6 +158,7 @@ class PricingAdminController extends Controller
             'features'               => array_values($featuresArray),
             'custom_limits'          => $customLimits,
             'is_popular'             => $request->boolean('is_popular'),
+            'is_vip'                 => $request->boolean('is_vip'),
             'is_active'              => $request->boolean('is_active', true),
             'sort_order'             => (int) ($request->sort_order ?? 0),
         ];

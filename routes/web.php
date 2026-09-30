@@ -42,6 +42,10 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth-login')->name('login.post');
 
+    // 📝 Registration (Sign Up)
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth-register')->name('register.post');
+
     // 🔐 Forgot & Reset Password
     Route::get('/forgot-password', [AuthController::class, 'showForgotForm'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:auth-forgot')->name('password.email');
@@ -326,12 +330,23 @@ Route::middleware(['auth', 'nocache', AdminMiddleware::class])->group(function (
             Route::delete('/plans/{id}', [\App\Http\Controllers\Admin\PricingAdminController::class, 'deletePlan'])->name('plans.delete');
             Route::post('/coupons/save', [\App\Http\Controllers\Admin\PricingAdminController::class, 'saveCoupon'])->name('coupons.save');
             Route::delete('/coupons/{id}', [\App\Http\Controllers\Admin\PricingAdminController::class, 'deleteCoupon'])->name('coupons.delete');
+            Route::post('/config/save', [\App\Http\Controllers\Admin\PricingAdminController::class, 'savePageConfig'])->name('config.save');
+        });
+
+        // 👑 Dedicated VIP Enterprise Pricing Management (Super Admin)
+        Route::prefix('vip-pricing')->name('vip-pricing.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\VipPricingAdminController::class, 'index'])->name('index');
+            Route::post('/plans/save', [\App\Http\Controllers\Admin\VipPricingAdminController::class, 'savePlan'])->name('plans.save');
+            Route::delete('/plans/{id}', [\App\Http\Controllers\Admin\VipPricingAdminController::class, 'deletePlan'])->name('plans.delete');
+            Route::post('/config/save', [\App\Http\Controllers\Admin\VipPricingAdminController::class, 'savePageConfig'])->name('config.save');
         });
     });
 });
 
 // 🏷️ Public / User-facing Dynamic Pricing Page
 Route::get('/pricing', [\App\Http\Controllers\PricingController::class, 'index'])->name('pricing.index');
+Route::get('/pricing-plans', [\App\Http\Controllers\PricingController::class, 'index'])->name('pricing');
+Route::get('/vip-pricing', [\App\Http\Controllers\PricingController::class, 'vipIndex'])->name('pricing.vip');
 Route::post('/pricing/apply-coupon', [\App\Http\Controllers\PricingController::class, 'applyCoupon'])->name('pricing.apply-coupon');
 
 // Load Isolated SEO Intelligence Module Routes

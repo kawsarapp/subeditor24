@@ -65,8 +65,13 @@
                         @foreach($plans as $p)
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                             <td class="py-3.5 px-4 font-bold text-slate-800 dark:text-white">
-                                <div class="flex items-center gap-1.5">
+                                <div class="flex items-center gap-1.5 flex-wrap">
                                     <span>{{ $p->name }}</span>
+                                    @if($p->is_vip)
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 flex items-center gap-1">
+                                            <i class="fa-solid fa-crown text-[8px]"></i> VIP
+                                        </span>
+                                    @endif
                                     @if($p->is_popular)
                                         <span class="px-2 py-0.5 rounded text-[9px] font-black bg-indigo-100 text-indigo-700">POPULAR</span>
                                     @endif
@@ -195,6 +200,150 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        {{-- 3. PRICING PAGE TEXT & LAYOUT CONFIGURATION --}}
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-black">
+                    <i class="fa-solid fa-sliders"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-white">Page Layout, Banner & Text Settings (পেজের সকল টেক্সট)</h2>
+                    <p class="text-xs text-slate-500">হেডার টাইটেল, অফারের নাম, ফ্রি ট্রায়াল ব্যানার, পলিসি কার্ড এবং কন্টাক্ট ইনফো পরিবর্তন করুন</p>
+                </div>
+            </div>
+
+            <form action="{{ route('admin.pricing.config.save') }}" method="POST" class="space-y-6 text-xs">
+                @csrf
+
+                {{-- Header & Subtitle --}}
+                <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-4">
+                    <h3 class="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-heading text-indigo-500"></i> ১. টপ হেডার ও টাইটেল সেটিংস
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Top Offer Badge Text</label>
+                            <input type="text" name="page_badge" value="{{ $config['page_badge'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-semibold" placeholder="যেমন: ৬ মাসের জন্য বিশেষ Discount Offer">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Page Main Title</label>
+                            <input type="text" name="page_title" value="{{ $config['page_title'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-extrabold text-sm" placeholder="যেমন: Special Pricing Plans">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Subtitle / Offer Description</label>
+                        <textarea name="page_subtitle" rows="2" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">{{ $config['page_subtitle'] ?? '' }}</textarea>
+                    </div>
+                </div>
+
+                {{-- Tab Switcher Names --}}
+                <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-4">
+                    <h3 class="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-toggle-on text-indigo-500"></i> ২. মোড সুইচার ট্যাব লেবেল (৩টি ট্যাব)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Tab 1: Special Offer Name</label>
+                            <input type="text" name="tab_special_title" value="{{ $config['tab_special_title'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-amber-600 font-bold" placeholder="🔥 October Special (সর্বোচ্চ ছাড়)">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Tab 2: Regular 6-Month Name</label>
+                            <input type="text" name="tab_regular_title" value="{{ $config['tab_regular_title'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-indigo-600 font-bold" placeholder="⏳ Regular 6-Month Discount">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Tab 3: Standard Price Name</label>
+                            <input type="text" name="tab_standard_title" value="{{ $config['tab_standard_title'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold" placeholder="Standard Price">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Free Trial Banner --}}
+                <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-4">
+                    <h3 class="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-gift text-emerald-500"></i> ৩. ফ্রি ট্রায়াল ব্যানার সেটিংস
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Banner Title</label>
+                            <input type="text" name="free_trial_banner_title" value="{{ $config['free_trial_banner_title'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Button Text</label>
+                            <input type="text" name="free_trial_btn_text" value="{{ $config['free_trial_btn_text'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold" placeholder="ফ্রি সাইন-আপ করুন">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Banner Description</label>
+                        <input type="text" name="free_trial_banner_desc" value="{{ $config['free_trial_banner_desc'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                    </div>
+                </div>
+
+                {{-- Policy & Guarantee Cards --}}
+                <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-4">
+                    <h3 class="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-purple-500"></i> ৪. পলিসি ও গ্যারান্টি বক্স
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+                            <label class="block font-bold text-slate-700 dark:text-slate-300">Policy Card 1 Title</label>
+                            <input type="text" name="policy_card_1_title" value="{{ $config['policy_card_1_title'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 bg-slate-50 dark:bg-slate-800 font-bold">
+                            <label class="block font-bold text-slate-700 dark:text-slate-300">Policy Card 1 Description</label>
+                            <textarea name="policy_card_1_desc" rows="2" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 bg-slate-50 dark:bg-slate-800">{{ $config['policy_card_1_desc'] ?? '' }}</textarea>
+                        </div>
+                        <div class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+                            <label class="block font-bold text-slate-700 dark:text-slate-300">Policy Card 2 Title</label>
+                            <input type="text" name="policy_card_2_title" value="{{ $config['policy_card_2_title'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 bg-slate-50 dark:bg-slate-800 font-bold">
+                            <label class="block font-bold text-slate-700 dark:text-slate-300">Policy Card 2 Description</label>
+                            <textarea name="policy_card_2_desc" rows="2" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 bg-slate-50 dark:bg-slate-800">{{ $config['policy_card_2_desc'] ?? '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Contact & WhatsApp Settings --}}
+                <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-4">
+                    <h3 class="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-headset text-cyan-500"></i> ৫. সাপোর্ট ও যোগাযোগ সেটিংস
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">WhatsApp Number (Digits only)</label>
+                            <input type="text" name="whatsapp_number" value="{{ $config['whatsapp_number'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold" placeholder="8801771545972">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Contact Phone</label>
+                            <input type="text" name="contact_phone" value="{{ $config['contact_phone'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold" placeholder="+880 1771-545972">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Contact Email</label>
+                            <input type="email" name="contact_email" value="{{ $config['contact_email'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold" placeholder="support@newsmanage24.com">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Link to VIP Module --}}
+                <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-crown text-amber-500 text-lg"></i>
+                        <div>
+                            <h4 class="font-bold text-slate-800 dark:text-white text-xs">ভিআইপি প্যাকেজ ম্যানেজ করতে চান?</h4>
+                            <p class="text-[11px] text-slate-500">বড় মিডিয়া হাউজ ও এজেন্সির প্যাকেজের জন্য ডেডিকেটেড VIP প্রাইসিং ম্যানেজার ব্যবহার করুন।</p>
+                        </div>
+                    </div>
+                    <a href="{{ route('admin.vip-pricing.index') }}" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black rounded-xl text-xs hover:from-amber-600 hover:to-orange-600 transition shrink-0">
+                        Go to VIP Manager <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+
+                {{-- Save Button --}}
+                <div class="flex justify-end pt-2">
+                    <button type="submit" class="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-600/20 transition cursor-pointer flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>Save All Regular Page Settings</span>
+                    </button>
+                </div>
+            </form>
         </div>
 
     </div>

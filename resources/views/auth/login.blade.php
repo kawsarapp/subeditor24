@@ -119,8 +119,16 @@
                 </div>
             @endif
 
-            <div class="mt-8 text-center border-t border-slate-100 pt-4">
-                <p class="text-xs text-slate-500">Don't have an account? <a href="https://wa.me/8801771545972" target="_blank" class="text-indigo-600 font-extrabold hover:underline">Contact Admin</a></p>
+            <div class="mt-8 text-center border-t border-slate-100 pt-4 space-y-2">
+                <p class="text-xs text-slate-600 font-medium">
+                    Don't have an account? 
+                    <a href="{{ route('register') }}" class="text-indigo-600 font-extrabold hover:underline">
+                        Create Account Free 🚀
+                    </a>
+                </p>
+                <p class="text-[11px] text-slate-400">
+                    Need custom setup? <a href="https://wa.me/8801771545972" target="_blank" class="text-emerald-600 font-bold hover:underline">WhatsApp Support</a>
+                </p>
             </div>
         </div>
     </main>

@@ -70,6 +70,15 @@ class AppServiceProvider extends ServiceProvider
             });
         });
 
+        RateLimiter::for('auth-register', function (Request $request) {
+            $key = 'register|' . $request->ip();
+            return Limit::perMinute(5)->by($key)->response(function () {
+                return back()->withErrors([
+                    'email' => '⚠️ খুব ঘন ঘন রেজিস্ট্রেশন চেষ্টা করা হচ্ছে। অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন।',
+                ]);
+            });
+        });
+
         RateLimiter::for('photocard-fetch', function (Request $request) {
             return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip())->response(function () {
                 return response()->json([

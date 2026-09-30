@@ -28,6 +28,7 @@ class PricingPlan extends Model
         'features',
         'custom_limits',
         'is_popular',
+        'is_vip',
         'is_active',
         'sort_order',
     ];
@@ -45,6 +46,7 @@ class PricingPlan extends Model
         'features'               => 'array',
         'custom_limits'          => 'array',
         'is_popular'             => 'boolean',
+        'is_vip'                 => 'boolean',
         'is_active'              => 'boolean',
         'sort_order'             => 'integer',
     ];
@@ -52,6 +54,16 @@ class PricingPlan extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true)->orderBy('sort_order', 'asc');
+    }
+
+    public function scopeRegular($query)
+    {
+        return $query->where('is_vip', false);
+    }
+
+    public function scopeVip($query)
+    {
+        return $query->where('is_vip', true);
     }
 
     /**

@@ -4,7 +4,7 @@
             
             {{-- BRAND & LOGO --}}
             <div class="flex items-center gap-3 xl:gap-5 shrink-0">
-                <a href="{{ auth()->user()->role === 'reporter' ? route('reporter.news.index') : route('news.index') }}" class="flex items-center gap-2 group">
+                <a href="{{ auth()->check() ? (auth()->user()->role === 'reporter' ? route('reporter.news.index') : route('news.index')) : route('login') }}" class="flex items-center gap-2 group">
                     <div class="w-9 h-9 xl:w-10 xl:h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform duration-300 font-black">
                         <i class="fa-solid fa-bolt text-base xl:text-lg"></i>
                     </div>
@@ -209,7 +209,7 @@
                                 </div>
 
                                 @php
-                                    $userPerms = is_array(auth()->user()->permissions) ? auth()->user()->permissions : (json_decode(auth()->user()->permissions, true) ?? []);
+                                    $userPerms = is_array(auth()->user()->permissions) ? auth()->user()->permissions : (json_decode(auth()->user()->permissions ?? '[]', true) ?? []);
                                     $canStaff = in_array('can_manage_staff', $userPerms) || auth()->user()->role === 'super_admin' || auth()->user()->role === 'client';
                                     $canReporters = auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('manage_reporters');
                                 @endphp
@@ -358,13 +358,20 @@
                                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
                                     <i class="fa-solid fa-shield-halved text-indigo-500 w-4"></i> Admin Panel
                                 </a>
-                                <a href="{{ route('admin.pricing.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-600 transition-colors">
-                                    <i class="fa-solid fa-tags text-amber-500 w-4"></i> Pricing & Coupons
+                                <a href="{{ route('admin.pricing.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                                    <i class="fa-solid fa-tags text-indigo-500 w-4"></i> Regular Pricing & Coupons
+                                </a>
+                                <a href="{{ route('admin.vip-pricing.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-black text-amber-700 hover:bg-amber-50 hover:text-amber-600 transition-colors">
+                                    <i class="fa-solid fa-crown text-amber-500 w-4"></i> VIP Pricing Manager
                                 </a>
                                 @endif
 
                                 <a href="{{ route('pricing.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
                                     <i class="fa-solid fa-gem text-purple-500 w-4"></i> Special Pricing Plans
+                                </a>
+
+                                <a href="{{ route('pricing.vip') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-amber-700 hover:bg-amber-50 transition-colors">
+                                    <i class="fa-solid fa-crown text-amber-500 w-4"></i> 👑 VIP Enterprise Plans
                                 </a>
 
                                 @if(Route::has('settings.index') && (auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings')))
@@ -386,6 +393,26 @@
                                 </form>
                             </div>
                         </div>
+                    </div>
+                @else
+                    {{-- 🌙 Dark Mode Toggle Button for Guests --}}
+                    <button type="button" onclick="toggleDarkMode()" id="darkModeToggleBtnGuest" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-amber-400 flex items-center justify-center text-xs transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm" title="Toggle Dark / Light Mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('pricing') }}" class="text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            <i class="fa-solid fa-tags text-indigo-500 mr-1"></i> প্রাইসিং
+                        </a>
+                        <a href="{{ route('pricing.vip') }}" class="text-xs font-black text-amber-600 dark:text-amber-400 hover:text-amber-500 px-3 py-2 rounded-xl hover:bg-amber-50 dark:hover:bg-slate-800 transition flex items-center gap-1">
+                            <i class="fa-solid fa-crown text-amber-500 text-xs"></i> VIP Pricing
+                        </a>
+                        <a href="{{ route('login') }}" class="text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 px-3.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            <i class="fa-solid fa-arrow-right-to-bracket mr-1"></i> লগইন
+                        </a>
+                        <a href="{{ route('register') }}" class="text-xs font-extrabold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 px-4 py-2 rounded-xl shadow-md shadow-indigo-500/20 transition transform hover:-translate-y-0.5">
+                            <i class="fa-solid fa-rocket mr-1"></i> ৭ দিনের ফ্রি ট্রায়াল
+                        </a>
                     </div>
                 @endauth
             </div>
