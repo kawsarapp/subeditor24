@@ -79,11 +79,12 @@ class PricingController extends Controller
      */
     public function index(Request $request)
     {
-        $plans = PricingPlan::active()->regular()->get();
+        $regularPlans = PricingPlan::active()->regular()->get();
+        $plans = $regularPlans;
         $activeCouponsCount = PricingCoupon::where('is_active', true)->count();
         $config = self::getPageConfig();
 
-        return view('pricing.index', compact('plans', 'activeCouponsCount', 'config'));
+        return view('pricing.index', compact('plans', 'regularPlans', 'activeCouponsCount', 'config'));
     }
 
     /**

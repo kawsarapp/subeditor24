@@ -89,7 +89,7 @@
 
         {{-- Pricing Cards Grid (Regular Subscription Plans) --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 xl:gap-5 mb-16">
-            @foreach($regularPlans as $plan)
+            @foreach(($regularPlans ?? $plans) as $plan)
             @php
                 $isFreeTrial = ($plan->slug === 'free-trial' || $plan->standard_price <= 0);
                 $isPopular = $plan->is_popular;
