@@ -55,6 +55,8 @@ class PricingAdminController extends Controller
         }
 
         $configData = [
+            'hide_pricing_from_nav'       => $request->boolean('hide_pricing_from_nav'),
+            'hide_vip_pricing_from_nav'   => $request->boolean('hide_vip_pricing_from_nav'),
             'page_badge'                  => $request->input('page_badge'),
             'page_title'                  => $request->input('page_title'),
             'page_subtitle'               => $request->input('page_subtitle'),

@@ -17,6 +17,8 @@ class PricingController extends Controller
     public static function getPageConfig(): array
     {
         $default = [
+            'hide_pricing_from_nav'     => false,
+            'hide_vip_pricing_from_nav' => false,
             'page_badge'               => '৬ মাসের জন্য বিশেষ Discount Offer',
             'page_title'               => 'Special Pricing Plans',
             'page_subtitle'            => 'প্রতিটি প্যাকেজে থাকছে ৬ মাসের Special Discount। সাবস্ক্রাইব করলে পাবেন অতিরিক্ত Early Bird Discount এবং লাইফটাইম প্রাইস লক সুবিধা!',
@@ -79,10 +81,16 @@ class PricingController extends Controller
      */
     public function index(Request $request)
     {
+        $config = self::getPageConfig();
+        $isSuperAdmin = auth()->check() && auth()->user()->role === 'super_admin';
+
+        if (!empty($config['hide_pricing_from_nav']) && !$isSuperAdmin) {
+            abort(404);
+        }
+
         $regularPlans = PricingPlan::active()->regular()->get();
         $plans = $regularPlans;
         $activeCouponsCount = PricingCoupon::where('is_active', true)->count();
-        $config = self::getPageConfig();
 
         return view('pricing.index', compact('plans', 'regularPlans', 'activeCouponsCount', 'config'));
     }
@@ -92,8 +100,15 @@ class PricingController extends Controller
      */
     public function vipIndex(Request $request)
     {
+        $config = self::getPageConfig();
+        $isSuperAdmin = auth()->check() && auth()->user()->role === 'super_admin';
+
+        if (!empty($config['hide_vip_pricing_from_nav']) && !$isSuperAdmin) {
+            abort(404);
+        }
+
         $vipPlans = PricingPlan::active()->vip()->get();
-        $config = \App\Http\Controllers\Admin\VipPricingAdminController::getVipPageConfig();
+        $vipConfig = \App\Http\Controllers\Admin\VipPricingAdminController::getVipPageConfig();
 
         return view('pricing.vip', compact('vipPlans', 'config'));
     }
@@ -103,6 +118,12 @@ class PricingController extends Controller
      */
     public function applyCoupon(Request $request)
     {
+        $config = self::getPageConfig();
+        $isSuperAdmin = auth()->check() && auth()->user()->role === 'super_admin';
+        if (!empty($config['hide_pricing_from_nav']) && !$isSuperAdmin) {
+            return response()->json(['success' => false, 'message' => 'প্রাইসিং পেজটি বর্তমানে নিষ্ক্রিয় রয়েছে।'], 403);
+        }
+
         $request->validate([
             'code'      => 'required|string',
             'plan_slug' => 'required|string',

@@ -19,10 +19,15 @@
         </button>
     </div>
     @else
+    @php
+        $pricingNavConfig = \App\Http\Controllers\PricingController::getPageConfig();
+    @endphp
     <div class="flex items-center gap-1.5">
+        @if(!$pricingNavConfig['hide_vip_pricing_from_nav'])
         <a href="{{ route('pricing.vip') }}" class="text-xs font-black text-amber-600 bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-200/80 transition flex items-center gap-1">
             <i class="fa-solid fa-crown text-[10px]"></i> VIP
         </a>
+        @endif
         <a href="{{ route('login') }}" class="text-xs font-bold text-slate-700 hover:text-indigo-600 bg-slate-100 px-3 py-1.5 rounded-xl transition">লগইন</a>
         <a href="{{ route('register') }}" class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-xl shadow-sm transition">ফ্রি ট্রায়াল</a>
     </div>
@@ -244,16 +249,27 @@
             @endif
             @endif
 
+            @php
+                $pricingNavConfig = \App\Http\Controllers\PricingController::getPageConfig();
+                $isSuperAdmin = auth()->check() && auth()->user()->role === 'super_admin';
+            @endphp
+
+            @if((!$pricingNavConfig['hide_pricing_from_nav'] || !$pricingNavConfig['hide_vip_pricing_from_nav']) || $isSuperAdmin)
             <div class="border-t border-slate-100 my-2"></div>
             <p class="px-3 pt-1 pb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Subscriptions & Pricing</p>
             
+            @if(!$pricingNavConfig['hide_pricing_from_nav'] || $isSuperAdmin)
             <a href="{{ route('pricing.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('pricing.index') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-gem text-purple-500 w-5 text-center text-sm"></i> Special Pricing Plans
             </a>
+            @endif
 
+            @if(!$pricingNavConfig['hide_vip_pricing_from_nav'] || $isSuperAdmin)
             <a href="{{ route('pricing.vip') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('pricing.vip') ? 'bg-amber-500 text-slate-950 font-black' : 'text-amber-700 bg-amber-50 hover:bg-amber-100' }}">
                 <i class="fa-solid fa-crown text-amber-500 w-5 text-center text-sm"></i> 👑 VIP Enterprise Plans
             </a>
+            @endif
+            @endif
 
             <div class="border-t border-slate-100 my-2"></div>
             @if(Route::has('settings.index') && (auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings')))

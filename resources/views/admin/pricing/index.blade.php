@@ -217,6 +217,42 @@
             <form action="{{ route('admin.pricing.config.save') }}" method="POST" class="space-y-6 text-xs">
                 @csrf
 
+                {{-- 0. Navigation Menu Visibility Control --}}
+                <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 rounded-2xl border border-indigo-500/30 shadow-md space-y-4">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-8 h-8 rounded-xl bg-indigo-600/30 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
+                                <i class="fa-solid fa-eye-slash text-sm"></i>
+                            </span>
+                            <div>
+                                <h3 class="font-extrabold text-white text-xs uppercase tracking-wider">ন্যাভিগেশন বার ভিজিবিলিটি কন্ট্রোল (Menu Visibility)</h3>
+                                <p class="text-[11px] text-slate-300">সুপার এডমিন ছাড়া বাকি সাধারণ ইউজার ও পাবলিক ভিজিটরদের মেনু থেকে প্রাইসিং অপশন হাইড রাখুন</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                            Super Admin Exclusive
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/10">
+                        <label class="flex items-start gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer transition">
+                            <input type="checkbox" name="hide_pricing_from_nav" value="1" {{ !empty($config['hide_pricing_from_nav']) ? 'checked' : '' }} class="mt-0.5 w-4 h-4 text-indigo-500 rounded border-slate-600 focus:ring-indigo-400 focus:ring-offset-slate-900">
+                            <div>
+                                <div class="text-xs font-bold text-white">Hide Regular Pricing Menu</div>
+                                <div class="text-[11px] text-slate-400">ন্যাভবার ও ড্রপডাউন থেকে 'Special Pricing Plans' অপশনটি সাধারণদের জন্য হাইড থাকবে।</div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer transition">
+                            <input type="checkbox" name="hide_vip_pricing_from_nav" value="1" {{ !empty($config['hide_vip_pricing_from_nav']) ? 'checked' : '' }} class="mt-0.5 w-4 h-4 text-amber-500 rounded border-slate-600 focus:ring-amber-400 focus:ring-offset-slate-900">
+                            <div>
+                                <div class="text-xs font-bold text-amber-300">Hide VIP Pricing Menu</div>
+                                <div class="text-[11px] text-slate-400">ন্যাভবার ও ড্রপডাউন থেকে 'VIP Enterprise Plans' অপশনটি সাধারণদের জন্য হাইড থাকবে।</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 {{-- Header & Subtitle --}}
                 <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-4">
                     <h3 class="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider flex items-center gap-2">

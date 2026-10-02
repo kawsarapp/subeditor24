@@ -54,9 +54,11 @@
         </a>
 
         <div class="flex items-center gap-3">
+            @if(!(\App\Http\Controllers\PricingController::getPageConfig()['hide_pricing_from_nav'] ?? false))
             <a href="{{ route('pricing') }}" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition">
                 <i class="fa-solid fa-tags text-indigo-500"></i> প্রাইসিং প্ল্যান
             </a>
+            @endif
             <a href="{{ route('login') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-1.5 rounded-xl transition">
                 <i class="fa-solid fa-arrow-right-to-bracket"></i> লগইন
             </a>

@@ -366,13 +366,22 @@
                                 </a>
                                 @endif
 
+                                @php
+                                    $pricingNavConfig = \App\Http\Controllers\PricingController::getPageConfig();
+                                    $isSuperAdmin = auth()->user()->role === 'super_admin';
+                                @endphp
+
+                                @if(!$pricingNavConfig['hide_pricing_from_nav'] || $isSuperAdmin)
                                 <a href="{{ route('pricing.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
                                     <i class="fa-solid fa-gem text-purple-500 w-4"></i> Special Pricing Plans
                                 </a>
+                                @endif
 
+                                @if(!$pricingNavConfig['hide_vip_pricing_from_nav'] || $isSuperAdmin)
                                 <a href="{{ route('pricing.vip') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-amber-700 hover:bg-amber-50 transition-colors">
                                     <i class="fa-solid fa-crown text-amber-500 w-4"></i> 👑 VIP Enterprise Plans
                                 </a>
+                                @endif
 
                                 @if(Route::has('settings.index') && (auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings')))
                                 <a href="{{ route('settings.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
@@ -395,18 +404,28 @@
                         </div>
                     </div>
                 @else
+                    @php
+                        $pricingNavConfig = \App\Http\Controllers\PricingController::getPageConfig();
+                    @endphp
+
                     {{-- 🌙 Dark Mode Toggle Button for Guests --}}
                     <button type="button" onclick="toggleDarkMode()" id="darkModeToggleBtnGuest" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-amber-400 flex items-center justify-center text-xs transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm" title="Toggle Dark / Light Mode">
                         <i class="fa-solid fa-moon"></i>
                     </button>
 
                     <div class="flex items-center gap-2">
+                        @if(!$pricingNavConfig['hide_pricing_from_nav'])
                         <a href="{{ route('pricing') }}" class="text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                             <i class="fa-solid fa-tags text-indigo-500 mr-1"></i> প্রাইসিং
                         </a>
+                        @endif
+
+                        @if(!$pricingNavConfig['hide_vip_pricing_from_nav'])
                         <a href="{{ route('pricing.vip') }}" class="text-xs font-black text-amber-600 dark:text-amber-400 hover:text-amber-500 px-3 py-2 rounded-xl hover:bg-amber-50 dark:hover:bg-slate-800 transition flex items-center gap-1">
                             <i class="fa-solid fa-crown text-amber-500 text-xs"></i> VIP Pricing
                         </a>
+                        @endif
+
                         <a href="{{ route('login') }}" class="text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 px-3.5 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                             <i class="fa-solid fa-arrow-right-to-bracket mr-1"></i> লগইন
                         </a>
