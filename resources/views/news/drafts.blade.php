@@ -58,7 +58,16 @@
             <div class="p-5 flex flex-col flex-1">
                 <div class="mb-3"><span class="inline-block bg-indigo-50 text-indigo-600 border border-indigo-100 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">{{ $item->website->name ?? '📌 Custom' }}</span></div>
                 <h3 class="text-[17px] font-bold leading-tight text-gray-900 line-clamp-2 mb-2 group-hover:text-indigo-600 transition-colors duration-200" title="{{ $item->ai_title ?? $item->title }}">{{ $item->ai_title ?? $item->title }}</h3>
-                <p class="text-xs text-gray-500 mb-4 line-clamp-3 leading-relaxed flex-1">{{ Str::limit(strip_tags($item->ai_content ?? $item->content), 120) }}</p>
+                <p class="text-xs text-gray-500 mb-3 line-clamp-3 leading-relaxed flex-1">{{ Str::limit(strip_tags($item->ai_content ?? $item->content), 120) }}</p>
+
+                @if($item->audio_url)
+                    <div class="mb-3 p-2 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-indigo-50/40 rounded-xl border border-amber-200/60 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </span>
+                        <audio controls preload="none" src="{{ $item->audio_url }}" class="w-full h-7" style="height: 28px;"></audio>
+                    </div>
+                @endif
 
                 <div class="mt-auto pt-4 border-t border-gray-100 space-y-2">
                     @if($item->status != 'processing' && $item->status != 'publishing')

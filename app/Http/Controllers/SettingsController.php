@@ -253,6 +253,21 @@ class SettingsController extends Controller
             }
         }
 
+        // 🎙️ AI Voice Narration & TTS Settings
+        if ($isSuperAdmin || $user->hasPermission('can_settings_ai') || $user->hasPermission('can_settings_tts')) {
+            $settings->tts_enabled = $request->has('tts_enabled');
+            if ($request->has('tts_provider')) $settings->tts_provider = $request->tts_provider;
+            if ($request->has('tts_voice_male')) $settings->tts_voice_male = $request->tts_voice_male;
+            if ($request->has('tts_voice_female')) $settings->tts_voice_female = $request->tts_voice_female;
+            if ($request->has('tts_selected_gender')) $settings->tts_selected_gender = $request->tts_selected_gender;
+            if ($request->filled('tts_speed')) $settings->tts_speed = (float) $request->tts_speed;
+            if ($request->has('tts_embed_mode')) $settings->tts_embed_mode = $request->tts_embed_mode;
+            if ($request->has('tts_openai_key')) $settings->tts_openai_key = $request->tts_openai_key;
+            if ($request->has('tts_elevenlabs_key')) $settings->tts_elevenlabs_key = $request->tts_elevenlabs_key;
+            if ($request->has('tts_google_key')) $settings->tts_google_key = $request->tts_google_key;
+            $settings->tts_auto_generate_on_draft = $request->has('tts_auto_generate_on_draft');
+        }
+
         // 💰 ROI Config
         if (Auth::user()->role === 'super_admin') {
             $roiConfig = [

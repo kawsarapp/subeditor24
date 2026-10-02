@@ -31,6 +31,27 @@ class WordPressService
         $postTitle = $customTitle ?? $news->ai_title ?? $news->title;
         $postContent = $customContent ?? $news->ai_content ?? $news->content;
 
+        // 🎙️ Embed AI Voice Narration HTML5 Audio Player
+        if (empty($news->audio_url) && (!empty($settings->tts_enabled) || stripos($postContent, '[audio') !== false)) {
+            try {
+                $audioService = app(\App\Modules\AudioNarration\Services\AudioNarrationService::class);
+                $audioResult = $audioService->generateForNews($news, $user);
+                if (!empty($audioResult['audio_url'])) {
+                    $news->audio_url = $audioResult['audio_url'];
+                    $news->audio_path = $audioResult['audio_path'] ?? null;
+                    $news->audio_provider = $audioResult['audio_provider'] ?? null;
+                    $news->audio_status = 'completed';
+                    $news->save();
+                }
+            } catch (\Exception $e) {
+                Log::warning("⚠️ Audio auto-generation on WP publish failed: " . $e->getMessage());
+            }
+        }
+
+        $embedMode = $settings->tts_embed_mode ?? 'top';
+        $embedder = app(\App\Modules\AudioNarration\Services\AudioPlayerEmbedderService::class);
+        $postContent = $embedder->embedPlayer($postContent, $news->audio_url, $embedMode, $postTitle);
+
         // ৩. ক্যাটাগরি হ্যান্ডলিং
         $finalCategories = !empty($customCategories) ? $customCategories : [1];
         if (!is_array($finalCategories)) {
@@ -76,6 +97,27 @@ class WordPressService
         $settings = $user->settings;
         $postTitle = $customTitle ?? $news->ai_title ?? $news->title;
         $postContent = $customContent ?? $news->ai_content ?? $news->content;
+
+        // 🎙️ Embed AI Voice Narration HTML5 Audio Player
+        if (empty($news->audio_url) && (!empty($settings->tts_enabled) || stripos($postContent, '[audio') !== false)) {
+            try {
+                $audioService = app(\App\Modules\AudioNarration\Services\AudioNarrationService::class);
+                $audioResult = $audioService->generateForNews($news, $user);
+                if (!empty($audioResult['audio_url'])) {
+                    $news->audio_url = $audioResult['audio_url'];
+                    $news->audio_path = $audioResult['audio_path'] ?? null;
+                    $news->audio_provider = $audioResult['audio_provider'] ?? null;
+                    $news->audio_status = 'completed';
+                    $news->save();
+                }
+            } catch (\Exception $e) {
+                Log::warning("⚠️ Audio auto-generation on WP update failed: " . $e->getMessage());
+            }
+        }
+
+        $embedMode = $settings->tts_embed_mode ?? 'top';
+        $embedder = app(\App\Modules\AudioNarration\Services\AudioPlayerEmbedderService::class);
+        $postContent = $embedder->embedPlayer($postContent, $news->audio_url, $embedMode, $postTitle);
 
         $domain = $settings->wp_url;
         $username = $settings->wp_username;

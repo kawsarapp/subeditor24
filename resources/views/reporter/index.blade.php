@@ -113,9 +113,16 @@
                                         <h4 class="font-bold text-slate-800 text-sm line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors" title="{{ $item->title }}">
                                             {{ $item->title }}
                                         </h4>
-                                        <p class="text-[10px] font-black text-slate-400 mt-1 uppercase tracking-wider">
-                                            ID: <span class="text-slate-500">#{{ $item->id }}</span>
-                                        </p>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                                ID: <span class="text-slate-500">#{{ $item->id }}</span>
+                                            </p>
+                                            @if($item->audio_url)
+                                                <a href="{{ $item->audio_url }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md hover:bg-indigo-100 transition" title="Listen to AI Voice">
+                                                    <i class="fa-solid fa-volume-high text-[9px]"></i> Audio
+                                                </a>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </td>

@@ -2,6 +2,8 @@
     let globalCategories = [];
     let originalImageSrc = ''; 
     let activeKeywords = [];
+    window.currentNewsAudioUrl = '';
+    window.currentNewsAudioProvider = '';
 
     document.addEventListener("DOMContentLoaded", function() {
         tinymce.init({
@@ -12,6 +14,9 @@
             menubar: false,
             statusbar: true,
             branding: false,
+            extended_valid_elements: 'audio[controls|preload|src|style|class],source[src|type],div[*],span[*]',
+            custom_elements: 'audio,source',
+            content_style: 'body { font-family: "Hind Siliguri", system-ui, sans-serif; font-size: 15px; line-height: 1.7; } .subeditor-audio-widget { margin: 18px 0; }',
             setup: function (editor) {
                 editor.on('keyup change', function () {
                     calculateSEO();
@@ -769,6 +774,37 @@
                         document.getElementById('previewContent').value = data.content;
                     }
 
+                    // 🎙️ Populate AI Audio Narration Player
+                    const audioContainer = document.getElementById('modalAudioPlayerContainer');
+                    const audioEmptyState = document.getElementById('modalAudioEmptyState');
+                    const audioPlayer = document.getElementById('modalAudioPlayer');
+                    const audioBadge = document.getElementById('modalAudioBadge');
+                    const providerText = document.getElementById('modalAudioProviderText');
+                    const downloadLink = document.getElementById('modalAudioDownloadLink');
+
+                    window.currentNewsAudioUrl = data.audio_url || '';
+                    window.currentNewsAudioProvider = data.audio_provider || 'EdgeTTS';
+
+                    if (data.audio_url && audioPlayer) {
+                        audioPlayer.src = data.audio_url;
+                        if (downloadLink) downloadLink.href = data.audio_url;
+                        if (providerText) providerText.innerText = (data.audio_provider || 'AI Voice').toUpperCase();
+                        if (audioBadge) {
+                            audioBadge.innerText = 'Audio Ready';
+                            audioBadge.className = 'bg-emerald-500 text-slate-950 px-2.5 py-0.5 rounded-full text-[10px] font-black';
+                        }
+                        if (audioContainer) audioContainer.classList.remove('hidden');
+                        if (audioEmptyState) audioEmptyState.classList.add('hidden');
+                    } else {
+                        if (audioPlayer) audioPlayer.src = '';
+                        if (audioContainer) audioContainer.classList.add('hidden');
+                        if (audioEmptyState) audioEmptyState.classList.remove('hidden');
+                        if (audioBadge) {
+                            audioBadge.innerText = 'No Audio';
+                            audioBadge.className = 'bg-slate-950 text-slate-400 px-2.5 py-0.5 rounded-full text-[10px] font-black';
+                        }
+                    }
+
                     // 🔀 Store & Populate Side-by-Side Original Source Data
                     currentOriginalData = {
                         title: data.original_title || data.title,
@@ -1494,6 +1530,171 @@
             } else {
                 input.classList.add('hidden');
             }
+        }
+    }
+
+    // ==========================================================
+    // 🎙️ AI Voice Narration Modal Generator
+    // ==========================================================
+    function generateAudioFromModal() {
+        const newsId = document.getElementById('previewNewsId').value;
+        if (!newsId) return;
+
+        const btn = document.getElementById('btnModalGenerateAudio');
+        const btnText = document.getElementById('btnModalGenerateAudioText');
+        const gender = document.getElementById('modalAudioGender')?.value || 'male';
+        const speed = document.getElementById('modalAudioSpeed')?.value || 1.00;
+        const audioBadge = document.getElementById('modalAudioBadge');
+        const audioContainer = document.getElementById('modalAudioPlayerContainer');
+        const audioEmptyState = document.getElementById('modalAudioEmptyState');
+        const audioPlayer = document.getElementById('modalAudioPlayer');
+        const providerText = document.getElementById('modalAudioProviderText');
+        const downloadLink = document.getElementById('modalAudioDownloadLink');
+
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+        btnText.innerText = 'Generating Voice Audio...';
+        if (audioBadge) {
+            audioBadge.innerText = 'Processing...';
+            audioBadge.className = 'bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full text-[10px] font-black animate-pulse';
+        }
+
+        fetch(`/news/${newsId}/audio/generate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                gender: gender,
+                speed: speed
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            btnText.innerText = 'Generate / Update Voice';
+
+            if (data.success && data.audio_url) {
+                window.currentNewsAudioUrl = data.audio_url;
+                window.currentNewsAudioProvider = data.audio_provider || 'EdgeTTS';
+
+                audioPlayer.src = data.audio_url;
+                if (downloadLink) downloadLink.href = data.audio_url;
+                if (providerText) providerText.innerText = (data.audio_provider || 'AI Voice').toUpperCase();
+                if (audioBadge) {
+                    audioBadge.innerText = 'Audio Ready';
+                    audioBadge.className = 'bg-emerald-500 text-slate-950 px-2.5 py-0.5 rounded-full text-[10px] font-black';
+                }
+                if (audioContainer) audioContainer.classList.remove('hidden');
+                if (audioEmptyState) audioEmptyState.classList.add('hidden');
+                audioPlayer.play().catch(e => console.log('Autoplay blocked:', e));
+
+                // 🔄 If TinyMCE contains placeholder or [audio_player], replace with live interactive audio player widget
+                if (typeof tinymce !== 'undefined' && tinymce.get('previewContent')) {
+                    let editor = tinymce.get('previewContent');
+                    let content = editor.getContent();
+                    const liveWidgetHtml = getAudioWidgetHtml(data.audio_url, document.getElementById('previewTitle')?.value || '');
+                    if (content.includes('AI Voice Player Placeholder') || content.includes('Voice Attached') || content.includes('[audio_player]')) {
+                        content = content.replace(/<div\s+class="subeditor-audio-widget"[^>]*>.*?<\/div>/is, liveWidgetHtml);
+                        content = content.replace(/(<p\b[^>]*>\s*)?\[audio_player\](\s*<\/p>)?/gi, liveWidgetHtml);
+                        editor.setContent(content);
+                    }
+                }
+            } else {
+                alert(data.message || 'ভয়েস তৈরিতে সমস্যা হয়েছে।');
+                if (audioBadge) {
+                    audioBadge.innerText = 'Failed';
+                    audioBadge.className = 'bg-rose-500 text-white px-2.5 py-0.5 rounded-full text-[10px] font-black';
+                }
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            btnText.innerText = 'Generate / Update Voice';
+            alert('নেটওয়ার্ক ত্রুটি: ' + err.message);
+        });
+    }
+
+    // ==========================================================
+    // 🎙️ Render HTML5 Audio Widget & Placeholder Templates
+    // ==========================================================
+    function getAudioWidgetHtml(audioUrl, title) {
+        const safeUrl = audioUrl || '';
+        const displayTitle = title ? title.replace(/"/g, '&quot;') : 'আজকের এই বিশেষ সংবাদটি শুনুন';
+        return `
+<div class="subeditor-audio-widget" contenteditable="false" style="margin: 20px 0; padding: 16px 20px; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); border: 1px solid #e0e7ff; border-radius: 16px; box-shadow: 0 4px 14px -3px rgba(99, 102, 241, 0.08); font-family: system-ui, -apple-system, sans-serif; user-select: none;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 10px; background: #4f46e5; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: bold; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);">
+                🎧
+            </div>
+            <div>
+                <div style="font-size: 13.5px; font-weight: 700; color: #1e293b; line-height: 1.3;">${displayTitle}</div>
+                <div style="font-size: 11px; color: #64748b; font-weight: 500;">AI Voice Narration • SubEditor24 Audio</div>
+            </div>
+        </div>
+        <span style="font-size: 10.5px; font-weight: 800; background: #e0e7ff; color: #4338ca; padding: 3px 10px; border-radius: 20px; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.5px;">
+            Audio News
+        </span>
+    </div>
+    <audio controls preload="metadata" src="${safeUrl}" style="width: 100%; height: 40px; border-radius: 12px; outline: none;">
+        <source src="${safeUrl}" type="audio/mpeg">
+        আপনার ব্রাউজার অডিও প্লেয়ার সাপোর্ট করে না।
+    </audio>
+</div><p>&nbsp;</p>`;
+    }
+
+    function getAudioPlaceholderHtml() {
+        return `
+<div class="subeditor-audio-widget" contenteditable="false" style="margin: 20px 0; padding: 14px 18px; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1.5px dashed #f59e0b; border-radius: 16px; font-family: system-ui, -apple-system, sans-serif; user-select: none;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 10px; background: #d97706; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold;">
+                🎙️
+            </div>
+            <div>
+                <div style="font-size: 13px; font-weight: 700; color: #92400e; line-height: 1.3;">AI Audio Player (Voice Attached Here)</div>
+                <div style="font-size: 11px; color: #b45309; font-weight: 500;">ডানপাশের প্যানেল থেকে ভয়েস তৈরি করুন অথবা পাবলিশ করার সময় স্বয়ংক্রিয়ভাবে অডিও যুক্ত হবে।</div>
+            </div>
+        </div>
+        <span style="font-size: 10px; font-weight: 800; background: #fef3c7; color: #b45309; padding: 3px 9px; border-radius: 20px; border: 1px solid #fcd34d;">
+            Voice Attached
+        </span>
+    </div>
+</div><p>&nbsp;</p>`;
+    }
+
+    // ==========================================================
+    // 🎙️ Insert Audio Player Shortcode into Editor
+    // ==========================================================
+    function insertAudioPlayerShortcode() {
+        const audioUrl = window.currentNewsAudioUrl;
+        const title = document.getElementById('previewTitle')?.value || '';
+        const widgetHtml = audioUrl ? getAudioWidgetHtml(audioUrl, title) : getAudioPlaceholderHtml();
+
+        if (typeof tinymce !== 'undefined' && tinymce.get('previewContent')) {
+            tinymce.get('previewContent').insertContent(widgetHtml);
+        } else {
+            const textarea = document.getElementById('previewContent');
+            if (textarea) {
+                const startPos = textarea.selectionStart || 0;
+                const endPos = textarea.selectionEnd || 0;
+                textarea.value = textarea.value.substring(0, startPos) + "\n[audio_player]\n" + textarea.value.substring(endPos);
+            }
+        }
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: audioUrl ? 'ভিজ্যুয়াল অডিও প্লেয়ার যুক্ত হয়েছে!' : 'অডিও প্লেয়ার পজিশন যুক্ত হয়েছে!',
+                showConfirmButton: false,
+                timer: 2500
+            });
         }
     }
 </script>

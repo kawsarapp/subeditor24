@@ -1020,6 +1020,194 @@
         </div>
         @endif
 
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_ai') || auth()->user()->hasPermission('can_settings_tts'))
+        {{-- AI VOICE NARRATION & TTS ENGINE (Collapsible) --}}
+        <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
+            <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent hover:bg-amber-50/80 transition" onclick="toggleSettingsAccordion(this)">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center text-base shadow-sm">
+                        <i class="fas fa-microphone-lines"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                            AI Voice Narration & TTS Newsroom Engine
+                            @if(!empty($settings->tts_enabled))
+                                <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-extrabold flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                                </span>
+                            @else
+                                <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-bold">Disabled</span>
+                            @endif
+                        </h2>
+                        <p class="text-xs text-gray-500">স্বয়ংক্রিয় অডিও নিউজ জেনারেশন, মাল্টি-প্রোভাইডার ভয়েস (EdgeTTS/OpenAI/Google/ElevenLabs) ও প্লেয়ার এমবেডিং</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Audio News</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
+                </div>
+            </div>
+            
+            <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm space-y-6">
+                
+                {{-- Master Toggles --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="flex items-start gap-3 p-4 bg-white rounded-xl border border-gray-200 shadow-sm cursor-pointer hover:border-amber-400 transition">
+                        <input type="checkbox" name="tts_enabled" value="1" {{ !empty($settings->tts_enabled) ? 'checked' : '' }} class="mt-1 w-4 h-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500">
+                        <div>
+                            <span class="block text-xs font-bold text-gray-800">Enable AI Audio Narration (ভয়েস ন্যারেশন চালু করুন)</span>
+                            <span class="block text-[11px] text-gray-500 mt-0.5">নিউজ আর্টিকেলের জন্য স্বয়ংক্রিয় প্রফেশনাল ব্রডকাস্ট ভয়েস ও অডিও প্লেয়ার সক্রিয় থাকবে।</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start gap-3 p-4 bg-white rounded-xl border border-gray-200 shadow-sm cursor-pointer hover:border-amber-400 transition">
+                        <input type="checkbox" name="tts_auto_generate_on_draft" value="1" {{ ($settings->tts_auto_generate_on_draft ?? true) ? 'checked' : '' }} class="mt-1 w-4 h-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500">
+                        <div>
+                            <span class="block text-xs font-bold text-gray-800">Auto-Generate on Draft (ড্রাফটে স্বয়ংক্রিয় ভয়েস)</span>
+                            <span class="block text-[11px] text-gray-500 mt-0.5">স্ক্র্যাপ বা রিরাইট হয়ে ড্রাফটে যাওয়ার সাথে সাথে ব্যাকগ্রাউন্ডে স্বয়ংক্রিয় অডিও তৈরি হবে।</span>
+                        </div>
+                    </label>
+                </div>
+
+                {{-- Provider & Voice Configuration --}}
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-5">
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-700 flex items-center gap-2">
+                        <i class="fas fa-sliders text-amber-500"></i> ১. প্রাইমারি TTS প্রোভাইডার ও ভয়েস সেটিংস
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {{-- TTS Provider --}}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">TTS Voice Provider</label>
+                            <select name="tts_provider" id="tts_provider" onchange="toggleTtsProviderFields()" class="w-full border-gray-300 rounded-lg text-xs font-bold focus:border-amber-500 focus:ring-amber-500 bg-amber-50/40 p-2.5">
+                                <option value="edgetts" {{ ($settings->tts_provider ?? 'edgetts') === 'edgetts' ? 'selected' : '' }}>🟢 Microsoft Edge TTS (100% Free - সেরা বাংলা)</option>
+                                <option value="openai" {{ ($settings->tts_provider ?? '') === 'openai' ? 'selected' : '' }}>🟣 OpenAI TTS (tts-1 / tts-1-hd)</option>
+                                <option value="google" {{ ($settings->tts_provider ?? '') === 'google' ? 'selected' : '' }}>🔵 Google Cloud TTS (Wavenet & Neural2)</option>
+                                <option value="elevenlabs" {{ ($settings->tts_provider ?? '') === 'elevenlabs' ? 'selected' : '' }}>👑 ElevenLabs (VIP Human Broadcast Voice)</option>
+                            </select>
+                        </div>
+
+                        {{-- Default Gender --}}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Default Voice Gender</label>
+                            <select name="tts_selected_gender" id="tts_selected_gender" class="w-full border-gray-300 rounded-lg text-xs font-semibold focus:border-amber-500 focus:ring-amber-500 p-2.5">
+                                <option value="male" {{ ($settings->tts_selected_gender ?? 'male') === 'male' ? 'selected' : '' }}>👨 পুরুষ কণ্ঠ (Male Voice - যেমন: Pradeep / Onyx)</option>
+                                <option value="female" {{ ($settings->tts_selected_gender ?? '') === 'female' ? 'selected' : '' }}>👩 নারী কণ্ঠ (Female Voice - যেমন: Nabanita / Nova)</option>
+                            </select>
+                        </div>
+
+                        {{-- Speech Speed --}}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Speaking Speed (গতি)</label>
+                            <select name="tts_speed" id="tts_speed" class="w-full border-gray-300 rounded-lg text-xs font-semibold focus:border-amber-500 focus:ring-amber-500 p-2.5">
+                                <option value="0.85" {{ (string)($settings->tts_speed ?? 1.0) === '0.85' ? 'selected' : '' }}>0.85x (ধীরগতির স্পষ্ট পাঠ)</option>
+                                <option value="0.95" {{ (string)($settings->tts_speed ?? 1.0) === '0.95' ? 'selected' : '' }}>0.95x (স্বাভাবিক ধীরগতি)</option>
+                                <option value="1.00" {{ (string)($settings->tts_speed ?? 1.0) === '1.00' || empty($settings->tts_speed) ? 'selected' : '' }}>1.00x (প্রমিত নিউজরুম স্পিড - প্রস্তাবিত)</option>
+                                <option value="1.05" {{ (string)($settings->tts_speed ?? 1.0) === '1.05' ? 'selected' : '' }}>1.05x (দ্রুতগতির তাজা খবর)</option>
+                                <option value="1.15" {{ (string)($settings->tts_speed ?? 1.0) === '1.15' ? 'selected' : '' }}>1.15x (ফাস্ট বুলেটিন)</option>
+                            </select>
+                        </div>
+
+                        {{-- Target Website Embed Mode --}}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Target Website Embed Mode</label>
+                            <select name="tts_embed_mode" id="tts_embed_mode" class="w-full border-gray-300 rounded-lg text-xs font-semibold focus:border-amber-500 focus:ring-amber-500 p-2.5">
+                                <option value="top" {{ ($settings->tts_embed_mode ?? 'top') === 'top' ? 'selected' : '' }}>🔝 আর্টিকেলের শুরুতে (Top / Before 1st Paragraph)</option>
+                                <option value="after_p1" {{ ($settings->tts_embed_mode ?? '') === 'after_p1' ? 'selected' : '' }}>1️⃣ ১ম অনুচ্ছেদের পরে (After 1st Paragraph)</option>
+                                <option value="after_p2" {{ ($settings->tts_embed_mode ?? '') === 'after_p2' ? 'selected' : '' }}>2️⃣ ২য় অনুচ্ছেদের পরে (After 2nd Paragraph - সেরা এঙ্গেজমেন্ট)</option>
+                                <option value="after_p3" {{ ($settings->tts_embed_mode ?? '') === 'after_p3' ? 'selected' : '' }}>3️⃣ ৩য় অনুচ্ছেদের পরে (After 3rd Paragraph)</option>
+                                <option value="middle" {{ ($settings->tts_embed_mode ?? '') === 'middle' ? 'selected' : '' }}>🔀 আর্টিকেলের মাঝামাঝি স্থানে (Middle of Article)</option>
+                                <option value="bottom" {{ ($settings->tts_embed_mode ?? '') === 'bottom' ? 'selected' : '' }}>🔚 আর্টিকেলের শেষে (Bottom of Article)</option>
+                                <option value="manual" {{ ($settings->tts_embed_mode ?? '') === 'manual' ? 'selected' : '' }}>✍️ ম্যানুয়াল শর্টকোড পজিশন ([audio_player] শর্টকোড)</option>
+                                <option value="api_only" {{ ($settings->tts_embed_mode ?? '') === 'api_only' ? 'selected' : '' }}>📡 শুধুমাত্র API পেলোডে audio_url যাবে (বডিতে নয়)</option>
+                                <option value="none" {{ ($settings->tts_embed_mode ?? '') === 'none' ? 'selected' : '' }}>🔒 টার্গেট সাইটে যাবে না (শুধু ইন্টারনাল ড্রাফটে)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Voice Overrides per Gender --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-gray-100">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Custom Male Voice Identifier (ঐচ্ছিক)</label>
+                            <input type="text" name="tts_voice_male" id="tts_voice_male" value="{{ old('tts_voice_male', $settings->tts_voice_male ?? '') }}" placeholder="e.g. bn-BD-PradeepNeural, onyx, bn-BD-Wavenet-B" class="w-full border-gray-300 rounded-lg text-xs font-mono p-2">
+                            <p class="text-[10px] text-gray-400 mt-1">খালি রাখলে সিলেক্টেড প্রোভাইডারের ডিফল্ট পুরুষ কণ্ঠ ব্যবহার হবে।</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Custom Female Voice Identifier (ঐচ্ছিক)</label>
+                            <input type="text" name="tts_voice_female" id="tts_voice_female" value="{{ old('tts_voice_female', $settings->tts_voice_female ?? '') }}" placeholder="e.g. bn-BD-NabanitaNeural, nova, bn-BD-Wavenet-A" class="w-full border-gray-300 rounded-lg text-xs font-mono p-2">
+                            <p class="text-[10px] text-gray-400 mt-1">খালি রাখলে সিলেক্টেড প্রোভাইডারের ডিফল্ট নারী কণ্ঠ ব্যবহার হবে।</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- External Provider API Keys --}}
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-700 flex items-center gap-2">
+                        <i class="fas fa-key text-indigo-500"></i> ২. পেইড প্রোভাইডার API Keys (EdgeTTS ব্যবহার করলে খালি রাখুন)
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">OpenAI TTS API Key (ঐচ্ছিক)</label>
+                            <input type="password" name="tts_openai_key" id="tts_openai_key" value="{{ old('tts_openai_key', $settings->tts_openai_key ?? '') }}" placeholder="sk-proj-..." class="w-full border-gray-300 rounded-lg text-xs font-mono p-2.5">
+                            <p class="text-[10px] text-gray-400 mt-1">খালি রাখলে প্রাইমারি OpenAI Key ব্যবহার হবে।</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">ElevenLabs API Key (xi-api-key)</label>
+                            <input type="password" name="tts_elevenlabs_key" id="tts_elevenlabs_key" value="{{ old('tts_elevenlabs_key', $settings->tts_elevenlabs_key ?? '') }}" placeholder="sk_..." class="w-full border-gray-300 rounded-lg text-xs font-mono p-2.5">
+                            <p class="text-[10px] text-gray-400 mt-1">ElevenLabs ড্যাশবোর্ড থেকে প্রাপ্ত এপিআই কি।</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Google Cloud TTS API Key</label>
+                            <input type="password" name="tts_google_key" id="tts_google_key" value="{{ old('tts_google_key', $settings->tts_google_key ?? '') }}" placeholder="AIzaSy..." class="w-full border-gray-300 rounded-lg text-xs font-mono p-2.5">
+                            <p class="text-[10px] text-gray-400 mt-1">Google Cloud Console থেকে Text-to-Speech Key।</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Interactive Voice Synthesis Audio Tester --}}
+                <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 rounded-2xl border border-indigo-500/30 shadow-md space-y-4">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm border border-amber-500/30">
+                                <i class="fas fa-play"></i>
+                            </span>
+                            <div>
+                                <h3 class="font-extrabold text-white text-xs uppercase tracking-wider">লাইভ ভয়েস টেস্টিং ল্যাব (Interactive Voice Testing)</h3>
+                                <p class="text-[11px] text-slate-300">সেভ করার আগেই আপনার নির্বাচিত প্রোভাইডার ও ভয়েস দিয়ে বাংলা অডিও প্লে করে শুনুন</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-500/30 text-indigo-300 border border-indigo-400/30">
+                            Instant Audio Preview
+                        </span>
+                    </div>
+
+                    <div class="space-y-3 pt-2 border-t border-white/10">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">টেস্ট করার জন্য বাংলা নমুনা বাক্য লিখুন:</label>
+                            <input type="text" id="tts_test_sample_text" value="স্বাগতম! সাব-এডিটর টোয়েন্টিফোর এআই ভয়েস ন্যারেশন সিস্টেম সক্রিয় রয়েছে। আজকের প্রধান সংবাদ শুনুন।" class="w-full bg-slate-800/80 border border-slate-700 text-white rounded-xl p-2.5 text-xs focus:ring-amber-500 focus:border-amber-500">
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row items-center gap-3">
+                            <button type="button" onclick="testTtsVoiceSynthesis()" id="tts_test_btn" class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 cursor-pointer">
+                                <i class="fas fa-volume-high"></i>
+                                <span>🎙️ টেস্ট ভয়েস তৈরি ও প্লে করুন</span>
+                            </button>
+
+                            <div id="tts_test_status_msg" class="text-xs font-semibold text-slate-300"></div>
+                        </div>
+
+                        {{-- Hidden/Visible Preview Player --}}
+                        <div id="tts_test_player_container" class="hidden mt-3 p-3 bg-white/5 rounded-xl border border-white/10">
+                            <audio id="tts_test_audio_player" controls class="w-full h-8"></audio>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        @endif
+
         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_wp_laravel'))
         {{-- WordPress Connection (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
@@ -1765,6 +1953,75 @@
             const arrow = card.querySelector('.accordion-arrow');
             if (body) body.classList.add('hidden');
             if (arrow) arrow.classList.remove('rotate-180');
+        });
+    }
+
+    // ==========================================================
+    // 🎙️ AI Voice Narration & TTS Test Synthesis Handler
+    // ==========================================================
+    function testTtsVoiceSynthesis() {
+        const btn = document.getElementById('tts_test_btn');
+        const statusMsg = document.getElementById('tts_test_status_msg');
+        const playerContainer = document.getElementById('tts_test_player_container');
+        const audioPlayer = document.getElementById('tts_test_audio_player');
+        
+        const provider = document.getElementById('tts_provider')?.value || 'edgetts';
+        const gender = document.getElementById('tts_selected_gender')?.value || 'male';
+        const speed = document.getElementById('tts_speed')?.value || 1.00;
+        const customVoice = (gender === 'female') ? (document.getElementById('tts_voice_female')?.value || '') : (document.getElementById('tts_voice_male')?.value || '');
+        const sampleText = document.getElementById('tts_test_sample_text')?.value || 'স্বাগতম! সাব-এডিটর টোয়েন্টিফোর এআই ভয়েস ন্যারেশন টেস্ট।';
+
+        let apiKey = '';
+        if (provider === 'openai') apiKey = document.getElementById('tts_openai_key')?.value || '';
+        else if (provider === 'elevenlabs') apiKey = document.getElementById('tts_elevenlabs_key')?.value || '';
+        else if (provider === 'google') apiKey = document.getElementById('tts_google_key')?.value || '';
+
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>ভয়েস তৈরি হচ্ছে...</span>';
+        statusMsg.className = 'text-xs font-semibold text-amber-300 animate-pulse';
+        statusMsg.innerText = 'অডিও সিন্থেসিস হচ্ছে... অনুগ্রহ করে কয়েক সেকেন্ড অপেক্ষা করুন।';
+
+        fetch('{{ route("settings.tts.test-synthesis") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                provider: provider,
+                gender: gender,
+                speed: speed,
+                voice: customVoice,
+                sample: sampleText,
+                api_key: apiKey
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            btn.innerHTML = '<i class="fas fa-volume-high"></i> <span>🎙️ টেস্ট ভয়েস তৈরি ও প্লে করুন</span>';
+
+            if (data.success && data.audio_url) {
+                statusMsg.className = 'text-xs font-bold text-emerald-400';
+                statusMsg.innerText = data.message || '✅ ভয়েস টেস্ট সফল!';
+                
+                audioPlayer.src = data.audio_url;
+                playerContainer.classList.remove('hidden');
+                audioPlayer.play().catch(e => console.log('Audio autoplay prevented:', e));
+            } else {
+                statusMsg.className = 'text-xs font-bold text-rose-400';
+                statusMsg.innerText = data.message || '❌ ভয়েস তৈরি করতে সমস্যা হয়েছে।';
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            btn.innerHTML = '<i class="fas fa-volume-high"></i> <span>🎙️ টেস্ট ভয়েস তৈরি ও প্লে করুন</span>';
+            statusMsg.className = 'text-xs font-bold text-rose-400';
+            statusMsg.innerText = '❌ নেটওয়ার্ক বা সার্ভার ত্রুটি: ' + err.message;
         });
     }
 

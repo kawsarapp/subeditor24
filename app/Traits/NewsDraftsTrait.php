@@ -184,7 +184,11 @@ trait NewsDraftsTrait
             'plagiarism_score' => $news->plagiarism_score,
             'fact_check_status'=> $news->fact_check_status,
             'fact_check_report'=> $news->fact_check_report,
-            'duplicates'       => $duplicates
+            'duplicates'       => $duplicates,
+            'audio_url'        => $news->audio_url,
+            'audio_provider'   => $news->audio_provider,
+            'audio_voice'      => $news->audio_voice,
+            'audio_status'     => $news->audio_status ?? 'disabled'
         ]);
     }
 

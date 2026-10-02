@@ -105,6 +105,16 @@ class GenerateAIContent implements ShouldQueue
                 $user->notify(new AIRewriteCompletedNotification($safeTitle, $news->id));
             }
 
+            // 🎙️ Auto-generate AI Audio Narration if enabled in settings
+            try {
+                $ttsSetting = $user ? \App\Models\UserSetting::where('user_id', $user->id)->first() : null;
+                if ($ttsSetting && $ttsSetting->tts_enabled && ($ttsSetting->tts_auto_generate_on_draft ?? true)) {
+                    \App\Modules\AudioNarration\Jobs\GenerateNewsAudioJob::dispatch($news->id, $user ? $user->id : null);
+                }
+            } catch (\Throwable $audioEx) {
+                Log::warning("⚠️ Audio Narration Auto-Dispatch Error: " . $audioEx->getMessage());
+            }
+
         } catch (\Exception $e) {
             
             $msg = $e->getMessage();

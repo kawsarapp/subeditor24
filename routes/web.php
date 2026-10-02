@@ -232,6 +232,13 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/settings/fetch-categories', [SettingsController::class, 'fetchCategories'])->name('settings.fetch-categories');
     Route::post('/settings/save-design', [SettingsController::class, 'saveDesign'])->name('settings.save-design');
     Route::post('/settings/upload-frame', [SettingsController::class, 'uploadFrame'])->name('settings.upload-frame');
+    Route::post('/settings/tts/test-synthesis', [\App\Modules\AudioNarration\Controllers\AudioApiController::class, 'testSynthesis'])->name('settings.tts.test-synthesis');
+
+    // 🎙️ AI Voice Narration & Audio News
+    Route::prefix('news/{id}/audio')->name('news.audio.')->group(function () {
+        Route::post('/generate', [\App\Modules\AudioNarration\Controllers\AudioApiController::class, 'generate'])->name('generate');
+        Route::get('/status', [\App\Modules\AudioNarration\Controllers\AudioApiController::class, 'status'])->name('status');
+    });
 
     // Admin / Analytics
     Route::middleware(['permission:can_analytics'])->group(function () {

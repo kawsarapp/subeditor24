@@ -44,7 +44,13 @@ class NewsItem extends Model
         'fact_check_status',
         'fact_check_report',
         'is_queued',
-        'scheduled_at'
+        'scheduled_at',
+        'audio_url',
+        'audio_path',
+        'audio_provider',
+        'audio_voice',
+        'audio_duration',
+        'audio_status'
     ];
 
     protected $casts = [

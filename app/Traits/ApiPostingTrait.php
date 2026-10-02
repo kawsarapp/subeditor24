@@ -23,6 +23,28 @@ trait ApiPostingTrait
         $baseUrl = rtrim($settings->laravel_site_url ?? '', '/');
 
         try {
+            // 🎙️ Embed AI Voice Narration HTML5 Audio Player
+            if (empty($news->audio_url) && (!empty($settings->tts_enabled) || stripos($finalContent, '[audio') !== false)) {
+                try {
+                    $user = !empty($news->staff_id) ? \App\Models\User::find($news->staff_id) : (\Illuminate\Support\Facades\Auth::user() ?? \App\Models\User::find($news->user_id));
+                    $audioService = app(\App\Modules\AudioNarration\Services\AudioNarrationService::class);
+                    $audioResult = $audioService->generateForNews($news, $user);
+                    if (!empty($audioResult['audio_url'])) {
+                        $news->audio_url = $audioResult['audio_url'];
+                        $news->audio_path = $audioResult['audio_path'] ?? null;
+                        $news->audio_provider = $audioResult['audio_provider'] ?? null;
+                        $news->audio_status = 'completed';
+                        $news->save();
+                    }
+                } catch (\Exception $e) {
+                    Log::warning("⚠️ Audio auto-generation on API publish failed: " . $e->getMessage());
+                }
+            }
+
+            $embedMode = $settings->tts_embed_mode ?? 'top';
+            $embedder = app(\App\Modules\AudioNarration\Services\AudioPlayerEmbedderService::class);
+            $finalContent = $embedder->embedPlayer($finalContent, $news->audio_url, $embedMode, $finalTitle);
+
             // 🟢 1. CUSTOM API LOGIC (Dynamic Webhook / Mapping)
             if (!empty($settings->custom_api_url) && !empty($settings->custom_api_mapping)) {
                 $apiUrl  = $settings->custom_api_url;
@@ -74,6 +96,7 @@ trait ApiPostingTrait
                     if (isset($mapping['date'])) $addPart($mapping['date'], $dateStr);
                     if (isset($mapping['slug'])) $addPart($mapping['slug'], $slug);
                     if (isset($mapping['original_link'])) $addPart($mapping['original_link'], $news->original_link ?? '');
+                    if (isset($mapping['audio_url'])) $addPart($mapping['audio_url'], $news->audio_url ?? '');
 
                     // Categories
                     if (isset($mapping['category'])) {
@@ -140,6 +163,8 @@ trait ApiPostingTrait
                     if (isset($mapping['date'])) $jsonPayload[$mapping['date']] = $dateStr;
                     if (isset($mapping['slug'])) $jsonPayload[$mapping['slug']] = $slug;
                     if (isset($mapping['original_link'])) $jsonPayload[$mapping['original_link']] = $news->original_link ?? '';
+                    if (isset($mapping['audio_url'])) $jsonPayload[$mapping['audio_url']] = $news->audio_url ?? '';
+                    elseif (!empty($news->audio_url)) $jsonPayload['audio_url'] = $news->audio_url;
 
                     // Categories
                     if (isset($mapping['category'])) {
@@ -229,6 +254,7 @@ trait ApiPostingTrait
                     'title'         => $finalTitle,
                     'content'       => $finalContent,
                     'image_url'     => $websiteImage,
+                    'audio_url'     => $news->audio_url ?? null,
                     'hashtags'      => $hashtags,
                     'slug'          => Str::slug($finalTitle),
                     'category_name' => $news->category ?? 'General',

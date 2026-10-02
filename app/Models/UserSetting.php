@@ -70,10 +70,27 @@ class UserSetting extends Model
         'ai_copilot_few_shot_examples',
         'ai_copilot_temperature',
         'ai_copilot_provider',
+        'tts_enabled',
+        'tts_provider',
+        'tts_voice_male',
+        'tts_voice_female',
+        'tts_selected_gender',
+        'tts_speed',
+        'tts_embed_mode',
+        'tts_openai_key',
+        'tts_elevenlabs_key',
+        'tts_google_key',
+        'tts_auto_generate_on_draft',
     ];
 
 
     protected $casts = [
+        'tts_enabled' => 'boolean',
+        'tts_auto_generate_on_draft' => 'boolean',
+        'tts_speed' => 'float',
+        'tts_openai_key' => 'encrypted',
+        'tts_elevenlabs_key' => 'encrypted',
+        'tts_google_key' => 'encrypted',
         'allowed_templates' => 'array',
         'is_auto_posting' => 'boolean',
 		'category_mapping' => 'array',

@@ -130,7 +130,12 @@
 
                 {{-- News Content (TinyMCE) --}}
                 <div class="mb-5">
-                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">Article Body & Full Content</label>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">Article Body & Full Content</label>
+                        <button type="button" onclick="insertAudioPlayerShortcode()" class="text-xs font-bold px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 rounded-lg border border-amber-200 dark:border-amber-800 flex items-center gap-1.5 transition cursor-pointer shadow-xs" title="ইনসার্ট কার্সরে অডিও প্লেয়ার শর্টকোড বসান">
+                            <i class="fa-solid fa-microphone-lines text-amber-600 dark:text-amber-400 text-xs"></i> <span>🎵 Insert Audio Player Here</span>
+                        </button>
+                    </div>
                     <textarea id="previewContent" rows="15" class="w-full border border-slate-200 dark:border-slate-700 rounded-2xl"></textarea>
                 </div>
             </div>
@@ -215,7 +220,62 @@
 
             {{-- 🚀 RIGHT SIDEBAR: SEO & METADATA --}}
             <div id="editorSidebarPanel" class="w-full lg:w-80 flex flex-col gap-5 h-auto lg:h-[92vh] lg:overflow-y-auto lg:sticky lg:top-4 pr-2">
-                {{-- 🚀 SEO & Meta Data Card --}}
+                
+                {{-- 🎙️ AI Voice Narration & Audio News Card --}}
+                <div class="bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900/60 rounded-2xl shadow-sm overflow-hidden flex-shrink-0">
+                    <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 px-4 py-3 flex justify-between items-center shadow-sm">
+                        <h5 class="m-0 font-extrabold text-xs flex items-center gap-2">
+                            <i class="fa-solid fa-microphone-lines"></i> 🎙️ AI Voice Narration
+                        </h5>
+                        <span id="modalAudioBadge" class="bg-slate-950 text-amber-400 px-2.5 py-0.5 rounded-full text-[10px] font-black">
+                            Ready
+                        </span>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        {{-- Live Audio Player --}}
+                        <div id="modalAudioPlayerContainer" class="hidden space-y-2 bg-amber-50/70 dark:bg-slate-800/60 p-3 rounded-xl border border-amber-200/60 dark:border-slate-700">
+                            <div class="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-volume-high text-amber-500"></i> <span id="modalAudioProviderText">EdgeTTS</span></span>
+                                <a id="modalAudioDownloadLink" href="#" target="_blank" download class="text-indigo-600 dark:text-indigo-400 hover:underline text-[10px]">Download MP3 📥</a>
+                            </div>
+                            <audio id="modalAudioPlayer" controls class="w-full h-8 rounded-lg" style="width: 100%;"></audio>
+                        </div>
+
+                        <div id="modalAudioEmptyState" class="text-center py-2 text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                            কোনো অডিও তৈরি হয়নি। নিচে ক্লিক করে ১-ক্লিকে ভয়েস তৈরি করুন।
+                        </div>
+
+                        {{-- Quick Voice Controls --}}
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">কণ্ঠ (Gender)</label>
+                                <select id="modalAudioGender" class="w-full text-xs font-bold border-slate-200 dark:border-slate-700 rounded-lg p-1.5 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+                                    <option value="male">👨 পুরুষ (Male)</option>
+                                    <option value="female">👩 নারী (Female)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">স্পিড (Speed)</label>
+                                <select id="modalAudioSpeed" class="w-full text-xs font-bold border-slate-200 dark:border-slate-700 rounded-lg p-1.5 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
+                                    <option value="0.90">0.9x Slow</option>
+                                    <option value="1.00" selected>1.0x Normal</option>
+                                    <option value="1.10">1.1x Fast</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="generateAudioFromModal()" id="btnModalGenerateAudio" class="w-full py-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black rounded-xl text-xs shadow-md shadow-amber-500/20 transition flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span id="btnModalGenerateAudioText">Generate / Update Voice</span>
+                        </button>
+
+                        <button type="button" onclick="insertAudioPlayerShortcode()" class="w-full py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-[11px] border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1.5 cursor-pointer" title="আর্টিকেলে আপনার পছন্দের স্থানে অডিও প্লেয়ার বসান">
+                            <i class="fa-solid fa-code text-amber-500"></i>
+                            <span>Insert [audio_player] in Editor</span>
+                        </button>
+                    </div>
+                </div>
+
                 {{-- 🚀 SEO & Focus Keywords Card --}}
                 <div class="bg-white dark:bg-slate-900 border border-indigo-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex-shrink-0">
                     <div class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-4 py-3 flex justify-between items-center shadow-sm">
