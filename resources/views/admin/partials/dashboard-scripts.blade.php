@@ -110,6 +110,17 @@
     }
 
     // --- Edit User Modal (Updated for Subscription, Plan, Limits & Expiry) ---
+    function onPlanSelectionChanged(selectElement) {
+        const notice = document.getElementById('vipPlanNotice');
+        if (!notice || !selectElement) return;
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        if (selectedOption && selectedOption.dataset.isVip === '1') {
+            notice.classList.remove('hidden');
+        } else {
+            notice.classList.add('hidden');
+        }
+    }
+
     function openEditUserModal(userId, name, email, staffLimit, planId, expireDate, status, credits, dailyLimit, limitType, monthlyLimit) {
         document.getElementById('editName').value = name || '';
         document.getElementById('editEmail').value = email || '';
@@ -117,6 +128,7 @@
         
         if (document.getElementById('editPricingPlanId')) {
             document.getElementById('editPricingPlanId').value = planId || '';
+            onPlanSelectionChanged(document.getElementById('editPricingPlanId'));
         }
         if (document.getElementById('editExpireDate')) {
             document.getElementById('editExpireDate').value = expireDate || '';

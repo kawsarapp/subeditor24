@@ -429,6 +429,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user is on a VIP plan or is Super Admin
+     */
+    public function isVip(): bool
+    {
+        return ($this->pricingPlan && $this->pricingPlan->is_vip) || $this->role === 'super_admin';
+    }
+
+    /**
      * Activate or renew a pricing plan for the user
      */
     public function activatePlan(PricingPlan $plan, string $cycle = 'half_yearly', ?SubscriptionOrder $order = null): void
@@ -474,8 +482,21 @@ class User extends Authenticatable
 
         // Ensure key permissions are enabled
         $currentPerms = is_array($this->permissions) ? $this->permissions : [];
-        $basePerms = ['can_scrape', 'can_ai', 'can_studio', 'can_direct_publish', 'can_view_published', 'can_auto_post', 'can_central_feed', 'can_custom_photo_card'];
-        $this->permissions = array_values(array_unique(array_merge($currentPerms, $basePerms)));
+        if ($plan->is_vip) {
+            $vipPerms = [
+                'can_scrape', 'can_central_feed', 'can_direct_publish', 'can_ai', 'can_view_published',
+                'can_youtube_automate', 'can_studio', 'can_custom_photo_card', 'manage_templates',
+                'can_viral_predictor', 'can_seo_intelligence', 'can_seo_audit', 'can_seo_gsc', 'can_seo_ga4',
+                'can_seo_cwv', 'can_seo_links', 'can_seo_ai', 'can_fact_check', 'can_auto_post',
+                'can_manage_staff', 'manage_reporters', 'reporter_direct', 'can_analytics',
+                'can_settings', 'can_settings_branding', 'can_settings_proxy', 'can_settings_target_language',
+                'can_settings_ai', 'can_settings_ai_prompt', 'can_settings_wp_laravel', 'can_settings_social', 'can_settings_category'
+            ];
+            $this->permissions = array_values(array_unique(array_merge($currentPerms, $vipPerms)));
+        } else {
+            $basePerms = ['can_scrape', 'can_ai', 'can_studio', 'can_direct_publish', 'can_view_published', 'can_auto_post', 'can_central_feed', 'can_custom_photo_card'];
+            $this->permissions = array_values(array_unique(array_merge($currentPerms, $basePerms)));
+        }
 
         $this->save();
 

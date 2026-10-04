@@ -69,7 +69,7 @@
                 
                 {{-- Left: Current Plan Title & Details --}}
                 <div class="lg:col-span-6 space-y-4">
-                    <div class="flex items-center gap-2.5">
+                    <div class="flex flex-wrap items-center gap-2.5">
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider {{ $adminUser->isSubscriptionActive() ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30' }}">
                             <span class="w-2 h-2 rounded-full {{ $adminUser->isSubscriptionActive() ? 'bg-emerald-400' : 'bg-rose-400' }}"></span>
                             {{ $adminUser->subscription_status === 'lifetime' ? '👑 Lifetime Plan' : ($adminUser->isSubscriptionActive() ? 'Active Subscription' : 'Expired Plan') }}
@@ -77,6 +77,11 @@
                         <span class="text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-lg">
                             {{ $adminUser->subscription_cycle_label }}
                         </span>
+                        @if($currentPlan?->is_vip)
+                            <span class="text-xs font-black text-amber-950 bg-gradient-to-r from-amber-400 to-yellow-500 px-3 py-0.5 rounded-lg shadow-md flex items-center gap-1">
+                                <i class="fa-solid fa-crown"></i> VIP ENTERPRISE
+                            </span>
+                        @endif
                     </div>
 
                     <h2 class="text-3xl font-black text-white tracking-tight flex items-center gap-3">
@@ -85,6 +90,16 @@
                             <span class="text-[10px] px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-bold uppercase">{{ $currentPlan->badge }}</span>
                         @endif
                     </h2>
+
+                    @if($currentPlan?->is_vip)
+                        <div class="bg-amber-950/40 border border-amber-500/30 rounded-2xl p-3 text-xs text-amber-200 flex items-start gap-2.5">
+                            <i class="fa-solid fa-gem text-amber-400 text-base mt-0.5 shrink-0"></i>
+                            <div>
+                                <strong class="text-amber-300 block font-bold text-xs">👑 VIP ডেডিকেটেড সুবিধা সক্রিয়:</strong>
+                                <span class="text-[11px] text-amber-200/90 leading-relaxed block mt-0.5">হাই-স্পিড ডেডিকেটেড ক্রোন ইঞ্জিন, সর্বোচ্চ অটোমেশন স্বাধীনতা, প্রায় ০% ডাউনটাইম এবং অগ্রাধিকার সাপোর্ট।</span>
+                            </div>
+                        </div>
+                    @endif
 
                     <div class="grid grid-cols-2 gap-3 text-xs pt-2">
                         <div class="bg-slate-950/60 p-3 rounded-2xl border border-slate-800">
@@ -156,16 +171,16 @@
                 <div class="text-[11px] text-slate-400">সর্বমোট ক্রেডিট ক্যাপাসিটি: {{ $adminUser->total_credits_limit ?: 500 }}</div>
             </div>
 
-            {{-- Daily Post Quota --}}
+            {{-- Daily / Monthly Post Quota --}}
             <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 space-y-2">
                 <div class="flex items-center justify-between text-slate-400 text-xs font-bold">
-                    <span>দৈনিক পোস্ট লিমিট</span>
+                    <span>{{ $adminUser->post_limit_type === 'monthly' ? 'মাসিক মোট পোস্ট কোটা' : 'দৈনিক পোস্ট কোটা' }}</span>
                     <i class="fa-solid fa-newspaper text-emerald-400"></i>
                 </div>
                 <div class="text-2xl font-black text-white font-mono">
-                    {{ $adminUser->todays_post_count }} <span class="text-xs font-normal text-slate-400">/ {{ $adminUser->daily_post_limit ?? 50 }} আজ পোস্ট</span>
+                    {{ $adminUser->active_period_post_count }} <span class="text-xs font-normal text-slate-400">/ {{ $adminUser->active_post_limit >= 9999 ? 'আনলিমিটেড' : $adminUser->active_post_limit }} {{ $adminUser->post_limit_type === 'monthly' ? 'এই মাসে' : 'আজ' }}</span>
                 </div>
-                <div class="text-[11px] text-slate-400">প্রতিদিন মধ্যরাতে অটোমেটিক রিসেট হয়</div>
+                <div class="text-[11px] text-slate-400">{{ $adminUser->post_limit_type === 'monthly' ? 'প্রতি ক্যালেন্ডার মাসে মোট পোস্ট সীমা' : 'প্রতিদিন মধ্যরাতে অটোমেটিক রিসেট হয়' }}</div>
             </div>
 
             {{-- Staff / Reporters --}}

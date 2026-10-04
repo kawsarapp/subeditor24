@@ -241,15 +241,46 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Assigned Pricing Plan</label>
-                        <select name="pricing_plan_id" id="editPricingPlanId" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                            <option value="">-- No Plan / Custom --</option>
+                        <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                            <span>Assigned Pricing Plan</span>
+                            <span class="text-[10px] text-amber-600 font-extrabold">👑 VIP vs Regular</span>
+                        </label>
+                        <select name="pricing_plan_id" id="editPricingPlanId" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium" onchange="onPlanSelectionChanged(this)">
+                            <option value="">-- No Plan / Custom Manual --</option>
                             @if(isset($pricingPlans))
-                                @foreach($pricingPlans as $plan)
-                                    <option value="{{ $plan->id }}">{{ $plan->name }} (৳{{ number_format($plan->price) }})</option>
-                                @endforeach
+                                @php
+                                    $vips = $pricingPlans->where('is_vip', true);
+                                    $regulars = $pricingPlans->where('is_vip', false);
+                                @endphp
+
+                                @if($vips->count() > 0)
+                                    <optgroup label="👑 VIP Enterprise Tier (সর্বোচ্চ সুবিধা ও প্রায় শূন্য ডাউনটাইম)">
+                                        @foreach($vips as $plan)
+                                            <option value="{{ $plan->id }}" data-is-vip="1" class="font-bold text-amber-800 bg-amber-50">
+                                                👑 {{ $plan->name }} — ৳{{ number_format($plan->price) }} [VIP Dedicated]
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+
+                                @if($regulars->count() > 0)
+                                    <optgroup label="⭐ Regular Standard Plans (মাসিক/সাধারণ প্যাকেজ)">
+                                        @foreach($regulars as $plan)
+                                            <option value="{{ $plan->id }}" data-is-vip="0" class="text-slate-800">
+                                                ⭐ {{ $plan->name }} — ৳{{ number_format($plan->price) }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
                             @endif
                         </select>
+                        <div id="vipPlanNotice" class="hidden text-[11px] font-bold text-amber-900 bg-amber-50 border border-amber-300 rounded-xl p-2.5 mt-2 flex items-start gap-2 shadow-sm animate-pulse">
+                            <i class="fa-solid fa-crown text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                            <div>
+                                <strong class="text-amber-800 block text-xs">👑 ভিআইপি এন্টারপ্রাইজ প্ল্যান নির্বাচিত:</strong>
+                                <span class="text-[10px] text-amber-700 leading-tight block mt-0.5">এই ক্লায়েন্ট ডেডিকেটেড হাই-স্পিড সার্ভার, সর্বোচ্চ অটোমেশন ফ্রিডম, প্রায় ০% ডাউনটাইম এবং ২৪/৭ ডেডিকেটেড সাপোর্ট অ্যাক্সেস পাবে।</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div>

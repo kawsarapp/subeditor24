@@ -83,8 +83,18 @@
 
                         {{-- 👑 Plan & Expiry Validity Column --}}
                         <td class="px-6 py-4 text-center">
-                            <div class="font-extrabold text-xs text-slate-800">
-                                {{ $user->pricingPlan ? $user->pricingPlan->name : 'Custom / No Plan' }}
+                            <div class="font-extrabold text-xs">
+                                @if($user->pricingPlan && $user->pricingPlan->is_vip)
+                                    <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-md font-black shadow-xs">
+                                        👑 VIP: {{ $user->pricingPlan->name }}
+                                    </span>
+                                @elseif($user->pricingPlan)
+                                    <span class="text-slate-800 font-bold">
+                                        ⭐ {{ $user->pricingPlan->name }}
+                                    </span>
+                                @else
+                                    <span class="text-slate-400 font-medium italic">Custom / No Plan</span>
+                                @endif
                             </div>
                             <div class="mt-1 flex items-center justify-center gap-1">
                                 @if($user->subscription_status === 'lifetime')
