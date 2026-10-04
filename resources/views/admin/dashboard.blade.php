@@ -67,7 +67,7 @@
                         <th class="px-6 py-4 font-bold">Name & Email</th>
                         <th class="px-6 py-4 font-bold text-center">Plan & Validity</th>
                         <th class="px-6 py-4 font-bold text-center">Credits</th>
-                        <th class="px-6 py-4 font-bold text-center">Daily Limit</th>
+                        <th class="px-6 py-4 font-bold text-center">Post Limit</th>
                         <th class="px-6 py-4 font-bold text-center">Status</th>
                         <th class="px-6 py-4 font-bold">Joined Date</th>
                         <th class="px-6 py-4 font-bold text-right">Actions</th>
@@ -108,13 +108,20 @@
                             </span>
                         </td>
 
+                        {{-- 📊 Dynamic Post Limit (Daily or Monthly Pool) --}}
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-2">
-                                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold">
-                                    {{ $user->daily_post_limit }} / Day
-                                </span>
-                                <button onclick="openLimitModal('{{ $user->id }}', '{{ $user->name }}', '{{ $user->daily_post_limit }}')" 
-                                        class="text-gray-400 hover:text-blue-600 transition p-1 rounded hover:bg-gray-200" title="Edit Limit">
+                                @if($user->post_limit_type === 'monthly')
+                                    <span class="bg-purple-100 text-purple-800 px-2.5 py-1 rounded-lg text-xs font-extrabold border border-purple-200" title="মাসিক মোট পোস্ট লিমিট">
+                                        🗓️ {{ $user->monthly_post_limit ?? ($user->daily_post_limit * 30) }}/Mo
+                                    </span>
+                                @else
+                                    <span class="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg text-xs font-extrabold border border-blue-200" title="দৈনিক পোস্ট লিমিট">
+                                        📅 {{ $user->daily_post_limit }}/Day
+                                    </span>
+                                @endif
+                                <button onclick="openLimitModal('{{ $user->id }}', '{{ $user->name }}', '{{ $user->daily_post_limit }}', '{{ $user->post_limit_type ?? 'daily' }}', '{{ $user->monthly_post_limit }}')" 
+                                        class="text-gray-400 hover:text-indigo-600 transition p-1 rounded hover:bg-gray-200" title="Edit Post Limit & Mode">
                                     ✏️
                                 </button>
                             </div>
@@ -134,8 +141,8 @@
 
                         <td class="px-6 py-4 text-right flex justify-end gap-2 items-center flex-wrap">
                             
-                            {{-- Edit Button (passes plan, expiry, status, credits, daily limit) --}}
-                            <button onclick="openEditUserModal('{{ $user->id }}', '{{ $user->name }}', '{{ $user->email }}', '{{ $user->staff_limit }}', '{{ $user->pricing_plan_id }}', '{{ $user->expire_date ? $user->expire_date->format('Y-m-d') : '' }}', '{{ $user->subscription_status ?? 'active' }}', '{{ $user->credits }}', '{{ $user->daily_post_limit }}')" class="bg-yellow-500 text-white px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-600 shadow-sm flex items-center justify-center gap-1" title="Edit Profile & Subscription">✏️ Edit</button>
+                            {{-- Edit Button (passes plan, expiry, status, credits, daily limit, limit type, monthly limit) --}}
+                            <button onclick="openEditUserModal('{{ $user->id }}', '{{ $user->name }}', '{{ $user->email }}', '{{ $user->staff_limit }}', '{{ $user->pricing_plan_id }}', '{{ $user->expire_date ? $user->expire_date->format('Y-m-d') : '' }}', '{{ $user->subscription_status ?? 'active' }}', '{{ $user->credits }}', '{{ $user->daily_post_limit }}', '{{ $user->post_limit_type ?? 'daily' }}', '{{ $user->monthly_post_limit }}')" class="bg-yellow-500 text-white px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-600 shadow-sm flex items-center justify-center gap-1" title="Edit Profile & Subscription">✏️ Edit</button>
                             
                             <button onclick='openSourceModal("{{ $user->id }}", "{{ $user->name }}", @json($user->accessibleWebsites->pluck("id")))' class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700 flex items-center gap-1 shadow-sm" title="Manage News Sources">🌐 <span class="hidden md:inline">Sources</span></button>
                             <button onclick='openTemplateModal("{{ $user->id }}", "{{ $user->name }}", @json($user->settings->allowed_templates ?? []), "{{ $user->settings->default_template ?? "dhaka_post_card" }}")' class="bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-800 flex items-center gap-1 shadow-sm" title="Manage Templates">🎨 <span class="hidden md:inline">Templates</span></button>

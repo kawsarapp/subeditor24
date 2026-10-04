@@ -54,20 +54,40 @@
 
 {{-- 2. Limit Modal --}}
 <div id="limitModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden transform transition-all">
-        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="font-bold text-gray-700">Set Limit for <span id="limitModalUserName" class="text-blue-600"></span></h3>
-            <button onclick="closeLimitModal()" class="text-gray-400 hover:text-red-500 text-2xl transition">&times;</button>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden transform transition-all">
+        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+            <h3 class="font-bold text-slate-800">Set Limit for <span id="limitModalUserName" class="text-indigo-600"></span></h3>
+            <button onclick="closeLimitModal()" class="text-slate-400 hover:text-red-500 text-2xl transition">&times;</button>
         </div>
-        <form id="limitForm" method="POST" class="p-6">
+        <form id="limitForm" method="POST" class="p-6 space-y-4">
             @csrf
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-gray-600 mb-2">Daily Post Limit</label>
-                <input type="number" name="limit" id="limitInput" min="1" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none text-center text-xl font-bold text-gray-700" required>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-2">Limit Type (লিমিট এর ধরন)</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50/60">
+                        <input type="radio" name="post_limit_type" value="daily" id="limitTypeDaily" class="text-indigo-600" onchange="toggleLimitInputs('daily')">
+                        <span class="text-xs font-bold text-slate-700">📅 Daily (দৈনিক)</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50/60">
+                        <input type="radio" name="post_limit_type" value="monthly" id="limitTypeMonthly" class="text-indigo-600" onchange="toggleLimitInputs('monthly')">
+                        <span class="text-xs font-bold text-slate-700">🗓️ Monthly (মাসিক)</span>
+                    </label>
+                </div>
             </div>
-            <div class="flex justify-end gap-3">
-                <button type="button" onclick="closeLimitModal()" class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg font-bold hover:bg-gray-200 transition text-sm">Cancel</button>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition shadow-md text-sm">Update Limit</button>
+
+            <div id="dailyLimitWrapper">
+                <label class="block text-xs font-bold text-slate-600 mb-1">Daily Post Limit (পোস্ট/দিন)</label>
+                <input type="number" name="daily_post_limit" id="limitInput" min="1" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none text-center text-xl font-black text-slate-800">
+            </div>
+
+            <div id="monthlyLimitWrapper" class="hidden">
+                <label class="block text-xs font-bold text-slate-600 mb-1">Monthly Post Pool (পোস্ট/মাস)</label>
+                <input type="number" name="monthly_post_limit" id="monthlyLimitInput" min="1" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none text-center text-xl font-black text-indigo-700">
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeLimitModal()" class="px-4 py-2 text-slate-600 bg-slate-100 rounded-xl font-bold hover:bg-slate-200 transition text-sm">Cancel</button>
+                <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-md text-sm">Update Limit</button>
             </div>
         </form>
     </div>
@@ -256,12 +276,26 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                     <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Limit Mode (লিমিট এর ধরন)</label>
+                        <select name="post_limit_type" id="editPostLimitType" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                            <option value="daily">📅 Daily Cap (দৈনিক লিমিট)</option>
+                            <option value="monthly">🗓️ Monthly Pool (মাসিক মোট পুল)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Post Limit Count (পোস্ট সংখ্যা)</label>
+                        <input type="number" name="daily_post_limit" id="editDailyPostLimit" min="0" placeholder="e.g. 20 (Daily) or 600 (Monthly)" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                    <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">AI Credits Balance</label>
                         <input type="number" name="credits" id="editCredits" min="0" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Daily News Limit</label>
-                        <input type="number" name="daily_post_limit" id="editDailyPostLimit" min="0" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Monthly Custom Cap <span class="text-slate-400 font-normal">(Optional)</span></label>
+                        <input type="number" name="monthly_post_limit" id="editMonthlyPostLimit" min="0" placeholder="Monthly custom cap" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
                 </div>
             </div>

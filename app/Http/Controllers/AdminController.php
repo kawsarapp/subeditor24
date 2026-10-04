@@ -95,14 +95,24 @@ class AdminController extends Controller
     public function updateLimit(Request $request, $id)
     {
         $request->validate([
-            'limit' => 'required|integer|min:1'
+            'post_limit_type'    => 'required|in:daily,monthly',
+            'daily_post_limit'   => 'nullable|integer|min:1',
+            'monthly_post_limit' => 'nullable|integer|min:1',
         ]);
 
         $user = User::findOrFail($id);
-        $user->daily_post_limit = $request->limit;
+        $user->post_limit_type = $request->post_limit_type;
+        if ($request->filled('daily_post_limit')) {
+            $user->daily_post_limit = (int) $request->daily_post_limit;
+            $user->daily_ai_limit = (int) $request->daily_post_limit;
+        }
+        if ($request->filled('monthly_post_limit')) {
+            $user->monthly_post_limit = (int) $request->monthly_post_limit;
+        }
         $user->save();
 
-        return back()->with('success', "ডেইলি লিমিট আপডেট করা হয়েছে: {$user->daily_post_limit} টি");
+        $label = $user->post_limit_label;
+        return back()->with('success', "পোস্ট লিমিট সফলভাবে আপডেট করা হয়েছে: {$label}");
     }
     
     public function updateWebsiteAccess(Request $request, $userId)
@@ -189,7 +199,9 @@ class AdminController extends Controller
             'expire_date' => 'nullable|date',
             'subscription_status' => 'nullable|string|in:active,expired,trial,lifetime,pending',
             'credits' => 'nullable|integer|min:0',
+            'post_limit_type' => 'nullable|in:daily,monthly',
             'daily_post_limit' => 'nullable|integer|min:0',
+            'monthly_post_limit' => 'nullable|integer|min:0',
         ]);
 
         $user->name = $request->name;
@@ -212,6 +224,12 @@ class AdminController extends Controller
             if ($newPlanId && $oldPlanId != $newPlanId) {
                 $plan = PricingPlan::find($newPlanId);
                 if ($plan) {
+                    if ($plan->post_limit_type) {
+                        $user->post_limit_type = $plan->post_limit_type;
+                    }
+                    if ($plan->monthly_post_limit) {
+                        $user->monthly_post_limit = $plan->monthly_post_limit;
+                    }
                     if ($plan->daily_news_limit) {
                         $user->daily_post_limit = $plan->daily_news_limit;
                         $user->daily_ai_limit = $plan->daily_news_limit;
@@ -240,9 +258,17 @@ class AdminController extends Controller
             $user->credits = (int) $request->credits;
         }
 
+        if ($request->has('post_limit_type') && $request->filled('post_limit_type')) {
+            $user->post_limit_type = $request->post_limit_type;
+        }
+
         if ($request->has('daily_post_limit') && $request->daily_post_limit !== null) {
             $user->daily_post_limit = (int) $request->daily_post_limit;
             $user->daily_ai_limit = (int) $request->daily_post_limit;
+        }
+
+        if ($request->has('monthly_post_limit') && $request->monthly_post_limit !== null) {
+            $user->monthly_post_limit = (int) $request->monthly_post_limit;
         }
 
         $user->save();

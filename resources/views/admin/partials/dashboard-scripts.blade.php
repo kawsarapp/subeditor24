@@ -24,11 +24,31 @@
     }
     
     // --- Limit Modal Script ---
-    function openLimitModal(userId, userName, currentLimit) {
+    function toggleLimitInputs(type) {
+        if (type === 'monthly') {
+            document.getElementById('monthlyLimitWrapper').classList.remove('hidden');
+            document.getElementById('dailyLimitWrapper').classList.add('hidden');
+        } else {
+            document.getElementById('monthlyLimitWrapper').classList.add('hidden');
+            document.getElementById('dailyLimitWrapper').classList.remove('hidden');
+        }
+    }
+
+    function openLimitModal(userId, userName, currentLimit, limitType, monthlyLimit) {
         document.getElementById('limitModalUserName').innerText = userName;
-        document.getElementById('limitInput').value = currentLimit;
+        document.getElementById('limitInput').value = currentLimit || 10;
+        document.getElementById('monthlyLimitInput').value = monthlyLimit || (currentLimit ? currentLimit * 30 : 300);
         document.getElementById('limitForm').action = `/admin/users/${userId}/limit`;
         
+        const type = limitType || 'daily';
+        if (type === 'monthly') {
+            document.getElementById('limitTypeMonthly').checked = true;
+            toggleLimitInputs('monthly');
+        } else {
+            document.getElementById('limitTypeDaily').checked = true;
+            toggleLimitInputs('daily');
+        }
+
         const modal = document.getElementById('limitModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -90,7 +110,7 @@
     }
 
     // --- Edit User Modal (Updated for Subscription, Plan, Limits & Expiry) ---
-    function openEditUserModal(userId, name, email, staffLimit, planId, expireDate, status, credits, dailyLimit) {
+    function openEditUserModal(userId, name, email, staffLimit, planId, expireDate, status, credits, dailyLimit, limitType, monthlyLimit) {
         document.getElementById('editName').value = name || '';
         document.getElementById('editEmail').value = email || '';
         document.getElementById('editStaffLimit').value = (staffLimit !== undefined && staffLimit !== null) ? staffLimit : 0;
@@ -107,8 +127,14 @@
         if (document.getElementById('editCredits')) {
             document.getElementById('editCredits').value = (credits !== undefined && credits !== null) ? credits : 10;
         }
+        if (document.getElementById('editPostLimitType')) {
+            document.getElementById('editPostLimitType').value = limitType || 'daily';
+        }
         if (document.getElementById('editDailyPostLimit')) {
             document.getElementById('editDailyPostLimit').value = (dailyLimit !== undefined && dailyLimit !== null) ? dailyLimit : 10;
+        }
+        if (document.getElementById('editMonthlyPostLimit')) {
+            document.getElementById('editMonthlyPostLimit').value = (monthlyLimit !== undefined && monthlyLimit !== null) ? monthlyLimit : '';
         }
         
         document.getElementById('editUserForm').action = `/admin/users/${userId}/update`;

@@ -319,18 +319,21 @@
                         </a>
                     @endif
 
-                    {{-- 🎯 Daily Goal & Target Progress Tracker (Only on wide 2xl screens) --}}
+                    {{-- 🎯 Dynamic Goal & Target Progress Tracker (Daily or Monthly) --}}
                     @php
-                        $todayPosts = auth()->user()->todays_post_count ?? 0;
-                        $dailyTarget = auth()->user()->daily_post_limit ?? 20;
-                        $isUnlimited = $dailyTarget >= 9999;
-                        $percent = $isUnlimited ? 100 : min(100, round(($todayPosts / max($dailyTarget, 1)) * 100));
+                        $userLimitType = auth()->user()->post_limit_type ?? 'daily';
+                        $isMonthlyLimit = ($userLimitType === 'monthly');
+                        $activePosts = $isMonthlyLimit ? (auth()->user()->this_month_post_count ?? 0) : (auth()->user()->todays_post_count ?? 0);
+                        $targetLimit = auth()->user()->active_post_limit ?? 20;
+                        $isUnlimited = $targetLimit >= 9999;
+                        $percent = $isUnlimited ? 100 : min(100, round(($activePosts / max($targetLimit, 1)) * 100));
+                        $trackerTitle = $isMonthlyLimit ? "This Month's Posts" : "Today's Posts";
                     @endphp
-                    <div class="hidden 2xl:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 px-3 py-1.5 rounded-xl shadow-sm transition-all" title="Daily Posts & Target Progress">
+                    <div class="hidden 2xl:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 px-3 py-1.5 rounded-xl shadow-sm transition-all" title="Post Limit & Progress ({{ $userLimitType }})">
                         <div class="flex flex-col gap-0.5">
                             <div class="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-bullseye text-indigo-500"></i> Today's Posts</span>
-                                <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">{{ $todayPosts }} @if(!$isUnlimited)/ {{ $dailyTarget }} ({{ $percent }}%)@endif</span>
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-bullseye text-indigo-500"></i> {{ $trackerTitle }}</span>
+                                <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">{{ $activePosts }} @if(!$isUnlimited)/ {{ $targetLimit }} ({{ $percent }}%)@endif</span>
                             </div>
                             @if(!$isUnlimited)
                             <div class="w-28 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">

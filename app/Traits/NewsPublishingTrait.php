@@ -46,8 +46,8 @@ trait NewsPublishingTrait
             });
         } elseif ($adminUser->role !== 'super_admin') {
             if($adminUser->credits <= 0) return response()->json(['success' => false, 'message' => '❌ ক্রেডিট শেষ!']);
-            if (method_exists($adminUser, 'hasDailyLimitRemaining') && !$adminUser->hasDailyLimitRemaining()) {
-                 return response()->json(['success' => false, 'message' => '❌ আজকের ডেইলি পোস্ট লিমিট শেষ!']);
+            if (method_exists($adminUser, 'hasPostLimitRemaining') && !$adminUser->hasPostLimitRemaining()) {
+                 return response()->json(['success' => false, 'message' => $adminUser->getPostLimitErrorMessage()]);
             }
         }
 
@@ -123,7 +123,7 @@ trait NewsPublishingTrait
 
         if ($adminUser->role !== 'super_admin') {
              if($adminUser->credits <= 0) return back()->with('error', 'আপনার ক্রেডিট শেষ!');
-             if (method_exists($adminUser, 'hasDailyLimitRemaining') && !$adminUser->hasDailyLimitRemaining()) return back()->with('error', 'আজকের ডেইলি লিমিট শেষ!');
+             if (method_exists($adminUser, 'hasPostLimitRemaining') && !$adminUser->hasPostLimitRemaining()) return back()->with('error', $adminUser->getPostLimitErrorMessage());
              try {
                  DB::transaction(function () use ($adminUser, $news, $staffId) {
                      $adminUser->decrement('credits', 1);
@@ -155,8 +155,8 @@ trait NewsPublishingTrait
         $adminUser = $this->getEffectiveAdmin();
         $staffId = Auth::id() !== $adminUser->id ? Auth::id() : null; // 🔥 Staff ID
         
-        if ($adminUser->role !== 'super_admin' && method_exists($adminUser, 'hasDailyLimitRemaining') && !$adminUser->hasDailyLimitRemaining()) {
-             return response()->json(['success' => false, 'message' => '❌ আজকের ডেইলি লিমিট শেষ!']);
+        if ($adminUser->role !== 'super_admin' && method_exists($adminUser, 'hasPostLimitRemaining') && !$adminUser->hasPostLimitRemaining()) {
+             return response()->json(['success' => false, 'message' => $adminUser->getPostLimitErrorMessage()]);
         }
         $news = NewsItem::findOrFail($id);
         $news->update(['status' => 'publishing', 'staff_id' => $staffId]); // 🔥 স্টাফ আইডি সেভ
@@ -310,7 +310,9 @@ trait NewsPublishingTrait
 
         if ($adminUser->role !== 'super_admin') {
             if ($adminUser->credits <= 0) return response()->json(['success' => false, 'message' => 'ক্রেডিট শেষ!']);
-            if (method_exists($adminUser, 'hasDailyLimitRemaining') && !$adminUser->hasDailyLimitRemaining()) return response()->json(['success' => false, 'message' => 'ডেইলি লিমিট শেষ!']);
+            if (method_exists($adminUser, 'hasPostLimitRemaining') && !$adminUser->hasPostLimitRemaining()) {
+                return response()->json(['success' => false, 'message' => $adminUser->getPostLimitErrorMessage()]);
+            }
         }
 
         $isSocialOnly = $request->has('social_only') && $request->social_only == '1';
@@ -353,7 +355,9 @@ trait NewsPublishingTrait
 
         if ($adminUser->role !== 'super_admin') {
             if ($adminUser->credits <= 0) return back()->with('error', 'ক্রেডিট শেষ!');
-            if (method_exists($adminUser, 'hasDailyLimitRemaining') && !$adminUser->hasDailyLimitRemaining()) return back()->with('error', "ডেইলি লিমিট সীমায় পৌঁছেছেন!");
+            if (method_exists($adminUser, 'hasPostLimitRemaining') && !$adminUser->hasPostLimitRemaining()) {
+                return back()->with('error', $adminUser->getPostLimitErrorMessage());
+            }
             try {
                 DB::transaction(function () use ($adminUser, $news, $staffId) {
                     $adminUser->decrement('credits', 1);

@@ -191,11 +191,12 @@ class CentralFeedController extends Controller
                     }
                     return redirect()->route('news.index')->with('error', 'আপনার ক্রেডিট শেষ! কিন্তু নিউজটি আপনার ড্রাফটে যোগ হয়েছে।');
                 }
-                if (method_exists($adminUser, 'hasDailyLimitRemaining') && !$adminUser->hasDailyLimitRemaining()) {
+                if (method_exists($adminUser, 'hasPostLimitRemaining') && !$adminUser->hasPostLimitRemaining()) {
+                    $msg = $adminUser->getPostLimitErrorMessage() . ' কিন্তু নিউজটি ড্রাফটে সেভ হয়েছে।';
                     if ($request->ajax() || $request->wantsJson()) {
-                        return response()->json(['success' => false, 'message' => 'আজকের ডেইলি লিমিট শেষ! কিন্তু নিউজটি ড্রাফটে সেভ হয়েছে।']);
+                        return response()->json(['success' => false, 'message' => $msg]);
                     }
-                    return redirect()->route('news.index')->with('error', 'আজকের ডেইলি লিমিট শেষ! কিন্তু নিউজটি আপনার ড্রাফটে যোগ হয়েছে।');
+                    return redirect()->route('news.index')->with('error', $msg);
                 }
                 
                 try {

@@ -22,6 +22,8 @@ class User extends Authenticatable
         'credits', 
         'total_credits_limit', 
         'daily_post_limit',
+        'post_limit_type',
+        'monthly_post_limit',
         'daily_bg_remove_limit',
         'daily_crawl_limit',
         'daily_ai_limit',
@@ -134,27 +136,50 @@ class User extends Authenticatable
             ->count();
     }
 
-    public function hasDailyLimitRemaining()
+    /**
+     * Check if user has remaining post limit (supports both daily and monthly mode)
+     */
+    public function hasPostLimitRemaining(): bool
     {
-        if ($this->role === 'super_admin') return true;
+        if ($this->role === 'super_admin') {
+            return true;
+        }
 
-        $todayPosts = $this->newsItems()
-            ->where('is_posted', true)
-            ->whereDate('posted_at', now())
-            ->count();
+        // If staff/reporter, check parent's limit
+        if (in_array($this->role, ['staff', 'reporter']) && $this->parent_id) {
+            $parent = $this->parent;
+            return $parent ? $parent->hasPostLimitRemaining() : false;
+        }
 
-        return $todayPosts < ($this->daily_post_limit ?? 10);
+        if ($this->post_limit_type === 'monthly') {
+            $limit = $this->monthly_post_limit ?? (($this->daily_post_limit ?? 20) * 30);
+            if ($limit >= 99999) return true; // unlimited
+            return $this->this_month_post_count < $limit;
+        }
+
+        // Daily limit mode (default)
+        $limit = $this->daily_post_limit ?? 10;
+        if ($limit >= 9999) return true; // unlimited
+        return $this->todays_post_count < $limit;
     }
 
-    public function hasCredits()
+    /**
+     * Backward-compatible wrapper for hasPostLimitRemaining
+     */
+    public function hasDailyLimitRemaining(): bool
+    {
+        return $this->hasPostLimitRemaining();
+    }
+
+    public function hasCredits(): bool
     {
         if ($this->role === 'super_admin') return true;
         return $this->credits > 0;
     }
 
-    public function getTodaysPostCountAttribute()
+    public function getTodaysPostCountAttribute(): int
     {
-        return $this->newsItems()
+        return (int) $this->newsItems()
             ->withoutGlobalScopes()
             ->where('is_posted', true)
             ->where(function($q) {
@@ -162,6 +187,65 @@ class User extends Authenticatable
                   ->orWhereDate('updated_at', \Carbon\Carbon::now());
             })
             ->count();
+    }
+
+    /**
+     * Get count of posts published this current calendar month
+     */
+    public function getThisMonthPostCountAttribute(): int
+    {
+        return (int) $this->newsItems()
+            ->withoutGlobalScopes()
+            ->where('is_posted', true)
+            ->whereYear('posted_at', now()->year)
+            ->whereMonth('posted_at', now()->month)
+            ->count();
+    }
+
+    /**
+     * Get active limit value (number)
+     */
+    public function getActivePostLimitAttribute(): int
+    {
+        if ($this->post_limit_type === 'monthly') {
+            return (int) ($this->monthly_post_limit ?? (($this->daily_post_limit ?? 20) * 30));
+        }
+        return (int) ($this->daily_post_limit ?? 10);
+    }
+
+    /**
+     * Get count of posts made in active limit period (today or this month)
+     */
+    public function getActivePeriodPostCountAttribute(): int
+    {
+        if ($this->post_limit_type === 'monthly') {
+            return $this->this_month_post_count;
+        }
+        return $this->todays_post_count;
+    }
+
+    /**
+     * Bengali/English human label for active limit type
+     */
+    public function getPostLimitLabelAttribute(): string
+    {
+        if ($this->post_limit_type === 'monthly') {
+            $lim = $this->active_post_limit;
+            return ($lim >= 99999) ? 'মাসিক আনলিমিটেড' : "{$lim} পোস্ট / মাস";
+        }
+        $lim = $this->active_post_limit;
+        return ($lim >= 9999) ? 'দৈনিক আনলিমিটেড' : "{$lim} পোস্ট / দিন";
+    }
+
+    /**
+     * Error message when post limit is reached
+     */
+    public function getPostLimitErrorMessage(): string
+    {
+        if ($this->post_limit_type === 'monthly') {
+            return "❌ আপনার এই মাসের নির্ধারিত পোস্ট লিমিট ({$this->active_post_limit} টি) শেষ হয়ে গেছে!";
+        }
+        return "❌ আপনার আজকের দৈনিক পোস্ট লিমিট ({$this->active_post_limit} টি) শেষ হয়ে গেছে!";
     }
 	
 	public function reporters()
@@ -369,6 +453,12 @@ class User extends Authenticatable
         $this->is_active = true;
 
         // Sync limits from plan
+        if ($plan->post_limit_type) {
+            $this->post_limit_type = $plan->post_limit_type;
+        }
+        if ($plan->monthly_post_limit !== null) {
+            $this->monthly_post_limit = $plan->monthly_post_limit;
+        }
         if ($plan->daily_news_limit !== null && $plan->daily_news_limit > 0) {
             $this->daily_post_limit = $plan->daily_news_limit;
             $this->daily_ai_limit = $plan->daily_news_limit;
