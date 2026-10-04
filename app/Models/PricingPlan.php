@@ -64,6 +64,14 @@ class PricingPlan extends Model
         return $this->hasMany(SubscriptionOrder::class, 'pricing_plan_id');
     }
 
+    /**
+     * Get effective price
+     */
+    public function getPriceAttribute(): float
+    {
+        return (float) ($this->special_price ?: ($this->regular_discount_price ?: $this->standard_price));
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true)->orderBy('sort_order', 'asc');

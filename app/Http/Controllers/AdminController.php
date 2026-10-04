@@ -30,7 +30,7 @@ class AdminController extends Controller
         $totalWebsites = Website::withoutGlobalScopes()->count();
         $allWebsites = Website::withoutGlobalScopes()->get();
         
-        $pricingPlans = PricingPlan::where('is_active', true)->orderBy('price', 'asc')->get();
+        $pricingPlans = PricingPlan::where('is_active', true)->orderBy('sort_order', 'asc')->get();
         $users = User::where('role', 'admin')->with(['accessibleWebsites', 'settings', 'pricingPlan'])->latest()->paginate(20);
 
         // Fetch DB Templates
