@@ -204,7 +204,23 @@ class AdminController extends Controller
         }
 
         if ($request->has('pricing_plan_id')) {
-            $user->pricing_plan_id = $request->pricing_plan_id ?: null;
+            $oldPlanId = $user->pricing_plan_id;
+            $newPlanId = $request->pricing_plan_id ?: null;
+            $user->pricing_plan_id = $newPlanId;
+
+            // If plan changed and new plan exists, auto-sync defaults if fields were untouched
+            if ($newPlanId && $oldPlanId != $newPlanId) {
+                $plan = PricingPlan::find($newPlanId);
+                if ($plan) {
+                    if ($plan->daily_news_limit) {
+                        $user->daily_post_limit = $plan->daily_news_limit;
+                        $user->daily_ai_limit = $plan->daily_news_limit;
+                    }
+                    if ($plan->reporters_limit) {
+                        $user->staff_limit = $plan->reporters_limit;
+                    }
+                }
+            }
         }
 
         if ($request->filled('expire_date')) {
@@ -231,7 +247,7 @@ class AdminController extends Controller
 
         $user->save();
 
-        return back()->with('success', 'ইউজারের সাবস্ক্রিপশন ও প্রোফাইল সফলভাবে আপডেট করা হয়েছে!');
+        return back()->with('success', 'ইউজারের সাবস্ক্রিপশন প্ল্যান ও প্রোফাইল সফলভাবে আপডেট/আপগ্রেড করা হয়েছে!');
     }
     
     public function destroy($id)
