@@ -151,7 +151,7 @@
                                     </td>
                                     <td class="py-4 px-4">
                                         <span class="font-black text-slate-200 block">{{ $order->plan_name }}</span>
-                                        <span class="text-[10px] text-slate-400">({{ ucfirst(str_replace('_', ' ', $order->billing_cycle)) }})</span>
+                                        <span class="text-[10px] text-amber-400/90 font-bold block">{{ $order->billing_cycle_label }}</span>
                                     </td>
                                     <td class="py-4 px-4 font-mono font-black text-amber-400 text-sm">
                                         ৳{{ number_format($order->final_amount, 2) }}

@@ -107,8 +107,8 @@
                                 <strong class="text-sm font-black text-white">{{ $order->plan_name }}</strong>
                                 <span class="text-[11px] text-slate-400 block mt-0.5">Subeditor24 SaaS Newsroom CMS License ({{ ucfirst($order->pricing_mode) }} Rate)</span>
                             </td>
-                            <td class="py-4 text-center font-medium text-slate-300">
-                                {{ ucfirst(str_replace('_', ' ', $order->billing_cycle)) }}
+                            <td class="py-4 text-center font-bold text-amber-400">
+                                {{ $order->billing_cycle_label }}
                             </td>
                             <td class="py-4 text-right font-mono font-bold text-white">
                                 ৳{{ number_format($order->base_price, 2) }}

@@ -291,6 +291,22 @@ class User extends Authenticatable
     }
 
     /**
+     * User friendly Bangla/English label for subscription cycle
+     */
+    public function getSubscriptionCycleLabelAttribute(): string
+    {
+        if ($this->subscription_status === 'lifetime') {
+            return '👑 লাইফটাইম প্যাকেজ';
+        }
+        return match ($this->subscription_cycle) {
+            'monthly'     => '📅 মাসিক প্যাকেজ (৩০ দিন)',
+            'yearly'      => '🌟 বার্ষিক প্যাকেজ (১২ মাস)',
+            'half_yearly' => '🔥 Special Offer (৬ মাস মেয়াদ)',
+            default       => '🔥 স্পেশাল অফার (৬ মাস মেয়াদ)',
+        };
+    }
+
+    /**
      * Progress percentage of days passed (0% to 100%)
      */
     public function getSubscriptionProgressPercentAttribute(): float

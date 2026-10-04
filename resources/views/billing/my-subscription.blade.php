@@ -74,8 +74,8 @@
                             <span class="w-2 h-2 rounded-full {{ $adminUser->isSubscriptionActive() ? 'bg-emerald-400' : 'bg-rose-400' }}"></span>
                             {{ $adminUser->subscription_status === 'lifetime' ? '👑 Lifetime Plan' : ($adminUser->isSubscriptionActive() ? 'Active Subscription' : 'Expired Plan') }}
                         </span>
-                        <span class="text-xs text-slate-400">
-                            {{ $adminUser->subscription_cycle ? ucfirst(str_replace('_', ' ', $adminUser->subscription_cycle)) : 'Standard Cycle' }}
+                        <span class="text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-lg">
+                            {{ $adminUser->subscription_cycle_label }}
                         </span>
                     </div>
 
@@ -227,7 +227,7 @@
                                     <td class="py-3.5 px-4 font-mono font-bold text-white">{{ $order->order_number }}</td>
                                     <td class="py-3.5 px-4">
                                         <span class="font-bold text-slate-200">{{ $order->plan_name }}</span>
-                                        <span class="text-[10px] text-slate-400 block">({{ ucfirst(str_replace('_', ' ', $order->billing_cycle)) }})</span>
+                                        <span class="text-[10px] text-slate-400 block">({{ $order->billing_cycle_label }})</span>
                                     </td>
                                     <td class="py-3.5 px-4 font-mono font-black text-amber-400">৳{{ number_format($order->final_amount, 2) }}</td>
                                     <td class="py-3.5 px-4">{!! $order->payment_method_badge !!}</td>

@@ -109,4 +109,15 @@ class SubscriptionOrder extends Model
             default     => '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800 animate-pulse"><i class="fa-solid fa-clock"></i> Pending Approval</span>',
         };
     }
+
+    public function getBillingCycleLabelAttribute(): string
+    {
+        return match ($this->billing_cycle) {
+            'monthly'     => '📅 মাসিক (৩০ দিন)',
+            'yearly'      => '🌟 বার্ষিক (১২ মাস)',
+            'lifetime'    => '👑 লাইফটাইম',
+            'half_yearly' => '🔥 Special Offer (৬ মাস)',
+            default       => '🔥 স্পেশাল অফার (৬ মাস)',
+        };
+    }
 }
