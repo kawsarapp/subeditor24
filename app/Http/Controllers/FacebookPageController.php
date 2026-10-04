@@ -40,7 +40,7 @@ class FacebookPageController extends Controller
         [$appId, $appSecret] = $this->getFacebookAppCredentials();
 
         if (empty($appId)) {
-            return redirect()->route('admin.settings')
+            return redirect()->route('settings.index')
                 ->with('error', '❌ ফেসবুক অ্যাপ কনফিগার করা হয়নি! অনুগ্রহ করে Settings-এ Facebook App ID এবং App Secret যুক্ত করুন।');
         }
 
@@ -78,18 +78,18 @@ class FacebookPageController extends Controller
 
         if ($request->has('error')) {
             $errorDesc = $request->get('error_description', 'ব্যবহারকারী ফেসবুক কানেকশন বাতিল করেছেন।');
-            return redirect()->route('admin.settings')
+            return redirect()->route('settings.index')
                 ->with('error', '❌ ফেসবুক কানেকশন ব্যর্থ হয়েছে: ' . $errorDesc);
         }
 
         if (empty($state) || $state !== $sessionState) {
-            return redirect()->route('admin.settings')
+            return redirect()->route('settings.index')
                 ->with('error', '❌ সিকিউরিটি টোকেন মিসম্যাচ (CSRF State Error)! অনুগ্রহ করে পুনরায় চেষ্টা করুন।');
         }
 
         $code = $request->get('code');
         if (empty($code)) {
-            return redirect()->route('admin.settings')
+            return redirect()->route('settings.index')
                 ->with('error', '❌ ফেসবুক থেকে কোনো কোড পাওয়া যায়নি।');
         }
 
@@ -108,7 +108,7 @@ class FacebookPageController extends Controller
             $tokenData = $tokenRes->json();
             if (!$tokenRes->successful() || empty($tokenData['access_token'])) {
                 $errMsg = $tokenData['error']['message'] ?? 'User token retrieval failed.';
-                return redirect()->route('admin.settings')->with('error', '❌ টোকেন এরর: ' . $errMsg);
+                return redirect()->route('settings.index')->with('error', '❌ টোকেন এরর: ' . $errMsg);
             }
 
             $shortLivedToken = $tokenData['access_token'];
@@ -132,7 +132,7 @@ class FacebookPageController extends Controller
 
             $pagesData = $pagesRes->json();
             if (!$pagesRes->successful() || empty($pagesData['data'])) {
-                return redirect()->route('admin.settings')
+                return redirect()->route('settings.index')
                     ->with('warning', '⚠️ আপনার ফেসবুক আইডির আন্ডারে কোনো সক্রিয় ফেসবুক পেজ পাওয়া যায়নি অথবা আপনি পেজ পারমিশন দেননি।');
             }
 
@@ -166,12 +166,12 @@ class FacebookPageController extends Controller
             }
 
             $namesList = implode(', ', $savedNames);
-            return redirect()->route('admin.settings')
+            return redirect()->route('settings.index')
                 ->with('success', "🎉 সফলভাবে {$savedCount}টি ফেসবুক পেজ কানেক্ট হয়েছে: {$namesList}");
 
         } catch (\Exception $e) {
             Log::error("Facebook 1-Click OAuth Exception: " . $e->getMessage());
-            return redirect()->route('admin.settings')
+            return redirect()->route('settings.index')
                 ->with('error', '❌ কানেকশন এরর: ' . $e->getMessage());
         }
     }
