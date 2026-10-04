@@ -172,13 +172,33 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">Valid OAuth Redirect URI (Meta App-এ এই লিংকটি দিন):</label>
-                        <div class="flex items-center gap-2">
-                            <input type="text" id="fbOAuthRedirectUri" value="{{ route('fb-pages.callback') }}" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-blue-400 select-all outline-none">
-                            <button type="button" onclick="copyFbRedirectUri()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1 cursor-pointer">
-                                <i class="fa-solid fa-copy"></i> <span>Copy</span>
-                            </button>
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-300">Valid OAuth Redirect URIs (Meta Developer App $\rightarrow$ Facebook Login $\rightarrow$ Settings-এ নিচের লিংকগুলো বসান):</label>
+                        
+                        {{-- 🌐 Live Production Domain --}}
+                        <div class="space-y-1">
+                            <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                                <i class="fa-solid fa-globe"></i> Live Production Domain (অফিশিয়াল লাইভ লিংক):
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="fbOAuthLiveUri" value="https://subeditor24.com/facebook-pages/callback" readonly class="w-full bg-slate-950 border border-emerald-800/80 rounded-xl px-3 py-2 text-xs font-mono text-emerald-300 select-all outline-none">
+                                <button type="button" onclick="copyTextValue('https://subeditor24.com/facebook-pages/callback', '✅ Live Domain URI কপি হয়েছে!')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fa-solid fa-copy"></i> <span>Copy Live URI</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- 💻 Current Environment / Local / DDEV --}}
+                        <div class="space-y-1 pt-1">
+                            <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                                <i class="fa-solid fa-server"></i> Current Active Host:
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="fbOAuthRedirectUri" value="{{ route('fb-pages.callback') }}" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-blue-400 select-all outline-none">
+                                <button type="button" onclick="copyTextValue('{{ route('fb-pages.callback') }}', '✅ Current Callback URI কপি হয়েছে!')" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fa-solid fa-copy"></i> <span>Copy Current</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -304,12 +324,16 @@
         if (container) container.classList.toggle('hidden');
     }
 
+    function copyTextValue(text, msg) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert(msg || '✅ কপি সম্পন্ন হয়েছে!');
+        });
+    }
+
     function copyFbRedirectUri() {
         const input = document.getElementById('fbOAuthRedirectUri');
         if (!input) return;
-        navigator.clipboard.writeText(input.value).then(() => {
-            alert('✅ OAuth Redirect URI কপি করা হয়েছে!');
-        });
+        copyTextValue(input.value, '✅ OAuth Redirect URI কপি করা হয়েছে!');
     }
 
     function saveMetaAppCredentials() {

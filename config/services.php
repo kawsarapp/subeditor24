@@ -59,19 +59,19 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', 'https://subeditor24.ddev.site/seo/google/callback'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL', 'https://subeditor24.com') . '/seo/google/callback'),
     ],
 
     'youtube' => [
         'client_id' => env('YOUTUBE_CLIENT_ID', env('GOOGLE_CLIENT_ID')),
         'client_secret' => env('YOUTUBE_CLIENT_SECRET', env('GOOGLE_CLIENT_SECRET')),
-        'redirect' => env('YOUTUBE_REDIRECT_URI', env('APP_URL', 'https://newsmanage24.ddev.site') . '/youtube/auth/callback'),
+        'redirect' => env('YOUTUBE_REDIRECT_URI', env('APP_URL', 'https://subeditor24.com') . '/youtube/auth/callback'),
     ],
 
     'facebook' => [
         'app_id'     => env('FACEBOOK_APP_ID'),
         'app_secret' => env('FACEBOOK_APP_SECRET'),
-        'redirect'   => env('FACEBOOK_REDIRECT_URI', env('APP_URL', 'https://newsmanage24.ddev.site') . '/facebook/callback'),
+        'redirect'   => env('FACEBOOK_REDIRECT_URI', env('APP_URL', 'https://subeditor24.com') . '/facebook-pages/callback'),
     ],
 
 ];
