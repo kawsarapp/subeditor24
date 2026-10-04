@@ -121,6 +121,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/custom-api', [SettingsController::class, 'testCustomApiConnection'])->name('test-custom-api');
             Route::post('/photoroom', [SettingsController::class, 'testPhotoRoomConnection'])->name('test-photoroom');
             Route::post('/decodo-proxy', [SettingsController::class, 'testDecodoProxyConnection'])->name('test-decodo-proxy');
+            Route::post('/scrape-do', [SettingsController::class, 'testScrapeDoConnection'])->name('test-scrape-do');
             Route::post('/ai-provider', [SettingsController::class, 'testAiProviderConnection'])->name('test-ai-provider');
         });
 

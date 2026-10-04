@@ -25,7 +25,12 @@ class NewsScraperService
         } else {
             $website = null;
         }
-        $useApi = $website ? $website->use_scraping_api : false;
+        $method = $website ? $website->scraper_method : null; // 'scrape_do', 'decodo', 'curl', 'python', 'node', 'auto'
+        $useApi = $website ? (bool) $website->use_scraping_api : false;
+        
+        if ($method === 'scrape_do' || $method === 'decodo') {
+            $useApi = true;
+        }
 
         // 🔥 Force Universal API for CF-protected Nuxt/React SSR sites regardless of dashboard toggle
         $forceApiDomains = [
@@ -35,13 +40,13 @@ class NewsScraperService
             'rtvonline.com', 'jagonews24.com', 'dailyamardesh.com', 'itvbd.com', 
             'bvnews24.com', 'dbcnews.tv', 'jugantor.com', 'japantimes.co.jp', 'thediplomat.com'
         ];
-        if (!$useApi && collect($forceApiDomains)->some(fn($d) => str_contains($url, $d))) {
+        if (!$useApi && $method !== 'curl' && collect($forceApiDomains)->some(fn($d) => str_contains($url, $d))) {
             Log::info("🔐 Force-API domain detected ($url) — overriding to Universal Scraping API.");
             $useApi = true;
         }
 
         // 🔥 STRICT SECURITY ENFORCEMENT
-        if (!$proxy && !$useApi) {
+        if (!$proxy && !$useApi && $method !== 'curl') {
             if (config('app.env') === 'local') {
                 Log::warning("⚠️ Running on LOCALHOST without Proxy/API. Proceeding directly (DEV MODE).");
             } else {
@@ -51,38 +56,78 @@ class NewsScraperService
             }
         }
 
-        $proxyLog = $proxy ? parse_url($proxy, PHP_URL_HOST) : "Universal API";
-        Log::info("🚀 START SCRAPE: $url | via $proxyLog");
+        $proxyLog = $proxy ? parse_url($proxy, PHP_URL_HOST) : ($method ?: "Universal API");
+        Log::info("🚀 START SCRAPE: $url | Engine: " . ($method ?: 'Auto') . " | via $proxyLog");
 
         $lastError = 'Unknown error';
         $httpStatus = null;
         $phpRetries = 0;
 
-        // 🌟 STEP 0: UNIVERSAL SCRAPING API (If enabled)
+        // 🌟 STEP 0: SPECIFIC API OR UNIVERSAL SCRAPING API (If enabled)
         $htmlContent = null;
-        if ($useApi) {
+        if ($method === 'scrape_do') {
+            $scrapeDoToken = \App\Models\UserSetting::getSettingWithFallback($userId, 'scrape_do_token') ?? env('SCRAPE_DO_TOKEN');
+            Log::info("🚀 Using Scrape.do API specifically for article body.");
+            $htmlContent = $this->fetchWithScrapeDo($url, $scrapeDoToken);
+        } elseif ($method === 'decodo') {
+            $decodoToken = \App\Models\UserSetting::getSettingWithFallback($userId, 'smartproxy_api_token') ?? env('SMARTPROXY_SCRAPING_API_TOKEN');
+            Log::info("🌐 Using Decodo API specifically for article body.");
+            $htmlContent = $this->fetchWithDecodoApi($url, $decodoToken);
+        } elseif ($useApi) {
             Log::info("🔐 Using Universal Scraping API for article body.");
             $htmlContent = $this->fetchWithUniversalScrapingApi($url, $userId);
+        }
+
+        if ($htmlContent && strlen($htmlContent) > 500) {
+            $scrapedData = $this->processHtml($htmlContent, $url, $customSelectors);
             
-            if ($htmlContent && strlen($htmlContent) > 500) {
-                $scrapedData = $this->processHtml($htmlContent, $url, $customSelectors);
-                
-                if (!empty($scrapedData) && !empty($scrapedData['body'])) {
-                    // 🔥 Image Cleaned Here
-                    if (isset($scrapedData['image'])) {
-                        $scrapedData['image'] = $this->fixVendorImages($scrapedData['image']);
-                    }
-                    if (isset($scrapedData['title'])) {
-                        $scrapedData['title'] = $this->cleanTitle($scrapedData['title']);
-                    }
-                    $this->logScraperRun($website?->id, $url, 'article', 'success', 'Universal API', 200, null, 0);
-                    return $scrapedData;
+            if (!empty($scrapedData) && !empty($scrapedData['body'])) {
+                if (isset($scrapedData['image'])) {
+                    $scrapedData['image'] = $this->fixVendorImages($scrapedData['image']);
                 }
-                $lastError = "Universal API fetched HTML, but empty body parsed.";
-                Log::warning("⚠️ Universal API fetched HTML, but PHP parser (DOMCrawler) returned empty body. Falling back to Python Scraper/Trafilatura...");
-            } else {
-                $lastError = "Universal API failed or returned content too short.";
-                Log::warning("⚠️ Universal API failed for article. Falling back to default proxy...");
+                if (isset($scrapedData['title'])) {
+                    $scrapedData['title'] = $this->cleanTitle($scrapedData['title']);
+                }
+                $this->logScraperRun($website?->id, $url, 'article', 'success', $method ?: 'Universal API', 200, null, 0);
+                return $scrapedData;
+            }
+            $lastError = "API fetched HTML, but empty body parsed.";
+            Log::warning("⚠️ API fetched HTML, but PHP parser (DOMCrawler) returned empty body. Falling back...");
+        }
+
+        // If specific engine was node (Puppeteer)
+        if ($method === 'node') {
+            Log::info("🤖 Using Node.js (Puppeteer) engine as specified.");
+            $puppeteerData = $this->scrapeWithPuppeteer($url, $customSelectors, $userId);
+            if ($puppeteerData && !empty($puppeteerData['body'])) {
+                $this->logScraperRun($website?->id, $url, 'article', 'success', 'Puppeteer', 200, null, 0);
+                return $puppeteerData;
+            }
+        }
+
+        // If specific engine was curl (Direct cURL)
+        if ($method === 'curl') {
+            Log::info("⚡ Using Direct cURL engine as specified.");
+            try {
+                $httpRequest = Http::withHeaders($this->getRealBrowserHeaders())
+                    ->timeout(20)
+                    ->withOptions(['verify' => false, 'connect_timeout' => 10]);
+                if ($proxy) $httpRequest->withOptions(['proxy' => $proxy]);
+                $response = $httpRequest->get($url);
+                if ($response->successful()) {
+                    $html = $response->body();
+                    if ($html && strlen($html) > 500) {
+                        $scrapedData = $this->processHtml($html, $url, $customSelectors);
+                        if (!empty($scrapedData) && !empty($scrapedData['body'])) {
+                            if (isset($scrapedData['image'])) $scrapedData['image'] = $this->fixVendorImages($scrapedData['image']);
+                            if (isset($scrapedData['title'])) $scrapedData['title'] = $this->cleanTitle($scrapedData['title']);
+                            $this->logScraperRun($website?->id, $url, 'article', 'success', 'Direct cURL', 200, null, 0);
+                            return $scrapedData;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning("⚠️ Direct cURL engine error: " . $e->getMessage());
             }
         }
 

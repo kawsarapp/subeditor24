@@ -55,6 +55,10 @@ class CentralPoolScraperCommand extends Command
         $this->line("→ Scanning: {$website->name} ({$website->url})");
 
         try {
+            $method = $website->scraper_method; // 'scrape_do', 'decodo', 'curl', 'python', 'node', 'auto'
+            $scrapeDoToken = \App\Models\UserSetting::getSettingWithFallback(null, 'scrape_do_token') ?? env('SCRAPE_DO_TOKEN');
+            $decodoToken = \App\Models\UserSetting::getSettingWithFallback(null, 'smartproxy_api_token') ?? env('SMARTPROXY_SCRAPING_API_TOKEN');
+
             $forceApiDomains = [
                 'prothomalo.com', 'somoynews.tv', 'bangla.bdnews24.com', 'bdnews24.com', 
                 'jamuna.tv', 'kalerkantho.com', 'dawn.com', 'aninews.in', 'thedailystar.net', 
@@ -64,10 +68,27 @@ class CentralPoolScraperCommand extends Command
             ];
             $shouldUseApi = $website->use_scraping_api || collect($forceApiDomains)->some(fn($d) => str_contains($website->url, $d));
 
-            // Fetch list page HTML using NewsScraperService
+            // Fetch list page HTML using selected engine
             $html = null;
 
-            if ($shouldUseApi) {
+            if ($method === 'scrape_do') {
+                $html = $scraper->fetchWithScrapeDo($website->url, $scrapeDoToken);
+            } elseif ($method === 'decodo') {
+                $html = $scraper->fetchWithDecodoApi($website->url, $decodoToken);
+            } elseif ($method === 'curl') {
+                try {
+                    $response = \Illuminate\Support\Facades\Http::withHeaders([
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    ])->timeout(20)->get($website->url);
+                    if ($response->successful()) {
+                        $html = $response->body();
+                    }
+                } catch (\Exception $e) {}
+            } elseif ($method === 'python') {
+                $html = $scraper->fetchHtmlWithPython($website->url, null);
+            } elseif ($method === 'node') {
+                $html = $scraper->runPuppeteer($website->url, null);
+            } elseif ($shouldUseApi) {
                 $html = $scraper->fetchWithUniversalScrapingApi($website->url, null);
             }
 

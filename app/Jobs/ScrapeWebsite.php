@@ -66,76 +66,120 @@ class ScrapeWebsite implements ShouldQueue
 
             // ২. লিস্ট পেজ লোড (Raw HTML)
             $listPageHtml = null;
+            $method = $website->scraper_method; // 'scrape_do', 'decodo', 'curl', 'python', 'node', 'auto'
+            $scrapeDoToken = \App\Models\UserSetting::getSettingWithFallback($this->userId, 'scrape_do_token') ?? env('SCRAPE_DO_TOKEN');
+            $decodoToken = \App\Models\UserSetting::getSettingWithFallback($this->userId, 'smartproxy_api_token') ?? env('SMARTPROXY_SCRAPING_API_TOKEN');
 
-            // 🚀 SmartProxy Universal Scraping API — Enabled per-website from Dashboard
-            if ($website->use_scraping_api) {
-                Log::info("🔐 Scraping API enabled for [{$website->name}] — using Universal Scraping API.");
-                $listPageHtml = $scraper->fetchWithUniversalScrapingApi($website->url, $this->userId);
-
-                // Fallback to Python if API is not configured or fails
+            // 🚀 1. Specific Engine Selected
+            if ($method === 'scrape_do') {
+                Log::info("🚀 [Scrape.do Selected] Fetching list page for: {$website->name}");
+                $listPageHtml = $scraper->fetchWithScrapeDo($website->url, $scrapeDoToken);
                 if (!$listPageHtml || strlen($listPageHtml) < 500) {
-                    if (!$proxy) {
-                        Log::error("❌ Security Block: Universal API failed and no Proxy available. Aborting.");
-                        $this->logScraperRun($website->id, $website->url, 'list', 'failed', 'Universal API', 502, 'Universal API failed and no fallback Proxy available.');
-                        return;
+                    Log::warning("⚠️ Scrape.do failed for list. Trying Universal fallback...");
+                    $listPageHtml = $scraper->fetchWithUniversalScrapingApi($website->url, $this->userId);
+                }
+            } elseif ($method === 'decodo') {
+                Log::info("🌐 [Decodo Selected] Fetching list page for: {$website->name}");
+                $listPageHtml = $scraper->fetchWithDecodoApi($website->url, $decodoToken);
+                if (!$listPageHtml || strlen($listPageHtml) < 500) {
+                    Log::warning("⚠️ Decodo failed for list. Trying Universal fallback...");
+                    $listPageHtml = $scraper->fetchWithUniversalScrapingApi($website->url, $this->userId);
+                }
+            } elseif ($method === 'curl') {
+                Log::info("⚡ [Direct cURL Selected] Fetching list page for: {$website->name}");
+                try {
+                    $response = \Illuminate\Support\Facades\Http::withHeaders([
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    ])->withOptions([
+                        'proxy' => $proxy,
+                        'verify' => false,
+                        'connect_timeout' => 15,
+                    ])->timeout(30)->get($website->url);
+                    if ($response->successful()) {
+                        $listPageHtml = $response->body();
                     }
-                    Log::info("🔄 Universal API failed or unconfigured — falling back to Python/Puppeteer.");
+                } catch (\Exception $e) {
+                    Log::warning("⚠️ Direct cURL failed: " . $e->getMessage());
+                }
+                if (!$listPageHtml || strlen($listPageHtml) < 500) {
                     $listPageHtml = $scraper->fetchHtmlWithPython($website->url, $this->userId);
                 }
+            } elseif ($method === 'python') {
+                Log::info("🐍 [Python Selected] Fetching list page for: {$website->name}");
+                $listPageHtml = $scraper->fetchHtmlWithPython($website->url, $this->userId);
                 if (!$listPageHtml || strlen($listPageHtml) < 500) {
-                    if (!$proxy) {
-                        $this->logScraperRun($website->id, $website->url, 'list', 'failed', 'None', 500, 'Universal API returned empty/short HTML and no fallback proxy is configured.');
-                        return; // Prevent fallback
-                    }
-                    $listPageHtml = $scraper->runPuppeteer($website->url, $this->userId);
+                    $listPageHtml = $scraper->fetchWithUniversalScrapingApi($website->url, $this->userId);
+                }
+            } elseif ($method === 'node') {
+                Log::info("🤖 [Node.js / Puppeteer Selected] Fetching list page for: {$website->name}");
+                $listPageHtml = $scraper->runPuppeteer($website->url, $this->userId);
+                if (!$listPageHtml || strlen($listPageHtml) < 500) {
+                    $listPageHtml = $scraper->fetchWithUniversalScrapingApi($website->url, $this->userId);
                 }
             } else {
-                // 🔥 JS-Rendered সাইটের জন্য সরাসরি Puppeteer ব্যবহার
-                // Note: somoynews.tv is removed from here — it requires Universal API (CF-protected Nuxt SSR)
-                $jsRenderedDomains = ['ekhon.tv', 'dbcnews.tv', 'banglatribune.com', 'prothomalo.com', 'channel24bd.tv', 'kalerkantho.com'];
-                $isJsRendered = $website->scraper_method === 'node' || collect($jsRenderedDomains)->some(fn($d) => str_contains($website->url, $d));
-
-                // 🚀 Force Universal Scraping API for hard CF-protected & proxy-timeout prone sites
-                $forceApiDomains = ['prothomalo.com', 'somoynews.tv', 'bangla.bdnews24.com', 'jamuna.tv', 'kalerkantho.com', 'dawn.com', 'aninews.in', 'thedailystar.net', 'starnews.com.bd', 'samakal.com', 'bartabazar.com', 'bd-pratidin.com', 'rtvonline.com', 'jagonews24.com', 'dailyamardesh.com', 'itvbd.com', 'bvnews24.com', 'dbcnews.tv', 'jugantor.com', 'japantimes.co.jp', 'thediplomat.com'];
-                $forceApi = collect($forceApiDomains)->some(fn($d) => str_contains($website->url, $d));
-
-                if ($forceApi) {
-                    Log::info("🔐 Force-API site detected ({$website->url}) — using Universal Scraping API.");
+                // 🚀 2. Universal Scraping API — Enabled per-website from Dashboard
+                if ($website->use_scraping_api) {
+                    Log::info("🔐 Scraping API enabled for [{$website->name}] — using Universal Scraping API.");
                     $listPageHtml = $scraper->fetchWithUniversalScrapingApi($website->url, $this->userId);
+
                     if (!$listPageHtml || strlen($listPageHtml) < 500) {
-                        Log::warning("⚠️ Universal API failed for force-API site. Trying Puppeteer fallback.");
-                        $listPageHtml = $scraper->runPuppeteer($website->url, $this->userId);
-                    }
-                } elseif ($isJsRendered) {
-                    Log::info("🎭 JS-Rendered Site detected. Using Puppeteer directly for list.");
-                    $listPageHtml = $scraper->runPuppeteer($website->url, $this->userId);
-                } else {
-                    try {
-                        // ১. Python bypass (curl_cffi) - সবচেয়ে দ্রুত এবং নির্ভরযোগ্য
-                        $listPageHtml = $scraper->fetchHtmlWithPython($website->url, $this->userId);
-
-                        // ২. Default Http Facade (যদি পাইথন কাজ না করে)
-                        if (!$listPageHtml || strlen($listPageHtml) < 500) {
-                            $response = \Illuminate\Support\Facades\Http::withHeaders([
-                                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                            ])->withOptions([
-                                'proxy' => $proxy,
-                                'verify' => false,
-                                'connect_timeout' => 20,
-                            ])->timeout(60)->get($website->url);
-
-                            if ($response->successful()) {
-                                $listPageHtml = $response->body();
-                            }
+                        if (!$proxy) {
+                            Log::error("❌ Security Block: Universal API failed and no Proxy available. Aborting.");
+                            $this->logScraperRun($website->id, $website->url, 'list', 'failed', 'Universal API', 502, 'Universal API failed and no fallback Proxy available.');
+                            return;
                         }
-                    } catch (\Exception $e) {
-                        Log::warning("⚠️ Direct HTTP/Python Failed (Will try Puppeteer): " . $e->getMessage());
+                        Log::info("🔄 Universal API failed or unconfigured — falling back to Python/Puppeteer.");
+                        $listPageHtml = $scraper->fetchHtmlWithPython($website->url, $this->userId);
                     }
-
-                    // ৩. Puppeteer (Last Resort)
                     if (!$listPageHtml || strlen($listPageHtml) < 500) {
-                        Log::info("🔄 Falling back to Puppeteer with Proxy...");
+                        if (!$proxy) {
+                            $this->logScraperRun($website->id, $website->url, 'list', 'failed', 'None', 500, 'Universal API returned empty/short HTML and no fallback proxy is configured.');
+                            return; // Prevent fallback
+                        }
                         $listPageHtml = $scraper->runPuppeteer($website->url, $this->userId);
+                    }
+                } else {
+                    // 🔥 JS-Rendered & Cloudflare detection
+                    $jsRenderedDomains = ['ekhon.tv', 'dbcnews.tv', 'banglatribune.com', 'prothomalo.com', 'channel24bd.tv', 'kalerkantho.com'];
+                    $isJsRendered = collect($jsRenderedDomains)->some(fn($d) => str_contains($website->url, $d));
+
+                    $forceApiDomains = ['prothomalo.com', 'somoynews.tv', 'bangla.bdnews24.com', 'jamuna.tv', 'kalerkantho.com', 'dawn.com', 'aninews.in', 'thedailystar.net', 'starnews.com.bd', 'samakal.com', 'bartabazar.com', 'bd-pratidin.com', 'rtvonline.com', 'jagonews24.com', 'dailyamardesh.com', 'itvbd.com', 'bvnews24.com', 'dbcnews.tv', 'jugantor.com', 'japantimes.co.jp', 'thediplomat.com'];
+                    $forceApi = collect($forceApiDomains)->some(fn($d) => str_contains($website->url, $d));
+
+                    if ($forceApi) {
+                        Log::info("🔐 Force-API site detected ({$website->url}) — using Universal Scraping API.");
+                        $listPageHtml = $scraper->fetchWithUniversalScrapingApi($website->url, $this->userId);
+                        if (!$listPageHtml || strlen($listPageHtml) < 500) {
+                            Log::warning("⚠️ Universal API failed for force-API site. Trying Puppeteer fallback.");
+                            $listPageHtml = $scraper->runPuppeteer($website->url, $this->userId);
+                        }
+                    } elseif ($isJsRendered) {
+                        Log::info("🎭 JS-Rendered Site detected. Using Puppeteer directly for list.");
+                        $listPageHtml = $scraper->runPuppeteer($website->url, $this->userId);
+                    } else {
+                        try {
+                            $listPageHtml = $scraper->fetchHtmlWithPython($website->url, $this->userId);
+                            if (!$listPageHtml || strlen($listPageHtml) < 500) {
+                                $response = \Illuminate\Support\Facades\Http::withHeaders([
+                                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                                ])->withOptions([
+                                    'proxy' => $proxy,
+                                    'verify' => false,
+                                    'connect_timeout' => 20,
+                                ])->timeout(60)->get($website->url);
+
+                                if ($response->successful()) {
+                                    $listPageHtml = $response->body();
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            Log::warning("⚠️ Direct HTTP/Python Failed: " . $e->getMessage());
+                        }
+
+                        if (!$listPageHtml || strlen($listPageHtml) < 500) {
+                            Log::info("🔄 Falling back to Puppeteer with Proxy...");
+                            $listPageHtml = $scraper->runPuppeteer($website->url, $this->userId);
+                        }
                     }
                 }
             }

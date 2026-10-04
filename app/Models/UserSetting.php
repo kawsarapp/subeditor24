@@ -63,6 +63,8 @@ class UserSetting extends Model
         'huggingface_api_key',
         'huggingface_model',
         'smartproxy_api_token',
+        'scraping_api_provider',
+        'scrape_do_token',
         'photoroom_api_key',
         'target_language',
         'custom_rewrite_prompt',
@@ -116,6 +118,7 @@ class UserSetting extends Model
         'qwen_api_key' => 'encrypted',
         'huggingface_api_key' => 'encrypted',
         'smartproxy_api_token' => 'encrypted',
+        'scrape_do_token' => 'encrypted',
         'photoroom_api_key' => 'encrypted',
     ];
 

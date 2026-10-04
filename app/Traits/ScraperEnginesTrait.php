@@ -132,18 +132,98 @@ trait ScraperEnginesTrait
     }
 
     /**
-     * 🚀 SmartProxy Universal Scraping API
-     * Used for hard-blocked sites like Jamuna TV (Datadome).
-     * Offloads all rendering, proxy rotation, and CAPTCHA solving to their cloud.
+     * 🚀 Universal Scraping API (Scrape.do & Decodo/SmartProxy)
+     * Used for hard-blocked sites (Cloudflare, Datadome, Akamai, Turnstile).
+     * Offloads rendering, proxy rotation, and CAPTCHA solving to cloud scrapers.
      */
     public function fetchWithUniversalScrapingApi($url, $userId = null)
     {
-        $token = \App\Models\UserSetting::getSettingWithFallback($userId, 'smartproxy_api_token') ?? env('SMARTPROXY_SCRAPING_API_TOKEN');
-        if (!$token) {
-            Log::warning("⚠️ SMARTPROXY_SCRAPING_API_TOKEN not set in DB or .env — skipping Universal API.");
+        $provider = \App\Models\UserSetting::getSettingWithFallback($userId, 'scraping_api_provider') ?? 'scrape_do';
+        $scrapeDoToken = \App\Models\UserSetting::getSettingWithFallback($userId, 'scrape_do_token') ?? env('SCRAPE_DO_TOKEN');
+        $decodoToken = \App\Models\UserSetting::getSettingWithFallback($userId, 'smartproxy_api_token') ?? env('SMARTPROXY_SCRAPING_API_TOKEN');
+
+        // 1. Primary: Scrape.do
+        if ($provider === 'scrape_do' || (!empty($scrapeDoToken) && empty($decodoToken))) {
+            if (!empty($scrapeDoToken)) {
+                $html = $this->fetchWithScrapeDo($url, $scrapeDoToken);
+                if ($html && strlen($html) > 500) {
+                    return $html;
+                }
+                Log::warning("⚠️ Scrape.do failed. Checking Decodo fallback for: $url");
+            }
+            if (!empty($decodoToken)) {
+                return $this->fetchWithDecodoApi($url, $decodoToken);
+            }
             return null;
         }
 
+        // 2. Primary: Decodo / SmartProxy
+        if (!empty($decodoToken)) {
+            $html = $this->fetchWithDecodoApi($url, $decodoToken);
+            if ($html && strlen($html) > 500) {
+                return $html;
+            }
+            Log::warning("⚠️ Decodo API failed. Checking Scrape.do fallback for: $url");
+        }
+
+        if (!empty($scrapeDoToken)) {
+            return $this->fetchWithScrapeDo($url, $scrapeDoToken);
+        }
+
+        Log::warning("⚠️ No Scraping API Token configured (Scrape.do or Decodo) — skipping Universal API.");
+        return null;
+    }
+
+    /**
+     * 🌐 Scrape.do Web Scraping API
+     * Handles Cloudflare Turnstile, DataDome, Akamai, JS-rendering, and rotating residential proxies.
+     */
+    public function fetchWithScrapeDo($url, $token)
+    {
+        try {
+            $tokenValue = trim($token);
+            if (empty($tokenValue)) return null;
+
+            Log::info("🌐 Calling Scrape.do Web Scraping API for: $url");
+
+            $params = [
+                'token'  => $tokenValue,
+                'url'    => $url,
+                'render' => 'true',
+            ];
+
+            // If Bangladesh news site, use BD geo-targeting
+            if (str_contains($url, '.bd') || str_contains($url, 'prothomalo.com') || str_contains($url, 'jamuna.tv') || str_contains($url, 'kalerkantho.com') || str_contains($url, 'somoynews.tv') || str_contains($url, 'samakal.com') || str_contains($url, 'dailyamardesh.com')) {
+                $params['geoCode'] = 'bd';
+            }
+
+            $apiUrl = 'https://api.scrape.do?' . http_build_query($params);
+
+            $response = \Illuminate\Support\Facades\Http::timeout(90)
+                ->withOptions(['verify' => false])
+                ->get($apiUrl);
+
+            if ($response->successful()) {
+                $html = $response->body();
+                if ($html && strlen($html) > 500) {
+                    Log::info("✅ Scrape.do API Success. HTML length: " . strlen($html));
+                    return $html;
+                }
+            } else {
+                Log::warning("⚠️ Scrape.do HTTP {$response->status()}: " . substr($response->body(), 0, 300));
+            }
+        } catch (\Exception $e) {
+            Log::warning("⚠️ Scrape.do API Exception: " . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * 🌐 Decodo / SmartProxy Web Scraping API
+     */
+    public function fetchWithDecodoApi($url, $token)
+    {
         // Clean up Basic auth token header prefix if user included it in settings/input
         if (preg_match('/^Basic\s+(.*)$/i', trim($token), $matches)) {
             $tokenValue = $matches[1];
@@ -229,6 +309,7 @@ trait ScraperEnginesTrait
                     'ssl' => [
                         'verify_peer'      => false,
                         'verify_peer_name' => false,
+                        'verify_host'      => false,
                     ]
                 ];
 
@@ -263,9 +344,9 @@ trait ScraperEnginesTrait
                 }
             }
 
-            Log::warning("⚠️ Universal Scraping API failed for: $url");
+            Log::warning("⚠️ Decodo Scraping API failed for: $url");
         } catch (\Exception $e) {
-            Log::warning("⚠️ Universal Scraping API exception: " . $e->getMessage());
+            Log::warning("⚠️ Decodo Scraping API exception: " . $e->getMessage());
         }
 
         return null;

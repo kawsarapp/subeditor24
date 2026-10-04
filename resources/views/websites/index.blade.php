@@ -35,11 +35,14 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Scraper Method</label>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Scraper Engine</label>
                 <select name="scraper_method" class="w-full bg-slate-50 border-slate-300 text-slate-900 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-3 text-sm font-semibold">
-                    <option value="">System Default</option>
-                    <option value="node">Node.js (Puppeteer)</option>
-                    <option value="python">Python (Playwright)</option>
+                    <option value="">⚙️ System Default (Auto-Detect)</option>
+                    <option value="scrape_do">🚀 Scrape.do API (Cloudflare / Turnstile Bypass)</option>
+                    <option value="decodo">🌐 Decodo / SmartProxy Universal API</option>
+                    <option value="curl">⚡ Direct cURL (Zero-Cost / Super Fast)</option>
+                    <option value="python">🐍 Python (curl_cffi)</option>
+                    <option value="node">🤖 Node.js (Puppeteer Headless)</option>
                 </select>
             </div>
 
@@ -152,12 +155,18 @@
                             <a href="{{ $site->url }}" target="_blank" class="text-[10px] md:text-xs text-blue-500 hover:underline block truncate max-w-[120px] md:max-w-[200px]">{{ $site->url }} ↗</a>
                         </td>
                         <td class="px-4 md:px-6 py-4">
-                            @if($site->scraper_method == 'python')
-                                <span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded border border-yellow-200">Python</span>
+                            @if($site->scraper_method == 'scrape_do')
+                                <span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded border border-indigo-200">🚀 Scrape.do</span>
+                            @elseif($site->scraper_method == 'decodo')
+                                <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-200">🌐 Decodo</span>
+                            @elseif($site->scraper_method == 'curl')
+                                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-200">⚡ Direct cURL</span>
+                            @elseif($site->scraper_method == 'python')
+                                <span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded border border-yellow-200">🐍 Python</span>
                             @elseif($site->scraper_method == 'node')
-                                <span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded border border-green-200">Node</span>
+                                <span class="bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded border border-purple-200">🤖 Node</span>
                             @else
-                                <span class="bg-gray-100 text-gray-600 text-[10px] px-2 py-0.5 rounded border border-gray-200">Default</span>
+                                <span class="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded border border-slate-200">⚙️ Auto</span>
                             @endif
                         </td>
                         <td class="px-4 md:px-6 py-4 text-xs font-semibold">
@@ -253,11 +262,14 @@
                     <input type="text" name="name" id="editName" class="w-full border-gray-300 rounded-lg p-2 focus:ring-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Scraper Method</label>
-                    <select name="scraper_method" id="editScraper" class="w-full border-gray-300 rounded-lg p-2 focus:ring-indigo-500">
-                        <option value="">Default</option>
-                        <option value="node">Node.js</option>
-                        <option value="python">Python</option>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Scraper Engine</label>
+                    <select name="scraper_method" id="editScraper" class="w-full border-gray-300 rounded-lg p-2 focus:ring-indigo-500 text-sm font-semibold">
+                        <option value="">⚙️ System Default (Auto-Detect)</option>
+                        <option value="scrape_do">🚀 Scrape.do API (Cloudflare / Turnstile Bypass)</option>
+                        <option value="decodo">🌐 Decodo / SmartProxy Universal API</option>
+                        <option value="curl">⚡ Direct cURL (Zero-Cost / Fast)</option>
+                        <option value="python">🐍 Python (curl_cffi)</option>
+                        <option value="node">🤖 Node.js (Puppeteer Headless)</option>
                     </select>
                 </div>
             </div>

@@ -67,6 +67,60 @@ class ConnectionDiagnosticsService
     private function analyzeWithRules(int $statusCode, string $error, string $targetUrl, array $context): ?array
     {
         $lowerError = strtolower($error);
+        $platform = $context['platform'] ?? 'laravel';
+
+        // =========================================================================
+        // 🌐 WORDPRESS REST API DIAGNOSTICS (Dedicated, simple, no Laravel confusion)
+        // =========================================================================
+        if ($platform === 'wordpress') {
+            if ($statusCode === 401 || str_contains($lowerError, 'unauthorized') || str_contains($lowerError, 'rest_cannot_access') || str_contains($lowerError, 'rest_not_logged_in') || str_contains($lowerError, 'incorrect_password')) {
+                return [
+                    'type' => 'wp_auth_error',
+                    'badge' => 'WordPress Auth Error (401)',
+                    'problem' => 'ওয়ার্ডপ্রেস ইউজারনেম বা অ্যাপ্লিকেশন পাসওয়ার্ড মেলেনি (HTTP 401)।',
+                    'reason' => '১. WordPress ড্যাশবোর্ড থেকে জেনারেট করা Application Password টি ভুল বা পেস্ট করার সময় অতিরিক্ত স্পেস পড়েছে।<br>২. Username ফিল্ডে দেওয়া ইউজারনেমটির আন্ডারে এই Application Password তৈরি করা হয়নি।<br>৩. অথবা হোস্টিং সার্ভার (Apache/cPanel) "Authorization" হেডার আটকে দিচ্ছে।',
+                    'fix_instructions' => '১. WordPress ড্যাশবোর্ডে লগইন করে <strong>Users > Profile</strong>-এ যান।<br>২. স্ক্রোল করে নিচে <strong>Application Passwords</strong> সেকশনে যান।<br>৩. একটি নতুন নাম (যেমন: SubEditor24) লিখে <strong>Add New Application Password</strong> বাটনে ক্লিক করুন।<br>৪. তৈরি হওয়া পাসওয়ার্ডটি কপি করে এখানে <strong>App Password</strong> ফিল্ডে পেস্ট করুন (কোনো বাড়তি স্পেস রাখবেন না)।<br>৫. <strong>Username</strong> ঘরে ঠিক ঐ ইউজারের ইউজারনেমটি দিন।<br>৬. যদি সব ঠিক থাকার পরও 401 আসে, তবে সিপ্যানেল থেকে সাইটের <code>.htaccess</code> ফাইলে নিচের লাইনটি যুক্ত করুন:',
+                    'fix_code' => "# WordPress .htaccess ফাইলে যোগ করুন (যদি সার্ভার Authorization হেডার ব্লক করে):\nSetEnvIf Authorization \"(.*)\" HTTP_AUTHORIZATION=\$1",
+                ];
+            }
+
+            if ($statusCode === 403 || str_contains($lowerError, 'forbidden') || str_contains($lowerError, 'rest_cannot_create')) {
+                return [
+                    'type' => 'wp_forbidden',
+                    'badge' => 'WordPress Permission Denied (403)',
+                    'problem' => 'ওয়ার্ডপ্রেস ইউজারের পোস্ট তৈরির অনুমতি নেই অথবা সিকিউরিটি প্লাগিন ব্লক করছে (HTTP 403)।',
+                    'reason' => '১. ব্যবহৃত ইউজার একাউন্টটির রোল Administrator বা Editor নয়।<br>২. অথবা Wordfence / iThemes Security / Cloudflare WAF দ্বারা REST API রিকোয়েস্ট ব্লক করা হয়েছে।',
+                    'fix_instructions' => '১. নিশ্চিত করুন ইউজারটির রোল <strong>Administrator</strong> অথবা <strong>Editor</strong>।<br>২. ওয়ার্ডপ্রেসের কোনো সিকিউরিটি প্লাগিন বা Cloudflare WAF থাকলে REST API রিকোয়েস্টকে হোয়াইটলিস্ট করুন।',
+                    'fix_code' => "// WordPress User Role রিকোয়ারমেন্ট:\nRole: Administrator অথবা Editor",
+                ];
+            }
+
+            if ($statusCode === 404) {
+                return [
+                    'type' => 'wp_not_found',
+                    'badge' => 'WordPress REST API Not Found (404)',
+                    'problem' => 'ওয়ার্ডপ্রেস REST API সক্রিয় নেই অথবা ডোমেইন লিংকে ভুল রয়েছে (HTTP 404)।',
+                    'reason' => '১. Website URL-এ শুধুমাত্র সাইটের মূল ডোমেইন (যেমন: https://banglalivenews.com) দেওয়ার কথা থাকলেও অতিরিক্ত পাথ দেওয়া হয়েছে।<br>২. অথবা WordPress এর Permalinks সেটিংস ডিফল্ট/Plain করা আছে যার কারণে REST API বন্ধ রয়েছে।',
+                    'fix_instructions' => '১. নিশ্চিত করুন Website URL ফিল্ডে শুধুমাত্র মূল ডোমেইন (যেমন: <code>https://banglalivenews.com</code>) দেওয়া আছে।<br>২. WordPress ড্যাশবোর্ড > <strong>Settings > Permalinks</strong>-এ গিয়ে <strong>Post name</strong> সিলেক্ট করে <strong>Save Changes</strong> দিন।',
+                    'fix_code' => "// সঠিক Website URL উদাহরণ:\nhttps://banglalivenews.com",
+                ];
+            }
+
+            if (str_contains($lowerError, 'curl error') || str_contains($lowerError, 'connection refused') || str_contains($lowerError, 'timed out') || str_contains($lowerError, 'could not resolve host') || $statusCode === 0) {
+                return [
+                    'type' => 'network_error',
+                    'badge' => 'Network / DNS / SSL Error',
+                    'problem' => 'ওয়ার্ডপ্রেস সাইটে সংযোগ স্থাপন করা যাচ্ছে না।',
+                    'reason' => 'ডোমেইন স্পেলিং ভুল, সাইট ডাউন অথবা SSL সার্টিফিকেটে সমস্যা থাকতে পারে।',
+                    'fix_instructions' => 'ব্রাউজারে সাইটটি ওপেন করে ডোমেইনটি কপি করে Website URL ফিল্ডে পেস্ট করুন (অবশ্যই https:// সহ)।',
+                    'fix_code' => "https://banglalivenews.com",
+                ];
+            }
+        }
+
+        // =========================================================================
+        // ⚡ LARAVEL & CUSTOM API DIAGNOSTICS
+        // =========================================================================
 
         // ১. PHP Namespace Backslash Issue (non-compound name)
         if (str_contains($lowerError, 'non-compound name') || str_contains($lowerError, 'appmodelsnewspost') || str_contains($lowerError, 'appmodelscategory')) {

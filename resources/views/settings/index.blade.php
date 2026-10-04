@@ -373,48 +373,89 @@
             
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm">
                 <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
-                    <p class="text-xs text-gray-600 font-medium">Configure custom proxies and Decodo Universal Scraping API for scraping news. Leave empty to use system defaults.</p>
-                    <button type="button" onclick="testDecodoProxy()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-lg transition font-bold shadow-sm flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
-                        <i class="fas fa-vial"></i> <span>Test Connection</span>
-                    </button>
+                    <p class="text-xs text-gray-600 font-medium">Configure custom proxies and Web Scraping APIs (Scrape.do / Decodo) for anti-bot bypass. Leave empty to use system defaults.</p>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="testDecodoProxy()" class="text-xs bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg transition font-bold shadow-sm flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                            <i class="fas fa-network-wired"></i> <span>Test Standard Proxy</span>
+                        </button>
+                        <button type="button" onclick="testActiveScrapingApi()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition font-bold shadow-sm flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                            <i class="fas fa-bolt"></i> <span>Test Scraping API</span>
+                        </button>
+                    </div>
                 </div>
                 <div id="decodo_proxy_status_msg" class="text-xs font-bold mb-4 whitespace-pre-line"></div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Standard Proxy -->
-                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <h3 class="font-bold text-gray-700 mb-3 border-b pb-1">Standard Proxy (Puppeteer & Python)</h3>
-                        <div class="grid grid-cols-2 gap-3 mb-3">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">Proxy Host</label>
-                                <input type="text" id="proxy_host" name="proxy_host" value="{{ old('proxy_host', $settings->proxy_host ?? '') }}" placeholder="proxy.example.com" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-gray-700 mb-3 border-b pb-1 flex items-center gap-2">
+                                <i class="fas fa-network-wired text-gray-500"></i> Standard Proxy (Puppeteer & Python)
+                            </h3>
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Proxy Host</label>
+                                    <input type="text" id="proxy_host" name="proxy_host" value="{{ old('proxy_host', $settings->proxy_host ?? '') }}" placeholder="proxy.example.com" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Proxy Port</label>
+                                    <input type="number" id="proxy_port" name="proxy_port" value="{{ old('proxy_port', $settings->proxy_port ?? '') }}" placeholder="10000" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">Proxy Port</label>
-                                <input type="number" id="proxy_port" name="proxy_port" value="{{ old('proxy_port', $settings->proxy_port ?? '') }}" placeholder="10000" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">Username (Optional)</label>
-                                <input type="text" id="proxy_username" name="proxy_username" value="{{ old('proxy_username', $settings->proxy_username ?? '') }}" placeholder="username" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">Password (Optional)</label>
-                                <input type="password" id="proxy_password" name="proxy_password" value="{{ old('proxy_password', $settings->proxy_password ?? '') }}" placeholder="••••••••" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Username (Optional)</label>
+                                    <input type="text" id="proxy_username" name="proxy_username" value="{{ old('proxy_username', $settings->proxy_username ?? '') }}" placeholder="username" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Password (Optional)</label>
+                                    <input type="password" id="proxy_password" name="proxy_password" value="{{ old('proxy_password', $settings->proxy_password ?? '') }}" placeholder="••••••••" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Universal Scraping API -->
+                    <!-- Web Scraping API (Anti-Bot & Cloudflare Bypass) -->
                     <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col justify-between">
                         <div>
-                            <h3 class="font-bold text-blue-700 mb-3 border-b pb-1">Decodo Universal Scraping API</h3>
-                            <p class="text-xs mb-3 text-gray-500">API token for scraping Cloudflare-protected news portals and protected sources.</p>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">Decodo API Token (Basic Auth Token)</label>
+                            <div class="border-b pb-2 mb-3">
+                                <h3 class="font-bold text-indigo-700 flex items-center gap-1.5">
+                                    <i class="fas fa-shield-virus"></i> Web Scraping API (Anti-Bot / Cloudflare Bypass)
+                                </h3>
+                                <p class="text-[11px] text-gray-500 mt-0.5">Bypasses Cloudflare Turnstile, DataDome, JS-rendering & protects IP.</p>
+                            </div>
+
+                            <!-- Provider Selection -->
+                            <div class="mb-3">
+                                <label class="block text-xs font-bold text-gray-700 mb-1">Active Scraping API Provider</label>
+                                <select name="scraping_api_provider" id="scraping_api_provider" onchange="toggleScrapingApiFields()" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs font-semibold">
+                                    <option value="scrape_do" {{ old('scraping_api_provider', $settings->scraping_api_provider ?? 'scrape_do') === 'scrape_do' ? 'selected' : '' }}>
+                                        🚀 Scrape.do (Recommended - Cloudflare, Turnstile, DataDome bypass)
+                                    </option>
+                                    <option value="decodo" {{ old('scraping_api_provider', $settings->scraping_api_provider ?? '') === 'decodo' ? 'selected' : '' }}>
+                                        🌐 Decodo / SmartProxy Universal API
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Scrape.do Token -->
+                            <div id="scrape_do_field" class="mb-3">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-xs font-bold text-gray-600">Scrape.do API Token</label>
+                                    <a href="https://scrape.do" target="_blank" class="text-[11px] text-indigo-600 hover:underline flex items-center gap-1"><i class="fas fa-external-link-alt text-[10px]"></i> Get Token</a>
+                                </div>
+                                <input type="password" id="scrape_do_token" name="scrape_do_token" value="{{ old('scrape_do_token', $settings->scrape_do_token ?? '') }}" placeholder="Enter your Scrape.do API Token" class="w-full border-gray-300 rounded shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-xs">
+                                <p class="text-[10px] text-gray-400 mt-1">High-speed residential proxies with JS render & BD geo-targeting.</p>
+                            </div>
+
+                            <!-- Decodo Token -->
+                            <div id="decodo_field" class="mb-3">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-xs font-bold text-gray-600">Decodo API Token (Basic Auth Token)</label>
+                                    <a href="https://decodo.com" target="_blank" class="text-[11px] text-blue-600 hover:underline flex items-center gap-1"><i class="fas fa-external-link-alt text-[10px]"></i> Get Token</a>
+                                </div>
                                 <input type="password" id="smartproxy_api_token" name="smartproxy_api_token" value="{{ old('smartproxy_api_token', $settings->smartproxy_api_token ?? '') }}" placeholder="Basic VTAwM..." class="w-full border-gray-300 rounded shadow-sm focus:border-blue-500 focus:ring-blue-500 font-mono text-xs">
-                                <p class="text-[10px] text-gray-400 mt-1">Enter <code>Basic Auth Token</code> obtained from your Decodo dashboard.</p>
+                                <p class="text-[10px] text-gray-400 mt-1">Enter <code>Basic Auth Token</code> obtained from your Decodo / SmartProxy dashboard.</p>
                             </div>
                         </div>
                     </div>
@@ -2261,6 +2302,71 @@
         });
     }
 
+    function toggleScrapingApiFields() {
+        const provider = document.getElementById('scraping_api_provider')?.value || 'scrape_do';
+        const scrapeDoField = document.getElementById('scrape_do_field');
+        const decodoField = document.getElementById('decodo_field');
+        
+        if (provider === 'scrape_do') {
+            if (scrapeDoField) scrapeDoField.classList.remove('opacity-60');
+            if (decodoField) decodoField.classList.add('opacity-60');
+        } else {
+            if (scrapeDoField) scrapeDoField.classList.add('opacity-60');
+            if (decodoField) decodoField.classList.remove('opacity-60');
+        }
+    }
+
+    function testActiveScrapingApi() {
+        const provider = document.getElementById('scraping_api_provider')?.value || 'scrape_do';
+        if (provider === 'scrape_do') {
+            testScrapeDo();
+        } else {
+            testDecodoProxy();
+        }
+    }
+
+    function testScrapeDo() {
+        const tokenInput = document.getElementById('scrape_do_token');
+        const statusMsg = document.getElementById('decodo_proxy_status_msg');
+        const btn = event.currentTarget || document.activeElement;
+        const originalText = btn.innerHTML;
+
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing Scrape.do...';
+        btn.disabled = true;
+        statusMsg.innerHTML = "⏳ Testing Scrape.do Web Scraping API (Residential BD IP & Cloudflare bypass)...";
+        statusMsg.className = "text-xs font-bold mb-4 text-indigo-600 bg-indigo-50 p-3 rounded-lg border border-indigo-200 block";
+
+        const payload = {
+            scrape_do_token: tokenInput ? tokenInput.value.trim() : ''
+        };
+
+        fetch(`/settings/test/scrape-do`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            statusMsg.innerText = data.message;
+            if (data.success) {
+                statusMsg.className = "text-xs font-bold mb-4 text-green-700 bg-green-50 p-3 rounded-lg border border-green-300 block whitespace-pre-line";
+            } else {
+                statusMsg.className = "text-xs font-bold mb-4 text-red-700 bg-red-50 p-3 rounded-lg border border-red-300 block whitespace-pre-line";
+            }
+        })
+        .catch(err => {
+            statusMsg.innerText = "❌ Network error: " + err.message;
+            statusMsg.className = "text-xs font-bold mb-4 text-red-700 bg-red-50 p-3 rounded-lg border border-red-300 block whitespace-pre-line";
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+
     const defaultAiPrompts = {
         bn: @json(\App\Services\AIWriterService::getDefaultPrompt('bn')),
         en: @json(\App\Services\AIWriterService::getDefaultPrompt('en'))
@@ -3054,6 +3160,7 @@ async def get_categories(authorization: Optional[str] = Header(None)):
     document.addEventListener('DOMContentLoaded', function () {
         fetchWPCategories();
         syncMappingJsonToVisual();
+        toggleScrapingApiFields();
     });
 
     // ==========================================================
