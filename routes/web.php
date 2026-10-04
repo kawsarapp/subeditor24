@@ -96,6 +96,14 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/credits', [SettingsController::class, 'credits'])->name('credits.index');
     Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.update-profile');
 
+    // 💳 Subscription & Billing Checkout / Orders / Invoices
+    Route::prefix('billing')->name('billing.')->group(function () {
+        Route::get('/checkout/{slug}', [\App\Http\Controllers\BillingController::class, 'checkout'])->name('checkout');
+        Route::post('/order/submit', [\App\Http\Controllers\BillingController::class, 'submitOrder'])->name('order.submit');
+        Route::get('/my-subscription', [\App\Http\Controllers\BillingController::class, 'mySubscription'])->name('my-subscription');
+        Route::get('/invoice/{order_number}', [\App\Http\Controllers\BillingController::class, 'invoice'])->name('invoice');
+    });
+
     // --- ৩. সেটিংস ম্যানেজমেন্ট ---
     Route::middleware(['permission:can_settings'])->group(function () {
         Route::get('/admin/settings', [SettingsController::class, 'index'])->name('settings.index');
@@ -347,6 +355,15 @@ Route::middleware(['auth', 'nocache', AdminMiddleware::class])->group(function (
             Route::post('/plans/save', [\App\Http\Controllers\Admin\VipPricingAdminController::class, 'savePlan'])->name('plans.save');
             Route::delete('/plans/{id}', [\App\Http\Controllers\Admin\VipPricingAdminController::class, 'deletePlan'])->name('plans.delete');
             Route::post('/config/save', [\App\Http\Controllers\Admin\VipPricingAdminController::class, 'savePageConfig'])->name('config.save');
+        });
+
+        // 💰 Manual Payment & Subscription Orders Manager (Super Admin)
+        Route::prefix('billing')->name('billing.')->group(function () {
+            Route::get('/orders', [\App\Http\Controllers\Admin\AdminBillingController::class, 'index'])->name('orders');
+            Route::post('/orders/{id}/approve', [\App\Http\Controllers\Admin\AdminBillingController::class, 'approve'])->name('orders.approve');
+            Route::post('/orders/{id}/reject', [\App\Http\Controllers\Admin\AdminBillingController::class, 'reject'])->name('orders.reject');
+            Route::get('/payment-settings', [\App\Http\Controllers\Admin\AdminBillingController::class, 'paymentSettings'])->name('payment-settings');
+            Route::post('/payment-settings', [\App\Http\Controllers\Admin\AdminBillingController::class, 'updatePaymentSettings'])->name('payment-settings.update');
         });
     });
 });

@@ -16,6 +16,9 @@ class User extends Authenticatable
         'password', 
         'role', 
 		'parent_id',
+        'pricing_plan_id',
+        'subscription_status',
+        'subscription_cycle',
         'credits', 
         'total_credits_limit', 
         'daily_post_limit',
@@ -175,5 +178,207 @@ class User extends Authenticatable
     {
         if ($this->role === 'super_admin') return true;
         return is_array($this->permissions) && in_array($permission, $this->permissions);
+    }
+
+    // ==========================================
+    // 👑 SUBSCRIPTION & BILLING METHODS
+    // ==========================================
+
+    public function pricingPlan()
+    {
+        return $this->belongsTo(PricingPlan::class, 'pricing_plan_id');
+    }
+
+    public function subscriptionOrders()
+    {
+        return $this->hasMany(SubscriptionOrder::class)->latest();
+    }
+
+    /**
+     * Check if user's subscription is active
+     */
+    public function isSubscriptionActive(): bool
+    {
+        // 1. Super Admin is always active
+        if ($this->role === 'super_admin') {
+            return true;
+        }
+
+        // 2. Staff/Reporter inherits status from parent
+        if (in_array($this->role, ['staff', 'reporter']) && $this->parent_id) {
+            $parent = $this->parent;
+            return $parent ? $parent->isSubscriptionActive() : false;
+        }
+
+        // 3. Lifetime plans
+        if ($this->subscription_status === 'lifetime') {
+            return true;
+        }
+
+        // 4. Inactive or explicitly expired flag
+        if ($this->subscription_status === 'expired' || $this->is_active === false) {
+            return false;
+        }
+
+        // 5. Check expire_date
+        if ($this->expire_date) {
+            return \Carbon\Carbon::parse($this->expire_date)->endOfDay()->isFuture() || \Carbon\Carbon::parse($this->expire_date)->isToday();
+        }
+
+        // 6. Default trial without explicit expire_date: fallback to 7 days from created_at
+        if ($this->created_at) {
+            return $this->created_at->addDays(7)->isFuture();
+        }
+
+        return true;
+    }
+
+    /**
+     * Number of days used in current subscription
+     */
+    public function getDaysUsedAttribute(): int
+    {
+        $startDate = $this->joining_date ? \Carbon\Carbon::parse($this->joining_date)->startOfDay() : ($this->created_at ? $this->created_at->startOfDay() : now()->startOfDay());
+        $now = now()->startOfDay();
+
+        if ($startDate->isFuture()) {
+            return 0;
+        }
+
+        return (int) $startDate->diffInDays($now);
+    }
+
+    /**
+     * Number of days remaining in current subscription
+     */
+    public function getDaysRemainingAttribute(): int
+    {
+        if ($this->role === 'super_admin' || $this->subscription_status === 'lifetime') {
+            return 999;
+        }
+
+        $expireDate = $this->expire_date ? \Carbon\Carbon::parse($this->expire_date)->endOfDay() : ($this->created_at ? $this->created_at->addDays(7)->endOfDay() : null);
+
+        if (!$expireDate) {
+            return 0;
+        }
+
+        if ($expireDate->isPast() && !$expireDate->isToday()) {
+            return 0;
+        }
+
+        return (int) ceil(now()->diffInDays($expireDate, false));
+    }
+
+    /**
+     * Total cycle days of current plan (e.g. 30, 180, 365)
+     */
+    public function getTotalPlanDaysAttribute(): int
+    {
+        if ($this->joining_date && $this->expire_date) {
+            $start = \Carbon\Carbon::parse($this->joining_date)->startOfDay();
+            $end = \Carbon\Carbon::parse($this->expire_date)->endOfDay();
+            $diff = (int) $start->diffInDays($end);
+            return $diff > 0 ? $diff : 30;
+        }
+
+        return match ($this->subscription_cycle) {
+            'yearly'      => 365,
+            'half_yearly' => 180,
+            'lifetime'    => 3650,
+            default       => 30,
+        };
+    }
+
+    /**
+     * Progress percentage of days passed (0% to 100%)
+     */
+    public function getSubscriptionProgressPercentAttribute(): float
+    {
+        $total = $this->total_plan_days;
+        if ($total <= 0) return 100.0;
+
+        $used = $this->days_used;
+        $percent = ($used / $total) * 100;
+
+        return (float) min(100.0, max(0.0, round($percent, 1)));
+    }
+
+    /**
+     * Check if subscription expires within given days
+     */
+    public function isExpiringSoon(int $days = 3): bool
+    {
+        if ($this->role === 'super_admin' || $this->subscription_status === 'lifetime') {
+            return false;
+        }
+
+        $remaining = $this->days_remaining;
+        return $remaining > 0 && $remaining <= $days;
+    }
+
+    /**
+     * Check if subscription has already expired
+     */
+    public function isExpired(): bool
+    {
+        return !$this->isSubscriptionActive();
+    }
+
+    /**
+     * Activate or renew a pricing plan for the user
+     */
+    public function activatePlan(PricingPlan $plan, string $cycle = 'half_yearly', ?SubscriptionOrder $order = null): void
+    {
+        $durationDays = match ($cycle) {
+            'monthly'     => 30,
+            'yearly'      => 365,
+            'lifetime'    => 3650,
+            default       => 180, // half_yearly / 6 months default
+        };
+
+        // If user already has an active subscription of same or higher, extend from existing expire_date
+        $baseDate = ($this->expire_date && \Carbon\Carbon::parse($this->expire_date)->isFuture())
+            ? \Carbon\Carbon::parse($this->expire_date)
+            : now();
+
+        $this->pricing_plan_id = $plan->id;
+        $this->subscription_status = ($cycle === 'lifetime') ? 'lifetime' : 'active';
+        $this->subscription_cycle = $cycle;
+        $this->joining_date = $this->joining_date ?: now();
+        $this->expire_date = ($cycle === 'lifetime') ? now()->addYears(10) : $baseDate->copy()->addDays($durationDays);
+        $this->is_active = true;
+
+        // Sync limits from plan
+        if ($plan->daily_news_limit !== null && $plan->daily_news_limit > 0) {
+            $this->daily_post_limit = $plan->daily_news_limit;
+            $this->daily_ai_limit = $plan->daily_news_limit;
+        }
+        if ($plan->reporters_limit !== null && $plan->reporters_limit > 0) {
+            $this->staff_limit = $plan->reporters_limit;
+        }
+
+        // Add / Refill AI Credits
+        $planCredits = $plan->custom_limits['ai_credits'] ?? ($plan->daily_news_limit > 0 ? ($plan->daily_news_limit * 30) : 500);
+        $this->credits = max((int) $this->credits, (int) $planCredits);
+        $this->total_credits_limit = max((int) $this->total_credits_limit, (int) $planCredits);
+
+        // Ensure key permissions are enabled
+        $currentPerms = is_array($this->permissions) ? $this->permissions : [];
+        $basePerms = ['can_scrape', 'can_ai', 'can_studio', 'can_direct_publish', 'can_view_published', 'can_auto_post', 'can_central_feed', 'can_custom_photo_card'];
+        $this->permissions = array_values(array_unique(array_merge($currentPerms, $basePerms)));
+
+        $this->save();
+
+        // Log credit history
+        try {
+            CreditHistory::create([
+                'user_id'         => $this->id,
+                'action_type'     => 'plan_activation',
+                'description'     => "Plan Activated: {$plan->name} ({$cycle})",
+                'credits_change'  => $planCredits,
+                'balance_after'   => $this->credits,
+            ]);
+        } catch (\Exception $e) {}
     }
 }

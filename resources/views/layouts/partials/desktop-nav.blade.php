@@ -292,8 +292,33 @@
             @endauth
 
             {{-- RIGHT CONTROL PANEL WITH USER PROFILE & CREDITS --}}
+            {{-- RIGHT CONTROL PANEL WITH USER PROFILE & CREDITS --}}
             <div class="flex items-center gap-2 xl:gap-3 shrink-0">
                 @auth
+                    {{-- 👑 Subscription Validity Countdown Pill --}}
+                    @if(auth()->user()->role !== 'reporter')
+                        @php
+                            $subStatus = auth()->user()->subscription_status ?? 'active';
+                            $daysRem = auth()->user()->days_remaining;
+                            $isExp = auth()->user()->isExpired();
+                            $isSoon = auth()->user()->isExpiringSoon();
+                            $planName = auth()->user()->pricingPlan ? auth()->user()->pricingPlan->name : (auth()->user()->role === 'super_admin' ? 'Unlimited Admin' : 'Active Plan');
+                        @endphp
+                        <a href="{{ route('billing.my-subscription') }}" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm border {{ $isExp ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 border-rose-300 dark:border-rose-800 animate-pulse' : ($isSoon ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 border-amber-300 dark:border-amber-800' : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100') }}" title="প্ল্যানের মেয়াদ: {{ $daysRem }} দিন বাকি">
+                            <i class="fa-solid {{ $isExp ? 'fa-triangle-exclamation text-rose-500' : ($isSoon ? 'fa-clock text-amber-500' : 'fa-crown text-amber-500') }}"></i>
+                            <span>{{ $planName }}</span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded-md font-extrabold {{ $isExp ? 'bg-rose-200 text-rose-900' : ($isSoon ? 'bg-amber-200 text-amber-900' : 'bg-indigo-200 dark:bg-indigo-900/60 text-indigo-900 dark:text-indigo-200') }}">
+                                @if($daysRem >= 999)
+                                    আনলিমিটেড
+                                @elseif($isExp)
+                                    মেয়াদ শেষ
+                                @else
+                                    {{ $daysRem }} দিন বাকি
+                                @endif
+                            </span>
+                        </a>
+                    @endif
+
                     {{-- 🎯 Daily Goal & Target Progress Tracker (Only on wide 2xl screens) --}}
                     @php
                         $todayPosts = auth()->user()->todays_post_count ?? 0;
@@ -353,10 +378,31 @@
                                     @endif
                                 </div>
                             </div>
+
+                                {{-- MY SUBSCRIPTION & PLAN MANAGEMENT --}}
+                                @if(auth()->user()->role !== 'reporter')
+                                <a href="{{ route('billing.my-subscription') }}" class="flex items-center justify-between px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-file-invoice-dollar text-indigo-500 w-4"></i>
+                                        <span>আমার সাবস্ক্রিপশন ও বিলিং</span>
+                                    </div>
+                                    <span class="text-[10px] font-black px-2 py-0.5 rounded-full {{ $isExp ? 'bg-rose-100 text-rose-600' : 'bg-indigo-100 text-indigo-700' }}">
+                                        {{ $daysRem >= 999 ? 'Active' : ($isExp ? 'Expired' : $daysRem . 'd') }}
+                                    </span>
+                                </a>
+                                @endif
                             
                                 @if(auth()->user()->role === 'super_admin')
+                                <div class="border-t border-slate-100 my-1"></div>
+                                <div class="px-4 pt-1 pb-0.5 text-[9px] font-extrabold uppercase text-slate-400">Admin Control</div>
                                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
                                     <i class="fa-solid fa-shield-halved text-indigo-500 w-4"></i> Admin Panel
+                                </a>
+                                <a href="{{ route('admin.billing.orders') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-black text-indigo-700 hover:bg-indigo-50 transition-colors">
+                                    <i class="fa-solid fa-money-check-dollar text-indigo-600 w-4"></i> বিলিং অর্ডার ও পেমেন্ট রিকুয়েস্ট
+                                </a>
+                                <a href="{{ route('admin.billing.payment-settings') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                                    <i class="fa-solid fa-wallet text-slate-500 w-4"></i> পেমেন্ট গেটওয়ে সেটিংস
                                 </a>
                                 <a href="{{ route('admin.pricing.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
                                     <i class="fa-solid fa-tags text-indigo-500 w-4"></i> Regular Pricing & Coupons
@@ -364,6 +410,7 @@
                                 <a href="{{ route('admin.vip-pricing.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-black text-amber-700 hover:bg-amber-50 hover:text-amber-600 transition-colors">
                                     <i class="fa-solid fa-crown text-amber-500 w-4"></i> VIP Pricing Manager
                                 </a>
+                                <div class="border-t border-slate-100 my-1"></div>
                                 @endif
 
                                 @php

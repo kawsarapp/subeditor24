@@ -21,10 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
 			'nocache' => \App\Http\Middleware\NoCacheMiddleware::class, // 🔥 Notun add holo
+            'check.subscription' => \App\Http\Middleware\CheckSubscription::class,
         ]);
 
         $middleware->web(append: [
             \App\Http\Middleware\GzipResponseMiddleware::class,
+            \App\Http\Middleware\CheckSubscription::class,
         ]);
         
         // 🔥 Login/Guest redirect loop ফিক্স

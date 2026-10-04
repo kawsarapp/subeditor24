@@ -30,6 +30,7 @@ class UserSetting extends Model
 		'design_preferences',
 		'pricing_page_config',
 		'vip_pricing_page_config',
+		'manual_payment_methods',
 		'fb_page_id',
 		'fb_access_token',
 		'telegram_bot_token',
@@ -99,6 +100,7 @@ class UserSetting extends Model
 		'design_preferences' => 'array',
 		'pricing_page_config' => 'array',
 		'vip_pricing_page_config' => 'array',
+		'manual_payment_methods' => 'array',
 		'post_to_fb' => 'boolean',
         'post_to_telegram' => 'boolean',
         'post_to_twitter' => 'boolean',
@@ -150,6 +152,44 @@ class UserSetting extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public static function getManualPaymentConfig(): array
+    {
+        $default = [
+            'bkash_number'       => '01771-545972',
+            'bkash_type'         => 'Personal (Send Money)',
+            'bkash_instruction'  => 'বিকাশ অ্যাপ থেকে Send Money করুন এবং Transaction ID (TrxID) নিচে প্রদান করুন।',
+            'nagad_number'       => '01771-545972',
+            'nagad_type'         => 'Personal (Send Money)',
+            'nagad_instruction'  => 'নগদ অ্যাপ থেকে Send Money করুন এবং Transaction ID (TrxID) নিচে প্রদান করুন।',
+            'rocket_number'      => '01771-545972-8',
+            'rocket_type'        => 'Personal',
+            'rocket_instruction' => 'রকেট থেকে Send Money করুন এবং TrxID নিচে লিখুন।',
+            'bank_name'          => 'Islami Bank Bangladesh Ltd.',
+            'bank_account_name'  => 'NewsManage24 Technologies',
+            'bank_account_no'    => '20501234567890123',
+            'bank_branch'        => 'Dhaka Principal Branch',
+            'bank_routing_no'    => '125272847',
+            'bank_instruction'   => 'ব্যাংক ডিপোজিট বা ফান্ড ট্রান্সফার করে স্লিপ/স্ক্রিনশট আপলোড করুন।',
+            'support_phone'      => '+880 1771-545972',
+            'support_whatsapp'   => '8801771545972',
+        ];
+
+        $superAdmin = User::where('role', 'super_admin')->first();
+        if ($superAdmin) {
+            $setting = self::where('user_id', $superAdmin->id)->first();
+            if ($setting && !empty($setting->manual_payment_methods)) {
+                $saved = is_array($setting->manual_payment_methods) 
+                    ? $setting->manual_payment_methods 
+                    : json_decode($setting->manual_payment_methods, true);
+                if (is_array($saved)) {
+                    return array_merge($default, $saved);
+                }
+            }
+        }
+
+        return $default;
     }
 
     public static function getSettingWithFallback($userId, $key)

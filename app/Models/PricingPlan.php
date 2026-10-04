@@ -51,6 +51,16 @@ class PricingPlan extends Model
         'sort_order'             => 'integer',
     ];
 
+    public function users()
+    {
+        return $this->hasMany(User::class, 'pricing_plan_id');
+    }
+
+    public function subscriptionOrders()
+    {
+        return $this->hasMany(SubscriptionOrder::class, 'pricing_plan_id');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true)->orderBy('sort_order', 'asc');

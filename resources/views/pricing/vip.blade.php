@@ -135,8 +135,8 @@
 
                 {{-- Action Buttons --}}
                 <div class="mt-4 pt-4 border-t border-amber-500/20 space-y-2">
-                    <a href="{{ route('register', ['plan' => $plan->slug]) }}" class="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 transition block text-center transform hover:-translate-y-0.5 cursor-pointer">
-                        <i class="fa-solid fa-crown mr-1"></i> ভিআইপি প্যাকেজ নিন 🚀
+                    <a href="{{ route('billing.checkout', ['slug' => $plan->slug, 'mode' => 'special']) }}" class="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 transition block text-center transform hover:-translate-y-0.5 cursor-pointer">
+                        <i class="fa-solid fa-crown mr-1"></i> ভিআইপি প্যাকেজ অর্ডার করুন 🚀
                     </a>
                     <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $config['whatsapp_number'] ?? '8801771545972') }}?text={{ urlencode('Hello, I am interested in the Subeditor24 VIP Plan: ' . $plan->name) }}" target="_blank" class="w-full py-2 px-3 rounded-lg text-xs font-bold text-center text-slate-300 hover:text-emerald-400 hover:bg-slate-800/80 transition block cursor-pointer">
                         <i class="fa-brands fa-whatsapp text-emerald-400 mr-1"></i> Executive WhatsApp Chat

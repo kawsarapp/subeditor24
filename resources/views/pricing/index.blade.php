@@ -206,9 +206,15 @@
 
                 {{-- Action Button --}}
                 <div class="mt-4 pt-4 border-t border-slate-700/60 space-y-2">
-                    <a href="{{ route('register', ['plan' => $plan->slug]) }}" class="w-full py-3 px-3.5 rounded-xl text-xs font-black text-center transition block shadow-lg cursor-pointer {{ $isFreeTrial ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-slate-950 font-black' : ($isPopular ? 'bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white' : ($isEnterprise ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950' : 'bg-slate-700 hover:bg-indigo-600 text-white')) }}">
-                        <i class="fa-solid {{ $isFreeTrial ? 'fa-gift' : 'fa-rocket' }} mr-1"></i> {{ $isFreeTrial ? 'ফ্রি ট্রায়াল শুরু করুন' : 'Start 7-Day Free Trial' }}
-                    </a>
+                    @if(auth()->check())
+                        <a href="{{ route('billing.checkout', ['slug' => $plan->slug, 'mode' => $currentMode]) }}" class="w-full py-3 px-3.5 rounded-xl text-xs font-black text-center transition block shadow-lg cursor-pointer {{ $isFreeTrial ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-slate-950 font-black' : ($isPopular ? 'bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white' : ($isEnterprise ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950' : 'bg-slate-700 hover:bg-indigo-600 text-white')) }}">
+                            <i class="fa-solid {{ $isFreeTrial ? 'fa-gift' : 'fa-bolt' }} mr-1"></i> {{ $isFreeTrial ? 'ফ্রি ট্রায়াল চালু করুন' : 'প্যাকেজটি অর্ডার করুন 🚀' }}
+                        </a>
+                    @else
+                        <a href="{{ route('billing.checkout', ['slug' => $plan->slug, 'mode' => $currentMode]) }}" class="w-full py-3 px-3.5 rounded-xl text-xs font-black text-center transition block shadow-lg cursor-pointer {{ $isFreeTrial ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-slate-950 font-black' : ($isPopular ? 'bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white' : ($isEnterprise ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950' : 'bg-slate-700 hover:bg-indigo-600 text-white')) }}">
+                            <i class="fa-solid {{ $isFreeTrial ? 'fa-gift' : 'fa-rocket' }} mr-1"></i> {{ $isFreeTrial ? 'ফ্রি ট্রায়াল শুরু করুন' : 'সাবস্ক্রাইব ও অর্ডার করুন 🚀' }}
+                        </a>
+                    @endif
                     <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $config['whatsapp_number'] ?? '8801771545972') }}?text={{ urlencode('Hello, I want to subscribe to SubEditor24 ' . $plan->name . ' Plan.') }}" target="_blank" class="w-full py-2 px-3 rounded-lg text-[11px] font-bold text-center text-slate-400 hover:text-emerald-400 hover:bg-slate-800/80 transition block cursor-pointer">
                         <i class="fa-brands fa-whatsapp text-emerald-400 mr-1"></i> Talk on WhatsApp
                     </a>

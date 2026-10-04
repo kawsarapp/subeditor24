@@ -192,6 +192,29 @@ Artisan::command('news:clean-error-news', function () {
     $this->info("✅ Pruning complete! Deleted {$newsCount} error items from news_items and {$centralCount} from central_news_pool.");
 })->purpose('Prune error and blocked page news items from database');
 
+// --- 💳 SUBSCRIPTION EXPIRY & STATUS CHECK COMMAND ---
+Artisan::command('subscription:check-expiry', function () {
+    $this->info("🔄 Checking expired user subscriptions...");
+    $today = now()->startOfDay();
+
+    // Mark active users as expired whose expire_date has passed
+    $expiredUsers = User::where('role', '!=', 'super_admin')
+        ->where('subscription_status', 'active')
+        ->whereNotNull('expire_date')
+        ->where('expire_date', '<', $today)
+        ->get();
+
+    $count = 0;
+    foreach ($expiredUsers as $user) {
+        $user->subscription_status = 'expired';
+        $user->save();
+        $count++;
+        $this->warn("⛔ User {$user->name} (ID: {$user->id}) marked as expired.");
+    }
+
+    $this->info("✅ Expiry check completed. {$count} subscriptions marked as expired.");
+})->purpose('Check and update expired user subscriptions');
+
 // শিডিউল সেটআপ
 Schedule::call(fn() => app(\App\Services\DynamicCronService::class)->recordHeartbeat('cli'))->everyMinute();
 Schedule::command('news:autopost')->everyMinute();
@@ -201,6 +224,7 @@ Schedule::command('news:central-pool-sync')->everyMinute();
 Schedule::command('youtube:autopilot-sync')->everyFiveMinutes();
 Schedule::command('trends:sync')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('news:clean-error-news')->hourly();
+Schedule::command('subscription:check-expiry')->daily();
 
 Schedule::call(function () {
     $settingsList = \App\Models\UserSetting::get();

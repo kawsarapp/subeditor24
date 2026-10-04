@@ -98,12 +98,31 @@
         </div>
 
         {{-- Limit & Credits Status --}}
-        <div class="p-4 bg-indigo-50/50 border-b border-slate-100 flex justify-between items-center">
-            <div class="text-xs font-bold text-slate-600">
-                Today's Limit: <span class="text-indigo-600 font-black">{{ auth()->user()->todays_post_count ?? 0 }}/{{ auth()->user()->daily_post_limit ?? 20 }}</span>
+        @php
+            $mDaysRem = auth()->user()->days_remaining;
+            $mIsExp = auth()->user()->isExpired();
+            $mIsSoon = auth()->user()->isExpiringSoon();
+        @endphp
+        <div class="p-3.5 bg-indigo-50/70 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-700 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+                <span class="font-bold text-slate-600 dark:text-slate-300">Today's Limit: <span class="text-indigo-600 dark:text-indigo-400 font-black">{{ auth()->user()->todays_post_count ?? 0 }}/{{ auth()->user()->daily_post_limit ?? 20 }}</span></span>
+                @if(auth()->user()->role !== 'reporter')
+                <a href="{{ route('credits.index') }}" class="bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-amber-200 dark:border-amber-700">🪙 {{ auth()->user()->credits ?? 0 }} Credits</a>
+                @endif
             </div>
             @if(auth()->user()->role !== 'reporter')
-            <a href="{{ route('credits.index') }}" class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold border border-amber-200">🪙 {{ auth()->user()->credits ?? 0 }} Credits</a>
+            <div class="pt-1.5 border-t border-indigo-100 dark:border-slate-700 flex justify-between items-center text-xs">
+                <span class="text-slate-500 dark:text-slate-400 font-medium">প্ল্যানের মেয়াদ:</span>
+                <a href="{{ route('billing.my-subscription') }}" class="font-black px-2 py-0.5 rounded-md text-[11px] {{ $mIsExp ? 'bg-rose-100 text-rose-700 animate-pulse' : ($mIsSoon ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-700') }}">
+                    @if($mDaysRem >= 999)
+                        👑 Unlimited
+                    @elseif($mIsExp)
+                        ⛔ মেয়াদ শেষ (রিনিউ করুন)
+                    @else
+                        ⏳ {{ $mDaysRem }} দিন বাকি
+                    @endif
+                </a>
+            </div>
             @endif
         </div>
 
@@ -234,6 +253,14 @@
             </a>
             @endif
 
+            <a href="{{ route('admin.billing.orders') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.billing.orders') ? 'bg-indigo-600 text-white' : 'text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100' }}">
+                <i class="fa-solid fa-money-check-dollar text-indigo-600 w-5 text-center text-sm"></i> বিলিং ও পেমেন্ট রিকুয়েস্ট
+            </a>
+
+            <a href="{{ route('admin.billing.payment-settings') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.billing.payment-settings') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
+                <i class="fa-solid fa-wallet text-slate-500 w-5 text-center text-sm"></i> পেমেন্ট গেটওয়ে সেটিংস
+            </a>
+
             <a href="{{ route('admin.pricing.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.pricing.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-tags text-indigo-500 w-5 text-center text-sm"></i> Regular Pricing & Coupons
             </a>
@@ -254,10 +281,21 @@
                 $isSuperAdmin = auth()->check() && auth()->user()->role === 'super_admin';
             @endphp
 
-            @if((!$pricingNavConfig['hide_pricing_from_nav'] || !$pricingNavConfig['hide_vip_pricing_from_nav']) || $isSuperAdmin)
             <div class="border-t border-slate-100 my-2"></div>
             <p class="px-3 pt-1 pb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Subscriptions & Pricing</p>
             
+            @if(auth()->user()->role !== 'reporter')
+            <a href="{{ route('billing.my-subscription') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-black {{ request()->routeIs('billing.my-subscription') ? 'bg-indigo-600 text-white' : 'text-indigo-700 bg-indigo-50/60 hover:bg-indigo-100' }}">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-file-invoice-dollar text-indigo-500 w-5 text-center text-sm"></i>
+                    <span>আমার সাবস্ক্রিপশন ও বিলিং</span>
+                </div>
+                <span class="text-[10px] font-black px-2 py-0.5 rounded-md {{ $mIsExp ? 'bg-rose-200 text-rose-900' : 'bg-indigo-200 text-indigo-900' }}">
+                    {{ $mDaysRem >= 999 ? 'Active' : ($mIsExp ? 'Expired' : $mDaysRem . 'd') }}
+                </span>
+            </a>
+            @endif
+
             @if(!$pricingNavConfig['hide_pricing_from_nav'] || $isSuperAdmin)
             <a href="{{ route('pricing.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('pricing.index') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-gem text-purple-500 w-5 text-center text-sm"></i> Special Pricing Plans
@@ -268,7 +306,6 @@
             <a href="{{ route('pricing.vip') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('pricing.vip') ? 'bg-amber-500 text-slate-950 font-black' : 'text-amber-700 bg-amber-50 hover:bg-amber-100' }}">
                 <i class="fa-solid fa-crown text-amber-500 w-5 text-center text-sm"></i> 👑 VIP Enterprise Plans
             </a>
-            @endif
             @endif
 
             <div class="border-t border-slate-100 my-2"></div>
