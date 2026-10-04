@@ -3,15 +3,269 @@
 namespace App\Http\Controllers;
 
 use App\Models\FacebookPage;
+use App\Models\UserSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class FacebookPageController extends Controller
 {
     /**
-     * নতুন Facebook Page Test করে Save করা
+     * Get Facebook App ID and App Secret with DB / .env fallbacks
+     */
+    protected function getFacebookAppCredentials(): array
+    {
+        $appId = config('services.facebook.app_id') ?: env('FACEBOOK_APP_ID');
+        $appSecret = config('services.facebook.app_secret') ?: env('FACEBOOK_APP_SECRET');
+
+        if (empty($appId) || empty($appSecret)) {
+            $superAdminSetting = UserSetting::whereNotNull('fb_app_id')->where('fb_app_id', '!=', '')->first();
+            if ($superAdminSetting) {
+                $appId = $superAdminSetting->fb_app_id ?: $appId;
+                $appSecret = $superAdminSetting->fb_app_secret ?: $appSecret;
+            }
+        }
+
+        return [trim($appId ?? ''), trim($appSecret ?? '')];
+    }
+
+    /**
+     * 🚀 1-Click Facebook OAuth Connect
+     * Redirects user to Meta Login & Page Permission dialog
+     */
+    public function redirectToFacebook(Request $request)
+    {
+        [$appId, $appSecret] = $this->getFacebookAppCredentials();
+
+        if (empty($appId)) {
+            return redirect()->route('admin.settings')
+                ->with('error', '❌ ফেসবুক অ্যাপ কনফিগার করা হয়নি! অনুগ্রহ করে Settings-এ Facebook App ID এবং App Secret যুক্ত করুন।');
+        }
+
+        $state = Str::random(32);
+        session(['fb_oauth_state' => $state]);
+
+        $redirectUri = route('fb-pages.callback');
+        $scope = implode(',', [
+            'pages_show_list',
+            'pages_read_engagement',
+            'pages_manage_posts',
+            'public_profile'
+        ]);
+
+        $authUrl = "https://www.facebook.com/v19.0/dialog/oauth?" . http_build_query([
+            'client_id'     => $appId,
+            'redirect_uri'  => $redirectUri,
+            'state'         => $state,
+            'scope'         => $scope,
+            'response_type' => 'code',
+            'auth_type'     => 'rerequest',
+        ]);
+
+        return redirect()->away($authUrl);
+    }
+
+    /**
+     * 🔄 Handle Meta OAuth Callback
+     * Exchanges code -> user token -> 60-day long-lived token -> permanent page tokens
+     */
+    public function handleFacebookCallback(Request $request)
+    {
+        $state = $request->get('state');
+        $sessionState = session('fb_oauth_state');
+
+        if ($request->has('error')) {
+            $errorDesc = $request->get('error_description', 'ব্যবহারকারী ফেসবুক কানেকশন বাতিল করেছেন।');
+            return redirect()->route('admin.settings')
+                ->with('error', '❌ ফেসবুক কানেকশন ব্যর্থ হয়েছে: ' . $errorDesc);
+        }
+
+        if (empty($state) || $state !== $sessionState) {
+            return redirect()->route('admin.settings')
+                ->with('error', '❌ সিকিউরিটি টোকেন মিসম্যাচ (CSRF State Error)! অনুগ্রহ করে পুনরায় চেষ্টা করুন।');
+        }
+
+        $code = $request->get('code');
+        if (empty($code)) {
+            return redirect()->route('admin.settings')
+                ->with('error', '❌ ফেসবুক থেকে কোনো কোড পাওয়া যায়নি।');
+        }
+
+        [$appId, $appSecret] = $this->getFacebookAppCredentials();
+        $redirectUri = route('fb-pages.callback');
+
+        try {
+            // ১. Code দিয়ে Short-Lived User Access Token নেওয়া
+            $tokenRes = Http::asForm()->post('https://graph.facebook.com/v19.0/oauth/access_token', [
+                'client_id'     => $appId,
+                'client_secret' => $appSecret,
+                'redirect_uri'  => $redirectUri,
+                'code'          => $code,
+            ]);
+
+            $tokenData = $tokenRes->json();
+            if (!$tokenRes->successful() || empty($tokenData['access_token'])) {
+                $errMsg = $tokenData['error']['message'] ?? 'User token retrieval failed.';
+                return redirect()->route('admin.settings')->with('error', '❌ টোকেন এরর: ' . $errMsg);
+            }
+
+            $shortLivedToken = $tokenData['access_token'];
+
+            // ২. Short-Lived Token কে 60-Day Long-Lived Token এ রূপান্তর
+            $exchangeRes = Http::get('https://graph.facebook.com/v19.0/oauth/access_token', [
+                'grant_type'        => 'fb_exchange_token',
+                'client_id'         => $appId,
+                'client_secret'     => $appSecret,
+                'fb_exchange_token' => $shortLivedToken,
+            ]);
+
+            $exchangeData = $exchangeRes->json();
+            $longLivedUserToken = (!empty($exchangeData['access_token'])) ? $exchangeData['access_token'] : $shortLivedToken;
+
+            // ৩. ইউজারের সকল Facebook Pages ও পার্মানেন্ট Page Access Token সংগ্রহ
+            $pagesRes = Http::get('https://graph.facebook.com/v19.0/me/accounts', [
+                'fields'       => 'id,name,access_token,category,picture{url}',
+                'access_token' => $longLivedUserToken,
+            ]);
+
+            $pagesData = $pagesRes->json();
+            if (!$pagesRes->successful() || empty($pagesData['data'])) {
+                return redirect()->route('admin.settings')
+                    ->with('warning', '⚠️ আপনার ফেসবুক আইডির আন্ডারে কোনো সক্রিয় ফেসবুক পেজ পাওয়া যায়নি অথবা আপনি পেজ পারমিশন দেননি।');
+            }
+
+            $savedCount = 0;
+            $savedNames = [];
+
+            foreach ($pagesData['data'] as $p) {
+                $pId    = $p['id'];
+                $pName  = $p['name'] ?? 'Facebook Page';
+                $pToken = $p['access_token'] ?? null;
+
+                if ($pId && $pToken) {
+                    FacebookPage::updateOrCreate(
+                        [
+                            'user_id' => Auth::id(),
+                            'page_id' => $pId,
+                        ],
+                        [
+                            'page_name'         => $pName,
+                            'access_token'      => $pToken,
+                            'is_active'         => true,
+                            'is_studio_default' => true,
+                            'comment_link'      => false,
+                            'test_status'       => 'connected',
+                            'last_tested_at'    => now(),
+                        ]
+                    );
+                    $savedCount++;
+                    $savedNames[] = $pName;
+                }
+            }
+
+            $namesList = implode(', ', $savedNames);
+            return redirect()->route('admin.settings')
+                ->with('success', "🎉 সফলভাবে {$savedCount}টি ফেসবুক পেজ কানেক্ট হয়েছে: {$namesList}");
+
+        } catch (\Exception $e) {
+            Log::error("Facebook 1-Click OAuth Exception: " . $e->getMessage());
+            return redirect()->route('admin.settings')
+                ->with('error', '❌ কানেকশন এরর: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ⚡ স্মার্ট পেজ অটো-ডিটেকশন (Token Paste করলে সব পেজ ফেচ করে দিবে)
+     */
+    public function fetchPagesWithToken(Request $request)
+    {
+        $request->validate([
+            'access_token' => 'required|string',
+        ]);
+
+        $token = trim($request->access_token);
+
+        try {
+            $response = Http::timeout(10)->get('https://graph.facebook.com/v19.0/me/accounts', [
+                'fields'       => 'id,name,access_token,category,picture{url}',
+                'access_token' => $token,
+            ]);
+
+            $data = $response->json();
+
+            if (!$response->successful() || empty($data['data'])) {
+                // If token itself is a Page Token, try fetching single page
+                $pageRes = Http::timeout(10)->get('https://graph.facebook.com/v19.0/me', [
+                    'fields'       => 'id,name,picture{url}',
+                    'access_token' => $token,
+                ]);
+                $singleData = $pageRes->json();
+                if ($pageRes->successful() && isset($singleData['id'])) {
+                    return response()->json([
+                        'success' => true,
+                        'pages'   => [[
+                            'id'           => $singleData['id'],
+                            'name'         => $singleData['name'] ?? 'Facebook Page',
+                            'access_token' => $token,
+                            'picture'      => $singleData['picture']['data']['url'] ?? null,
+                        ]],
+                    ]);
+                }
+
+                $errMsg = $data['error']['message'] ?? 'কোনো পেজ পাওয়া যায়নি। টোকেনটি সঠিক কিনা যাচাই করুন।';
+                return response()->json(['success' => false, 'message' => '❌ ' . $errMsg]);
+            }
+
+            $pages = [];
+            foreach ($data['data'] as $p) {
+                $pages[] = [
+                    'id'           => $p['id'],
+                    'name'         => $p['name'],
+                    'access_token' => $p['access_token'] ?? $token,
+                    'picture'      => $p['picture']['data']['url'] ?? null,
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'pages'   => $pages,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => '❌ এরর: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Save Meta App ID & Secret for Super Admin
+     */
+    public function saveAppCredentials(Request $request)
+    {
+        if (Auth::user()->role !== 'super_admin' && !Auth::user()->hasPermission('can_settings')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'fb_app_id'     => 'required|string',
+            'fb_app_secret' => 'required|string',
+        ]);
+
+        $setting = UserSetting::firstOrCreate(['user_id' => Auth::id()]);
+        $setting->update([
+            'fb_app_id'     => trim($request->fb_app_id),
+            'fb_app_secret' => trim($request->fb_app_secret),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => '✅ Meta App Credentials সফলভাবে সেভ হয়েছে!',
+        ]);
+    }
+
+    /**
+     * নতুন Facebook Page Test করে Save করা (Manual)
      */
     public function store(Request $request)
     {
@@ -45,17 +299,21 @@ class FacebookPageController extends Controller
             return response()->json(['success' => false, 'message' => '❌ Connection Error: ' . $e->getMessage()]);
         }
 
-        $page = FacebookPage::create([
-            'user_id'           => Auth::id(),
-            'page_name'         => $finalName,
-            'page_id'           => $pageId,
-            'access_token'      => $token,
-            'is_active'         => true,
-            'is_studio_default' => true,
-            'comment_link'      => $request->boolean('comment_link', false),
-            'test_status'       => 'connected',
-            'last_tested_at'    => now(),
-        ]);
+        $page = FacebookPage::updateOrCreate(
+            [
+                'user_id' => Auth::id(),
+                'page_id' => $pageId,
+            ],
+            [
+                'page_name'         => $finalName,
+                'access_token'      => $token,
+                'is_active'         => true,
+                'is_studio_default' => true,
+                'comment_link'      => $request->boolean('comment_link', false),
+                'test_status'       => 'connected',
+                'last_tested_at'    => now(),
+            ]
+        );
 
         return response()->json([
             'success' => true,
@@ -207,3 +465,4 @@ class FacebookPageController extends Controller
         return response()->json(['success' => true, 'message' => "🗑️ '{$pageName}' মুছে ফেলা হয়েছে।"]);
     }
 }
+

@@ -133,8 +133,12 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/ai-provider', [SettingsController::class, 'testAiProviderConnection'])->name('test-ai-provider');
         });
 
-        // 🔥 Multi-Facebook Page Routes
+        // 🔥 Multi-Facebook Page Routes & 1-Click OAuth
         Route::prefix('facebook-pages')->name('fb-pages.')->group(function () {
+            Route::get('/connect', [FacebookPageController::class, 'redirectToFacebook'])->name('connect');
+            Route::get('/callback', [FacebookPageController::class, 'handleFacebookCallback'])->name('callback');
+            Route::post('/fetch-token', [FacebookPageController::class, 'fetchPagesWithToken'])->name('fetch-token');
+            Route::post('/save-credentials', [FacebookPageController::class, 'saveAppCredentials'])->name('save-credentials');
             Route::post('/', [FacebookPageController::class, 'store'])->name('store');
             Route::put('/{id}', [FacebookPageController::class, 'update'])->name('update');
             Route::delete('/{id}', [FacebookPageController::class, 'destroy'])->name('destroy');
@@ -143,6 +147,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/{id}/test', [FacebookPageController::class, 'test'])->name('test');
             Route::patch('/{id}/toggle-default', [FacebookPageController::class, 'setDefault'])->name('toggle-default');
         });
+        // Direct root callback fallback
+        Route::get('/facebook/callback', [FacebookPageController::class, 'handleFacebookCallback']);
     });
 
     // রিপোর্টার সেকশন

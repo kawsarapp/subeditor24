@@ -1921,6 +1921,9 @@
         @endif
 
         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_social'))
+        {{-- Facebook Pages & 1-Click OAuth Integration --}}
+        @include('settings.partials.facebook-pages-section')
+
         {{-- Telegram Notifications (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-white hover:bg-gray-50 transition" onclick="toggleSettingsAccordion(this)">

@@ -68,5 +68,11 @@ return [
         'redirect' => env('YOUTUBE_REDIRECT_URI', env('APP_URL', 'https://newsmanage24.ddev.site') . '/youtube/auth/callback'),
     ],
 
+    'facebook' => [
+        'app_id'     => env('FACEBOOK_APP_ID'),
+        'app_secret' => env('FACEBOOK_APP_SECRET'),
+        'redirect'   => env('FACEBOOK_REDIRECT_URI', env('APP_URL', 'https://newsmanage24.ddev.site') . '/facebook/callback'),
+    ],
+
 ];
 
