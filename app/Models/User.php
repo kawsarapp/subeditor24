@@ -298,6 +298,9 @@ class User extends Authenticatable
         if ($this->subscription_status === 'lifetime') {
             return '👑 লাইফটাইম প্যাকেজ';
         }
+        if ($this->subscription_status === 'trial' || $this->subscription_cycle === 'trial') {
+            return '🎁 ফ্রি ট্রায়াল (৭ দিন)';
+        }
         return match ($this->subscription_cycle) {
             'monthly'     => '📅 মাসিক প্যাকেজ (৩০ দিন)',
             'yearly'      => '🌟 বার্ষিক প্যাকেজ (১২ মাস)',

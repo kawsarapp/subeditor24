@@ -109,6 +109,9 @@ class AuthController extends Controller
                 'password'              => Hash::make($request->password),
                 'role'                  => 'admin', // Client Newsroom Admin
                 'is_active'             => true,
+                'subscription_status'   => 'trial',
+                'subscription_cycle'    => 'trial',
+                'joining_date'          => Carbon::today(),
                 'credits'               => 20,
                 'total_credits_limit'   => 20,
                 'daily_post_limit'      => 10,
@@ -117,6 +120,11 @@ class AuthController extends Controller
                 'daily_ai_limit'        => 20,
                 'staff_limit'           => 5,
                 'expire_date'           => Carbon::now()->addDays(7),
+                'permissions'           => [
+                    'can_scrape', 'can_ai', 'can_studio', 'can_direct_publish', 
+                    'can_view_published', 'can_auto_post', 'can_central_feed', 
+                    'can_custom_photo_card', 'can_manage_staff'
+                ],
             ]);
 
             // ৭. ইউজারের ডিফল্ট সেটিংস সেটআপ
