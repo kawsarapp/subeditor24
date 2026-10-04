@@ -52,7 +52,9 @@ class FacebookPageController extends Controller
             'pages_show_list',
             'pages_read_engagement',
             'pages_manage_posts',
-            'public_profile'
+            'pages_read_user_content',
+            'public_profile',
+            'business_management'
         ]);
 
         $authUrl = "https://www.facebook.com/v19.0/dialog/oauth?" . http_build_query([
@@ -124,16 +126,52 @@ class FacebookPageController extends Controller
             $exchangeData = $exchangeRes->json();
             $longLivedUserToken = (!empty($exchangeData['access_token'])) ? $exchangeData['access_token'] : $shortLivedToken;
 
+            // Permissions Check
+            $permsRes = Http::get('https://graph.facebook.com/v19.0/me/permissions', [
+                'access_token' => $longLivedUserToken,
+            ]);
+            Log::info("Facebook User Permissions: " . $permsRes->body());
+
             // ৩. ইউজারের সকল Facebook Pages ও পার্মানেন্ট Page Access Token সংগ্রহ
             $pagesRes = Http::get('https://graph.facebook.com/v19.0/me/accounts', [
-                'fields'       => 'id,name,access_token,category,picture{url}',
+                'fields'       => 'id,name,access_token,category,picture{url},tasks,is_published',
+                'limit'        => 100,
                 'access_token' => $longLivedUserToken,
             ]);
 
             $pagesData = $pagesRes->json();
+            Log::info("Facebook /me/accounts Response: " . $pagesRes->body());
+
             if (!$pagesRes->successful() || empty($pagesData['data'])) {
-                return redirect()->route('settings.index')
-                    ->with('warning', '⚠️ আপনার ফেসবুক আইডির আন্ডারে কোনো সক্রিয় ফেসবুক পেজ পাওয়া যায়নি অথবা আপনি পেজ পারমিশন দেননি।');
+                // Check if user has business accounts or pages
+                $bizRes = Http::get('https://graph.facebook.com/v19.0/me/businesses', [
+                    'fields'       => 'id,name,client_pages{id,name,access_token},owned_pages{id,name,access_token}',
+                    'access_token' => $longLivedUserToken,
+                ]);
+                $bizData = $bizRes->json();
+                Log::info("Facebook /me/businesses Response: " . $bizRes->body());
+
+                $foundPages = [];
+                if (!empty($bizData['data'])) {
+                    foreach ($bizData['data'] as $biz) {
+                        $allBizPages = array_merge(
+                            $biz['client_pages']['data'] ?? [],
+                            $biz['owned_pages']['data'] ?? []
+                        );
+                        foreach ($allBizPages as $bp) {
+                            if (!empty($bp['id']) && !empty($bp['access_token'])) {
+                                $foundPages[] = $bp;
+                            }
+                        }
+                    }
+                }
+
+                if (empty($foundPages)) {
+                    return redirect()->route('settings.index')
+                        ->with('warning', '⚠️ আপনার ফেসবুক আইডির আন্ডারে কোনো সক্রিয় ফেসবুক পেজ পাওয়া যায়নি অথবা লগইন করার সময় পেজ সিলেক্ট করে পারমিশন দেওয়া হয়নি। অনুগ্রহ করে লগইন ডায়ালগে আপনার পেজটি টিক চিহ্ন দিয়ে নির্বাচন করুন।');
+                }
+
+                $pagesData['data'] = $foundPages;
             }
 
             $savedCount = 0;
