@@ -205,6 +205,18 @@ def extract_data(html, base_url):
         "source_url": base_url
     }
 
+def is_error_content(title, body, html):
+    combined = f"{title} {body} {html[:3000]}".lower()
+    error_terms = [
+        "this site can't be reached", "this site can’t be reached", "this site cannot be reached",
+        "site can't be reached", "site can’t be reached", "err_name_not_resolved",
+        "err_connection_timed_out", "err_connection_refused", "err_connection_closed",
+        "err_connection_reset", "403 forbidden", "access denied", "attention required! | cloudflare",
+        "just a moment...", "checking your browser", "enable javascript and cookies",
+        "cloudflare ray id", "dns_probe_finished", "the page cannot be found"
+    ]
+    return any(t in combined for t in error_terms)
+
 # ==========================================
 # 🏁 MAIN EXECUTION
 # ==========================================
@@ -214,11 +226,11 @@ try:
     if html_content:
         data = extract_data(html_content, target_url)
         
-        # ভ্যালিডেশন: টাইটেল থাকতে হবে এবং বডি অন্তত ১০০ ক্যারেক্টারের হতে হবে
-        if data['title'] and (data['body'] and len(data['body']) > 100):
+        # ভ্যালিডেশন: টাইটেল থাকতে হবে, বডি অন্তত ১০০ ক্যারেক্টার হতে হবে এবং কোনো এরর পেজ হওয়া যাবে না
+        if data['title'] and (data['body'] and len(data['body']) > 100) and not is_error_content(data['title'], data['body'], html_content):
             print(json.dumps(data, ensure_ascii=False))
         else:
-            print(json.dumps({"error": "Content extraction failed or empty. Body length: " + str(len(data.get('body', '')))}))
+            print(json.dumps({"error": "Content extraction failed, empty, or error page detected"}))
     else:
         print(json.dumps({"error": "Failed to retrieve HTML or Blocked by Site"}))
 

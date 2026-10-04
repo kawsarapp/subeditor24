@@ -236,9 +236,39 @@ const USER_AGENTS = [
         } catch (e) {}
 
         const html = await page.content();
+        const pageTitle = await page.title();
+        
+        const lowerTitle = (pageTitle || '').toLowerCase();
+        const lowerHtml = (html || '').toLowerCase();
+
+        const isError = lowerTitle.includes("this site can't be reached") ||
+                        lowerTitle.includes("this site can’t be reached") ||
+                        lowerTitle.includes("site can't be reached") ||
+                        lowerTitle.includes("site can’t be reached") ||
+                        lowerTitle.includes("403 forbidden") ||
+                        lowerTitle.includes("access denied") ||
+                        lowerTitle.includes("attention required") ||
+                        lowerTitle.includes("just a moment") ||
+                        lowerHtml.includes("err_name_not_resolved") ||
+                        lowerHtml.includes("err_connection_timed_out") ||
+                        lowerHtml.includes("err_connection_refused") ||
+                        lowerHtml.includes("err_connection_closed") ||
+                        lowerHtml.includes("err_connection_reset") ||
+                        lowerHtml.includes("dns_probe_finished") ||
+                        lowerHtml.includes("err_tunnel_connection_failed") ||
+                        lowerHtml.includes("err_ssl_protocol_error") ||
+                        lowerHtml.includes("err_empty_response");
+
+        if (isError) {
+            console.error("❌ Chrome network error or block page detected: " + pageTitle);
+            await browser.close();
+            process.exit(1);
+        }
         
         if (html.length < 500) {
              console.error("❌ Content too short/Blocked.");
+             await browser.close();
+             process.exit(1);
         }
 
         fs.writeFileSync(outputFile, html);

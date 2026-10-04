@@ -32,6 +32,22 @@ class CentralNewsPool extends Model
         return $this->belongsTo(Website::class, 'website_id');
     }
 
+    public function scopeValidNews($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('title', 'not like', '%This site can%')
+              ->where('title', 'not like', '%This site cannot%')
+              ->where('title', 'not like', '%Site can%reached%')
+              ->where('title', 'not like', '%ERR_%')
+              ->where('title', 'not like', '%403 Forbidden%')
+              ->where('title', 'not like', '%Access Denied%')
+              ->where('title', 'not like', '%Attention Required!%')
+              ->where('title', 'not like', '%Just a moment%')
+              ->where('title', 'not like', '%Checking your browser%')
+              ->where('title', 'not like', '%DNS_PROBE%');
+        });
+    }
+
     /**
      * Generate deterministic SHA-256 hash of URL for O(1) deduplication
      */

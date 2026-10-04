@@ -31,7 +31,7 @@ class CentralFeedController extends Controller
         $websiteId = $request->input('website_id');
         $hours = $request->input('hours');
 
-        $query = CentralNewsPool::with(['website' => function ($q) {
+        $query = CentralNewsPool::validNews()->with(['website' => function ($q) {
             $q->withoutGlobalScopes();
         }]);
 
@@ -111,7 +111,7 @@ class CentralFeedController extends Controller
         $lastId = (int) $request->input('last_id', 0);
         $fetchItems = $request->boolean('fetch_items', false);
 
-        $query = CentralNewsPool::with(['website' => function ($q) {
+        $query = CentralNewsPool::validNews()->with(['website' => function ($q) {
             $q->withoutGlobalScopes();
         }])->where('id', '>', $lastId);
 

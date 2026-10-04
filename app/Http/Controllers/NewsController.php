@@ -56,6 +56,7 @@ class NewsController extends Controller
         $date = $request->input('date');
 
         $query = NewsItem::withoutGlobalScopes()
+            ->validNews()
             ->with(['website' => function ($q) { $q->withoutGlobalScopes(); }]);
 
         // 🔐 Role-aware visibility filter

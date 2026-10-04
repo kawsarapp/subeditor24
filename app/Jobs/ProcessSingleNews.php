@@ -45,8 +45,12 @@ class ProcessSingleNews implements ShouldQueue
     public function handle(NewsScraperService $scraper)
     {
         try {
-            // ১. 🛑 FAST DUPLICATE CHECK
-            // DB কুয়েরি অপ্টিমাইজ করার জন্য exist() ব্যবহার করা হয়েছে
+            // ১. 🛑 FAST DUPLICATE & ERROR TITLE CHECK
+            if (\App\Traits\ScraperEnginesTrait::isErrorTitleOrText($this->title)) {
+                Log::warning("⚠️ Discarded job with error title: {$this->title}");
+                return;
+            }
+
             if (NewsItem::where('original_link', $this->link)
                         ->where('user_id', $this->userId)
                         ->exists()) {
@@ -75,13 +79,13 @@ class ProcessSingleNews implements ShouldQueue
                           : trim($this->title);
 
             // 🛑 REJECT ERROR PAGES (Prevent saving proxy/DNS error pages)
-            $errorPatterns = ["This site can't be reached", "This site can’t be reached", "ERR_NAME_NOT_RESOLVED", "ERR_CONNECTION_TIMED_OUT", "403 Forbidden", "Access Denied", "Attention Required! | Cloudflare"];
-            foreach ($errorPatterns as $errPattern) {
-                if (stripos($finalTitle, $errPattern) !== false || stripos($scrapedData['body'] ?? '', $errPattern) !== false) {
-                    Log::warning("⚠️ Rejected error page text for link: {$this->link}");
-                    $this->logScraperRun($this->websiteId, $this->link, 'article', 'failed', null, null, 'Error page content detected: ' . $errPattern);
-                    return;
-                }
+            if (\App\Traits\ScraperEnginesTrait::isErrorTitleOrText($finalTitle) || 
+                \App\Traits\ScraperEnginesTrait::isErrorTitleOrText($this->title) ||
+                \App\Traits\ScraperEnginesTrait::isErrorTitleOrText($scrapedData['body'] ?? '') ||
+                \App\Traits\ScraperEnginesTrait::isErrorHtml($scrapedData['body'] ?? '')) {
+                Log::warning("⚠️ Rejected error page text for link: {$this->link} | Title: {$finalTitle}");
+                $this->logScraperRun($this->websiteId, $this->link, 'article', 'failed', null, null, 'Error page content detected in title or body.');
+                return;
             }
 
             // ৬. 💾 SAVE TO DATABASE

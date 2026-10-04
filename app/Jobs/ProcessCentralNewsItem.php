@@ -40,6 +40,11 @@ class ProcessCentralNewsItem implements ShouldQueue
     public function handle(NewsScraperService $scraper)
     {
         try {
+            // 0. Reject error title early
+            if (\App\Traits\ScraperEnginesTrait::isErrorTitleOrText($this->title)) {
+                return;
+            }
+
             $slugHash = CentralNewsPool::generateHash($this->link);
 
             // 1. Fast O(1) Duplicate Check
@@ -63,11 +68,11 @@ class ProcessCentralNewsItem implements ShouldQueue
                 ? trim($scrapedData['title'])
                 : trim($this->title);
 
-            $errorPatterns = ["This site can't be reached", "403 Forbidden", "Access Denied", "Attention Required! | Cloudflare"];
-            foreach ($errorPatterns as $errPattern) {
-                if (stripos($finalTitle, $errPattern) !== false || stripos($scrapedData['body'] ?? '', $errPattern) !== false) {
-                    return;
-                }
+            if (\App\Traits\ScraperEnginesTrait::isErrorTitleOrText($finalTitle) ||
+                \App\Traits\ScraperEnginesTrait::isErrorTitleOrText($this->title) ||
+                \App\Traits\ScraperEnginesTrait::isErrorTitleOrText($scrapedData['body'] ?? '') ||
+                \App\Traits\ScraperEnginesTrait::isErrorHtml($scrapedData['body'] ?? '')) {
+                return;
             }
 
             $finalImage = $scrapedData['image'] ?? $this->listImage;

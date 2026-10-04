@@ -139,6 +139,59 @@ Artisan::command('youtube:autopilot-sync', function () {
     }
 })->purpose('Auto-sync and process YouTube channels that have Auto-Pilot enabled');
 
+// --- 🛡️ ERROR & BLOCKED NEWS PRUNING COMMAND ---
+Artisan::command('news:clean-error-news', function () {
+    $this->info("🧹 Scanning database for error/blocked news items...");
+    
+    $errorPatterns = [
+        '%This site can%',
+        '%This site cannot%',
+        '%Site can%reached%',
+        '%ERR_NAME_NOT_RESOLVED%',
+        '%ERR_CONNECTION_%',
+        '%ERR_SSL_%',
+        '%ERR_TOO_MANY_REDIRECTS%',
+        '%ERR_EMPTY_RESPONSE%',
+        '%ERR_TIMED_OUT%',
+        '%DNS_PROBE_%',
+        '%403 Forbidden%',
+        '%401 Unauthorized%',
+        '%404 Not Found%',
+        '%502 Bad Gateway%',
+        '%503 Service Unavailable%',
+        '%504 Gateway%',
+        '%Access Denied%',
+        '%Attention Required!%',
+        '%Just a moment...%',
+        '%Checking your browser%',
+        '%Enable JavaScript and cookies%',
+        '%Cloudflare Ray ID%',
+        '%Ray ID:%',
+        '%The page cannot be found%',
+        '%Untitled News%',
+        '%Welcome to nginx%',
+        '%Apache2 Default Page%'
+    ];
+
+    $newsItemQuery = NewsItem::withoutGlobalScopes()->where(function ($q) use ($errorPatterns) {
+        foreach ($errorPatterns as $pat) {
+            $q->orWhere('title', 'like', $pat);
+        }
+    });
+    $newsCount = $newsItemQuery->count();
+    $newsItemQuery->delete();
+
+    $centralQuery = \App\Models\CentralNewsPool::where(function ($q) use ($errorPatterns) {
+        foreach ($errorPatterns as $pat) {
+            $q->orWhere('title', 'like', $pat);
+        }
+    });
+    $centralCount = $centralQuery->count();
+    $centralQuery->delete();
+
+    $this->info("✅ Pruning complete! Deleted {$newsCount} error items from news_items and {$centralCount} from central_news_pool.");
+})->purpose('Prune error and blocked page news items from database');
+
 // শিডিউল সেটআপ
 Schedule::call(fn() => app(\App\Services\DynamicCronService::class)->recordHeartbeat('cli'))->everyMinute();
 Schedule::command('news:autopost')->everyMinute();
@@ -147,6 +200,7 @@ Schedule::command('news:check-inactivity')->everyThirtyMinutes();
 Schedule::command('news:central-pool-sync')->everyMinute();
 Schedule::command('youtube:autopilot-sync')->everyFiveMinutes();
 Schedule::command('trends:sync')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('news:clean-error-news')->hourly();
 
 Schedule::call(function () {
     $settingsList = \App\Models\UserSetting::get();

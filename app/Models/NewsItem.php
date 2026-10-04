@@ -67,6 +67,22 @@ class NewsItem extends Model
         static::addGlobalScope(new UserScope);
     }
 
+    public function scopeValidNews($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('title', 'not like', '%This site can%')
+              ->where('title', 'not like', '%This site cannot%')
+              ->where('title', 'not like', '%Site can%reached%')
+              ->where('title', 'not like', '%ERR_%')
+              ->where('title', 'not like', '%403 Forbidden%')
+              ->where('title', 'not like', '%Access Denied%')
+              ->where('title', 'not like', '%Attention Required!%')
+              ->where('title', 'not like', '%Just a moment%')
+              ->where('title', 'not like', '%Checking your browser%')
+              ->where('title', 'not like', '%DNS_PROBE%');
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

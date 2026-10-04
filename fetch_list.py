@@ -73,6 +73,20 @@ def get_html(url, proxy=None, retries=3):
                 if response.encoding is None or response.encoding.upper() in ['ISO-8859-1', 'LATIN-1']:
                     response.encoding = response.apparent_encoding or 'utf-8'
                 content = response.text
+                lower_content = content[:3000].lower()
+                error_terms = [
+                    "this site can't be reached", "this site can’t be reached", "this site cannot be reached",
+                    "site can't be reached", "site can’t be reached", "err_name_not_resolved",
+                    "err_connection_timed_out", "err_connection_refused", "403 forbidden",
+                    "access denied", "attention required! | cloudflare", "just a moment...",
+                    "checking your browser", "enable javascript and cookies", "cloudflare ray id",
+                    "dns_probe_finished"
+                ]
+                if any(t in lower_content for t in error_terms):
+                    sys.stderr.write(f"⚠️ Error/Blocked page returned on attempt {attempt+1}, retrying...\n")
+                    time.sleep(2)
+                    continue
+
                 if len(content) > 1000:
                     return content
             elif response.status_code in [403, 429, 503]:

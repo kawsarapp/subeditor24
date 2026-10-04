@@ -78,7 +78,7 @@ class NewsScraperService
             $htmlContent = $this->fetchWithUniversalScrapingApi($url, $userId);
         }
 
-        if ($htmlContent && strlen($htmlContent) > 500) {
+        if ($htmlContent && strlen($htmlContent) > 500 && !self::isErrorHtml($htmlContent)) {
             $scrapedData = $this->processHtml($htmlContent, $url, $customSelectors);
             
             if (!empty($scrapedData) && !empty($scrapedData['body'])) {
@@ -88,11 +88,16 @@ class NewsScraperService
                 if (isset($scrapedData['title'])) {
                     $scrapedData['title'] = $this->cleanTitle($scrapedData['title']);
                 }
-                $this->logScraperRun($website?->id, $url, 'article', 'success', $method ?: 'Universal API', 200, null, 0);
-                return $scrapedData;
+
+                if (self::isErrorTitleOrText($scrapedData['title'] ?? '') || self::isErrorTitleOrText($scrapedData['body'] ?? '')) {
+                    Log::warning("⚠️ Processed article contains error text/title. Discarding: $url");
+                } else {
+                    $this->logScraperRun($website?->id, $url, 'article', 'success', $method ?: 'Universal API', 200, null, 0);
+                    return $scrapedData;
+                }
             }
-            $lastError = "API fetched HTML, but empty body parsed.";
-            Log::warning("⚠️ API fetched HTML, but PHP parser (DOMCrawler) returned empty body. Falling back...");
+            $lastError = "API fetched HTML, but empty or error body parsed.";
+            Log::warning("⚠️ API fetched HTML, but parser returned empty/error body. Falling back...");
         }
 
         // If specific engine was node (Puppeteer)
@@ -209,7 +214,7 @@ class NewsScraperService
         }
 
         // 4️⃣ FINAL PROCESSING
-        if ($htmlContent && strlen($htmlContent) > 500) {
+        if ($htmlContent && strlen($htmlContent) > 500 && !self::isErrorHtml($htmlContent)) {
             $scrapedData = $this->processHtml($htmlContent, $url, $customSelectors);
             
             // 🔥 Image Cleaned Here
@@ -222,14 +227,14 @@ class NewsScraperService
                 $scrapedData['title'] = $this->cleanTitle($scrapedData['title']);
             }
             
-            if (empty($scrapedData['title']) || empty($scrapedData['body'])) {
-                 Log::warning("⚠️ Content Parsing Failed. Retrying with Puppeteer...");
+            if (empty($scrapedData['title']) || empty($scrapedData['body']) || self::isErrorTitleOrText($scrapedData['title']) || self::isErrorTitleOrText($scrapedData['body'])) {
+                 Log::warning("⚠️ Content Parsing Failed or contained error text. Retrying with Puppeteer...");
                  $puppeteerData = $this->scrapeWithPuppeteer($url, $customSelectors, $userId);
-                 if ($puppeteerData && !empty($puppeteerData['body'])) {
+                 if ($puppeteerData && !empty($puppeteerData['body']) && !self::isErrorTitleOrText($puppeteerData['title'] ?? '') && !self::isErrorTitleOrText($puppeteerData['body'])) {
                      $this->logScraperRun($website?->id, $url, 'article', 'success', 'Puppeteer (after parser fail)', 200, null, $phpRetries);
                      return $puppeteerData;
                  }
-                 $lastError = "HTML parser output was empty, Puppeteer fallback also failed.";
+                 $lastError = "HTML parser output was empty or error page, Puppeteer fallback also failed.";
             } else {
                  $this->logScraperRun($website?->id, $url, 'article', 'success', 'PHP HTTP', 200, null, $phpRetries);
                  return $scrapedData;

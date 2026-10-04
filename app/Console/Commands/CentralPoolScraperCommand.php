@@ -92,11 +92,11 @@ class CentralPoolScraperCommand extends Command
                 $html = $scraper->fetchWithUniversalScrapingApi($website->url, null);
             }
 
-            if (!$html || strlen($html) < 500) {
+            if (!$html || strlen($html) < 500 || \App\Traits\ScraperEnginesTrait::isErrorHtml($html)) {
                 $html = $scraper->fetchHtmlWithPython($website->url, null);
             }
 
-            if (!$html || strlen($html) < 500) {
+            if (!$html || strlen($html) < 500 || \App\Traits\ScraperEnginesTrait::isErrorHtml($html)) {
                 $response = \Illuminate\Support\Facades\Http::withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 ])->timeout(20)->get($website->url);
@@ -106,8 +106,8 @@ class CentralPoolScraperCommand extends Command
                 }
             }
 
-            if (!$html || strlen($html) < 500) {
-                $this->warn("⚠️ Empty HTML for {$website->name}, skipping.");
+            if (!$html || strlen($html) < 500 || \App\Traits\ScraperEnginesTrait::isErrorHtml($html)) {
+                $this->warn("⚠️ Empty or error HTML for {$website->name}, skipping.");
                 return;
             }
 
@@ -150,7 +150,7 @@ class CentralPoolScraperCommand extends Command
                     }
                 }
 
-                if (!$link || strlen($title) < 5) return;
+                if (!$link || strlen($title) < 5 || \App\Traits\ScraperEnginesTrait::isErrorTitleOrText($title)) return;
 
                 // Fix relative links
                 if (str_starts_with($link, '//')) {

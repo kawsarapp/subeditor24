@@ -42,6 +42,125 @@ trait ScraperEnginesTrait
         return null;
     }
 
+    /**
+     * 🛡️ Comprehensive Error HTML Detector
+     * Detects Chrome error pages, Cloudflare challenge/blocks, Nginx/Apache 4xx/5xx pages, DNS failures, etc.
+     */
+    public static function isErrorHtml($html): bool
+    {
+        if (empty($html) || !is_string($html)) return true;
+        if (strlen(trim($html)) < 300) return true;
+
+        $lower = strtolower($html);
+        $errorSignatures = [
+            "this site can't be reached",
+            "this site can’t be reached",
+            "this site cannot be reached",
+            "site can't be reached",
+            "site can’t be reached",
+            "err_name_not_resolved",
+            "err_connection_timed_out",
+            "err_connection_refused",
+            "err_connection_closed",
+            "err_connection_reset",
+            "err_tunnel_connection_failed",
+            "err_ssl_protocol_error",
+            "err_too_many_redirects",
+            "err_empty_response",
+            "err_timed_out",
+            "err_address_unreachable",
+            "err_internet_disconnected",
+            "dns_probe_finished",
+            "dns_probe_finished_nxdomain",
+            "attention required! | cloudflare",
+            "just a moment...",
+            "checking your browser",
+            "enable javascript and cookies to continue",
+            "cloudflare ray id",
+            "web server is down",
+            "the page cannot be found",
+            "request blocked",
+            "access denied",
+            "403 forbidden",
+        ];
+
+        foreach ($errorSignatures as $signature) {
+            if (str_contains($lower, $signature)) {
+                return true;
+            }
+        }
+
+        // Check Chrome / Cloudflare / Nginx title error patterns
+        if (preg_match('/<title[^>]*>(.*?)(403 forbidden|access denied|404 not found|502 bad gateway|503 service unavailable|504 gateway|this site can|just a moment|attention required)(.*?)<\/title>/i', $html)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 🛡️ Comprehensive Error Title & Body Text Detector
+     */
+    public static function isErrorTitleOrText($text): bool
+    {
+        if (empty($text) || !is_string($text)) return false;
+        $lower = strtolower(trim($text));
+
+        $errorPhrases = [
+            "this site can't be reached",
+            "this site can’t be reached",
+            "this site cannot be reached",
+            "site can't be reached",
+            "site can’t be reached",
+            "err_name_not_resolved",
+            "err_connection_timed_out",
+            "err_connection_refused",
+            "err_connection_closed",
+            "err_connection_reset",
+            "err_tunnel_connection_failed",
+            "err_ssl_protocol_error",
+            "err_too_many_redirects",
+            "err_empty_response",
+            "err_timed_out",
+            "err_address_unreachable",
+            "err_internet_disconnected",
+            "dns_probe_finished",
+            "403 forbidden",
+            "401 unauthorized",
+            "404 not found",
+            "500 internal server error",
+            "502 bad gateway",
+            "503 service unavailable",
+            "504 gateway time-out",
+            "504 gateway timeout",
+            "access denied",
+            "attention required! | cloudflare",
+            "attention required",
+            "just a moment...",
+            "just a moment",
+            "checking your browser",
+            "enable javascript and cookies to continue",
+            "cloudflare ray id",
+            "ray id:",
+            "web server is down",
+            "the page cannot be found",
+            "temporarily unavailable",
+            "request blocked",
+            "untitled news",
+            "welcome to nginx",
+            "default webpage",
+            "apache2 default",
+        ];
+
+        foreach ($errorPhrases as $phrase) {
+            if (str_contains($lower, $phrase)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function runPythonScraper($url, $userId = null)
     {
         $proxy = $this->getProxyConfig($userId, $url);
@@ -60,7 +179,15 @@ trait ScraperEnginesTrait
         $output = shell_exec($command);
         $data = json_decode($output, true);
         
-        return (json_last_error() === JSON_ERROR_NONE && isset($data['body'])) ? $data : null;
+        if (json_last_error() === JSON_ERROR_NONE && isset($data['body'])) {
+            if (self::isErrorTitleOrText($data['title'] ?? '') || self::isErrorTitleOrText($data['body'] ?? '')) {
+                Log::warning("⚠️ Python scraper returned error title or body. Discarding: $url");
+                return null;
+            }
+            return $data;
+        }
+
+        return null;
     }
 
     public function fetchHtmlWithPython($url, $userId = null)
@@ -81,14 +208,22 @@ trait ScraperEnginesTrait
         Log::info("🔄 Fetching List HTML with Python curl_cffi...");
         $output = shell_exec($command);
         
-        return (strlen($output) > 500) ? $output : null;
+        if ($output && strlen($output) > 500 && !self::isErrorHtml($output)) {
+            return $output;
+        }
+
+        if ($output && self::isErrorHtml($output)) {
+            Log::warning("⚠️ Python curl_cffi returned Error/Blocked HTML. Skipping...");
+        }
+
+        return null;
     }
 
     protected function scrapeWithPuppeteer($url, $customSelectors, $userId)
     {
         $htmlContent = $this->runPuppeteer($url, $userId);
 
-        if ($htmlContent && strlen($htmlContent) > 500) {
+        if ($htmlContent && strlen($htmlContent) > 500 && !self::isErrorHtml($htmlContent)) {
             $scrapedData = $this->processHtml($htmlContent, $url, $customSelectors);
             if (isset($scrapedData['image'])) {
                 $scrapedData['image'] = $this->fixVendorImages($scrapedData['image']);
@@ -123,12 +258,12 @@ trait ScraperEnginesTrait
             Log::warning("⚠️ Puppeteer: No output file created for [$url]. Raw stderr: " . substr($rawOutput ?? 'empty/null', 0, 800));
         }
 
-        if ($htmlContent && (str_contains($htmlContent, "This site can't be reached") || str_contains($htmlContent, 'ERR_NAME_NOT_RESOLVED') || str_contains($htmlContent, 'ERR_CONNECTION_TIMED_OUT'))) {
-            Log::warning("⚠️ Puppeteer returned Chrome Error Page. Skipping...");
+        if ($htmlContent && self::isErrorHtml($htmlContent)) {
+            Log::warning("⚠️ Puppeteer returned Error/Blocked Page. Skipping...");
             return null;
         }
         
-        return (strlen($htmlContent) > 500) ? $htmlContent : null;
+        return ($htmlContent && strlen($htmlContent) > 500) ? $htmlContent : null;
     }
 
     /**
@@ -146,7 +281,7 @@ trait ScraperEnginesTrait
         if ($provider === 'scrape_do' || (!empty($scrapeDoToken) && empty($decodoToken))) {
             if (!empty($scrapeDoToken)) {
                 $html = $this->fetchWithScrapeDo($url, $scrapeDoToken);
-                if ($html && strlen($html) > 500) {
+                if ($html && strlen($html) > 500 && !self::isErrorHtml($html)) {
                     return $html;
                 }
                 Log::warning("⚠️ Scrape.do failed. Checking Decodo fallback for: $url");
@@ -160,7 +295,7 @@ trait ScraperEnginesTrait
         // 2. Primary: Decodo / SmartProxy
         if (!empty($decodoToken)) {
             $html = $this->fetchWithDecodoApi($url, $decodoToken);
-            if ($html && strlen($html) > 500) {
+            if ($html && strlen($html) > 500 && !self::isErrorHtml($html)) {
                 return $html;
             }
             Log::warning("⚠️ Decodo API failed. Checking Scrape.do fallback for: $url");
@@ -205,9 +340,12 @@ trait ScraperEnginesTrait
 
             if ($response->successful()) {
                 $html = $response->body();
-                if ($html && strlen($html) > 500) {
+                if ($html && strlen($html) > 500 && !self::isErrorHtml($html)) {
                     Log::info("✅ Scrape.do API Success. HTML length: " . strlen($html));
                     return $html;
+                }
+                if ($html && self::isErrorHtml($html)) {
+                    Log::warning("⚠️ Scrape.do returned Error/Blocked HTML for: $url");
                 }
             } else {
                 Log::warning("⚠️ Scrape.do HTTP {$response->status()}: " . substr($response->body(), 0, 300));
@@ -276,7 +414,7 @@ trait ScraperEnginesTrait
 
                 if ($response->successful()) {
                     $html = $response->json('data.html');
-                    if ($html && strlen($html) > 500) {
+                    if ($html && strlen($html) > 500 && !self::isErrorHtml($html)) {
                         Log::info("✅ SmartProxy.org Universal Scraping API Success. HTML length: " . strlen($html));
                         return $html;
                     }
@@ -319,7 +457,7 @@ trait ScraperEnginesTrait
                 if ($rawBody) {
                     $json = json_decode($rawBody, true);
                     $html = $json['results'][0]['content'] ?? $json['results'][0]['html'] ?? $json['data']['html'] ?? null;
-                    if ($html && strlen($html) > 500) {
+                    if ($html && strlen($html) > 500 && !self::isErrorHtml($html)) {
                         Log::info("✅ Decodo Universal Scraping API Success. HTML length: " . strlen($html));
                         return $html;
                     }
@@ -337,7 +475,7 @@ trait ScraperEnginesTrait
                 if ($response->successful()) {
                     $json = $response->json();
                     $html = $json['results'][0]['content'] ?? $json['results'][0]['html'] ?? $json['data']['html'] ?? null;
-                    if ($html && strlen($html) > 500) {
+                    if ($html && strlen($html) > 500 && !self::isErrorHtml($html)) {
                         Log::info("✅ Decodo Universal Scraping API Success. HTML length: " . strlen($html));
                         return $html;
                     }
