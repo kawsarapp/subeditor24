@@ -186,32 +186,89 @@
 
 {{-- 6. Edit User Modal --}}
 <div id="editUserModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 backdrop-blur-sm">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="font-bold text-lg text-gray-800">Edit User Profile</h3>
-            <button onclick="closeEditUserModal()" class="text-gray-400 hover:text-red-500 text-2xl transition">&times;</button>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden max-h-[90vh] flex flex-col">
+        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+            <div>
+                <h3 class="font-black text-lg text-slate-800">Edit User & Subscription</h3>
+                <p class="text-xs text-slate-500">ইউজার প্রোফাইল, প্যাকেজ ও মেয়াদ নিয়ন্ত্রণ করুন</p>
+            </div>
+            <button onclick="closeEditUserModal()" class="text-slate-400 hover:text-red-500 text-2xl transition">&times;</button>
         </div>
-        <form id="editUserForm" method="POST" class="p-6 space-y-4">
+        <form id="editUserForm" method="POST" class="p-6 space-y-4 overflow-y-auto custom-scrollbar">
             @csrf @method('PUT')
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
-                <input type="text" name="name" id="editName" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-yellow-500" required>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+                    <input type="text" name="name" id="editName" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+                    <input type="email" name="email" id="editEmail" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" required>
+                </div>
             </div>
+
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Email Address</label>
-                <input type="email" name="email" id="editEmail" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-yellow-500" required>
+                <label class="block text-xs font-bold text-slate-700 mb-1">New Password <span class="text-slate-400 font-normal">(Leave empty to keep current)</span></label>
+                <input type="password" name="password" placeholder="••••••••" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
             </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">New Password <span class="text-gray-400 font-normal">(Optional)</span></label>
-                <input type="password" name="password" placeholder="Leave empty to keep current" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-yellow-500">
+
+            {{-- Subscription & Plan Settings Section --}}
+            <div class="pt-3 border-t border-slate-100">
+                <div class="text-xs font-black text-indigo-600 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <i class="fa-solid fa-crown text-amber-500"></i> সাবস্ক্রিপশন ও প্যাকেজ সেটিংস
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Assigned Pricing Plan</label>
+                        <select name="pricing_plan_id" id="editPricingPlanId" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                            <option value="">-- No Plan / Custom --</option>
+                            @if(isset($pricingPlans))
+                                @foreach($pricingPlans as $plan)
+                                    <option value="{{ $plan->id }}">{{ $plan->name }} (৳{{ number_format($plan->price) }})</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Subscription Status</label>
+                        <select name="subscription_status" id="editSubscriptionStatus" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                            <option value="active">Active (সক্রিয়)</option>
+                            <option value="expired">Expired (মেয়াদ শেষ)</option>
+                            <option value="trial">Trial (ট্রায়াল)</option>
+                            <option value="lifetime">Lifetime (আজীবন ফ্রি/ভিআইপি)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Expiry Date (মেয়াদ শেষ হওয়ার তারিখ)</label>
+                        <input type="date" name="expire_date" id="editExpireDate" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Staff Limit (সর্বোচ্চ সাব-ইউজার)</label>
+                        <input type="number" name="staff_limit" id="editStaffLimit" min="0" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">AI Credits Balance</label>
+                        <input type="number" name="credits" id="editCredits" min="0" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Daily News Limit</label>
+                        <input type="number" name="daily_post_limit" id="editDailyPostLimit" min="0" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
             </div>
-            {{-- 🔥 Staff Limit Input (Edit) --}}
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">Max Staff Limit</label>
-                <input type="number" name="staff_limit" id="editStaffLimit" min="0" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-yellow-500">
-            </div>
-            <div class="flex justify-end pt-2">
-                <button type="submit" class="bg-yellow-500 text-white px-6 py-2 rounded-lg font-bold hover:bg-yellow-600 shadow-md w-full">Update Profile</button>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <button type="button" onclick="closeEditUserModal()" class="px-4 py-2.5 text-slate-600 bg-slate-100 rounded-xl font-bold hover:bg-slate-200 transition text-sm">Cancel</button>
+                <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg text-sm">Update User & Subscription</button>
             </div>
         </form>
     </div>

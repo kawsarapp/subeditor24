@@ -253,8 +253,19 @@
             </a>
             @endif
 
-            <a href="{{ route('admin.billing.orders') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.billing.orders') ? 'bg-indigo-600 text-white' : 'text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100' }}">
-                <i class="fa-solid fa-money-check-dollar text-indigo-600 w-5 text-center text-sm"></i> বিলিং ও পেমেন্ট রিকুয়েস্ট
+            @php
+                $mPendingOrders = \App\Models\SubscriptionOrder::where('status', 'pending')->count();
+            @endphp
+            <a href="{{ route('admin.billing.orders') }}" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.billing.orders') ? 'bg-indigo-600 text-white' : 'text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100' }}">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-money-check-dollar text-indigo-600 w-5 text-center text-sm"></i>
+                    <span>বিলিং ও পেমেন্ট রিকুয়েস্ট</span>
+                </div>
+                @if($mPendingOrders > 0)
+                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-black leading-none text-white bg-rose-600 rounded-full animate-bounce">
+                        {{ $mPendingOrders }}
+                    </span>
+                @endif
             </a>
 
             <a href="{{ route('admin.billing.payment-settings') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.billing.payment-settings') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">

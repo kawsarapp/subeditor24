@@ -142,6 +142,30 @@ class BillingController extends Controller
             'status'          => 'pending',
         ]);
 
+        // 🔔 Send Notification to User & Super Admins
+        try {
+            $user->notify(new \App\Notifications\SubscriptionNotification(
+                'অর্ডার গ্রহণ করা হয়েছে',
+                "আপনার {$plan->name} প্যাকেজ অর্ডারটি (নং {$orderNumber}) সফলভাবে জমা হয়েছে। পেমেন্ট যাচাইপূর্বক দ্রুত একাউন্ট সক্রিয় করা হবে।",
+                route('billing.my-subscription'),
+                'info',
+                'fa-solid fa-receipt'
+            ));
+
+            $superAdmins = User::where('role', 'super_admin')->get();
+            foreach ($superAdmins as $admin) {
+                $admin->notify(new \App\Notifications\SubscriptionNotification(
+                    'নতুন পেমেন্ট অর্ডার',
+                    "গ্রাহক {$user->name} ({$plan->name} - ৳" . number_format($finalAmount) . ") একটি নতুন পেমেন্ট অর্ডার জমা দিয়েছেন। (TrxID: {$order->transaction_id})",
+                    route('admin.billing.orders', ['status' => 'pending']),
+                    'warning',
+                    'fa-solid fa-money-check-dollar'
+                ));
+            }
+        } catch (\Exception $e) {
+            Log::error("Notification trigger error: " . $e->getMessage());
+        }
+
         Log::info("💳 Subscription Order Created: {$orderNumber} by User {$user->id} ({$user->name}) for {$plan->name}");
 
         return redirect()->route('billing.my-subscription')->with('success', "🎉 আপনার অর্ডারটি (নং: {$orderNumber}) সফলভাবে জমা হয়েছে! পেমেন্ট যাচাই করে অ্যাডমিন শীঘ্রই আপনার প্ল্যানটি সক্রিয় করে দেবেন।");

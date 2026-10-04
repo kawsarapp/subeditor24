@@ -352,9 +352,13 @@
 
                     {{-- PROFILE DROPDOWN WITH CREDITS INSIDE --}}
                     <div class="relative">
-                        <button id="userProfileBtn" onclick="toggleUserProfileDropdown(event)" class="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all cursor-pointer">
-                            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-black flex items-center justify-center text-sm border border-indigo-400 uppercase shadow-md shadow-indigo-500/20">
+                        <button id="userProfileBtn" onclick="toggleUserProfileDropdown(event)" class="relative flex items-center gap-2 p-1.5 rounded-2xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all cursor-pointer">
+                            <div class="relative w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white font-black flex items-center justify-center text-sm border border-indigo-400 uppercase shadow-md shadow-indigo-500/20">
                                 {{ substr(auth()->user()->name, 0, 1) }}
+                                @if(auth()->user()->role === 'super_admin' && \App\Models\SubscriptionOrder::where('status', 'pending')->count() > 0)
+                                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 border-2 border-white rounded-full animate-ping"></span>
+                                    <span class="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 border-2 border-white rounded-full"></span>
+                                @endif
                             </div>
                             <div class="flex flex-col text-left hidden 2xl:block">
                                 <span class="font-extrabold text-xs text-slate-900 leading-tight">{{ auth()->user()->name }}</span>
@@ -393,13 +397,24 @@
                                 @endif
                             
                                 @if(auth()->user()->role === 'super_admin')
+                                @php
+                                    $pendingOrdersCount = \App\Models\SubscriptionOrder::where('status', 'pending')->count();
+                                @endphp
                                 <div class="border-t border-slate-100 my-1"></div>
                                 <div class="px-4 pt-1 pb-0.5 text-[9px] font-extrabold uppercase text-slate-400">Admin Control</div>
                                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
                                     <i class="fa-solid fa-shield-halved text-indigo-500 w-4"></i> Admin Panel
                                 </a>
-                                <a href="{{ route('admin.billing.orders') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-black text-indigo-700 hover:bg-indigo-50 transition-colors">
-                                    <i class="fa-solid fa-money-check-dollar text-indigo-600 w-4"></i> বিলিং অর্ডার ও পেমেন্ট রিকুয়েস্ট
+                                <a href="{{ route('admin.billing.orders') }}" class="flex items-center justify-between px-4 py-2 text-xs font-black text-indigo-700 hover:bg-indigo-50 transition-colors">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-solid fa-money-check-dollar text-indigo-600 w-4"></i>
+                                        <span>বিলিং ও পেমেন্ট অর্ডার</span>
+                                    </div>
+                                    @if($pendingOrdersCount > 0)
+                                        <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-black leading-none text-white bg-rose-600 rounded-full animate-pulse shadow-sm">
+                                            {{ $pendingOrdersCount }}
+                                        </span>
+                                    @endif
                                 </a>
                                 <a href="{{ route('admin.billing.payment-settings') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
                                     <i class="fa-solid fa-wallet text-slate-500 w-4"></i> পেমেন্ট গেটওয়ে সেটিংস

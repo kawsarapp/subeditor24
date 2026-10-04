@@ -85,6 +85,19 @@ class AdminBillingController extends Controller
             'admin_notes'         => $request->input('admin_notes', 'অর্ডার যাচাইপূর্বক প্ল্যানটি সফলভাবে সক্রিয় করা হয়েছে।'),
         ]);
 
+        // 🔔 Notify Customer
+        try {
+            $user->notify(new \App\Notifications\SubscriptionNotification(
+                '🎉 প্ল্যান সক্রিয় হয়েছে!',
+                "আপনার '{$plan->name}' প্যাকেজ অর্ডারটি (নং {$order->order_number}) অনুমোদিত হয়েছে এবং মেয়াদ সফলভাবে সক্রিয় করা হয়েছে!",
+                route('billing.my-subscription'),
+                'success',
+                'fa-solid fa-crown'
+            ));
+        } catch (\Exception $e) {
+            Log::error("Notification trigger error: " . $e->getMessage());
+        }
+
         Log::info("✅ Plan Approved & Activated: User #{$user->id} ({$user->name}) -> Plan {$plan->name} until {$user->expire_date}");
 
         return back()->with('success', "🎉 অর্ডার নং {$order->order_number} সফলভাবে অনুমোদিত হয়েছে এবং গ্রাহক ({$user->name})-এর একাউন্টে '{$plan->name}' প্ল্যান সক্রিয় করা হয়েছে!");
@@ -95,12 +108,28 @@ class AdminBillingController extends Controller
      */
     public function reject(Request $request, $id)
     {
-        $order = SubscriptionOrder::findOrFail($id);
+        $order = SubscriptionOrder::with('user')->findOrFail($id);
+        $reason = $request->input('admin_notes', 'পেমেন্ট ট্রানজেকশন আইডি বা তথ্যের অসঙ্গতির কারণে অর্ডারটি বাতিল করা হয়েছে।');
 
         $order->update([
             'status'      => 'rejected',
-            'admin_notes' => $request->input('admin_notes', 'পেমেন্ট ট্রানজেকশন আইডি বা তথ্যের অসঙ্গতির কারণে অর্ডারটি বাতিল করা হয়েছে।'),
+            'admin_notes' => $reason,
         ]);
+
+        // 🔔 Notify Customer
+        if ($order->user) {
+            try {
+                $order->user->notify(new \App\Notifications\SubscriptionNotification(
+                    '⚠️ অর্ডার বাতিল হয়েছে',
+                    "আপনার অর্ডার নং {$order->order_number} বাতিল করা হয়েছে। কারণ: {$reason}",
+                    route('billing.my-subscription'),
+                    'danger',
+                    'fa-solid fa-triangle-exclamation'
+                ));
+            } catch (\Exception $e) {
+                Log::error("Notification trigger error: " . $e->getMessage());
+            }
+        }
 
         Log::warning("❌ Subscription Order Rejected: {$order->order_number}");
 

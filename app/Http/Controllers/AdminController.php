@@ -7,6 +7,7 @@ use App\Models\NewsItem;
 use App\Models\Website;
 use Illuminate\Http\Request;
 use App\Models\UserSetting;
+use App\Models\PricingPlan;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +30,8 @@ class AdminController extends Controller
         $totalWebsites = Website::withoutGlobalScopes()->count();
         $allWebsites = Website::withoutGlobalScopes()->get();
         
-        $users = User::where('role', 'admin')->with(['accessibleWebsites', 'settings'])->latest()->paginate(20);
+        $pricingPlans = PricingPlan::where('is_active', true)->orderBy('price', 'asc')->get();
+        $users = User::where('role', 'admin')->with(['accessibleWebsites', 'settings', 'pricingPlan'])->latest()->paginate(20);
 
         // Fetch DB Templates
         $dbTemplates = \App\Models\Template::where('is_active', true)->pluck('name', 'id')->mapWithKeys(function($name, $id) {
@@ -37,7 +39,7 @@ class AdminController extends Controller
         })->toArray();
         $allTemplates = array_merge(\App\Models\UserSetting::AVAILABLE_TEMPLATES, $dbTemplates);
 
-        return view('admin.dashboard', compact('users', 'totalUsers', 'totalNews', 'totalWebsites', 'allWebsites', 'allTemplates'));
+        return view('admin.dashboard', compact('users', 'totalUsers', 'totalNews', 'totalWebsites', 'allWebsites', 'allTemplates', 'pricingPlans'));
     }
     
     // ==========================================
@@ -178,28 +180,58 @@ class AdminController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // দুটি মেথডের ভ্যালিডেশন একসাথে যুক্ত করা হয়েছে
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:6',
-            'staff_limit' => 'nullable|integer' // 🔥 নতুন
+            'staff_limit' => 'nullable|integer|min:0',
+            'pricing_plan_id' => 'nullable',
+            'expire_date' => 'nullable|date',
+            'subscription_status' => 'nullable|string|in:active,expired,trial,lifetime,pending',
+            'credits' => 'nullable|integer|min:0',
+            'daily_post_limit' => 'nullable|integer|min:0',
         ]);
 
         $user->name = $request->name;
         $user->email = $request->email;
         
-        if ($request->filled('staff_limit')) {
-            $user->staff_limit = $request->staff_limit; // 🔥 আপডেট স্টাফ লিমিট
+        if ($request->has('staff_limit')) {
+            $user->staff_limit = (int) $request->staff_limit;
         }
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
 
+        if ($request->has('pricing_plan_id')) {
+            $user->pricing_plan_id = $request->pricing_plan_id ?: null;
+        }
+
+        if ($request->filled('expire_date')) {
+            $user->expire_date = $request->expire_date;
+        }
+
+        if ($request->filled('subscription_status')) {
+            $user->subscription_status = $request->subscription_status;
+            if ($request->subscription_status === 'active' || $request->subscription_status === 'lifetime') {
+                $user->is_active = true;
+            } elseif ($request->subscription_status === 'expired') {
+                $user->is_active = false;
+            }
+        }
+
+        if ($request->has('credits') && $request->credits !== null) {
+            $user->credits = (int) $request->credits;
+        }
+
+        if ($request->has('daily_post_limit') && $request->daily_post_limit !== null) {
+            $user->daily_post_limit = (int) $request->daily_post_limit;
+            $user->daily_ai_limit = (int) $request->daily_post_limit;
+        }
+
         $user->save();
 
-        return back()->with('success', 'ইউজারের তথ্য আপডেট করা হয়েছে!');
+        return back()->with('success', 'ইউজারের সাবস্ক্রিপশন ও প্রোফাইল সফলভাবে আপডেট করা হয়েছে!');
     }
     
     public function destroy($id)

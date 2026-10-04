@@ -89,13 +89,27 @@
         document.getElementById('createUserModal').classList.remove('flex');
     }
 
-    // --- Edit User Modal (Updated for Staff Limit) ---
-    function openEditUserModal(userId, name, email, staffLimit) {
-        document.getElementById('editName').value = name;
-        document.getElementById('editEmail').value = email;
+    // --- Edit User Modal (Updated for Subscription, Plan, Limits & Expiry) ---
+    function openEditUserModal(userId, name, email, staffLimit, planId, expireDate, status, credits, dailyLimit) {
+        document.getElementById('editName').value = name || '';
+        document.getElementById('editEmail').value = email || '';
+        document.getElementById('editStaffLimit').value = (staffLimit !== undefined && staffLimit !== null) ? staffLimit : 0;
         
-        // Set staff limit value (defaults to 0)
-        document.getElementById('editStaffLimit').value = staffLimit || 0; 
+        if (document.getElementById('editPricingPlanId')) {
+            document.getElementById('editPricingPlanId').value = planId || '';
+        }
+        if (document.getElementById('editExpireDate')) {
+            document.getElementById('editExpireDate').value = expireDate || '';
+        }
+        if (document.getElementById('editSubscriptionStatus')) {
+            document.getElementById('editSubscriptionStatus').value = status || 'active';
+        }
+        if (document.getElementById('editCredits')) {
+            document.getElementById('editCredits').value = (credits !== undefined && credits !== null) ? credits : 10;
+        }
+        if (document.getElementById('editDailyPostLimit')) {
+            document.getElementById('editDailyPostLimit').value = (dailyLimit !== undefined && dailyLimit !== null) ? dailyLimit : 10;
+        }
         
         document.getElementById('editUserForm').action = `/admin/users/${userId}/update`;
         

@@ -159,6 +159,7 @@
 
     {{-- MAIN CONTENT AREA --}}
     <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 pt-20 lg:pt-6 pb-24 lg:pb-12">
+        @include('layouts.partials.subscription-banner')
         @yield('content')
     </main>
 

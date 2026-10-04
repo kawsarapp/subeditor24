@@ -65,6 +65,7 @@
                 <thead>
                     <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
                         <th class="px-6 py-4 font-bold">Name & Email</th>
+                        <th class="px-6 py-4 font-bold text-center">Plan & Validity</th>
                         <th class="px-6 py-4 font-bold text-center">Credits</th>
                         <th class="px-6 py-4 font-bold text-center">Daily Limit</th>
                         <th class="px-6 py-4 font-bold text-center">Status</th>
@@ -78,6 +79,27 @@
                         <td class="px-6 py-4">
                             <div class="font-bold text-slate-800">{{ $user->name }}</div>
                             <div class="text-sm text-slate-500">{{ $user->email }}</div>
+                        </td>
+
+                        {{-- 👑 Plan & Expiry Validity Column --}}
+                        <td class="px-6 py-4 text-center">
+                            <div class="font-extrabold text-xs text-slate-800">
+                                {{ $user->pricingPlan ? $user->pricingPlan->name : 'Custom / No Plan' }}
+                            </div>
+                            <div class="mt-1 flex items-center justify-center gap-1">
+                                @if($user->subscription_status === 'lifetime')
+                                    <span class="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300">👑 Lifetime</span>
+                                @elseif($user->isExpired())
+                                    <span class="bg-rose-100 text-rose-700 text-[10px] font-black px-2 py-0.5 rounded-full border border-rose-300">🚨 Expired</span>
+                                @elseif($user->isExpiringSoon(3))
+                                    <span class="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-300">⏳ {{ $user->days_remaining }}d left</span>
+                                @else
+                                    <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-300">✅ {{ $user->days_remaining }}d left</span>
+                                @endif
+                            </div>
+                            <div class="text-[10px] text-slate-400 mt-0.5">
+                                Exp: {{ $user->expire_date ? $user->expire_date->format('d M, Y') : 'None' }}
+                            </div>
                         </td>
 
                         <td class="px-6 py-4 text-center">
@@ -112,8 +134,8 @@
 
                         <td class="px-6 py-4 text-right flex justify-end gap-2 items-center flex-wrap">
                             
-                            {{-- Edit Button --}}
-                            <button onclick="openEditUserModal('{{ $user->id }}', '{{ $user->name }}', '{{ $user->email }}', '{{ $user->staff_limit }}')" class="bg-yellow-500 text-white px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-600 shadow-sm flex items-center justify-center gap-1" title="Edit Profile">✏️ Edit</button>
+                            {{-- Edit Button (passes plan, expiry, status, credits, daily limit) --}}
+                            <button onclick="openEditUserModal('{{ $user->id }}', '{{ $user->name }}', '{{ $user->email }}', '{{ $user->staff_limit }}', '{{ $user->pricing_plan_id }}', '{{ $user->expire_date ? $user->expire_date->format('Y-m-d') : '' }}', '{{ $user->subscription_status ?? 'active' }}', '{{ $user->credits }}', '{{ $user->daily_post_limit }}')" class="bg-yellow-500 text-white px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-600 shadow-sm flex items-center justify-center gap-1" title="Edit Profile & Subscription">✏️ Edit</button>
                             
                             <button onclick='openSourceModal("{{ $user->id }}", "{{ $user->name }}", @json($user->accessibleWebsites->pluck("id")))' class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-700 flex items-center gap-1 shadow-sm" title="Manage News Sources">🌐 <span class="hidden md:inline">Sources</span></button>
                             <button onclick='openTemplateModal("{{ $user->id }}", "{{ $user->name }}", @json($user->settings->allowed_templates ?? []), "{{ $user->settings->default_template ?? "dhaka_post_card" }}")' class="bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-800 flex items-center gap-1 shadow-sm" title="Manage Templates">🎨 <span class="hidden md:inline">Templates</span></button>
