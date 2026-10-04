@@ -52,9 +52,7 @@ class FacebookPageController extends Controller
             'pages_show_list',
             'pages_read_engagement',
             'pages_manage_posts',
-            'pages_read_user_content',
-            'public_profile',
-            'business_management'
+            'public_profile'
         ]);
 
         $authUrl = "https://www.facebook.com/v19.0/dialog/oauth?" . http_build_query([
