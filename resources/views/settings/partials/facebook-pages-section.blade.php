@@ -211,7 +211,12 @@
                         </ol>
                     </div>
 
-                    <div class="flex justify-end pt-1">
+                    <div id="metaAppTestStatusMsg" class="hidden p-3 rounded-xl text-xs font-bold"></div>
+
+                    <div class="flex flex-wrap items-center justify-end gap-2.5 pt-1">
+                        <button type="button" id="btnTestMetaApp" onclick="testMetaAppCredentials()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-bolt text-amber-400"></i> <span>⚡ Test Meta App Connection</span>
+                        </button>
                         <button type="button" onclick="saveMetaAppCredentials()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer">
                             <i class="fa-solid fa-save"></i> <span>Save Meta App Credentials</span>
                         </button>
@@ -334,6 +339,53 @@
         const input = document.getElementById('fbOAuthRedirectUri');
         if (!input) return;
         copyTextValue(input.value, '✅ OAuth Redirect URI কপি করা হয়েছে!');
+    }
+
+    function testMetaAppCredentials() {
+        const appId = document.getElementById('globalFbAppId').value.trim();
+        const appSecret = document.getElementById('globalFbAppSecret').value.trim();
+        const statusBox = document.getElementById('metaAppTestStatusMsg');
+        const btn = document.getElementById('btnTestMetaApp');
+
+        if (!appId || !appSecret) {
+            alert('❌ Facebook App ID এবং App Secret উভয়ই প্রদান করুন!');
+            return;
+        }
+
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin text-amber-400"></i> <span>Testing Connection...</span>';
+        
+        statusBox.className = 'p-3 rounded-xl text-xs font-bold bg-amber-950/80 text-amber-300 border border-amber-500/30 block animate-pulse';
+        statusBox.innerText = '⏳ Meta Graph API সার্ভারের সাথে হ্যান্ডশেক টেস্ট করা হচ্ছে...';
+
+        fetch('{{ route("fb-pages.test-app-credentials") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ fb_app_id: appId, fb_app_secret: appSecret })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                statusBox.className = 'p-3 rounded-xl text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 block whitespace-pre-line';
+                statusBox.innerText = data.message;
+            } else {
+                statusBox.className = 'p-3 rounded-xl text-xs font-bold bg-rose-950/80 text-rose-300 border border-rose-500/40 block whitespace-pre-line';
+                statusBox.innerText = data.message;
+            }
+        })
+        .catch(err => {
+            statusBox.className = 'p-3 rounded-xl text-xs font-bold bg-rose-950/80 text-rose-300 border border-rose-500/40 block';
+            statusBox.innerText = '❌ নেটওয়ার্ক এরর: ' + err.message;
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        });
     }
 
     function saveMetaAppCredentials() {

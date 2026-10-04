@@ -239,6 +239,47 @@ class FacebookPageController extends Controller
     }
 
     /**
+     * ⚡ Meta App Handshake Test (App ID & Secret validity check)
+     */
+    public function testAppCredentials(Request $request)
+    {
+        $appId = trim($request->fb_app_id ?? '');
+        $appSecret = trim($request->fb_app_secret ?? '');
+
+        if (empty($appId) || empty($appSecret)) {
+            [$appId, $appSecret] = $this->getFacebookAppCredentials();
+        }
+
+        if (empty($appId) || empty($appSecret)) {
+            return response()->json(['success' => false, 'message' => '❌ App ID এবং App Secret দিতে হবে।']);
+        }
+
+        try {
+            // App Access Token handshake: appId|appSecret
+            $appToken = "{$appId}|{$appSecret}";
+            $response = Http::timeout(10)->get("https://graph.facebook.com/v19.0/{$appId}", [
+                'fields'       => 'id,name',
+                'access_token' => $appToken,
+            ]);
+
+            $data = $response->json();
+
+            if ($response->successful() && isset($data['id'])) {
+                $appName = $data['name'] ?? 'Meta App';
+                return response()->json([
+                    'success' => true,
+                    'message' => "✅ Meta App কানেকশন সফল!\nApp Name: {$appName}\nApp ID: {$data['id']}\nস্ট্যাটাস: ১-ক্লিক লগইন ও পেজ কানেকশনের জন্য প্রস্তুত 🚀",
+                ]);
+            } else {
+                $errMsg = $data['error']['message'] ?? 'Meta API validation failed';
+                return response()->json(['success' => false, 'message' => '❌ কানেকশন ফেইল্ড: ' . $errMsg]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => '❌ নেটওয়ার্ক এরর: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Save Meta App ID & Secret for Super Admin
      */
     public function saveAppCredentials(Request $request)

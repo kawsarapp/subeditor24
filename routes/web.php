@@ -139,6 +139,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::get('/callback', [FacebookPageController::class, 'handleFacebookCallback'])->name('callback');
             Route::post('/fetch-token', [FacebookPageController::class, 'fetchPagesWithToken'])->name('fetch-token');
             Route::post('/save-credentials', [FacebookPageController::class, 'saveAppCredentials'])->name('save-credentials');
+            Route::post('/test-app-credentials', [FacebookPageController::class, 'testAppCredentials'])->name('test-app-credentials');
             Route::post('/', [FacebookPageController::class, 'store'])->name('store');
             Route::put('/{id}', [FacebookPageController::class, 'update'])->name('update');
             Route::delete('/{id}', [FacebookPageController::class, 'destroy'])->name('destroy');
