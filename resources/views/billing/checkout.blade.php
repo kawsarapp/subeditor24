@@ -37,8 +37,8 @@
                     @endif
 
                     <h2 class="text-2xl font-black text-white tracking-tight">{{ $plan->name }}</h2>
-                    <p class="text-xs text-slate-400 mt-1">
-                        {{ $cycle === 'yearly' ? '১ বছর (১২ মাস) মেয়াদ' : ($cycle === 'monthly' ? '১ মাস মেয়াদ' : '৬ মাস স্পেশাল মেয়াদ') }}
+                    <p class="text-xs text-amber-400 font-bold mt-1" id="planDurationText">
+                        {{ $cycle === 'yearly' ? '১ বছর (১২ মাস / ৩৬৫ দিন) মেয়াদ' : ($cycle === 'monthly' ? '১ মাস (৩০ দিন) মেয়াদ' : '৬ মাস (১৮০ দিন) স্পেশাল মেয়াদ') }}
                     </p>
 
                     <hr class="border-slate-800 my-5">
@@ -73,7 +73,7 @@
                     <div class="space-y-2 text-xs">
                         <div class="flex justify-between text-slate-400">
                             <span>মূল্য ({{ ucfirst($mode) }} Rate):</span>
-                            <span class="font-bold text-slate-200">৳{{ number_format($basePrice, 2) }}</span>
+                            <span class="font-bold text-slate-200" id="basePriceBreakdownText">৳{{ number_format($basePrice, 2) }}</span>
                         </div>
                         <div id="couponDiscountRow" class="hidden flex justify-between text-emerald-400 font-bold">
                             <span>কুপন ডিসকাউন্ট:</span>
@@ -102,54 +102,108 @@
 
             {{-- RIGHT COLUMN: Manual Payment Instructions & Submission Form --}}
             <div class="lg:col-span-7">
-                <div class="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+                <div class="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
                     
-                    <h3 class="text-lg font-black text-white flex items-center gap-2.5">
-                        <span class="w-7 h-7 rounded-xl bg-indigo-600 flex items-center justify-center text-xs text-white">1</span>
-                        <span>পেমেন্ট মাধ্যম বেছে নিন ও টাকা পাঠান</span>
-                    </h3>
+                    {{-- 🌟 STEP 1: BILLING CYCLE SELECTION (USER FREEDOM) --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-base font-black text-white flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-xs text-white">1</span>
+                                <span>সাবস্ক্রিপশন মেয়াদ নির্বাচন করুন</span>
+                            </h3>
+                            <span class="text-[11px] font-bold text-indigo-400"><i class="fa-solid fa-clock mr-1"></i> আপনার পছন্দমত মেয়াদ বেছে নিন</span>
+                        </div>
 
-                    {{-- Payment Method Tabs --}}
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4" id="paymentMethodSelectors">
-                        {{-- bKash --}}
-                        <button type="button" onclick="selectPaymentMethod('bkash')" id="btnMethod_bkash" class="method-btn border-2 border-pink-500 bg-pink-950/30 text-pink-300 p-3 rounded-2xl flex flex-col items-center gap-1.5 transition text-xs font-extrabold cursor-pointer">
-                            <span class="text-base">🌸</span>
-                            <span>bKash</span>
-                        </button>
-                        {{-- Nagad --}}
-                        <button type="button" onclick="selectPaymentMethod('nagad')" id="btnMethod_nagad" class="method-btn border border-slate-800 bg-slate-950/60 text-slate-400 p-3 rounded-2xl flex flex-col items-center gap-1.5 transition text-xs font-extrabold hover:border-slate-700 cursor-pointer">
-                            <span class="text-base">🔥</span>
-                            <span>Nagad</span>
-                        </button>
-                        {{-- Rocket --}}
-                        <button type="button" onclick="selectPaymentMethod('rocket')" id="btnMethod_rocket" class="method-btn border border-slate-800 bg-slate-950/60 text-slate-400 p-3 rounded-2xl flex flex-col items-center gap-1.5 transition text-xs font-extrabold hover:border-slate-700 cursor-pointer">
-                            <span class="text-base">🚀</span>
-                            <span>Rocket</span>
-                        </button>
-                        {{-- Bank --}}
-                        <button type="button" onclick="selectPaymentMethod('bank_transfer')" id="btnMethod_bank_transfer" class="method-btn border border-slate-800 bg-slate-950/60 text-slate-400 p-3 rounded-2xl flex flex-col items-center gap-1.5 transition text-xs font-extrabold hover:border-slate-700 cursor-pointer">
-                            <span class="text-base">🏦</span>
-                            <span>Bank</span>
-                        </button>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="billingCycleSelectors">
+                            {{-- 1 Month --}}
+                            <button type="button" onclick="selectBillingCycle('monthly')" id="btnCycle_monthly" class="cycle-btn p-3.5 rounded-2xl border text-left transition flex flex-col justify-between gap-2 cursor-pointer {{ $cycle === 'monthly' ? 'border-2 border-amber-500 bg-amber-950/30 text-amber-300 shadow-lg shadow-amber-500/10' : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:border-slate-700' }}">
+                                <div class="flex items-center justify-between w-full">
+                                    <span class="text-xs font-black text-white">১ মাস</span>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-semibold">মাসিক</span>
+                                </div>
+                                <div>
+                                    <div class="text-base font-black font-mono text-white">৳{{ number_format($monthlyRate, 0) }}</div>
+                                    <div class="text-[10px] text-slate-400">৩০ দিন অ্যাক্টিভেশন</div>
+                                </div>
+                            </button>
+
+                            {{-- 6 Months (Special Offer) --}}
+                            <button type="button" onclick="selectBillingCycle('half_yearly')" id="btnCycle_half_yearly" class="cycle-btn p-3.5 rounded-2xl border text-left transition flex flex-col justify-between gap-2 cursor-pointer {{ $cycle === 'half_yearly' ? 'border-2 border-amber-500 bg-amber-950/30 text-amber-300 shadow-lg shadow-amber-500/10' : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:border-slate-700' }}">
+                                <div class="flex items-center justify-between w-full">
+                                    <span class="text-xs font-black text-amber-300">৬ মাস</span>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40">🔥 Best Value</span>
+                                </div>
+                                <div>
+                                    <div class="text-base font-black font-mono text-amber-400">৳{{ number_format($monthlyRate * 6, 0) }}</div>
+                                    <div class="text-[10px] text-slate-400">১৮০ দিন স্পেশাল অফার</div>
+                                </div>
+                            </button>
+
+                            {{-- 1 Year (12 Months) --}}
+                            <button type="button" onclick="selectBillingCycle('yearly')" id="btnCycle_yearly" class="cycle-btn p-3.5 rounded-2xl border text-left transition flex flex-col justify-between gap-2 cursor-pointer {{ $cycle === 'yearly' ? 'border-2 border-amber-500 bg-amber-950/30 text-amber-300 shadow-lg shadow-amber-500/10' : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:border-slate-700' }}">
+                                <div class="flex items-center justify-between w-full">
+                                    <span class="text-xs font-black text-white">১ বছর</span>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">💰 Save 15%</span>
+                                </div>
+                                <div>
+                                    <div class="text-base font-black font-mono text-white">৳{{ number_format(round($monthlyRate * 12 * 0.85), 0) }}</div>
+                                    <div class="text-[10px] text-slate-400">৩৬৫ দিন বার্ষিক মেয়াদ</div>
+                                </div>
+                            </button>
+                        </div>
                     </div>
 
-                    {{-- Dynamic Payment Instructions Box --}}
-                    <div id="methodInstructionsBox" class="mt-4 p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-xs">
-                        {{-- Injected dynamically by JS --}}
+                    <hr class="border-slate-800">
+
+                    {{-- 🌟 STEP 2: PAYMENT METHOD --}}
+                    <div>
+                        <h3 class="text-base font-black text-white flex items-center gap-2 mb-3">
+                            <span class="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-xs text-white">2</span>
+                            <span>পেমেন্ট মাধ্যম বেছে নিন ও টাকা পাঠান</span>
+                        </h3>
+
+                        {{-- Payment Method Tabs --}}
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5" id="paymentMethodSelectors">
+                            {{-- bKash --}}
+                            <button type="button" onclick="selectPaymentMethod('bkash')" id="btnMethod_bkash" class="method-btn border-2 border-pink-500 bg-pink-950/30 text-pink-300 p-3 rounded-2xl flex flex-col items-center gap-1.5 transition text-xs font-extrabold cursor-pointer">
+                                <span class="text-base">🌸</span>
+                                <span>bKash</span>
+                            </button>
+                            {{-- Nagad --}}
+                            <button type="button" onclick="selectPaymentMethod('nagad')" id="btnMethod_nagad" class="method-btn border border-slate-800 bg-slate-950/60 text-slate-400 p-3 rounded-2xl flex flex-col items-center gap-1.5 transition text-xs font-extrabold hover:border-slate-700 cursor-pointer">
+                                <span class="text-base">🔥</span>
+                                <span>Nagad</span>
+                            </button>
+                            {{-- Rocket --}}
+                            <button type="button" onclick="selectPaymentMethod('rocket')" id="btnMethod_rocket" class="method-btn border border-slate-800 bg-slate-950/60 text-slate-400 p-3 rounded-2xl flex flex-col items-center gap-1.5 transition text-xs font-extrabold hover:border-slate-700 cursor-pointer">
+                                <span class="text-base">🚀</span>
+                                <span>Rocket</span>
+                            </button>
+                            {{-- Bank --}}
+                            <button type="button" onclick="selectPaymentMethod('bank_transfer')" id="btnMethod_bank_transfer" class="method-btn border border-slate-800 bg-slate-950/60 text-slate-400 p-3 rounded-2xl flex flex-col items-center gap-1.5 transition text-xs font-extrabold hover:border-slate-700 cursor-pointer">
+                                <span class="text-base">🏦</span>
+                                <span>Bank</span>
+                            </button>
+                        </div>
+
+                        {{-- Dynamic Payment Instructions Box --}}
+                        <div id="methodInstructionsBox" class="mt-4 p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-xs">
+                            {{-- Injected dynamically by JS --}}
+                        </div>
                     </div>
 
-                    <hr class="border-slate-800 my-6">
+                    <hr class="border-slate-800">
 
-                    {{-- Form: Submission Details --}}
+                    {{-- 🌟 STEP 3: SUBMISSION FORM --}}
                     <form action="{{ route('billing.order.submit') }}" method="POST" enctype="multipart/form-data" id="orderSubmitForm">
                         @csrf
                         <input type="hidden" name="plan_slug" value="{{ $plan->slug }}">
                         <input type="hidden" name="pricing_mode" value="{{ $mode }}">
-                        <input type="hidden" name="billing_cycle" value="{{ $cycle }}">
+                        <input type="hidden" name="billing_cycle" id="selectedBillingCycleInput" value="{{ $cycle }}">
                         <input type="hidden" name="payment_method" id="selectedPaymentMethodInput" value="bkash">
 
-                        <h3 class="text-lg font-black text-white flex items-center gap-2.5 mb-4">
-                            <span class="w-7 h-7 rounded-xl bg-indigo-600 flex items-center justify-center text-xs text-white">2</span>
+                        <h3 class="text-base font-black text-white flex items-center gap-2 mb-4">
+                            <span class="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-xs text-white">3</span>
                             <span>পেমেন্ট তথ্য প্রদান করুন</span>
                         </h3>
 
@@ -227,8 +281,56 @@
 <script>
     const paymentMethodsConfig = @json($paymentConfig);
     let currentMethod = 'bkash';
-    let baseOrderPrice = {{ $basePrice }};
+
+    const monthlyRate = {{ $monthlyRate }};
+    const cyclePrices = {
+        monthly: {{ $monthlyRate }},
+        half_yearly: {{ $monthlyRate * 6 }},
+        yearly: {{ round($monthlyRate * 12 * 0.85) }}
+    };
+
+    let currentCycle = '{{ $cycle }}' || 'half_yearly';
+    let baseOrderPrice = cyclePrices[currentCycle] !== undefined ? cyclePrices[currentCycle] : {{ $basePrice }};
     let currentDiscount = 0;
+
+    function selectBillingCycle(cycle) {
+        currentCycle = cycle;
+        const cycleInput = document.getElementById('selectedBillingCycleInput');
+        if (cycleInput) cycleInput.value = cycle;
+
+        // Reset Cycle button styles
+        ['monthly', 'half_yearly', 'yearly'].forEach(c => {
+            const btn = document.getElementById('btnCycle_' + c);
+            if (btn) {
+                btn.className = 'cycle-btn p-3.5 rounded-2xl border text-left transition flex flex-col justify-between gap-2 cursor-pointer bg-slate-950/70 border-slate-800 text-slate-400 hover:border-slate-700';
+            }
+        });
+
+        const activeBtn = document.getElementById('btnCycle_' + cycle);
+        if (activeBtn) {
+            activeBtn.className = 'cycle-btn p-3.5 rounded-2xl border-2 text-left transition flex flex-col justify-between gap-2 cursor-pointer border-amber-500 bg-amber-950/30 text-amber-300 shadow-lg shadow-amber-500/10';
+        }
+
+        // Update Base price
+        baseOrderPrice = cyclePrices[cycle] !== undefined ? cyclePrices[cycle] : monthlyRate;
+
+        // Update Duration label in summary
+        const durLabel = cycle === 'yearly' 
+            ? '১ বছর (১২ মাস / ৩৬৫ দিন) মেয়াদ' 
+            : (cycle === 'monthly' ? '১ মাস (৩০ দিন) মেয়াদ' : '৬ মাস (১৮০ দিন) স্পেশাল মেয়াদ');
+        
+        const durEl = document.getElementById('planDurationText');
+        if (durEl) durEl.textContent = durLabel;
+
+        // Update rate breakdown
+        const baseEl = document.getElementById('basePriceBreakdownText');
+        if (baseEl) baseEl.textContent = '৳' + baseOrderPrice.toFixed(2);
+
+        // Recalculate Final Price
+        const finalAmt = Math.max(0, baseOrderPrice - currentDiscount);
+        const finalEl = document.getElementById('finalPriceText');
+        if (finalEl) finalEl.textContent = '৳' + finalAmt.toFixed(2);
+    }
 
     function selectPaymentMethod(method) {
         currentMethod = method;

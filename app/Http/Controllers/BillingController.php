@@ -30,23 +30,28 @@ class BillingController extends Controller
         $mode = $request->input('mode', 'special'); // special, regular, standard
         $cycle = $request->input('cycle', 'half_yearly'); // monthly, half_yearly, yearly, lifetime
 
-        $basePrice = match ($mode) {
+        $monthlyRate = match ($mode) {
             'standard' => (float) $plan->standard_price,
             'regular'  => (float) $plan->regular_discount_price,
             default    => (float) $plan->special_price,
         };
 
-        // If specific cycle multiplier is requested
-        if ($cycle === 'yearly') {
-            $basePrice = $basePrice * 2 * 0.90; // 10% extra yearly loyalty discount
-        } elseif ($cycle === 'monthly') {
-            $basePrice = (float) round($basePrice / 5); // monthly rate
+        // If monthly rate is 0 (e.g. Free Trial), keep 0
+        if ($monthlyRate <= 0) {
+            $basePrice = 0.00;
+        } else {
+            $basePrice = match ($cycle) {
+                'monthly'  => (float) $monthlyRate,
+                'yearly'   => (float) round($monthlyRate * 12 * 0.85), // 15% yearly discount
+                'lifetime' => (float) round($monthlyRate * 36 * 0.70),
+                default    => (float) round($monthlyRate * 6), // 6-month bundle
+            };
         }
 
         $paymentConfig = UserSetting::getManualPaymentConfig();
         $pageConfig = PricingController::getPageConfig();
 
-        return view('billing.checkout', compact('plan', 'mode', 'cycle', 'basePrice', 'paymentConfig', 'pageConfig', 'user'));
+        return view('billing.checkout', compact('plan', 'mode', 'cycle', 'monthlyRate', 'basePrice', 'paymentConfig', 'pageConfig', 'user'));
     }
 
     /**
@@ -72,16 +77,21 @@ class BillingController extends Controller
         $plan = PricingPlan::where('slug', $request->plan_slug)->firstOrFail();
 
         // 1. Calculate Base Price
-        $basePrice = match ($request->pricing_mode) {
+        $monthlyRate = match ($request->pricing_mode) {
             'standard' => (float) $plan->standard_price,
             'regular'  => (float) $plan->regular_discount_price,
             default    => (float) $plan->special_price,
         };
 
-        if ($request->billing_cycle === 'yearly') {
-            $basePrice = $basePrice * 2 * 0.90;
-        } elseif ($request->billing_cycle === 'monthly') {
-            $basePrice = (float) round($basePrice / 5);
+        if ($monthlyRate <= 0) {
+            $basePrice = 0.00;
+        } else {
+            $basePrice = match ($request->billing_cycle) {
+                'monthly'  => (float) $monthlyRate,
+                'yearly'   => (float) round($monthlyRate * 12 * 0.85),
+                'lifetime' => (float) round($monthlyRate * 36 * 0.70),
+                default    => (float) round($monthlyRate * 6),
+            };
         }
 
         // 2. Check Coupon
