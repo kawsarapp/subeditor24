@@ -292,10 +292,9 @@
             @endauth
 
             {{-- RIGHT CONTROL PANEL WITH USER PROFILE & CREDITS --}}
-            {{-- RIGHT CONTROL PANEL WITH USER PROFILE & CREDITS --}}
-            <div class="flex items-center gap-1.5 xl:gap-2.5 shrink-0">
+            <div class="flex items-center gap-2 shrink-0">
                 @auth
-                    {{-- 👑 Subscription Validity Countdown Pill --}}
+                    {{-- 👑 Ultra-Compact Subscription Validity Badge --}}
                     @if(auth()->user()->role !== 'reporter')
                         @php
                             $subStatus = auth()->user()->subscription_status ?? 'active';
@@ -304,53 +303,23 @@
                             $isSoon = auth()->user()->isExpiringSoon();
                             $planName = auth()->user()->pricingPlan ? auth()->user()->pricingPlan->name : (auth()->user()->role === 'super_admin' ? 'Unlimited Admin' : 'Active Plan');
                         @endphp
-                        <a href="{{ route('billing.my-subscription') }}" class="hidden lg:flex items-center gap-1 xl:gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm border {{ $isExp ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 border-rose-300 dark:border-rose-800 animate-pulse' : ($isSoon ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 border-amber-300 dark:border-amber-800' : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100') }}" title="প্ল্যানের মেয়াদ: {{ $daysRem }} দিন বাকি">
-                            <i class="fa-solid {{ $isExp ? 'fa-triangle-exclamation text-rose-500' : ($isSoon ? 'fa-clock text-amber-500' : 'fa-crown text-amber-500') }}"></i>
-                            <span class="hidden xl:inline">{{ $planName }}</span>
-                            <span class="text-[10px] px-1.5 py-0.5 rounded-md font-extrabold {{ $isExp ? 'bg-rose-200 text-rose-900' : ($isSoon ? 'bg-amber-200 text-amber-900' : 'bg-indigo-200 dark:bg-indigo-900/60 text-indigo-900 dark:text-indigo-200') }}">
+                        <a href="{{ route('billing.my-subscription') }}" class="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-black transition-all shadow-sm border {{ $isExp ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 border-rose-300 dark:border-rose-800 animate-pulse' : ($isSoon ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 border-amber-300 dark:border-amber-800' : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100') }}" title="প্ল্যান: {{ $planName }} ({{ $daysRem }} দিন বাকি)">
+                            <i class="fa-solid {{ $isExp ? 'fa-triangle-exclamation text-rose-500' : 'fa-crown text-amber-500' }} text-[11px]"></i>
+                            <span class="text-[11px] font-black">
                                 @if($daysRem >= 999)
-                                    আনলিমিটেড
+                                    Unlimited
                                 @elseif($isExp)
-                                    মেয়াদ শেষ
+                                    Expired
                                 @else
-                                    {{ $daysRem }} দিন
+                                    {{ $daysRem }}d
                                 @endif
                             </span>
                         </a>
                     @endif
 
-                    {{-- 🎯 Dynamic Goal & Target Progress Tracker (Daily or Monthly) --}}
-                    @php
-                        $userLimitType = auth()->user()->post_limit_type ?? 'daily';
-                        $isMonthlyLimit = ($userLimitType === 'monthly');
-                        $activePosts = $isMonthlyLimit ? (auth()->user()->this_month_post_count ?? 0) : (auth()->user()->todays_post_count ?? 0);
-                        $targetLimit = auth()->user()->active_post_limit ?? 20;
-                        $isUnlimited = $targetLimit >= 9999;
-                        $percent = $isUnlimited ? 100 : min(100, round(($activePosts / max($targetLimit, 1)) * 100));
-                        $trackerTitle = $isMonthlyLimit ? "This Month's Posts" : "Today's Posts";
-                    @endphp
-                    <div class="hidden 2xl:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 px-3 py-1.5 rounded-xl shadow-sm transition-all" title="Post Limit & Progress ({{ $userLimitType }})">
-                        <div class="flex flex-col gap-0.5">
-                            <div class="flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-bullseye text-indigo-500"></i> {{ $trackerTitle }}</span>
-                                <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">{{ $activePosts }} @if(!$isUnlimited)/ {{ $targetLimit }} ({{ $percent }}%)@endif</span>
-                            </div>
-                            @if(!$isUnlimited)
-                            <div class="w-28 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-500" style="width: {{ $percent }}%"></div>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-
                     {{-- 🌙 Dark Mode Toggle Button --}}
                     <button type="button" onclick="toggleDarkMode()" id="darkModeToggleBtn" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-amber-400 flex items-center justify-center text-xs transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm shrink-0" title="Toggle Dark / Light Mode">
                         <i id="darkModeIcon" class="fa-solid fa-moon"></i>
-                    </button>
-
-                    {{-- ⌨️ Keyboard Shortcuts Button --}}
-                    <button type="button" onclick="openShortcutsModal()" class="hidden xl:flex w-8 h-8 rounded-xl bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 items-center justify-center text-xs transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm shrink-0" title="Keyboard Shortcuts (?)">
-                        <i class="fa-solid fa-keyboard"></i>
                     </button>
 
                     {{-- PROFILE DROPDOWN WITH CREDITS INSIDE --}}
@@ -363,28 +332,48 @@
                                     <span class="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 border-2 border-white rounded-full"></span>
                                 @endif
                             </div>
-                            <div class="flex flex-col text-left hidden 2xl:block">
-                                <span class="font-extrabold text-xs text-slate-900 dark:text-white leading-tight">{{ auth()->user()->name }}</span>
-                                <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">{{ auth()->user()->role }}</span>
-                            </div>
                             <i class="fa-solid fa-chevron-down text-[9px] text-slate-400"></i>
                         </button>
 
-                        <div id="userProfileMenu" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-3xl shadow-2xl border border-slate-200/90 py-2.5 z-[100]">
-                            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/60 rounded-t-3xl">
+                        <div id="userProfileMenu" class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200/90 dark:border-slate-800 py-2.5 z-[100]">
+                            <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 rounded-t-3xl">
                                 <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Signed in as</p>
-                                <p class="text-sm font-extrabold text-slate-900 truncate">{{ auth()->user()->email }}</p>
-                                <div class="mt-1 flex items-center justify-between gap-1">
-                                    <span class="inline-block bg-indigo-50 text-indigo-700 text-[10px] px-2.5 py-0.5 rounded-full font-extrabold uppercase border border-indigo-200/60">{{ auth()->user()->role }}</span>
+                                <p class="text-xs font-extrabold text-slate-900 dark:text-white truncate">{{ auth()->user()->email }}</p>
+                                <div class="mt-2 flex items-center justify-between gap-1">
+                                    <span class="inline-block bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-[10px] px-2.5 py-0.5 rounded-full font-extrabold uppercase border border-indigo-200/60 dark:border-indigo-800">{{ auth()->user()->role }}</span>
                                     
                                     {{-- CREDITS INSIDE PROFILE DROPDOWN --}}
                                     @if(auth()->user()->role !== 'reporter')
-                                    <a href="{{ route('credits.index') }}" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border border-amber-200 transition-all flex items-center gap-1">
+                                    <a href="{{ route('credits.index') }}" class="bg-amber-50 dark:bg-amber-950/70 hover:bg-amber-100 text-amber-800 dark:text-amber-300 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border border-amber-200 dark:border-amber-800 transition-all flex items-center gap-1">
                                         🪙 {{ auth()->user()->credits ?? 0 }} Credits
                                     </a>
                                     @endif
                                 </div>
                             </div>
+
+                            {{-- 🎯 DYNAMIC GOAL & TARGET PROGRESS TRACKER INSIDE DROPDOWN --}}
+                            @if(auth()->user()->role !== 'reporter')
+                            @php
+                                $userLimitType = auth()->user()->post_limit_type ?? 'daily';
+                                $isMonthlyLimit = ($userLimitType === 'monthly');
+                                $activePosts = $isMonthlyLimit ? (auth()->user()->this_month_post_count ?? 0) : (auth()->user()->todays_post_count ?? 0);
+                                $targetLimit = auth()->user()->active_post_limit ?? 20;
+                                $isUnlimited = $targetLimit >= 9999;
+                                $percent = $isUnlimited ? 100 : min(100, round(($activePosts / max($targetLimit, 1)) * 100));
+                                $trackerTitle = $isMonthlyLimit ? "This Month's Posts" : "Today's Posts";
+                            @endphp
+                            <div class="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800">
+                                <div class="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                                    <span class="flex items-center gap-1"><i class="fa-solid fa-bullseye text-indigo-500"></i> {{ $trackerTitle }}</span>
+                                    <span class="text-indigo-600 dark:text-indigo-400 font-black">{{ $activePosts }} @if(!$isUnlimited)/ {{ $targetLimit }} ({{ $percent }}%)@endif</span>
+                                </div>
+                                @if(!$isUnlimited)
+                                <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-500" style="width: {{ $percent }}%"></div>
+                                </div>
+                                @endif
+                            </div>
+                            @endif
 
                                 {{-- MY SUBSCRIPTION & PLAN MANAGEMENT --}}
                                 @if(auth()->user()->role !== 'reporter')
