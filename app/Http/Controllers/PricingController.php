@@ -83,11 +83,6 @@ class PricingController extends Controller
     public function index(Request $request)
     {
         $config = self::getPageConfig();
-        $isSuperAdmin = auth()->check() && auth()->user()->role === 'super_admin';
-
-        if (!empty($config['hide_pricing_from_nav']) && !$isSuperAdmin) {
-            abort(404);
-        }
 
         $regularPlans = PricingPlan::active()->regular()->get();
         $plans = $regularPlans;
@@ -102,11 +97,6 @@ class PricingController extends Controller
     public function vipIndex(Request $request)
     {
         $config = self::getPageConfig();
-        $isSuperAdmin = auth()->check() && auth()->user()->role === 'super_admin';
-
-        if (!empty($config['hide_vip_pricing_from_nav']) && !$isSuperAdmin) {
-            abort(404);
-        }
 
         $vipPlans = PricingPlan::active()->vip()->get();
         $vipConfig = \App\Http\Controllers\Admin\VipPricingAdminController::getVipPageConfig();
