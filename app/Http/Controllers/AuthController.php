@@ -153,6 +153,7 @@ class AuthController extends Controller
             // ৯. স্বয়ংক্রিয় লগইন
             Auth::login($user);
             $request->session()->regenerate();
+            $request->session()->flash('meta_registration_event', true);
 
             return redirect()->route('news.index')->with(
                 'success',
@@ -224,6 +225,7 @@ class AuthController extends Controller
             }
 
             $request->session()->regenerate();
+            $request->session()->flash('meta_login_event', true);
 
             if ($user->role === 'super_admin') {
                 return redirect()->route('admin.dashboard');
