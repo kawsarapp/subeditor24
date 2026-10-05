@@ -372,6 +372,17 @@ Route::middleware(['auth', 'nocache', AdminMiddleware::class])->group(function (
             Route::get('/payment-settings', [\App\Http\Controllers\Admin\AdminBillingController::class, 'paymentSettings'])->name('payment-settings');
             Route::post('/payment-settings', [\App\Http\Controllers\Admin\AdminBillingController::class, 'updatePaymentSettings'])->name('payment-settings.update');
         });
+
+        // 📜 Dynamic Legal & Policy Pages (Super Admin)
+        Route::prefix('legal-pages')->name('legal-pages.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\LegalPageAdminController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\Admin\LegalPageAdminController::class, 'create'])->name('create');
+            Route::get('/{id}/edit', [\App\Http\Controllers\Admin\LegalPageAdminController::class, 'edit'])->name('edit');
+            Route::post('/save', [\App\Http\Controllers\Admin\LegalPageAdminController::class, 'save'])->name('save');
+            Route::post('/{id}/reset', [\App\Http\Controllers\Admin\LegalPageAdminController::class, 'resetToDefault'])->name('reset');
+            Route::post('/{id}/toggle-status', [\App\Http\Controllers\Admin\LegalPageAdminController::class, 'toggleStatus'])->name('toggle');
+            Route::delete('/{id}', [\App\Http\Controllers\Admin\LegalPageAdminController::class, 'delete'])->name('delete');
+        });
     });
 });
 
@@ -380,6 +391,18 @@ Route::get('/pricing', [\App\Http\Controllers\PricingController::class, 'index']
 Route::get('/pricing-plans', [\App\Http\Controllers\PricingController::class, 'index'])->name('pricing');
 Route::get('/vip-pricing', [\App\Http\Controllers\PricingController::class, 'vipIndex'])->name('pricing.vip');
 Route::post('/pricing/apply-coupon', [\App\Http\Controllers\PricingController::class, 'applyCoupon'])->name('pricing.apply-coupon');
+
+// 📜 Public Legal & Compliance Policy Pages
+Route::get('/privacy-policy', [\App\Http\Controllers\LegalPageController::class, 'show'])->defaults('slug', 'privacy-policy')->name('legal.privacy');
+Route::get('/privacy', [\App\Http\Controllers\LegalPageController::class, 'show'])->defaults('slug', 'privacy-policy');
+Route::get('/terms-and-conditions', [\App\Http\Controllers\LegalPageController::class, 'show'])->defaults('slug', 'terms-and-conditions')->name('legal.terms');
+Route::get('/terms', [\App\Http\Controllers\LegalPageController::class, 'show'])->defaults('slug', 'terms-and-conditions');
+Route::get('/refund-policy', [\App\Http\Controllers\LegalPageController::class, 'show'])->defaults('slug', 'refund-policy')->name('legal.refund');
+Route::get('/about-us', [\App\Http\Controllers\LegalPageController::class, 'show'])->defaults('slug', 'about-us')->name('legal.about');
+Route::get('/about', [\App\Http\Controllers\LegalPageController::class, 'show'])->defaults('slug', 'about-us');
+Route::get('/contact-us', [\App\Http\Controllers\LegalPageController::class, 'show'])->defaults('slug', 'contact-us')->name('legal.contact');
+Route::get('/contact', [\App\Http\Controllers\LegalPageController::class, 'show'])->defaults('slug', 'contact-us');
+Route::get('/policy/{slug}', [\App\Http\Controllers\LegalPageController::class, 'show'])->name('legal.show');
 
 // Load Isolated SEO Intelligence Module Routes
 require __DIR__ . '/seo.php';

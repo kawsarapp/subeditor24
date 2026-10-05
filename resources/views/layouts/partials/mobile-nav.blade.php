@@ -280,6 +280,10 @@
                 <i class="fa-solid fa-crown text-amber-500 w-5 text-center text-sm"></i> VIP Pricing Manager
             </a>
 
+            <a href="{{ route('admin.legal-pages.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.legal-pages.*') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
+                <i class="fa-solid fa-scale-balanced text-emerald-500 w-5 text-center text-sm"></i> Legal & Policy CMS
+            </a>
+
             @if(Route::has('admin.scraper-monitor'))
             <a href="{{ route('admin.scraper-monitor') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.scraper-monitor') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-heart-pulse text-rose-500 w-5 text-center text-sm"></i> Scraper Monitor

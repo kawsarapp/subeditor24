@@ -248,7 +248,7 @@
                         <input type="checkbox" name="terms" value="1" {{ old('terms') ? 'checked' : '' }} required
                                class="mt-1 w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500">
                         <span class="text-xs text-slate-600 font-medium">
-                            আমি প্ল্যাটফর্মের <a href="#" class="text-indigo-600 font-bold hover:underline">ব্যবহারের শর্তাবলী</a> এবং <a href="#" class="text-indigo-600 font-bold hover:underline">গোপনীয়তা নীতি</a> মেনে নিচ্ছি।
+                            আমি প্ল্যাটফর্মের <a href="{{ route('legal.terms') }}" target="_blank" class="text-indigo-600 font-bold hover:underline">ব্যবহারের শর্তাবলী</a> এবং <a href="{{ route('legal.privacy') }}" target="_blank" class="text-indigo-600 font-bold hover:underline">গোপনীয়তা নীতি</a> মেনে নিচ্ছি।
                         </span>
                     </label>
                 </div>
@@ -277,8 +277,21 @@
         </div>
     </main>
 
-    <footer class="py-4 text-center text-xs text-slate-400">
-        &copy; {{ date('Y') }} Subeditor24. All rights reserved.
+    <footer class="py-6 text-center text-xs text-slate-400 space-y-2">
+        <div class="flex items-center justify-center gap-4 flex-wrap text-slate-500">
+            <a href="{{ route('legal.privacy') }}" class="hover:text-indigo-600 transition">গোপনীয়তা নীতি</a>
+            <span>•</span>
+            <a href="{{ route('legal.terms') }}" class="hover:text-indigo-600 transition">ব্যবহারের শর্তাবলী</a>
+            <span>•</span>
+            <a href="{{ route('legal.refund') }}" class="hover:text-indigo-600 transition">রিফান্ড নীতি</a>
+            <span>•</span>
+            <a href="{{ route('legal.about') }}" class="hover:text-indigo-600 transition">আমাদের সম্পর্কে</a>
+            <span>•</span>
+            <a href="{{ route('legal.contact') }}" class="hover:text-indigo-600 transition">যোগাযোগ</a>
+        </div>
+        <div>
+            &copy; {{ date('Y') }} Subeditor24. All rights reserved.
+        </div>
     </footer>
 
     <script>

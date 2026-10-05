@@ -273,9 +273,22 @@
             </div>
         </div>
 
-        {{-- Footer Link --}}
-        <div class="text-center py-8 text-xs text-slate-500">
-            <p>© {{ date('Y') }} Subeditor24 • অল-ইন-ওয়ান নিউজ পোর্টাল অটোমেশন ও এআই নিউজরুম</p>
+        {{-- Footer Link & Policy Links --}}
+        <div class="text-center py-8 text-xs text-slate-500 space-y-3">
+            <div class="flex items-center justify-center gap-4 flex-wrap text-slate-400 text-[11px]">
+                <a href="{{ route('legal.privacy') }}" class="hover:text-amber-400 transition">গোপনীয়তা নীতি</a>
+                <span>•</span>
+                <a href="{{ route('legal.terms') }}" class="hover:text-amber-400 transition">ব্যবহারের শর্তাবলী</a>
+                <span>•</span>
+                <a href="{{ route('legal.refund') }}" class="hover:text-amber-400 transition">রিফান্ড নীতি</a>
+                <span>•</span>
+                <a href="{{ route('legal.about') }}" class="hover:text-amber-400 transition">আমাদের সম্পর্কে</a>
+                <span>•</span>
+                <a href="{{ route('legal.contact') }}" class="hover:text-amber-400 transition">যোগাযোগ</a>
+            </div>
+            <p class="text-[11px] text-slate-600">
+                &copy; {{ date('Y') }} Subeditor24 • অল-ইন-ওয়ান নিউজ পোর্টাল অটোমেশন ও এআই নিউজরুম
+            </p>
         </div>
 
     </div>

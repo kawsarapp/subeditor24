@@ -135,6 +135,23 @@
                 </p>
             </div>
         </div>
+
+        <footer class="mt-6 text-center text-xs text-slate-400 space-y-2">
+            <div class="flex items-center justify-center gap-4 flex-wrap text-slate-500 text-[11px]">
+                <a href="{{ route('legal.privacy') }}" class="hover:text-indigo-600 transition">গোপনীয়তা নীতি</a>
+                <span>•</span>
+                <a href="{{ route('legal.terms') }}" class="hover:text-indigo-600 transition">ব্যবহারের শর্তাবলী</a>
+                <span>•</span>
+                <a href="{{ route('legal.refund') }}" class="hover:text-indigo-600 transition">রিফান্ড নীতি</a>
+                <span>•</span>
+                <a href="{{ route('legal.about') }}" class="hover:text-indigo-600 transition">আমাদের সম্পর্কে</a>
+                <span>•</span>
+                <a href="{{ route('legal.contact') }}" class="hover:text-indigo-600 transition">যোগাযোগ</a>
+            </div>
+            <div>
+                &copy; {{ date('Y') }} Subeditor24. All rights reserved.
+            </div>
+        </footer>
     </main>
 
     <script>

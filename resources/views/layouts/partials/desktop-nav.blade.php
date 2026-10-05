@@ -417,6 +417,9 @@
                                 <a href="{{ route('admin.vip-pricing.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-black text-amber-700 hover:bg-amber-50 hover:text-amber-600 transition-colors">
                                     <i class="fa-solid fa-crown text-amber-500 w-4"></i> VIP Pricing Manager
                                 </a>
+                                <a href="{{ route('admin.legal-pages.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                                    <i class="fa-solid fa-scale-balanced text-emerald-500 w-4"></i> Legal & Policy CMS
+                                </a>
                                 <div class="border-t border-slate-100 my-1"></div>
                                 @endif
 

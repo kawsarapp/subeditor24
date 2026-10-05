@@ -322,13 +322,27 @@
             </div>
         </div>
 
-        {{-- Contact Support Footer --}}
-        <div class="text-center py-8 border-t border-slate-800 text-xs text-slate-500">
+        {{-- Contact Support Footer & Legal Links --}}
+        <div class="text-center py-8 border-t border-slate-800 text-xs text-slate-500 space-y-3">
             <p>
                 কাস্টম এন্টারপ্রাইজ বা বিশেষ সহায়তার জন্য যোগাযোগ করুন: 
                 <a href="mailto:{{ $config['contact_email'] ?? 'support@newsmanage24.com' }}" class="text-indigo-400 hover:underline">{{ $config['contact_email'] ?? 'support@newsmanage24.com' }}</a> 
                 অথবা কল করুন <strong class="text-slate-300">{{ $config['contact_phone'] ?? '+880 1975-389599' }}</strong> 
-                অথবা <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $config['whatsapp_number'] ?? '8801975389599') }}" target="_blank" class="text-emerald-400 font-bold hover:underline inline-flex items-center gap-1"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                অথবা <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $config['whatsapp_number'] ?? '8801975389599') }}" target="_blank" onclick="if(window.fbq) fbq('track', 'Contact', { content_name: 'WhatsApp Pricing Footer Support' });" class="text-emerald-400 font-bold hover:underline inline-flex items-center gap-1"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+            </p>
+            <div class="flex items-center justify-center gap-4 flex-wrap text-slate-400 text-[11px] pt-1">
+                <a href="{{ route('legal.privacy') }}" class="hover:text-indigo-400 transition">গোপনীয়তা নীতি</a>
+                <span>•</span>
+                <a href="{{ route('legal.terms') }}" class="hover:text-indigo-400 transition">ব্যবহারের শর্তাবলী</a>
+                <span>•</span>
+                <a href="{{ route('legal.refund') }}" class="hover:text-indigo-400 transition">রিফান্ড নীতি</a>
+                <span>•</span>
+                <a href="{{ route('legal.about') }}" class="hover:text-indigo-400 transition">আমাদের সম্পর্কে</a>
+                <span>•</span>
+                <a href="{{ route('legal.contact') }}" class="hover:text-indigo-400 transition">যোগাযোগ</a>
+            </div>
+            <p class="text-[11px] text-slate-600">
+                &copy; {{ date('Y') }} Subeditor24. All rights reserved.
             </p>
         </div>
 
