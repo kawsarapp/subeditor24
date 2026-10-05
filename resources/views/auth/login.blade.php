@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login - Subeditor24</title>
+    
+    {{-- 📊 Meta Pixel Tracking --}}
+    @include('layouts.partials.meta-pixel')
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -127,7 +131,7 @@
                     </a>
                 </p>
                 <p class="text-[11px] text-slate-400">
-                    Need custom setup? <a href="https://wa.me/8801975389599" target="_blank" class="text-emerald-600 font-bold hover:underline">WhatsApp Support</a>
+                    Need custom setup? <a href="https://wa.me/8801975389599" target="_blank" onclick="if(window.fbq) fbq('track', 'Contact', { content_name: 'WhatsApp Support Login' });" class="text-emerald-600 font-bold hover:underline">WhatsApp Support</a>
                 </p>
             </div>
         </div>

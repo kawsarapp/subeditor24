@@ -490,5 +490,15 @@
 
     // Initialize default method
     selectPaymentMethod('bkash');
+
+    // 📊 Meta Pixel InitiateCheckout Tracking
+    if (window.fbq) {
+        fbq('track', 'InitiateCheckout', {
+            content_name: '{{ $plan->name }}',
+            content_category: 'SaaS Subscription',
+            value: {{ $price }},
+            currency: 'BDT'
+        });
+    }
 </script>
 @endsection

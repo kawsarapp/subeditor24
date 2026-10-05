@@ -38,6 +38,7 @@ class PricingController extends Controller
             'contact_email'            => 'support@newsmanage24.com',
             'contact_phone'            => '+880 1975-389599',
             'whatsapp_number'          => '8801975389599',
+            'facebook_pixel_id'        => env('FACEBOOK_PIXEL_ID', env('FB_PIXEL_ID', '')),
 
             // 👑 Special VIP / Custom Premium Solution for Media Giants
             'vip_plan_enabled'            => true,

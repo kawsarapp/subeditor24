@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>রেজিস্টার — Subeditor24 AI News Automation Platform</title>
+    
+    {{-- 📊 Meta Pixel Tracking --}}
+    @include('layouts.partials.meta-pixel')
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -265,7 +269,7 @@
                 </p>
                 <p class="text-[11px] text-slate-400 mt-2">
                     সহায়তা প্রয়োজন? সরাসরি যোগাযোগ করুন 
-                    <a href="https://wa.me/8801975389599" target="_blank" class="text-emerald-600 font-bold hover:underline inline-flex items-center gap-1">
+                    <a href="https://wa.me/8801975389599" target="_blank" onclick="if(window.fbq) fbq('track', 'Contact', { content_name: 'WhatsApp Support Register' });" class="text-emerald-600 font-bold hover:underline inline-flex items-center gap-1">
                         <i class="fa-brands fa-whatsapp"></i> WhatsApp সাপোর্ট
                     </a>
                 </p>

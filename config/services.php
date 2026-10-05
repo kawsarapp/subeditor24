@@ -74,5 +74,9 @@ return [
         'redirect'   => env('FACEBOOK_REDIRECT_URI', env('APP_URL', 'https://subeditor24.com') . '/facebook-pages/callback'),
     ],
 
+    'facebook_pixel' => [
+        'id' => env('FACEBOOK_PIXEL_ID', env('FB_PIXEL_ID')),
+    ],
+
 ];
 

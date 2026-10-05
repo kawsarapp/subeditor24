@@ -76,6 +76,7 @@ class PricingAdminController extends Controller
             'contact_email'               => $request->input('contact_email'),
             'contact_phone'               => $request->input('contact_phone'),
             'whatsapp_number'             => $request->input('whatsapp_number'),
+            'facebook_pixel_id'           => $request->input('facebook_pixel_id'),
 
             // 👑 VIP Custom Premium Plan Settings
             'vip_plan_enabled'            => $request->boolean('vip_plan_enabled', true),

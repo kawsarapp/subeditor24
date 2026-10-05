@@ -138,7 +138,7 @@
                     <a href="{{ route('billing.checkout', ['slug' => $plan->slug, 'mode' => 'special']) }}" class="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 transition block text-center transform hover:-translate-y-0.5 cursor-pointer">
                         <i class="fa-solid fa-crown mr-1"></i> ভিআইপি প্যাকেজ অর্ডার করুন 🚀
                     </a>
-                    <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $config['whatsapp_number'] ?? '8801975389599') }}?text={{ urlencode('Hello, I am interested in the Subeditor24 VIP Plan: ' . $plan->name) }}" target="_blank" class="w-full py-2 px-3 rounded-lg text-xs font-bold text-center text-slate-300 hover:text-emerald-400 hover:bg-slate-800/80 transition block cursor-pointer">
+                    <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $config['whatsapp_number'] ?? '8801975389599') }}?text={{ urlencode('Hello, I am interested in the Subeditor24 VIP Plan: ' . $plan->name) }}" target="_blank" onclick="if(window.fbq) fbq('track', 'Contact', { content_name: 'WhatsApp VIP Plan: ' + '{{ $plan->name }}' });" class="w-full py-2 px-3 rounded-lg text-xs font-bold text-center text-slate-300 hover:text-emerald-400 hover:bg-slate-800/80 transition block cursor-pointer">
                         <i class="fa-brands fa-whatsapp text-emerald-400 mr-1"></i> Executive WhatsApp Chat
                     </a>
                 </div>
@@ -185,10 +185,10 @@
                         $vipCustomUrl = !empty($config['vip_plan_btn_url']) ? $config['vip_plan_btn_url'] : "https://wa.me/{$vipWhatsApp}?text=" . urlencode('Hello, I am interested in Subeditor24 VIP Custom Enterprise.');
                     @endphp
                     <div class="space-y-2.5">
-                        <a href="{{ $vipCustomUrl }}" target="_blank" class="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 transition block cursor-pointer">
+                        <a href="{{ $vipCustomUrl }}" target="_blank" onclick="if(window.fbq) fbq('track', 'Contact', { content_name: 'VIP Demo Booking' });" class="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-amber-500/20 transition block cursor-pointer">
                             {{ $config['vip_plan_btn_text'] ?? 'ভিআইপি কনসালটেশন ও ডেমো বুক করুন 🚀' }}
                         </a>
-                        <a href="https://wa.me/{{ $vipWhatsApp }}" target="_blank" class="w-full py-2 px-3 rounded-lg text-xs font-bold text-slate-300 hover:text-emerald-400 transition block">
+                        <a href="https://wa.me/{{ $vipWhatsApp }}" target="_blank" onclick="if(window.fbq) fbq('track', 'Contact', { content_name: 'WhatsApp VIP Custom Enterprise' });" class="w-full py-2 px-3 rounded-lg text-xs font-bold text-slate-300 hover:text-emerald-400 transition block">
                             <i class="fa-brands fa-whatsapp text-emerald-400 mr-1"></i> Executive WhatsApp Chat
                         </a>
                     </div>
@@ -262,7 +262,7 @@
                 আমাদের এক্সিকিউটিভ টিমের সাথে সরাসরি আলোচনা করে আপনার পোর্টালের জন্য সবচেয়ে সাশ্রয়ী ও পাওয়ারফুল VIP প্যাকেজ নির্ধারণ করুন।
             </p>
             <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
-                <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $config['whatsapp_number'] ?? '8801975389599') }}?text={{ urlencode('Hello, I want to discuss a VIP Enterprise plan for our news organization.') }}" target="_blank" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-2">
+                <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $config['whatsapp_number'] ?? '8801975389599') }}?text={{ urlencode('Hello, I want to discuss a VIP Enterprise plan for our news organization.') }}" target="_blank" onclick="if(window.fbq) fbq('track', 'Contact', { content_name: 'WhatsApp VIP Enterprise Inquiry' });" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-2">
                     <i class="fa-brands fa-whatsapp text-sm"></i>
                     <span>সরাসরি WhatsApp এ কথা বলুন</span>
                 </a>

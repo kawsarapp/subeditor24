@@ -358,6 +358,23 @@
                     </div>
                 </div>
 
+                {{-- 📊 Meta / Facebook Pixel Tracking Settings --}}
+                <div class="bg-blue-50/50 dark:bg-blue-950/20 p-4 rounded-2xl border border-blue-200/80 dark:border-blue-900/60 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-blue-900 dark:text-blue-300 text-xs uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-brands fa-facebook text-blue-600 text-sm"></i> ৬. Meta (Facebook) Pixel কনফিগারেশন
+                        </h3>
+                        <span class="text-[10px] font-extrabold text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded-full">Boost Tracking</span>
+                    </div>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-400">
+                        ফেসবুক অ্যাডস ম্যানেজার বা ইভেন্ট ম্যানেজার থেকে আপনার <strong>Pixel ID</strong> টি এখানে দিন। এটি স্বয়ংক্রিয়ভাবে পুরো ওয়েবসাইটের সব পেজে <code>PageView</code>, <code>Lead</code>, <code>InitiateCheckout</code> এবং <code>WhatsApp Contact</code> ট্র্যাক করবে।
+                    </p>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 text-xs mb-1">Meta Pixel ID (15-16 ডিজিট)</label>
+                        <input type="text" name="facebook_pixel_id" value="{{ $config['facebook_pixel_id'] ?? '' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-mono font-bold text-xs" placeholder="e.g. 1138240454378873">
+                    </div>
+                </div>
+
                 {{-- Link to VIP Module --}}
                 <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-4">
                     <div class="flex items-center gap-3">

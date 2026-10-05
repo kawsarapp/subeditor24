@@ -22,6 +22,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Subeditor24">
     <link rel="apple-touch-icon" href="{{ asset('favicon.ico') }}">
+
+    {{-- 📊 Meta Pixel Tracking --}}
+    @include('layouts.partials.meta-pixel')
     
     {{-- Tailwind, Alpine.js & Icons --}}
     <script src="https://cdn.tailwindcss.com"></script>
