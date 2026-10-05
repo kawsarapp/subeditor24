@@ -22,9 +22,9 @@ s.parentNode.insertBefore(t,s)}(window, document,'script',
 @if(Auth::check())
 // Advanced Matching for Authenticated Users (High Accuracy Tracking)
 fbq('init', '{{ $pixelId }}', {
-    em: '{{ hash('sha256', strtolower(trim(Auth::user()->email))) }}',
+    em: '{{ strtolower(trim(Auth::user()->email)) }}',
     @if(Auth::user()->phone)
-    ph: '{{ hash('sha256', preg_replace('/[^\d]/', '', Auth::user()->phone)) }}'
+    ph: '{{ preg_replace('/[^\d]/', '', Auth::user()->phone) }}'
     @endif
 });
 @else
