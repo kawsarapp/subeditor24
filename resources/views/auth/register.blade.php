@@ -265,7 +265,7 @@
                 </p>
                 <p class="text-[11px] text-slate-400 mt-2">
                     সহায়তা প্রয়োজন? সরাসরি যোগাযোগ করুন 
-                    <a href="https://wa.me/8801771545972" target="_blank" class="text-emerald-600 font-bold hover:underline inline-flex items-center gap-1">
+                    <a href="https://wa.me/8801975389599" target="_blank" class="text-emerald-600 font-bold hover:underline inline-flex items-center gap-1">
                         <i class="fa-brands fa-whatsapp"></i> WhatsApp সাপোর্ট
                     </a>
                 </p>

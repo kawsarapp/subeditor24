@@ -94,7 +94,7 @@
                     <div>
                         <h4 class="text-xs font-bold text-white">যেকোনো সহায়তায় হটলাইন</h4>
                         <p class="text-[11px] text-slate-400 mt-0.5">
-                            WhatsApp: <a href="https://wa.me/{{ $paymentConfig['support_whatsapp'] ?? '8801771545972' }}" target="_blank" class="text-emerald-400 font-bold hover:underline">{{ $paymentConfig['support_phone'] ?? '+880 1771-545972' }}</a>
+                            WhatsApp: <a href="https://wa.me/{{ $paymentConfig['support_whatsapp'] ?? '8801975389599' }}" target="_blank" class="text-emerald-400 font-bold hover:underline">{{ $paymentConfig['support_phone'] ?? '+880 1975-389599' }}</a>
                         </p>
                     </div>
                 </div>
@@ -360,7 +360,7 @@
         let html = '';
 
         if (currentMethod === 'bkash') {
-            const num = paymentMethodsConfig.bkash_number || '01771-545972';
+            const num = paymentMethodsConfig.bkash_number || '01975-389599';
             const type = paymentMethodsConfig.bkash_type || 'Personal (Send Money)';
             const inst = paymentMethodsConfig.bkash_instruction || 'বিকাশ অ্যাপ থেকে Send Money করুন।';
             html = `
@@ -378,7 +378,7 @@
                 </div>
             `;
         } else if (currentMethod === 'nagad') {
-            const num = paymentMethodsConfig.nagad_number || '01771-545972';
+            const num = paymentMethodsConfig.nagad_number || '01975-389599';
             const type = paymentMethodsConfig.nagad_type || 'Personal (Send Money)';
             const inst = paymentMethodsConfig.nagad_instruction || 'নগদ অ্যাপ থেকে Send Money করুন।';
             html = `
@@ -396,7 +396,7 @@
                 </div>
             `;
         } else if (currentMethod === 'rocket') {
-            const num = paymentMethodsConfig.rocket_number || '01771-545972-8';
+            const num = paymentMethodsConfig.rocket_number || '01975-389599-8';
             const type = paymentMethodsConfig.rocket_type || 'Personal';
             const inst = paymentMethodsConfig.rocket_instruction || 'রকেট থেকে Send Money করুন।';
             html = `

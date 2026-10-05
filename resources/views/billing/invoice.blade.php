@@ -46,7 +46,7 @@
                         <span class="font-black text-2xl tracking-tight text-white">Subeditor<span class="text-indigo-500">24</span></span>
                     </div>
                     <p class="text-xs text-slate-400 mt-2">Next-Gen Newsroom CMS & Scraping Automation</p>
-                    <p class="text-[11px] text-slate-500 mt-0.5">Hotline: {{ $paymentConfig['support_phone'] ?? '+880 1771-545972' }}</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Hotline: {{ $paymentConfig['support_phone'] ?? '+880 1975-389599' }}</p>
                 </div>
 
                 <div class="text-left sm:text-right">

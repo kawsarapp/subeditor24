@@ -160,13 +160,13 @@ class UserSetting extends Model
     public static function getManualPaymentConfig(): array
     {
         $default = [
-            'bkash_number'       => '01771-545972',
+            'bkash_number'       => '01975-389599',
             'bkash_type'         => 'Personal (Send Money)',
             'bkash_instruction'  => 'বিকাশ অ্যাপ থেকে Send Money করুন এবং Transaction ID (TrxID) নিচে প্রদান করুন।',
-            'nagad_number'       => '01771-545972',
+            'nagad_number'       => '01975-389599',
             'nagad_type'         => 'Personal (Send Money)',
             'nagad_instruction'  => 'নগদ অ্যাপ থেকে Send Money করুন এবং Transaction ID (TrxID) নিচে প্রদান করুন।',
-            'rocket_number'      => '01771-545972-8',
+            'rocket_number'      => '01975-389599-8',
             'rocket_type'        => 'Personal',
             'rocket_instruction' => 'রকেট থেকে Send Money করুন এবং TrxID নিচে লিখুন।',
             'bank_name'          => 'Islami Bank Bangladesh Ltd.',
@@ -175,8 +175,8 @@ class UserSetting extends Model
             'bank_branch'        => 'Dhaka Principal Branch',
             'bank_routing_no'    => '125272847',
             'bank_instruction'   => 'ব্যাংক ডিপোজিট বা ফান্ড ট্রান্সফার করে স্লিপ/স্ক্রিনশট আপলোড করুন।',
-            'support_phone'      => '+880 1771-545972',
-            'support_whatsapp'   => '8801771545972',
+            'support_phone'      => '+880 1975-389599',
+            'support_whatsapp'   => '8801975389599',
         ];
 
         $superAdmin = User::where('role', 'super_admin')->first();

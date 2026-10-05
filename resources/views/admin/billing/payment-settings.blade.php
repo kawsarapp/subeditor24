@@ -43,7 +43,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">বিকাশ নম্বর</label>
-                        <input type="text" name="bkash_number" value="{{ $config['bkash_number'] ?? '01771-545972' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-pink-500 focus:outline-none">
+                        <input type="text" name="bkash_number" value="{{ $config['bkash_number'] ?? '01975-389599' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-pink-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">অ্যাকাউন্ট টাইপ</label>
@@ -67,7 +67,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">নগদ নম্বর</label>
-                        <input type="text" name="nagad_number" value="{{ $config['nagad_number'] ?? '01771-545972' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-orange-500 focus:outline-none">
+                        <input type="text" name="nagad_number" value="{{ $config['nagad_number'] ?? '01975-389599' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-orange-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">অ্যাকাউন্ট টাইপ</label>
@@ -91,7 +91,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">রকেট নম্বর</label>
-                        <input type="text" name="rocket_number" value="{{ $config['rocket_number'] ?? '01771-545972-8' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-purple-500 focus:outline-none">
+                        <input type="text" name="rocket_number" value="{{ $config['rocket_number'] ?? '01975-389599-8' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-purple-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">অ্যাকাউন্ট টাইপ</label>
@@ -150,11 +150,11 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">ফোন সাপোর্ট নম্বর</label>
-                        <input type="text" name="support_phone" value="{{ $config['support_phone'] ?? '+880 1771-545972' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-emerald-500 focus:outline-none">
+                        <input type="text" name="support_phone" value="{{ $config['support_phone'] ?? '+880 1975-389599' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-emerald-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">WhatsApp নম্বর (International format, no +)</label>
-                        <input type="text" name="support_whatsapp" value="{{ $config['support_whatsapp'] ?? '8801771545972' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-emerald-500 focus:outline-none">
+                        <input type="text" name="support_whatsapp" value="{{ $config['support_whatsapp'] ?? '8801975389599' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-emerald-500 focus:outline-none">
                     </div>
                 </div>
             </div>

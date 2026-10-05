@@ -127,7 +127,7 @@
                     </a>
                 </p>
                 <p class="text-[11px] text-slate-400">
-                    Need custom setup? <a href="https://wa.me/8801771545972" target="_blank" class="text-emerald-600 font-bold hover:underline">WhatsApp Support</a>
+                    Need custom setup? <a href="https://wa.me/8801975389599" target="_blank" class="text-emerald-600 font-bold hover:underline">WhatsApp Support</a>
                 </p>
             </div>
         </div>

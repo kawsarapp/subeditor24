@@ -36,8 +36,8 @@ class PricingController extends Controller
             'policy_card_2_title'      => '🔥 Early Bird (Lifetime Lock)',
             'policy_card_2_desc'       => 'অফারের মধ্যে সাবস্ক্রাইব করলে Special Price-এর ছাড় পাবেন এবং সেই নির্ধারিত মূল্য আপনার জন্য সবসময়ের জন্য (Lifetime) Lock থাকবে!',
             'contact_email'            => 'support@newsmanage24.com',
-            'contact_phone'            => '+880 1771-545972',
-            'whatsapp_number'          => '8801771545972',
+            'contact_phone'            => '+880 1975-389599',
+            'whatsapp_number'          => '8801975389599',
 
             // 👑 Special VIP / Custom Premium Solution for Media Giants
             'vip_plan_enabled'            => true,

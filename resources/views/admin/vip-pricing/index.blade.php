@@ -190,11 +190,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Executive WhatsApp (Digits only)</label>
-                            <input type="text" name="whatsapp_number" value="{{ $config['whatsapp_number'] ?? '8801771545972' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold">
+                            <input type="text" name="whatsapp_number" value="{{ $config['whatsapp_number'] ?? '8801975389599' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold">
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Executive Hotline Phone</label>
-                            <input type="text" name="contact_phone" value="{{ $config['contact_phone'] ?? '+880 1771-545972' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold">
+                            <input type="text" name="contact_phone" value="{{ $config['contact_phone'] ?? '+880 1975-389599' }}" class="w-full border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold">
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Executive Email</label>

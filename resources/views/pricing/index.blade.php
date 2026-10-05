@@ -215,7 +215,7 @@
                             <i class="fa-solid {{ $isFreeTrial ? 'fa-gift' : 'fa-rocket' }} mr-1"></i> {{ $isFreeTrial ? 'ফ্রি ট্রায়াল শুরু করুন' : 'সাবস্ক্রাইব ও অর্ডার করুন 🚀' }}
                         </a>
                     @endif
-                    <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $config['whatsapp_number'] ?? '8801771545972') }}?text={{ urlencode('Hello, I want to subscribe to SubEditor24 ' . $plan->name . ' Plan.') }}" target="_blank" class="w-full py-2 px-3 rounded-lg text-[11px] font-bold text-center text-slate-400 hover:text-emerald-400 hover:bg-slate-800/80 transition block cursor-pointer">
+                    <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $config['whatsapp_number'] ?? '8801975389599') }}?text={{ urlencode('Hello, I want to subscribe to SubEditor24 ' . $plan->name . ' Plan.') }}" target="_blank" class="w-full py-2 px-3 rounded-lg text-[11px] font-bold text-center text-slate-400 hover:text-emerald-400 hover:bg-slate-800/80 transition block cursor-pointer">
                         <i class="fa-brands fa-whatsapp text-emerald-400 mr-1"></i> Talk on WhatsApp
                     </a>
                 </div>
@@ -327,8 +327,8 @@
             <p>
                 কাস্টম এন্টারপ্রাইজ বা বিশেষ সহায়তার জন্য যোগাযোগ করুন: 
                 <a href="mailto:{{ $config['contact_email'] ?? 'support@newsmanage24.com' }}" class="text-indigo-400 hover:underline">{{ $config['contact_email'] ?? 'support@newsmanage24.com' }}</a> 
-                অথবা কল করুন <strong class="text-slate-300">{{ $config['contact_phone'] ?? '+880 1771-545972' }}</strong> 
-                অথবা <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $config['whatsapp_number'] ?? '8801771545972') }}" target="_blank" class="text-emerald-400 font-bold hover:underline inline-flex items-center gap-1"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                অথবা কল করুন <strong class="text-slate-300">{{ $config['contact_phone'] ?? '+880 1975-389599' }}</strong> 
+                অথবা <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $config['whatsapp_number'] ?? '8801975389599') }}" target="_blank" class="text-emerald-400 font-bold hover:underline inline-flex items-center gap-1"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
             </p>
         </div>
 
