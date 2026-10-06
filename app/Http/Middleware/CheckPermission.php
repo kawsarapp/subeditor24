@@ -15,8 +15,15 @@ class CheckPermission
             return redirect('login');
         }
 
-        // ২. ইউজারের ওই পারমিশন আছে কি না চেক (সুপার এডমিন হলে অটো এক্সেস পাবে)
-        if (!auth()->user()->hasPermission($permission)) {
+        $user = auth()->user();
+
+        // ২. সুপার এডমিন সবসময় পারমিশন পাবে
+        if ($user->role === 'super_admin') {
+            return $next($request);
+        }
+
+        // ৩. ইউজারের ওই পারমিশন আছে কি না চেক
+        if (!$user->hasPermission($permission)) {
             if ($request->ajax()) {
                 return response()->json(['success' => false, 'message' => 'আপনার এই কাজের অনুমতি নেই।'], 403);
             }

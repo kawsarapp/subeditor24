@@ -121,7 +121,7 @@ class SettingsController extends Controller
             'smartproxy_api_token' => 'nullable|string',
             'custom_api_url'       => 'nullable|string|max:255',
             'custom_category_url'  => 'nullable|string|max:255',
-            'custom_api_mapping'   => 'nullable|json',
+            'custom_api_mapping'   => 'nullable|string',
             'auto_clean_days'      => 'nullable|integer|min:1|max:90',
 
             // AI Options

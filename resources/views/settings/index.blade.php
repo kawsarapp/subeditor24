@@ -1956,7 +1956,7 @@
 
         <!-- Sticky or Bottom Save Bar -->
         <div class="flex justify-end pt-4 sticky bottom-4 z-20">
-            <button type="submit" class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-3 rounded-xl font-bold text-base hover:shadow-xl transition transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer shadow-lg">
+            <button type="submit" id="btnSaveSettings" form="mainSettingsForm" class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-3 rounded-xl font-bold text-base hover:shadow-xl transition transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer shadow-lg">
                 <i class="fas fa-save"></i> <span>Save Changes</span>
             </button>
         </div>
@@ -1964,6 +1964,22 @@
 </div>
 
 <script>
+    // ==========================================================
+    // Save Button explicit submission safety
+    // ==========================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('mainSettingsForm');
+        const btn = document.getElementById('btnSaveSettings');
+        if (form && btn) {
+            btn.addEventListener('click', function(e) {
+                // Ensure form submits smoothly
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Saving Changes...</span>';
+                form.submit();
+            });
+        }
+    });
+
     // ==========================================================
     // Accordion Expand / Collapse Handlers
     // ==========================================================
@@ -2102,10 +2118,12 @@
     // 1. Fetch Categories (with caching)
     function fetchWPCategories(forceRefresh = false) {
         const btn = document.getElementById('refresh-cat-btn');
-        const originalText = btn.innerHTML;
+        const originalText = btn ? btn.innerHTML : '';
         
-        btn.innerHTML = '⏳ Loading...';
-        btn.disabled = true;
+        if (btn) {
+            btn.innerHTML = '⏳ Loading...';
+            btn.disabled = true;
+        }
 
         let url = "{{ route('settings.fetch-categories') }}";
         if (forceRefresh) {
@@ -2116,7 +2134,7 @@
             .then(res => res.json())
             .then(data => {
                 if(data.error) {
-                    alert(data.error);
+                    if (forceRefresh) alert(data.error);
                 } else {
                     populateDropdowns(data);
                     if(forceRefresh) alert('✅ Category list updated successfully!');
@@ -2124,11 +2142,13 @@
             })
             .catch(err => {
                 console.error(err);
-                alert('Connection Failed! Please check Settings.');
+                if (forceRefresh) alert('Connection Failed! Please check Settings.');
             })
             .finally(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
             });
     }
 
@@ -2136,7 +2156,8 @@
     function populateDropdowns(categories) {
         const selectors = document.querySelectorAll('.wp-cat-selector');
         selectors.forEach(select => {
-            const savedVal = select.nextElementSibling.value;
+            const hiddenSibling = select.nextElementSibling;
+            const savedVal = hiddenSibling ? hiddenSibling.value : (select.value || '');
             let options = '<option value="">Select Category</option>';
             
             if (Array.isArray(categories)) {
@@ -2509,45 +2530,47 @@ Assistant: ১. ভিডিওর মূল চমক বা কিউরিও
     }
 
     function syncVisualToMappingJson() {
-        const authType = document.getElementById('v_auth_type').value;
-        const authHeaderName = document.getElementById('v_auth_header_name').value.trim();
-        const imageFormat = document.getElementById('v_image_format').value;
-        const categoryType = document.getElementById('v_category_type').value;
+        const customApiMappingEl = document.getElementById('custom_api_mapping');
+        const authTypeEl = document.getElementById('v_auth_type');
+        if (!customApiMappingEl || !authTypeEl) return;
+
+        const authType = authTypeEl.value || 'bearer';
+        const authHeaderName = document.getElementById('v_auth_header_name')?.value?.trim() || '';
+        const imageFormat = document.getElementById('v_image_format')?.value || 'url';
+        const categoryType = document.getElementById('v_category_type')?.value || 'slug';
 
         const authHeaderWrapper = document.getElementById('v_auth_header_wrapper');
-        if (authType === 'custom_header') {
-            authHeaderWrapper.style.display = 'block';
-        } else {
-            authHeaderWrapper.style.display = 'none';
+        if (authHeaderWrapper) {
+            authHeaderWrapper.style.display = (authType === 'custom_header') ? 'block' : 'none';
         }
 
         const fields = {};
-        const titleField = document.getElementById('v_field_title').value.trim();
+        const titleField = document.getElementById('v_field_title')?.value?.trim();
         if (titleField) fields.title = titleField;
 
-        const contentField = document.getElementById('v_field_content').value.trim();
+        const contentField = document.getElementById('v_field_content')?.value?.trim();
         if (contentField) fields.content = contentField;
 
-        const imageField = document.getElementById('v_field_image').value.trim();
+        const imageField = document.getElementById('v_field_image')?.value?.trim();
         if (imageField) fields.image = imageField;
 
-        const categoryField = document.getElementById('v_field_category').value.trim();
+        const categoryField = document.getElementById('v_field_category')?.value?.trim();
         if (categoryField) fields.category = categoryField;
 
-        const tagsField = document.getElementById('v_field_tags').value.trim();
+        const tagsField = document.getElementById('v_field_tags')?.value?.trim();
         if (tagsField) fields.tags = tagsField;
 
-        const slugField = document.getElementById('v_field_slug').value.trim();
+        const slugField = document.getElementById('v_field_slug')?.value?.trim();
         if (slugField) fields.slug = slugField;
 
-        const responseIdKey = document.getElementById('v_field_response_id_key').value.trim();
-        const responseUrlKey = document.getElementById('v_field_response_url_key').value.trim();
+        const responseIdKey = document.getElementById('v_field_response_id_key')?.value?.trim();
+        const responseUrlKey = document.getElementById('v_field_response_url_key')?.value?.trim();
 
         // Extra static key-values
         const extraData = {};
         document.querySelectorAll('.extra-field-row').forEach(row => {
-            const k = row.querySelector('.extra-key').value.trim();
-            const v = row.querySelector('.extra-val').value.trim();
+            const k = row.querySelector('.extra-key')?.value?.trim();
+            const v = row.querySelector('.extra-val')?.value?.trim();
             if (k) extraData[k] = v;
         });
 
@@ -2572,41 +2595,46 @@ Assistant: ১. ভিডিওর মূল চমক বা কিউরিও
         if (responseIdKey) mappingObj.response_id_key = responseIdKey;
         if (responseUrlKey) mappingObj.response_url_key = responseUrlKey;
 
-        document.getElementById('custom_api_mapping').value = JSON.stringify(mappingObj, null, 2);
+        customApiMappingEl.value = JSON.stringify(mappingObj, null, 2);
     }
 
     function syncMappingJsonToVisual() {
-        const rawJson = document.getElementById('custom_api_mapping').value.trim();
+        const customApiMappingEl = document.getElementById('custom_api_mapping');
+        if (!customApiMappingEl) return;
+        const rawJson = customApiMappingEl.value.trim();
         if (!rawJson) return;
 
         try {
             const obj = JSON.parse(rawJson);
-            if (obj.auth_type) document.getElementById('v_auth_type').value = obj.auth_type;
-            if (obj.auth_header_name) document.getElementById('v_auth_header_name').value = obj.auth_header_name;
-            if (obj.image_format) document.getElementById('v_image_format').value = obj.image_format;
-            if (obj.category_type) document.getElementById('v_category_type').value = obj.category_type;
+            if (obj.auth_type && document.getElementById('v_auth_type')) document.getElementById('v_auth_type').value = obj.auth_type;
+            if (obj.auth_header_name && document.getElementById('v_auth_header_name')) document.getElementById('v_auth_header_name').value = obj.auth_header_name;
+            if (obj.image_format && document.getElementById('v_image_format')) document.getElementById('v_image_format').value = obj.image_format;
+            if (obj.category_type && document.getElementById('v_category_type')) document.getElementById('v_category_type').value = obj.category_type;
 
-            if (obj.auth_type === 'custom_header') {
-                document.getElementById('v_auth_header_wrapper').style.display = 'block';
+            const wrapper = document.getElementById('v_auth_header_wrapper');
+            if (wrapper && obj.auth_type === 'custom_header') {
+                wrapper.style.display = 'block';
             }
 
             if (obj.fields) {
-                if (obj.fields.title) document.getElementById('v_field_title').value = obj.fields.title;
-                if (obj.fields.content) document.getElementById('v_field_content').value = obj.fields.content;
-                if (obj.fields.image) document.getElementById('v_field_image').value = obj.fields.image;
-                if (obj.fields.category) document.getElementById('v_field_category').value = obj.fields.category;
-                if (obj.fields.tags) document.getElementById('v_field_tags').value = obj.fields.tags;
-                if (obj.fields.slug) document.getElementById('v_field_slug').value = obj.fields.slug;
+                if (obj.fields.title && document.getElementById('v_field_title')) document.getElementById('v_field_title').value = obj.fields.title;
+                if (obj.fields.content && document.getElementById('v_field_content')) document.getElementById('v_field_content').value = obj.fields.content;
+                if (obj.fields.image && document.getElementById('v_field_image')) document.getElementById('v_field_image').value = obj.fields.image;
+                if (obj.fields.category && document.getElementById('v_field_category')) document.getElementById('v_field_category').value = obj.fields.category;
+                if (obj.fields.tags && document.getElementById('v_field_tags')) document.getElementById('v_field_tags').value = obj.fields.tags;
+                if (obj.fields.slug && document.getElementById('v_field_slug')) document.getElementById('v_field_slug').value = obj.fields.slug;
             }
 
-            if (obj.response_id_key) document.getElementById('v_field_response_id_key').value = obj.response_id_key;
-            if (obj.response_url_key) document.getElementById('v_field_response_url_key').value = obj.response_url_key;
+            if (obj.response_id_key && document.getElementById('v_field_response_id_key')) document.getElementById('v_field_response_id_key').value = obj.response_id_key;
+            if (obj.response_url_key && document.getElementById('v_field_response_url_key')) document.getElementById('v_field_response_url_key').value = obj.response_url_key;
 
             if (obj.extra_data) {
                 const container = document.getElementById('extra_fields_container');
-                container.innerHTML = '';
-                for (const [k, v] of Object.entries(obj.extra_data)) {
-                    addExtraFieldRow(k, v);
+                if (container) {
+                    container.innerHTML = '';
+                    for (const [k, v] of Object.entries(obj.extra_data)) {
+                        addExtraFieldRow(k, v);
+                    }
                 }
             }
         } catch (e) {
