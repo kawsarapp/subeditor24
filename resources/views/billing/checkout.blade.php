@@ -496,7 +496,7 @@
         fbq('track', 'InitiateCheckout', {
             content_name: '{{ $plan->name }}',
             content_category: 'SaaS Subscription',
-            value: {{ $price }},
+            value: {{ $basePrice ?? 0 }},
             currency: 'BDT'
         });
     }

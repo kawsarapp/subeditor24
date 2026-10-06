@@ -50,8 +50,9 @@ class BillingController extends Controller
 
         $paymentConfig = UserSetting::getManualPaymentConfig();
         $pageConfig = PricingController::getPageConfig();
+        $price = $basePrice;
 
-        return view('billing.checkout', compact('plan', 'mode', 'cycle', 'monthlyRate', 'basePrice', 'paymentConfig', 'pageConfig', 'user'));
+        return view('billing.checkout', compact('plan', 'mode', 'cycle', 'monthlyRate', 'basePrice', 'price', 'paymentConfig', 'pageConfig', 'user'));
     }
 
     /**
