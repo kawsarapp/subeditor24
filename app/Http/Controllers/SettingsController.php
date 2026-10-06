@@ -24,7 +24,7 @@ class SettingsController extends Controller
     public function index()
     {
         $user = Auth::user();
-        if ($user->role !== 'super_admin' && !$user->hasPermission('can_settings')) {
+        if ($user->role !== 'super_admin' && $user->role !== 'admin' && !$user->hasPermission('can_settings')) {
             return redirect()->route('news.index')->with('error', 'আপনার সেটিংস পরিবর্তনের অনুমতি নেই।');
         }
 
@@ -87,7 +87,12 @@ class SettingsController extends Controller
      */
     public function update(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin' && !Auth::user()->hasPermission('can_settings')) {
+        $user = Auth::user();
+        $isSuperAdmin = $user->role === 'super_admin';
+        $isAdmin = $user->role === 'admin';
+        $canSettings = $isSuperAdmin || $isAdmin || $user->hasPermission('can_settings');
+
+        if (!$canSettings) {
             return abort(403, 'Unauthorized');
         }
 
@@ -144,9 +149,6 @@ class SettingsController extends Controller
         
         $settings = UserSetting::firstOrCreate(['user_id' => Auth::id()]);
 
-        $user = Auth::user();
-        $isSuperAdmin = $user->role === 'super_admin';
-
         // 🌐 Proxy & Scraper Settings
         if ($isSuperAdmin || $user->hasPermission('can_settings_proxy')) {
             if ($request->has('proxy_username')) $settings->proxy_username = $request->proxy_username;
@@ -164,14 +166,14 @@ class SettingsController extends Controller
         }
 
         // 🎨 Branding Settings
-        if ($isSuperAdmin || $user->hasPermission('can_settings_branding')) {
+        if ($isSuperAdmin || $isAdmin || $user->hasPermission('can_settings_branding') || $user->hasPermission('can_settings')) {
             if ($request->has('brand_name')) $settings->brand_name = $request->brand_name;
             if ($request->has('default_theme_color')) $settings->default_theme_color = $request->default_theme_color ?? 'red';
             if ($request->filled('logo_url')) $settings->logo_url = $request->logo_url;
         }
 
         // 🔗 WordPress & Laravel API Settings
-        if ($isSuperAdmin || $user->hasPermission('can_settings_wp_laravel')) {
+        if ($isSuperAdmin || $isAdmin || $user->hasPermission('can_settings_wp_laravel') || $user->hasPermission('can_settings')) {
             if ($request->has('wp_url')) $settings->wp_url = $request->wp_url;
             if ($request->has('wp_username')) $settings->wp_username = $request->wp_username;
             if ($request->has('wp_app_password')) $settings->wp_app_password = $request->wp_app_password;
@@ -187,7 +189,7 @@ class SettingsController extends Controller
         }
 
         // 📱 Social Media Settings
-        if ($isSuperAdmin || $user->hasPermission('can_settings_social')) {
+        if ($isSuperAdmin || $isAdmin || $user->hasPermission('can_settings_social') || $user->hasPermission('can_settings')) {
             if ($request->has('fb_page_id')) $settings->fb_page_id = $request->fb_page_id;
             if ($request->has('fb_access_token')) $settings->fb_access_token = $request->fb_access_token;
             // `has('post_to_fb')` is an isset check for checkboxes
@@ -206,21 +208,21 @@ class SettingsController extends Controller
         }
 
         // 📂 Category Mapping
-        if ($isSuperAdmin || $user->hasPermission('can_settings_category')) {
+        if ($isSuperAdmin || $isAdmin || $user->hasPermission('can_settings_category') || $user->hasPermission('can_settings')) {
             if ($request->has('category_mapping')) {
                 $settings->category_mapping = $request->category_mapping;
             }
         }
 
         // 🌍 Target Language Settings
-        if ($isSuperAdmin || $user->hasPermission('can_settings_target_language')) {
+        if ($isSuperAdmin || $isAdmin || $user->hasPermission('can_settings_target_language') || $user->hasPermission('can_settings')) {
             if ($request->has('target_language')) {
                 $settings->target_language = $request->target_language;
             }
         }
 
         // 🤖 AI Configuration & Custom Prompt
-        if ($isSuperAdmin || $user->hasPermission('can_settings_ai') || $user->hasPermission('can_settings_ai_prompt')) {
+        if ($isSuperAdmin || $isAdmin || $user->hasPermission('can_settings_ai') || $user->hasPermission('can_settings_ai_prompt') || $user->hasPermission('can_settings')) {
             if ($request->filled('primary_ai') && ($isSuperAdmin || $user->hasPermission('can_settings_ai'))) {
                 $settings->primary_ai = $request->primary_ai;
             }
@@ -242,7 +244,7 @@ class SettingsController extends Controller
             if ($request->has('custom_rewrite_prompt')) {
                 $settings->custom_rewrite_prompt = $request->custom_rewrite_prompt;
             }
-            if ($isSuperAdmin || $user->hasPermission('can_settings_ai_prompt')) {
+            if ($isSuperAdmin || $isAdmin || $user->hasPermission('can_settings_ai_prompt') || $user->hasPermission('can_settings')) {
                 if ($request->has('ai_copilot_custom_knowledge')) {
                     $settings->ai_copilot_custom_knowledge = $request->ai_copilot_custom_knowledge;
                 }
@@ -259,7 +261,7 @@ class SettingsController extends Controller
         }
 
         // 🎙️ AI Voice Narration & TTS Settings
-        if ($isSuperAdmin || $user->hasPermission('can_settings_ai') || $user->hasPermission('can_settings_tts')) {
+        if ($isSuperAdmin || $isAdmin || $user->hasPermission('can_settings_ai') || $user->hasPermission('can_settings_tts') || $user->hasPermission('can_settings')) {
             $settings->tts_enabled = $request->has('tts_enabled');
             if ($request->has('tts_provider')) $settings->tts_provider = $request->tts_provider;
             if ($request->has('tts_voice_male')) $settings->tts_voice_male = $request->tts_voice_male;

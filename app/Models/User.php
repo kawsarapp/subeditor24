@@ -261,6 +261,29 @@ class User extends Authenticatable
 	public function hasPermission($permission)
     {
         if ($this->role === 'super_admin') return true;
+
+        $baseNewsroomPermissions = [
+            'can_settings', 'can_settings_branding', 'can_settings_target_language',
+            'can_settings_wp_laravel', 'can_settings_social', 'can_settings_category',
+            'can_settings_ai_prompt', 'can_scrape', 'can_ai', 'can_studio', 
+            'can_direct_publish', 'can_view_published', 'can_auto_post', 
+            'can_central_feed', 'can_custom_photo_card', 'can_manage_staff'
+        ];
+
+        // An admin (newsroom owner) has newsroom management permissions
+        if ($this->role === 'admin' && in_array($permission, $baseNewsroomPermissions)) {
+            return true;
+        }
+
+        // If a user has 'can_settings' permission, allow standard settings features
+        if (in_array($permission, [
+            'can_settings', 'can_settings_branding', 'can_settings_target_language',
+            'can_settings_wp_laravel', 'can_settings_social', 'can_settings_category',
+            'can_settings_ai_prompt'
+        ]) && is_array($this->permissions) && in_array('can_settings', $this->permissions)) {
+            return true;
+        }
+
         return is_array($this->permissions) && in_array($permission, $this->permissions);
     }
 

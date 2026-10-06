@@ -133,7 +133,10 @@ class AuthController extends Controller
                 'permissions'           => [
                     'can_scrape', 'can_ai', 'can_studio', 'can_direct_publish', 
                     'can_view_published', 'can_auto_post', 'can_central_feed', 
-                    'can_custom_photo_card', 'can_manage_staff'
+                    'can_custom_photo_card', 'can_manage_staff', 'can_settings',
+                    'can_settings_branding', 'can_settings_target_language',
+                    'can_settings_wp_laravel', 'can_settings_social',
+                    'can_settings_category', 'can_settings_ai_prompt'
                 ],
             ]);
 
