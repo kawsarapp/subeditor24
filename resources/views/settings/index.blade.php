@@ -54,7 +54,7 @@
     @endif
     
     {{-- 1. Profile Update Section (Collapsible) --}}
-    <form action="{{ route('settings.update-profile') }}" method="POST" class="mb-6">
+    <form action="{{ route('settings.update-profile') }}" method="POST" class="mb-6" novalidate>
         @csrf
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-white hover:bg-gray-50 transition" onclick="toggleSettingsAccordion(this)">
@@ -347,7 +347,7 @@
     @endif
 
     {{-- 2. Main Settings Form Start --}}
-    <form action="{{ route('settings.update') }}" method="POST" class="space-y-6">
+    <form action="{{ route('settings.update') }}" method="POST" class="space-y-6" novalidate id="mainSettingsForm">
         @csrf
 
         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_proxy'))
@@ -606,7 +606,7 @@
                     </div>
                     <div class="col-span-1 md:col-span-2">
                         <label class="block text-xs font-bold text-gray-700 mb-1">Publication Logo URL (Optional)</label>
-                        <input type="url" name="logo_url" value="{{ old('logo_url', $settings->logo_url ?? '') }}" placeholder="https://example.com/logo.png" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
+                        <input type="text" name="logo_url" value="{{ old('logo_url', $settings->logo_url ?? '') }}" placeholder="https://example.com/logo.png" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
                         <p class="text-[11px] text-gray-500 mt-1">Enter public image URL or upload directly inside Template Studio.</p>
                     </div>
                 </div>
@@ -1283,7 +1283,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="col-span-1 md:col-span-2">
                         <label class="block text-xs font-bold text-gray-700 mb-1">Website URL</label>
-                        <input type="url" id="wp_url" name="wp_url" value="{{ old('wp_url', $settings->wp_url ?? '') }}" placeholder="https://mywebsite.com" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
+                        <input type="text" id="wp_url" name="wp_url" value="{{ old('wp_url', $settings->wp_url ?? '') }}" placeholder="https://mywebsite.com" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">Username</label>
@@ -1344,7 +1344,7 @@
                                 <i class="fas fa-info"></i>
                             </button>
                         </div>
-                        <input type="url" id="laravel_site_url" name="laravel_site_url" value="{{ old('laravel_site_url', $settings->laravel_site_url ?? '') }}" 
+                        <input type="text" id="laravel_site_url" name="laravel_site_url" value="{{ old('laravel_site_url', $settings->laravel_site_url ?? '') }}" 
                                placeholder="https://mywebsite.com" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition text-xs">
                         <p class="text-[11px] text-gray-500 mt-1">Your website domain URL (e.g. <code>https://mywebsite.com</code>).</p>
                     </div>
@@ -1448,7 +1448,7 @@
                                         <i class="fas fa-info"></i>
                                     </button>
                                 </div>
-                                <input type="url" id="custom_api_url" name="custom_api_url" value="{{ old('custom_api_url', $settings->custom_api_url ?? '') }}" 
+                                <input type="text" id="custom_api_url" name="custom_api_url" value="{{ old('custom_api_url', $settings->custom_api_url ?? '') }}" 
                                        placeholder="https://mywebsite.com/api/v1/articles/create" class="w-full border-slate-300 rounded-lg shadow-sm text-xs focus:ring-indigo-500 focus:border-indigo-500">
                                 <p class="text-[10px] text-slate-400 mt-1">If empty, defaults to <code>Base_URL/api/external-news-post</code>.</p>
                             </div>
@@ -1459,7 +1459,7 @@
                                         <i class="fas fa-info"></i>
                                     </button>
                                 </div>
-                                <input type="url" id="custom_category_url" name="custom_category_url" value="{{ old('custom_category_url', $settings->custom_category_url ?? '') }}" 
+                                <input type="text" id="custom_category_url" name="custom_category_url" value="{{ old('custom_category_url', $settings->custom_category_url ?? '') }}" 
                                        placeholder="https://mywebsite.com/api/v1/categories" class="w-full border-slate-300 rounded-lg shadow-sm text-xs focus:ring-indigo-500 focus:border-indigo-500">
                                 <p class="text-[10px] text-slate-400 mt-1">API URL to fetch categories from your website.</p>
                             </div>

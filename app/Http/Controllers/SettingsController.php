@@ -93,7 +93,7 @@ class SettingsController extends Controller
 
         $request->validate([
             'brand_name'           => 'nullable|string|max:50',
-            'wp_url'               => 'nullable|url',
+            'wp_url'               => 'nullable|string|max:255',
             'wp_username'          => 'nullable|string',
             'wp_app_password'      => 'nullable|string',
             'fb_page_id'           => 'nullable|string',
@@ -104,7 +104,7 @@ class SettingsController extends Controller
             'twitter_api_secret'   => 'nullable|string',
             'twitter_access_token' => 'nullable|string',
             'twitter_access_secret'=> 'nullable|string',
-            'laravel_site_url'     => 'nullable|url',
+            'laravel_site_url'     => 'nullable|string|max:255',
             'laravel_api_token'    => 'nullable|string',
             'laravel_route_prefix' => 'nullable|string|max:40',
             'proxy_username'       => 'nullable|string',
@@ -114,8 +114,8 @@ class SettingsController extends Controller
             'scraping_api_provider'=> 'nullable|string|in:scrape_do,decodo',
             'scrape_do_token'      => 'nullable|string',
             'smartproxy_api_token' => 'nullable|string',
-            'custom_api_url'       => 'nullable|url',
-            'custom_category_url'  => 'nullable|url',
+            'custom_api_url'       => 'nullable|string|max:255',
+            'custom_category_url'  => 'nullable|string|max:255',
             'custom_api_mapping'   => 'nullable|json',
             'auto_clean_days'      => 'nullable|integer|min:1|max:90',
 
