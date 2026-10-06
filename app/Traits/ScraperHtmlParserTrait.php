@@ -172,14 +172,26 @@ trait ScraperHtmlParserTrait
     {
         if (!empty($customSelectors['title']) && $crawler->filter($customSelectors['title'])->count() > 0) {
             $candidate = trim($crawler->filter($customSelectors['title'])->first()->text());
-            if (mb_strlen($candidate, 'UTF-8') >= 10 && !in_array(strtolower($candidate), ['search', 'menu', 'home', 'login', 'untitled', 'breaking news', 'latest news'])) {
+            if (mb_strlen($candidate, 'UTF-8') >= 5 && !in_array(strtolower($candidate), ['search', 'menu', 'home', 'login', 'untitled', 'breaking news', 'latest news'])) {
                 return $candidate;
             }
         }
 
-        if ($crawler->filter('meta[property="og:title"]')->count() > 0) return trim($crawler->filter('meta[property="og:title"]')->attr('content'));
-        if ($crawler->filter('meta[name="twitter:title"]')->count() > 0) return trim($crawler->filter('meta[name="twitter:title"]')->attr('content'));
-        if ($crawler->filter('article h1, .post-header h1, h1')->count() > 0) return trim($crawler->filter('article h1, .post-header h1, h1')->first()->text());
+        if ($crawler->filter('meta[property="og:title"]')->count() > 0 && !empty(trim($crawler->filter('meta[property="og:title"]')->attr('content') ?? ''))) {
+            return trim($crawler->filter('meta[property="og:title"]')->attr('content'));
+        }
+        if ($crawler->filter('meta[name="twitter:title"]')->count() > 0 && !empty(trim($crawler->filter('meta[name="twitter:title"]')->attr('content') ?? ''))) {
+            return trim($crawler->filter('meta[name="twitter:title"]')->attr('content'));
+        }
+        if ($crawler->filter('h1.entry-title, h1.post-title, h1.title, h1.heading, article h1, .post-header h1, h1')->count() > 0) {
+            $h1Text = trim($crawler->filter('h1.entry-title, h1.post-title, h1.title, h1.heading, article h1, .post-header h1, h1')->first()->text());
+            if (strlen($h1Text) >= 5) return $h1Text;
+        }
+        if ($crawler->filter('title')->count() > 0) {
+            $titleText = trim($crawler->filter('title')->first()->text());
+            $titleText = preg_replace('/\s*[-–|]\s*[^-–|]+$/u', '', $titleText);
+            if (strlen($titleText) >= 5) return trim($titleText);
+        }
         return "Untitled News";
     }
 

@@ -174,10 +174,10 @@
                                 <span class="text-base">🔥</span>
                                 <span>Nagad</span>
                             </button>
-                            {{-- Rocket --}}
+                            {{-- Rocket & Upay --}}
                             <button type="button" onclick="selectPaymentMethod('rocket')" id="btnMethod_rocket" class="method-btn border border-slate-800 bg-slate-950/60 text-slate-400 p-3 rounded-2xl flex flex-col items-center gap-1.5 transition text-xs font-extrabold hover:border-slate-700 cursor-pointer">
                                 <span class="text-base">🚀</span>
-                                <span>Rocket</span>
+                                <span>Rocket / Upay</span>
                             </button>
                             {{-- Bank --}}
                             <button type="button" onclick="selectPaymentMethod('bank_transfer')" id="btnMethod_bank_transfer" class="method-btn border border-slate-800 bg-slate-950/60 text-slate-400 p-3 rounded-2xl flex flex-col items-center gap-1.5 transition text-xs font-extrabold hover:border-slate-700 cursor-pointer">
@@ -361,8 +361,8 @@
 
         if (currentMethod === 'bkash') {
             const num = paymentMethodsConfig.bkash_number || '01975-389599';
-            const type = paymentMethodsConfig.bkash_type || 'Personal (Send Money)';
-            const inst = paymentMethodsConfig.bkash_instruction || 'বিকাশ অ্যাপ থেকে Send Money করুন।';
+            const type = paymentMethodsConfig.bkash_type || 'Merchant (Make Payment)';
+            const inst = paymentMethodsConfig.bkash_instruction || 'বিকাশ অ্যাপ থেকে Make Payment অপশন নির্বাচন করে পেমেন্ট করুন।';
             html = `
                 <div class="flex items-start justify-between gap-4">
                     <div>
@@ -378,7 +378,7 @@
                 </div>
             `;
         } else if (currentMethod === 'nagad') {
-            const num = paymentMethodsConfig.nagad_number || '01975-389599';
+            const num = paymentMethodsConfig.nagad_number || '01771-545972';
             const type = paymentMethodsConfig.nagad_type || 'Personal (Send Money)';
             const inst = paymentMethodsConfig.nagad_instruction || 'নগদ অ্যাপ থেকে Send Money করুন।';
             html = `
@@ -396,14 +396,14 @@
                 </div>
             `;
         } else if (currentMethod === 'rocket') {
-            const num = paymentMethodsConfig.rocket_number || '01975-389599-8';
-            const type = paymentMethodsConfig.rocket_type || 'Personal';
-            const inst = paymentMethodsConfig.rocket_instruction || 'রকেট থেকে Send Money করুন।';
+            const num = paymentMethodsConfig.rocket_number || '01771-545972';
+            const type = paymentMethodsConfig.rocket_type || 'Personal (Rocket / Upay)';
+            const inst = paymentMethodsConfig.rocket_instruction || 'রকেট বা উপায় (Upay) অ্যাপ থেকে Send Money করুন।';
             html = `
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <div class="flex items-center gap-2">
-                            <span class="font-extrabold text-purple-400 text-sm">Rocket ${type}:</span>
+                            <span class="font-extrabold text-purple-400 text-sm">Rocket / Upay ${type}:</span>
                             <span class="font-mono font-black text-white text-base">${num}</span>
                         </div>
                         <p class="text-slate-400 mt-1">${inst}</p>
@@ -414,12 +414,12 @@
                 </div>
             `;
         } else if (currentMethod === 'bank_transfer') {
-            const bank = paymentMethodsConfig.bank_name || 'Islami Bank Bangladesh Ltd.';
-            const accName = paymentMethodsConfig.bank_account_name || 'NewsManage24 Technologies';
-            const accNo = paymentMethodsConfig.bank_account_no || '20501234567890123';
-            const branch = paymentMethodsConfig.bank_branch || 'Dhaka Principal Branch';
-            const routing = paymentMethodsConfig.bank_routing_no || '125272847';
-            const inst = paymentMethodsConfig.bank_instruction || 'ব্যাংক ডিপোজিট করে স্লিপ আপলোড করুন।';
+            const bank = paymentMethodsConfig.bank_name || 'Dhaka Bank PLC';
+            const accName = paymentMethodsConfig.bank_account_name || 'Kawsar Ahmed';
+            const accNo = paymentMethodsConfig.bank_account_no || '1142750023075';
+            const branch = paymentMethodsConfig.bank_branch || 'Pragati Sarani Branch';
+            const routing = paymentMethodsConfig.bank_routing_no || '085260344';
+            const inst = paymentMethodsConfig.bank_instruction || 'ব্যাংক ডিপোজিট বা ফান্ড ট্রান্সফার (BEFTN/NPSB/RTGS) করে স্লিপ/স্ক্রিনশট আপলোড করুন।';
             html = `
                 <div class="space-y-1.5">
                     <div class="text-blue-400 font-extrabold text-sm">${bank}</div>

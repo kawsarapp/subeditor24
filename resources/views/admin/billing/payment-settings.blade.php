@@ -47,13 +47,13 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">অ্যাকাউন্ট টাইপ</label>
-                        <input type="text" name="bkash_type" value="{{ $config['bkash_type'] ?? 'Personal (Send Money)' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-pink-500 focus:outline-none">
+                        <input type="text" name="bkash_type" value="{{ $config['bkash_type'] ?? 'Merchant (Make Payment)' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-pink-500 focus:outline-none">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-300 mb-1.5">বিকাশ পেমেন্ট নির্দেশনা (গ্রাহকের জন্য)</label>
-                    <textarea name="bkash_instruction" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-pink-500 focus:outline-none">{{ $config['bkash_instruction'] ?? 'বিকাশ অ্যাপ থেকে Send Money করুন এবং Transaction ID (TrxID) নিচে প্রদান করুন।' }}</textarea>
+                    <textarea name="bkash_instruction" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-pink-500 focus:outline-none">{{ $config['bkash_instruction'] ?? 'বিকাশ অ্যাপ থেকে Make Payment অপশন নির্বাচন করে পেমেন্ট সম্পন্ন করে Transaction ID (TrxID) নিচে প্রদান করুন।' }}</textarea>
                 </div>
             </div>
 
@@ -67,7 +67,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">নগদ নম্বর</label>
-                        <input type="text" name="nagad_number" value="{{ $config['nagad_number'] ?? '01975-389599' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-orange-500 focus:outline-none">
+                        <input type="text" name="nagad_number" value="{{ $config['nagad_number'] ?? '01771-545972' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-orange-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">অ্যাকাউন্ট টাইপ</label>
@@ -81,27 +81,27 @@
                 </div>
             </div>
 
-            {{-- 3. Rocket Settings --}}
+            {{-- 3. Rocket & Upay Settings --}}
             <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-4">
                 <h3 class="text-base font-extrabold text-purple-400 flex items-center gap-2">
                     <span class="text-lg">🚀</span>
-                    <span>Rocket (রকেট) অ্যাকাউন্ট কনফিগারেশন</span>
+                    <span>Rocket & Upay (রকেট ও উপায়) অ্যাকাউন্ট কনফিগারেশন</span>
                 </h3>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1.5">রকেট নম্বর</label>
-                        <input type="text" name="rocket_number" value="{{ $config['rocket_number'] ?? '01975-389599-8' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-purple-500 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">রকেট / উপায় নম্বর</label>
+                        <input type="text" name="rocket_number" value="{{ $config['rocket_number'] ?? '01771-545972' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-purple-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">অ্যাকাউন্ট টাইপ</label>
-                        <input type="text" name="rocket_type" value="{{ $config['rocket_type'] ?? 'Personal' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-purple-500 focus:outline-none">
+                        <input type="text" name="rocket_type" value="{{ $config['rocket_type'] ?? 'Personal (Rocket / Upay)' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-purple-500 focus:outline-none">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5">রকেট পেমেন্ট নির্দেশনা</label>
-                    <textarea name="rocket_instruction" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 focus:outline-none">{{ $config['rocket_instruction'] ?? 'রকেট থেকে Send Money করুন এবং TrxID নিচে লিখুন।' }}</textarea>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">রকেট ও উপায় পেমেন্ট নির্দেশনা</label>
+                    <textarea name="rocket_instruction" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-purple-500 focus:outline-none">{{ $config['rocket_instruction'] ?? 'রকেট বা উপায় (Upay) অ্যাপ থেকে Send Money করুন এবং TrxID নিচে লিখুন।' }}</textarea>
                 </div>
             </div>
 
@@ -115,28 +115,28 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">ব্যাংকের নাম</label>
-                        <input type="text" name="bank_name" value="{{ $config['bank_name'] ?? 'Islami Bank Bangladesh Ltd.' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-blue-500 focus:outline-none">
+                        <input type="text" name="bank_name" value="{{ $config['bank_name'] ?? 'Dhaka Bank PLC' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-blue-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">অ্যাকাউন্ট নাম (Account Title)</label>
-                        <input type="text" name="bank_account_name" value="{{ $config['bank_account_name'] ?? 'NewsManage24 Technologies' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-blue-500 focus:outline-none">
+                        <input type="text" name="bank_account_name" value="{{ $config['bank_account_name'] ?? 'Kawsar Ahmed' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-blue-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">অ্যাকাউন্ট নম্বর</label>
-                        <input type="text" name="bank_account_no" value="{{ $config['bank_account_no'] ?? '20501234567890123' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-blue-500 focus:outline-none">
+                        <input type="text" name="bank_account_no" value="{{ $config['bank_account_no'] ?? '1142750023075' }}" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:border-blue-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1.5">ব্রাঞ্চ ও রাউটিং নম্বর</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="text" name="bank_branch" value="{{ $config['bank_branch'] ?? 'Dhaka Principal Branch' }}" placeholder="Branch" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:border-blue-500 focus:outline-none">
-                            <input type="text" name="bank_routing_no" value="{{ $config['bank_routing_no'] ?? '125272847' }}" placeholder="Routing" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:border-blue-500 focus:outline-none">
+                            <input type="text" name="bank_branch" value="{{ $config['bank_branch'] ?? 'Pragati Sarani Branch' }}" placeholder="Branch" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:border-blue-500 focus:outline-none">
+                            <input type="text" name="bank_routing_no" value="{{ $config['bank_routing_no'] ?? '085260344' }}" placeholder="Routing" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:border-blue-500 focus:outline-none">
                         </div>
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-300 mb-1.5">ব্যাংক ডিপোজিট নির্দেশনা</label>
-                    <textarea name="bank_instruction" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-blue-500 focus:outline-none">{{ $config['bank_instruction'] ?? 'ব্যাংক ডিপোজিট বা ফান্ড ট্রান্সফার করে স্লিপ/স্ক্রিনশট আপলোড করুন।' }}</textarea>
+                    <textarea name="bank_instruction" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:border-blue-500 focus:outline-none">{{ $config['bank_instruction'] ?? 'ব্যাংক ডিপোজিট বা ফান্ড ট্রান্সফার (BEFTN/NPSB/RTGS) করে ট্রানজেকশন স্লিপ/স্ক্রিনশট আপলোড করুন।' }}</textarea>
                 </div>
             </div>
 

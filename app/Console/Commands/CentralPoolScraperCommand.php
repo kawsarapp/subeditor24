@@ -17,6 +17,11 @@ class CentralPoolScraperCommand extends Command
 
     public function handle(NewsScraperService $scraper)
     {
+        if (env('DISABLE_CENTRAL_SCRAPER', false) || env('APP_ENV') === 'local_no_scrape') {
+            $this->info("⏸️ [Central Pool Sync] Scraper is paused via DISABLE_CENTRAL_SCRAPER=true (Local mode).");
+            return 0;
+        }
+
         $limit = (int) $this->option('limit') ?: 12;
 
         // 1. Fetch eligible websites due for scraping

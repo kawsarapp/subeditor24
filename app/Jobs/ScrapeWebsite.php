@@ -19,9 +19,11 @@ use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver; 
 use Illuminate\Support\Facades\Storage;
 
+use App\Traits\ScraperEnginesTrait;
+
 class ScrapeWebsite implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, ScraperEnginesTrait;
 
     protected $websiteId;
     protected $userId;
@@ -184,7 +186,7 @@ class ScrapeWebsite implements ShouldQueue
                 }
             }
 
-            if (!$listPageHtml || strlen($listPageHtml) < 500 || \App\Traits\ScraperEnginesTrait::isErrorHtml($listPageHtml)) {
+            if (!$listPageHtml || strlen($listPageHtml) < 500 || self::isErrorHtml($listPageHtml)) {
                 Log::error("❌ Failed to load list page content (empty or error page received).");
                 $this->logScraperRun($website->id, $website->url, 'list', 'failed', null, null, 'Failed to load list page content (empty or error page detected)');
                 return;
@@ -246,7 +248,7 @@ class ScrapeWebsite implements ShouldQueue
                     Log::info("✅ Next.js __NEXT_DATA__ Parser: Found " . count($nextDataLinks) . " items.");
                     $count = 0;
                     foreach (array_slice($nextDataLinks, 0, $limit ?? 5) as $item) {
-                        if (!empty($item['link']) && !empty($item['title']) && strlen($item['title']) > 5 && !\App\Traits\ScraperEnginesTrait::isErrorTitleOrText($item['title'])) {
+                        if (!empty($item['link']) && !empty($item['title']) && strlen($item['title']) > 5 && !self::isErrorTitleOrText($item['title'])) {
                             Log::info("⚡ Dispatching Job for: " . \Illuminate\Support\Str::limit($item['title'], 30));
                             \App\Jobs\ProcessSingleNews::dispatch($item['link'], $item['title'], $this->userId, $website->id, $item['image'] ?? null)
                                 ->delay(now()->addSeconds($count * 2));
@@ -273,7 +275,7 @@ class ScrapeWebsite implements ShouldQueue
                     Log::info("✅ Quintype CMS Parser: Found " . count($qtLinks) . " items for {$website->url}");
                     $count = 0;
                     foreach (array_slice($qtLinks, 0, $limit ?? 5) as $item) {
-                        if (!empty($item['link']) && !empty($item['title']) && strlen($item['title']) > 5 && !\App\Traits\ScraperEnginesTrait::isErrorTitleOrText($item['title'])) {
+                        if (!empty($item['link']) && !empty($item['title']) && strlen($item['title']) > 5 && !self::isErrorTitleOrText($item['title'])) {
                             Log::info("⚡ Dispatching Job for: " . \Illuminate\Support\Str::limit($item['title'], 30));
                             \App\Jobs\ProcessSingleNews::dispatch(
                                 $item['link'],
@@ -310,7 +312,7 @@ class ScrapeWebsite implements ShouldQueue
                             $link = $item['url'] ?? null;
                             $title = $item['fullheadline'] ?? $item['headline'] ?? null;
                             $image = $item['thumbMedium'] ?? $item['thumbSmall'] ?? null;
-                            if (!empty($link) && !empty($title) && strlen($title) > 5 && !\App\Traits\ScraperEnginesTrait::isErrorTitleOrText($title)) {
+                            if (!empty($link) && !empty($title) && strlen($title) > 5 && !self::isErrorTitleOrText($title)) {
                                 if (!NewsItem::where('original_link', $link)->where('user_id', $this->userId)->exists()) {
                                     Log::info("⚡ Dispatching Job for: " . \Illuminate\Support\Str::limit($title, 30));
                                     \App\Jobs\ProcessSingleNews::dispatch($link, $title, $this->userId, $website->id, $image);
@@ -397,11 +399,20 @@ class ScrapeWebsite implements ShouldQueue
                             $link = $node->filter('a')->first()->attr('href');
                             if (empty($title)) $title = trim($node->text());
                         }
+                        // Support for container wrapped inside anchor (e.g. Next.js / modern cards: <a href="..."><article>...</article></a>)
+                        if (!$link) {
+                            try {
+                                $closestA = $node->closest('a');
+                                if ($closestA && $closestA->count() > 0) {
+                                    $link = $closestA->attr('href');
+                                }
+                            } catch (\Throwable $e) {}
+                        }
                     }
 
                     // ভ্যালিডেশন — CSS selector string that leaked as title is rejected
-                    $looksLikeCssSelector = preg_match('/^[.#\[\w-]+(\s+[.#\[\w-]+)*$/', trim($title)) && !preg_match('/[\x{0980}-\x{09FF}]/u', $title);
-                    if (!$link || strlen($title) < 5 || $looksLikeCssSelector || \App\Traits\ScraperEnginesTrait::isErrorTitleOrText($title)) return;
+                    $looksLikeCssSelector = ((str_starts_with(trim($title), '.') || str_starts_with(trim($title), '#') || str_starts_with(trim($title), '[')) || preg_match('/^[a-z0-9_-]+[.#][a-z0-9_-]+/i', trim($title)) || str_contains($title, ' > ') || str_contains($title, ' + ')) && !str_contains($title, '  ');
+                    if (!$link || strlen($title) < 3 || $looksLikeCssSelector || self::isErrorTitleOrText($title)) return;
 
                     // URL Fix
                     $parsedUrl = parse_url($website->url);
