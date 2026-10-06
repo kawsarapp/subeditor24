@@ -66,6 +66,14 @@ class EdgeTtsEngine implements TtsEngineInterface
         // Python Edge-TTS script execution
         $pythonScript = <<<PYTHON
 import sys
+import os
+import glob
+
+# Ensure user site-packages (e.g. /home/subeditorkawsar/.local/lib/python3.*/site-packages) are discoverable by PHP/web processes
+for p in glob.glob('/home/*/.local/lib/python*/site-packages') + glob.glob('/root/.local/lib/python*/site-packages'):
+    if os.path.isdir(p) and p not in sys.path:
+        sys.path.insert(0, p)
+
 import asyncio
 import edge_tts
 
