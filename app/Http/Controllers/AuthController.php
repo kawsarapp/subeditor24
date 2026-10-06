@@ -101,7 +101,17 @@ class AuthController extends Controller
         try {
             DB::beginTransaction();
 
-            // ৬. ইউজার তৈরি (Client SaaS Admin with 7 Days Free Trial & 20 Credits)
+            // ৬. ট্রায়াল প্ল্যান কনফিগারেশন ডায়নামিক লোড
+            $trialPlan = \App\Models\PricingPlan::where('slug', 'free-trial')->orWhere('standard_price', '<=', 0)->first();
+            $trialDays = (int) ($trialPlan?->custom_limits['trial_days'] ?? 7);
+            if ($trialDays <= 0) $trialDays = 7;
+            $trialCredits = (int) ($trialPlan?->custom_limits['welcome_credits'] ?? 20);
+            if ($trialCredits < 0) $trialCredits = 20;
+            $dailyPostLimit = (int) ($trialPlan?->daily_news_limit ?? 10);
+            $staffLimit = (int) ($trialPlan?->reporters_limit ?? 5);
+            $defaultLang = \App\Models\UserSetting::getSettingWithFallback(null, 'target_language') ?? 'bn';
+
+            // ইউজার তৈরি (Client SaaS Admin with Dynamic Free Trial & Credits)
             $user = User::create([
                 'name'                  => trim($request->name),
                 'email'                 => strtolower(trim($request->email)),
@@ -112,14 +122,14 @@ class AuthController extends Controller
                 'subscription_status'   => 'trial',
                 'subscription_cycle'    => 'trial',
                 'joining_date'          => Carbon::today(),
-                'credits'               => 20,
-                'total_credits_limit'   => 20,
-                'daily_post_limit'      => 10,
+                'credits'               => $trialCredits,
+                'total_credits_limit'   => $trialCredits,
+                'daily_post_limit'      => $dailyPostLimit,
                 'daily_bg_remove_limit' => 10,
                 'daily_crawl_limit'     => 20,
                 'daily_ai_limit'        => 20,
-                'staff_limit'           => 5,
-                'expire_date'           => Carbon::now()->addDays(7),
+                'staff_limit'           => $staffLimit,
+                'expire_date'           => Carbon::now()->addDays($trialDays),
                 'permissions'           => [
                     'can_scrape', 'can_ai', 'can_studio', 'can_direct_publish', 
                     'can_view_published', 'can_auto_post', 'can_central_feed', 
@@ -135,7 +145,7 @@ class AuthController extends Controller
                 'allowed_templates'  => ['ntv', 'rtv', 'dhakapost', 'todayevents'],
                 'default_template'   => 'dhakapost',
                 'scraper_method'     => 'direct',
-                'target_language'    => 'bn',
+                'target_language'    => $defaultLang,
                 'is_auto_posting'    => false,
             ]);
 
@@ -143,9 +153,9 @@ class AuthController extends Controller
             CreditHistory::create([
                 'user_id'        => $user->id,
                 'action_type'    => 'welcome_bonus',
-                'description'    => '🎉 ওয়েলকাম বোনাস: ৭ দিনের ফ্রি ট্রায়াল ও ২০ ফ্রি ক্রেডিট',
-                'credits_change' => 20,
-                'balance_after'  => 20,
+                'description'    => "🎉 ওয়েলকাম বোনাস: {$trialDays} দিনের ফ্রি ট্রায়াল ও {$trialCredits} ফ্রি ক্রেডিট",
+                'credits_change' => $trialCredits,
+                'balance_after'  => $trialCredits,
             ]);
 
             DB::commit();
