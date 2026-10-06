@@ -95,7 +95,27 @@ PYTHON;
 
             if (!$process->isSuccessful() || !file_exists($absolutePath) || filesize($absolutePath) < 512) {
                 $errorMsg = $process->getErrorOutput() ?: 'Edge-TTS synthesis failed or output file empty.';
-                Log::error("❌ EdgeTtsEngine Error: " . $errorMsg);
+                Log::warning("⚠️ EdgeTtsEngine Error: {$errorMsg}. Attempting HTTP fallback...");
+
+                // Attempt seamless HTTP fallback so the user always gets their audio
+                $lang = str_starts_with($voice, 'en') ? 'en' : 'bn';
+                if ($this->synthesizeViaHttpFallback($text, $absolutePath, $lang)) {
+                    Log::info("✅ HTTP Audio Fallback succeeded for News Audio.");
+                    return [
+                        'success'        => true,
+                        'audio_path'     => $relativeStoragePath,
+                        'audio_url'      => asset('storage/' . $relativeStoragePath),
+                        'audio_provider' => $this->getProviderName() . ' (fallback)',
+                        'audio_voice'    => $voice,
+                        'cached'         => false,
+                        'error'          => null,
+                    ];
+                }
+
+                if (str_contains($errorMsg, 'No module named') && str_contains($errorMsg, 'edge_tts')) {
+                    $errorMsg = "সার্ভারে Python 'edge-tts' লাইব্রেরি ইনস্টল নেই। সার্ভারের টার্মিনালে রান করুন: pip install edge-tts";
+                }
+
                 return [
                     'success' => false,
                     'error'   => $errorMsg,
@@ -113,6 +133,22 @@ PYTHON;
             ];
         } catch (\Exception $e) {
             Log::error("❌ EdgeTtsEngine Exception: " . $e->getMessage());
+
+            // Attempt seamless HTTP fallback on exception as well
+            $lang = str_starts_with($voice, 'en') ? 'en' : 'bn';
+            if ($this->synthesizeViaHttpFallback($text, $absolutePath, $lang)) {
+                Log::info("✅ HTTP Audio Fallback succeeded after exception.");
+                return [
+                    'success'        => true,
+                    'audio_path'     => $relativeStoragePath,
+                    'audio_url'      => asset('storage/' . $relativeStoragePath),
+                    'audio_provider' => $this->getProviderName() . ' (fallback)',
+                    'audio_voice'    => $voice,
+                    'cached'         => false,
+                    'error'          => null,
+                ];
+            }
+
             return [
                 'success' => false,
                 'error'   => $e->getMessage(),
@@ -121,5 +157,76 @@ PYTHON;
             @unlink($tempTextFile);
             @unlink($tempPyScript);
         }
+    }
+
+    /**
+     * Seamless HTTP TTS Fallback (requires 0 external Python packages)
+     */
+    protected function synthesizeViaHttpFallback(string $text, string $absolutePath, string $lang = 'bn'): bool
+    {
+        try {
+            $chunks = $this->splitTextIntoChunks($text, 150);
+            if (empty($chunks)) return false;
+
+            $audioContent = '';
+            foreach ($chunks as $chunk) {
+                if (empty(trim($chunk))) continue;
+
+                $response = \Illuminate\Support\Facades\Http::withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Referer'    => 'https://translate.google.com/',
+                ])->timeout(15)->get('https://translate.google.com/translate_tts', [
+                    'ie'     => 'UTF-8',
+                    'q'      => $chunk,
+                    'tl'     => str_starts_with($lang, 'en') ? 'en' : 'bn',
+                    'client' => 'tw-ob',
+                ]);
+
+                if ($response->successful() && strlen($response->body()) > 100) {
+                    $audioContent .= $response->body();
+                }
+            }
+
+            if (strlen($audioContent) > 500) {
+                file_put_contents($absolutePath, $audioContent);
+                return true;
+            }
+        } catch (\Throwable $e) {
+            Log::warning("⚠️ HTTP TTS Fallback synthesis error: " . $e->getMessage());
+        }
+
+        return false;
+    }
+
+    /**
+     * Split text into chunked sentences
+     */
+    protected function splitTextIntoChunks(string $text, int $maxLength = 150): array
+    {
+        $cleanText = preg_replace('/\s+/', ' ', trim(strip_tags($text)));
+        if (mb_strlen($cleanText) <= $maxLength) {
+            return [$cleanText];
+        }
+
+        $sentences = preg_split('/([।!?\.\n]+)/u', $cleanText, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+        $chunks = [];
+        $currentChunk = '';
+
+        foreach ($sentences as $sentence) {
+            if (mb_strlen($currentChunk . $sentence) <= $maxLength) {
+                $currentChunk .= $sentence;
+            } else {
+                if (!empty(trim($currentChunk))) {
+                    $chunks[] = trim($currentChunk);
+                }
+                $currentChunk = $sentence;
+            }
+        }
+
+        if (!empty(trim($currentChunk))) {
+            $chunks[] = trim($currentChunk);
+        }
+
+        return $chunks;
     }
 }
