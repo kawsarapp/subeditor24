@@ -49,8 +49,8 @@
             <div>
                 <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Target Language</label>
                 <select name="target_language" class="w-full bg-slate-50 border-slate-300 text-slate-900 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-3 text-sm font-semibold">
-                    <option value="bn">Bengali (Default)</option>
-                    <option value="en">English</option>
+                    <option value="bn" {{ (auth()->user()->settings?->target_language ?? 'bn') === 'bn' ? 'selected' : '' }}>Bengali (Default)</option>
+                    <option value="en" {{ (auth()->user()->settings?->target_language ?? '') === 'en' ? 'selected' : '' }}>English</option>
                 </select>
             </div>
 

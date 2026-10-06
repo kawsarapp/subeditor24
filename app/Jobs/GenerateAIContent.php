@@ -71,13 +71,14 @@ class GenerateAIContent implements ShouldQueue
             }
 
             // User Setting Overrides Website Setting if they manually set it in their profile
-            $userSettings = \App\Models\UserSetting::where('user_id', $news->user_id)->first();
-            if ($userSettings && !empty($userSettings->target_language)) {
-                $targetLanguage = $userSettings->target_language;
+            $effectiveUserId = $this->staffId ?? $news->user_id;
+            $userTargetLang = \App\Models\UserSetting::getSettingWithFallback($effectiveUserId, 'target_language');
+            if (!empty($userTargetLang)) {
+                $targetLanguage = $userTargetLang;
             }
 
-            // 🔥 পরিবর্তন: rewrite মেথডে $isRetry, $news->user_id এবং $targetLanguage প্যারামিটারটি পাস করা হচ্ছে
-            $aiResponse = $aiWriter->rewrite($fullContext, $title, $isRetry, $news->user_id, $targetLanguage);
+            // 🔥 পরিবর্তন: rewrite মেথডে $isRetry, $effectiveUserId এবং $targetLanguage প্যারামিটারটি পাস করা হচ্ছে
+            $aiResponse = $aiWriter->rewrite($fullContext, $title, $isRetry, $effectiveUserId, $targetLanguage);
 
             $cleanText = strip_tags($aiResponse['content']);
             $cleanText = preg_replace('/\s+/', ' ', $cleanText);
