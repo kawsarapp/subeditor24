@@ -124,18 +124,14 @@ trait ApiPostingTrait
                     }
 
                     // Fetch and attach binary image
-                    try {
-                        $imgResponse = Http::timeout(25)->withOptions(['verify' => false])->get($websiteImage);
-                        if ($imgResponse->successful()) {
-                            $multipart[] = [
-                                'name'     => (string)$mapping['image'],
-                                'contents' => $imgResponse->body(),
-                                'filename' => basename(parse_url($websiteImage, PHP_URL_PATH)) ?: 'news_image.jpg'
-                            ];
-                            Log::info("🖼️ Binary Image attached for Multipart API");
-                        }
-                    } catch (\Exception $e) {
-                        Log::warning("⚠️ Image Fetch Failed: " . $e->getMessage());
+                    $imgData = $this->getImageBinaryAndMime($websiteImage);
+                    if ($imgData && isset($mapping['image'])) {
+                        $multipart[] = [
+                            'name'     => (string)$mapping['image'],
+                            'contents' => $imgData['bytes'],
+                            'filename' => $imgData['filename']
+                        ];
+                        Log::info("🖼️ Binary Image attached for Multipart API: {$imgData['filename']}");
                     }
 
                     $client = new \GuzzleHttp\Client([
@@ -172,21 +168,17 @@ trait ApiPostingTrait
                     }
 
                     // Image handling (URL or Base64)
-                    if (isset($mapping['image']) && !empty($websiteImage)) {
+                    $normalizedImgUrl = $this->normalizeImageUrl($websiteImage);
+                    if (isset($mapping['image']) && !empty($normalizedImgUrl)) {
                         if ($imageFormat === 'base64') {
-                            try {
-                                $imgResp = Http::timeout(25)->withOptions(['verify' => false])->get($websiteImage);
-                                if ($imgResp->successful()) {
-                                    $mime = $imgResp->header('Content-Type') ?: 'image/jpeg';
-                                    $jsonPayload[$mapping['image']] = 'data:' . $mime . ';base64,' . base64_encode($imgResp->body());
-                                } else {
-                                    $jsonPayload[$mapping['image']] = $websiteImage;
-                                }
-                            } catch (\Exception $e) {
-                                $jsonPayload[$mapping['image']] = $websiteImage;
+                            $imgData = $this->getImageBinaryAndMime($websiteImage);
+                            if ($imgData) {
+                                $jsonPayload[$mapping['image']] = 'data:' . $imgData['mime'] . ';base64,' . base64_encode($imgData['bytes']);
+                            } else {
+                                $jsonPayload[$mapping['image']] = $normalizedImgUrl;
                             }
                         } else {
-                            $jsonPayload[$mapping['image']] = $websiteImage;
+                            $jsonPayload[$mapping['image']] = $normalizedImgUrl;
                         }
                     }
 
@@ -248,31 +240,53 @@ trait ApiPostingTrait
                     return $result;
                 }
 
+                $formattedImageUrl = $this->normalizeImageUrl($websiteImage);
+
                 $apiUrl = $baseUrl . '/api/external-news-post';
                 $payload = [
-                    'token'         => $settings->laravel_api_token,
-                    'title'         => $finalTitle,
-                    'content'       => $finalContent,
-                    'image_url'     => $websiteImage,
-                    'audio_url'     => $news->audio_url ?? null,
-                    'hashtags'      => $hashtags,
-                    'slug'          => Str::slug($finalTitle),
-                    'category_name' => $news->category ?? 'General',
-                    'category_ids'  => $categories,
-                    'original_link' => $news->original_link ?? '',
-                    'published_at'  => now()->format('Y-m-d H:i:s')
+                    'token'               => $settings->laravel_api_token,
+                    'title'               => $finalTitle,
+                    'content'             => $finalContent,
+                    'image_url'           => $formattedImageUrl,
+                    'image'               => $formattedImageUrl,
+                    'featured_image'      => $formattedImageUrl,
+                    'featured_image_url'  => $formattedImageUrl,
+                    'thumbnail'           => $formattedImageUrl,
+                    'thumbnail_url'       => $formattedImageUrl,
+                    'photo'               => $formattedImageUrl,
+                    'cover_image'         => $formattedImageUrl,
+                    'audio_url'           => $news->audio_url ?? null,
+                    'hashtags'            => $hashtags,
+                    'slug'                => Str::slug($finalTitle) ?: ('news-' . time()),
+                    'category_name'       => $news->category ?? 'General',
+                    'category_ids'        => $categories,
+                    'category_id'         => is_array($categories) ? ($categories[0] ?? 1) : $categories,
+                    'original_link'       => $news->original_link ?? '',
+                    'published_at'        => now()->format('Y-m-d H:i:s')
                 ];
                 
                 if ($news->wp_post_id) {
                     $payload['remote_id'] = $news->wp_post_id;
                 }
 
+                $headers = [
+                    'Accept'     => 'application/json',
+                    'User-Agent' => 'Subeditor24-Publisher/2.0 (+https://subeditor24.com)'
+                ];
+
+                if (!empty($settings->laravel_api_token)) {
+                    $headers['Authorization'] = 'Bearer ' . $settings->laravel_api_token;
+                }
+
+                Log::info("🚀 Dispatched Default Laravel API Post to {$apiUrl}", [
+                    'title'     => $finalTitle,
+                    'image_url' => $formattedImageUrl,
+                    'auth'      => !empty($settings->laravel_api_token) ? 'Bearer Token Included' : 'No Token'
+                ]);
+
                 $response = Http::timeout(120)
                     ->withOptions(['verify' => false])
-                    ->withHeaders([
-                        'Accept'     => 'application/json',
-                        'User-Agent' => 'Subeditor24-Publisher/2.0 (+https://subeditor24.com)'
-                    ])
+                    ->withHeaders($headers)
                     ->post($apiUrl, $payload);
 
                 if ($response && $response->successful()) {
@@ -298,5 +312,93 @@ trait ApiPostingTrait
         }
 
         return $result;
+    }
+
+    /**
+     * Helper: Normalize image URL to fully qualified public URL
+     */
+    protected function normalizeImageUrl($url)
+    {
+        if (empty($url)) {
+            return null;
+        }
+
+        $url = trim($url);
+
+        // Protocol-relative URL //example.com/img.jpg
+        if (str_starts_with($url, '//')) {
+            return 'https:' . $url;
+        }
+
+        // Already fully qualified absolute URL
+        if (filter_var($url, FILTER_VALIDATE_URL)) {
+            return $url;
+        }
+
+        // Relative URL with leading slash
+        if (str_starts_with($url, '/')) {
+            return url($url);
+        }
+
+        return url('/' . $url);
+    }
+
+    /**
+     * Helper: Fetch binary data and MIME for image (checking local disk first)
+     */
+    protected function getImageBinaryAndMime($imageUrl)
+    {
+        if (empty($imageUrl)) {
+            return null;
+        }
+
+        // 1. Check local storage / public directory first
+        $localPath = null;
+        if (str_contains($imageUrl, '/storage/')) {
+            $storageSubPath = Str::after($imageUrl, '/storage/');
+            $candidate = storage_path('app/public/' . $storageSubPath);
+            if (file_exists($candidate)) {
+                $localPath = $candidate;
+            }
+        } elseif (str_starts_with($imageUrl, '/') && !str_starts_with($imageUrl, '//')) {
+            $candidate = public_path(ltrim($imageUrl, '/'));
+            if (file_exists($candidate)) {
+                $localPath = $candidate;
+            }
+        }
+
+        if ($localPath && file_exists($localPath)) {
+            $bytes = @file_get_contents($localPath);
+            if ($bytes !== false && strlen($bytes) > 0) {
+                $mime = mime_content_type($localPath) ?: 'image/jpeg';
+                $filename = basename($localPath);
+                return ['bytes' => $bytes, 'mime' => $mime, 'filename' => $filename];
+            }
+        }
+
+        // 2. Remote HTTP fetch
+        $normalizedUrl = $this->normalizeImageUrl($imageUrl);
+        if (!$normalizedUrl) {
+            return null;
+        }
+
+        try {
+            $resp = Http::timeout(25)
+                ->withOptions(['verify' => false])
+                ->withHeaders(['User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Subeditor24/2.0'])
+                ->get($normalizedUrl);
+
+            if ($resp->successful() && strlen($resp->body()) > 0) {
+                $bytes = $resp->body();
+                $mime = $resp->header('Content-Type') ?: 'image/jpeg';
+                $pathOnly = parse_url($normalizedUrl, PHP_URL_PATH);
+                $filename = basename($pathOnly) ?: ('news_image_' . time() . '.jpg');
+                return ['bytes' => $bytes, 'mime' => $mime, 'filename' => $filename];
+            }
+        } catch (\Exception $e) {
+            Log::warning("⚠️ Image Fetch Failed for {$normalizedUrl}: " . $e->getMessage());
+        }
+
+        return null;
     }
 }
