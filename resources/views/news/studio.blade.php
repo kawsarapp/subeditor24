@@ -5,7 +5,7 @@
 {{-- 1. Style file import --}}
 @include('partials.studio_styles')
 
-<div class="w-full bg-white rounded-3xl border border-slate-200 shadow-xl flex flex-col font-bangla h-[calc(100vh-7rem)] min-h-[650px] overflow-hidden">
+<div class="w-full bg-white rounded-3xl border border-slate-200 shadow-xl flex flex-col font-bangla h-auto md:h-[calc(100vh-7rem)] min-h-0 md:min-h-[650px] overflow-hidden">
     
     {{-- Header Section --}}
     <div class="bg-white border-b border-gray-200 px-4 py-2 md:px-6 md:py-3 flex flex-col md:flex-row justify-between items-center shadow-sm z-30 shrink-0 gap-3 md:gap-0">

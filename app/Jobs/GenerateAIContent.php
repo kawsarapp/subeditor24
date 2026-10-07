@@ -61,20 +61,27 @@ class GenerateAIContent implements ShouldQueue
             // 🔥 পরিবর্তন: চেক করা হচ্ছে নিউজটি আগে রি-রাইট করা হয়েছে কি না
             $isRetry = (bool) $news->is_rewritten;
 
-            // টার্গেট ল্যাঙ্গুয়েজ বের করা
-            $targetLanguage = 'bn';
+            // 🌍 টার্গেট ল্যাঙ্গুয়েজ নির্ধারণ (Smart Language Resolution)
+            $effectiveUserId = $this->staffId ?? $news->user_id;
+            $userTargetLang = \App\Models\UserSetting::where('user_id', $effectiveUserId)->value('target_language');
+            
+            $websiteTargetLang = null;
             if ($news->website_id) {
                 $website = \App\Models\Website::withoutGlobalScopes()->find($news->website_id);
                 if ($website && !empty($website->target_language)) {
-                    $targetLanguage = $website->target_language;
+                    $websiteTargetLang = $website->target_language;
                 }
             }
 
-            // User Setting Overrides Website Setting if they manually set it in their profile
-            $effectiveUserId = $this->staffId ?? $news->user_id;
-            $userTargetLang = \App\Models\UserSetting::getSettingWithFallback($effectiveUserId, 'target_language');
-            if (!empty($userTargetLang)) {
+            // Priority: User's direct profile setting -> Website specific profile -> Content auto-detection
+            if (!empty($userTargetLang) && in_array($userTargetLang, ['bn', 'en'])) {
                 $targetLanguage = $userTargetLang;
+            } elseif (!empty($websiteTargetLang) && in_array($websiteTargetLang, ['bn', 'en'])) {
+                $targetLanguage = $websiteTargetLang;
+            } else {
+                // Auto-detect: If headline or content contains Bengali script, write in Bangla
+                $isBangla = (bool) preg_match('/[\x{0980}-\x{09FF}]/u', $title . ' ' . $cleanBody);
+                $targetLanguage = $isBangla ? 'bn' : 'en';
             }
 
             // 🔥 পরিবর্তন: rewrite মেথডে $isRetry, $effectiveUserId এবং $targetLanguage প্যারামিটারটি পাস করা হচ্ছে

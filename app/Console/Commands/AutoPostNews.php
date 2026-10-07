@@ -88,17 +88,23 @@ class AutoPostNews extends Command
                 }
             }
 
-            // --- STEP B: AI REWRITE ---
-            $targetLanguage = 'bn';
+            // --- STEP B: AI REWRITE (Smart Language Resolution) ---
+            $userTargetLang = \App\Models\UserSetting::where('user_id', $news->user_id)->value('target_language');
+            $websiteTargetLang = null;
             if ($news->website_id) {
                 $website = \App\Models\Website::withoutGlobalScopes()->find($news->website_id);
                 if ($website && !empty($website->target_language)) {
-                    $targetLanguage = $website->target_language;
+                    $websiteTargetLang = $website->target_language;
                 }
             }
-            $userTargetLang = \App\Models\UserSetting::getSettingWithFallback($news->user_id, 'target_language');
-            if (!empty($userTargetLang)) {
+
+            if (!empty($userTargetLang) && in_array($userTargetLang, ['bn', 'en'])) {
                 $targetLanguage = $userTargetLang;
+            } elseif (!empty($websiteTargetLang) && in_array($websiteTargetLang, ['bn', 'en'])) {
+                $targetLanguage = $websiteTargetLang;
+            } else {
+                $isBangla = (bool) preg_match('/[\x{0980}-\x{09FF}]/u', $news->title . ' ' . $news->content);
+                $targetLanguage = $isBangla ? 'bn' : 'en';
             }
 
             $aiResponse = $this->aiWriter->rewrite($news->content, $news->title, false, $news->user_id, $targetLanguage);
