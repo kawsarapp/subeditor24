@@ -1,21 +1,21 @@
 {{-- 🤖 SUBEDITOR24 PREMIUM AI EDITORIAL COPILOT ASSISTANT --}}
-<div id="aiCopilotWidget" class="fixed bottom-5 right-5 z-[999] font-sans select-none">
+<div id="aiCopilotWidget" class="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-[95] font-sans select-none">
     
     {{-- 1. Floating Toggle Trigger Button --}}
     <button type="button" id="aiCopilotToggleBtn" onclick="toggleAiCopilot()" 
-            class="group relative flex items-center gap-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white p-3.5 sm:px-4 sm:py-3 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer border-2 border-white/20">
+            class="group relative flex items-center gap-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white p-3 sm:px-4 sm:py-3 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer border-2 border-white/20">
         <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
         </span>
-        <div class="w-6 h-6 flex items-center justify-center text-lg">
+        <div class="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-base sm:text-lg">
             <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i>
         </div>
         <span class="hidden sm:inline font-bold text-xs tracking-wide">AI Assistant</span>
     </button>
 
     {{-- 2. Floating Chat Window / Modal --}}
-    <div id="aiCopilotWindow" class="hidden flex-col fixed bottom-20 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[440px] max-h-[85vh] h-[640px] bg-slate-900/95 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-2xl transition-all duration-300 z-[1000]">
+    <div id="aiCopilotWindow" class="hidden flex-col fixed bottom-24 right-2 sm:right-6 lg:bottom-20 w-[calc(100vw-1rem)] sm:w-[440px] max-h-[82vh] h-[640px] bg-slate-900/95 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-2xl transition-all duration-300 z-[1000]">
         
         {{-- Header --}}
         <div class="p-4 bg-slate-850/90 border-b border-slate-700/80 flex items-center justify-between text-white">
