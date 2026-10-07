@@ -1974,6 +1974,60 @@
         </div>
         @endif
 
+        {{-- 🚀 Automation & Auto-Drip Post Settings --}}
+        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_auto_post'))
+        <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
+            <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-white hover:bg-gray-50 transition" onclick="toggleSettingsAccordion(this)">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-base">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                            Automation & Auto-Drip Post Settings
+                        </h2>
+                        <p class="text-xs text-gray-500">Auto-publish queued articles to WordPress/Laravel at regular intervals</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full hidden sm:inline">Auto Drip</span>
+                    <i class="fas fa-chevron-down text-gray-400 text-sm accordion-arrow transition-transform duration-300"></i>
+                </div>
+            </div>
+            
+            <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50 text-sm space-y-4">
+                <div class="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200">
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Enable Auto-Posting / Auto-Drip Queue</h4>
+                        <p class="text-xs text-gray-500 mt-0.5">When enabled, queued news will automatically post to your website and social channels on schedule</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_auto_posting" value="1" {{ !empty($settings->is_auto_posting) ? 'checked' : '' }} class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-gray-200">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Post Interval (মিনিট পর পর পোস্ট হবে)</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" name="auto_post_interval" min="1" max="1440" value="{{ old('auto_post_interval', $settings->auto_post_interval ?? 10) }}" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 text-sm font-semibold">
+                            <span class="text-xs font-bold text-gray-500 shrink-0">Minutes</span>
+                        </div>
+                        <p class="text-[11px] text-gray-500 mt-1">Default: 10 minutes. Minimum: 1 minute.</p>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-gray-200">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Last Auto-Posted At</label>
+                        <p class="text-sm font-semibold text-gray-800 mt-2">
+                            {{ $settings->last_auto_post_at ? \Carbon\Carbon::parse($settings->last_auto_post_at)->diffForHumans() . ' (' . \Carbon\Carbon::parse($settings->last_auto_post_at)->format('d M Y, h:i A') . ')' : 'No post executed yet' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Sticky or Bottom Save Bar -->
         <div class="flex justify-end pt-4 sticky bottom-4 z-20">
             <button type="submit" id="btnSaveSettings" form="mainSettingsForm" class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-3 rounded-xl font-bold text-base hover:shadow-xl transition transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer shadow-lg">

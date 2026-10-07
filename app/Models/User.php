@@ -264,20 +264,7 @@ class User extends Authenticatable
 
         // 1. If Super Admin has explicitly customized permissions for this user (stored as array in DB)
         if (is_array($this->permissions)) {
-            if (in_array($permission, $this->permissions)) {
-                return true;
-            }
-
-            // Sub-permission fallback for settings sections
-            if (in_array($permission, [
-                'can_settings_branding', 'can_settings_target_language',
-                'can_settings_wp_laravel', 'can_settings_social', 'can_settings_category',
-                'can_settings_ai_prompt', 'can_settings_proxy', 'can_settings_ai', 'can_settings_tts'
-            ]) && in_array('can_settings', $this->permissions)) {
-                return true;
-            }
-
-            return false;
+            return in_array($permission, $this->permissions);
         }
 
         // 2. Default fallback for newly registered admins before Super Admin customizes their permissions

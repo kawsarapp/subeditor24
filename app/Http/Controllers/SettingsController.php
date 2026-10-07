@@ -275,6 +275,14 @@ class SettingsController extends Controller
             $settings->tts_auto_generate_on_draft = $request->has('tts_auto_generate_on_draft');
         }
 
+        // 🚀 Automation & Auto-Drip Post Settings
+        if ($isSuperAdmin || $isAdmin || $user->hasPermission('can_auto_post') || $user->hasPermission('can_settings')) {
+            $settings->is_auto_posting = $request->has('is_auto_posting');
+            if ($request->filled('auto_post_interval')) {
+                $settings->auto_post_interval = max(1, (int) $request->auto_post_interval);
+            }
+        }
+
         // 💰 ROI Config
         if (Auth::user()->role === 'super_admin') {
             $roiConfig = [
