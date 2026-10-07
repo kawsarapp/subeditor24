@@ -46,18 +46,18 @@
         </a>
     </header>
 
-    <main class="flex-grow flex items-center justify-center p-4 mt-20 md:mt-16 sm:p-6">
-        <div class="bg-white p-6 sm:p-10 rounded-3xl shadow-2xl shadow-slate-950/10 w-full max-w-[420px] border border-slate-200/90 relative overflow-hidden">
+    <main class="flex-grow flex flex-col items-center justify-center px-4 py-8 mt-14 sm:mt-16 w-full min-h-[calc(100vh-60px)]">
+        <div class="bg-white p-6 sm:p-8 md:p-10 rounded-3xl shadow-2xl shadow-slate-950/10 w-full max-w-[420px] border border-slate-200/90 relative overflow-hidden my-auto">
             
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Welcome Back! 👋</h2>
-                <p class="text-xs font-semibold text-slate-500 mt-1">Sign in to your Subeditor24 account</p>
+            <div class="text-center mb-5 sm:mb-6">
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Welcome Back! 👋</h2>
+                <p class="text-xs sm:text-sm font-semibold text-slate-500 mt-1">Sign in to your Subeditor24 account</p>
             </div>
 
             {{-- INTERACTIVE AVATAR --}}
-            <div class="flex justify-center mb-6">
-                <div id="avatar" class="face-container relative w-20 h-20 md:w-24 md:h-24 bg-indigo-50/60 rounded-full flex items-center justify-center border-4 border-indigo-100 shadow-inner">
-                    <svg viewBox="0 0 100 100" class="w-16 h-16 md:w-20 md:h-20">
+            <div class="flex justify-center mb-5 sm:mb-6">
+                <div id="avatar" class="face-container relative w-20 h-20 bg-indigo-50/60 rounded-full flex items-center justify-center border-4 border-indigo-100 shadow-inner">
+                    <svg viewBox="0 0 100 100" class="w-16 h-16">
                         <circle cx="50" cy="50" r="40" fill="#ffffff" stroke="#4f46e5" stroke-width="2"/>
                         <g id="eyes">
                             <circle id="eye-l" cx="35" cy="45" r="4" fill="#1e293b"/>
@@ -81,7 +81,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('login.post') }}" method="POST" class="space-y-4 sm:space-y-5">
+            <form action="{{ route('login.post') }}" method="POST" class="space-y-4">
                 @csrf
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5 ml-1">Email Address</label>
@@ -110,7 +110,7 @@
                     Log In
                 </button>
 
-                <div class="text-center pt-2">
+                <div class="text-center pt-1">
                     <a href="{{ route('password.request') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold hover:underline">
                         🔐 Forgot Password?
                     </a>
@@ -123,7 +123,7 @@
                 </div>
             @endif
 
-            <div class="mt-8 text-center border-t border-slate-100 pt-4 space-y-2">
+            <div class="mt-6 text-center border-t border-slate-100 pt-4 space-y-2">
                 <p class="text-xs text-slate-600 font-medium">
                     Don't have an account? 
                     <a href="{{ route('register') }}" class="text-indigo-600 font-extrabold hover:underline">
@@ -136,8 +136,8 @@
             </div>
         </div>
 
-        <footer class="mt-6 text-center text-xs text-slate-400 space-y-2">
-            <div class="flex items-center justify-center gap-4 flex-wrap text-slate-500 text-[11px]">
+        <footer class="mt-8 text-center text-xs text-slate-400 space-y-2 w-full max-w-[420px] px-2">
+            <div class="flex items-center justify-center gap-3 sm:gap-4 flex-wrap text-slate-500 text-[11px]">
                 <a href="{{ route('legal.privacy') }}" class="hover:text-indigo-600 transition">গোপনীয়তা নীতি</a>
                 <span>•</span>
                 <a href="{{ route('legal.terms') }}" class="hover:text-indigo-600 transition">ব্যবহারের শর্তাবলী</a>
@@ -148,7 +148,7 @@
                 <span>•</span>
                 <a href="{{ route('legal.contact') }}" class="hover:text-indigo-600 transition">যোগাযোগ</a>
             </div>
-            <div>
+            <div class="text-[11px] text-slate-400">
                 &copy; {{ date('Y') }} Subeditor24. All rights reserved.
             </div>
         </footer>

@@ -64,9 +64,9 @@
                     </div>
                     <div>
                         <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                            User Profile & Security
+                            User Profile & Organization Information
                         </h2>
-                        <p class="text-xs text-gray-500">Update account name, email address, and login credentials</p>
+                        <p class="text-xs text-gray-500">আপনার নাম, পোর্টাল নাম, ওয়েবসাইট লিঙ্ক, মোবাইল নম্বর ও লগইন ক্রেডেনশিয়াল</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -75,31 +75,51 @@
                 </div>
             </div>
             <div class="settings-accordion-body hidden p-6 border-t border-gray-100 bg-gray-50/50">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Your Name</label>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">আপনার নাম (Full Name)</label>
                         <input type="text" name="name" value="{{ old('name', auth()->user()->name) }}" 
-                               class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+                               class="w-full bg-white border border-gray-300 text-gray-900 px-3.5 py-2.5 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Email Address (Login Username)</label>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">ইমেইল এড্রেস (Email / Login ID)</label>
                         <input type="email" name="email" value="{{ old('email', auth()->user()->email) }}" 
-                               class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition" required>
+                               class="w-full bg-white border border-gray-300 text-gray-900 px-3.5 py-2.5 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" required>
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">New Password</label>
-                        <input type="password" name="password" placeholder="Leave blank to keep unchanged..." 
-                               class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">মোবাইল নম্বর (Phone Number)</label>
+                        <input type="text" name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="01XXXXXXXXX"
+                               class="w-full bg-white border border-gray-300 text-gray-900 px-3.5 py-2.5 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Confirm Password</label>
-                        <input type="password" name="password_confirmation" placeholder="Re-enter your new password" 
-                               class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">নিউজ পোর্টালের নাম (Brand Name)</label>
+                        <input type="text" name="brand_name" value="{{ old('brand_name', $settings->brand_name ?? '') }}" placeholder="Ex: ঢাকা পোস্ট ২৪"
+                               class="w-full bg-white border border-gray-300 text-gray-900 px-3.5 py-2.5 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">নিউজ ওয়েবসাইট URL (Website Link)</label>
+                        <input type="url" name="website_url" value="{{ old('website_url', $settings->wp_url ?? '') }}" placeholder="https://yourportal.com"
+                               class="w-full bg-white border border-gray-300 text-gray-900 px-3.5 py-2.5 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">জেলা / লোকেশন (District)</label>
+                        <input type="text" name="district" value="{{ old('district', auth()->user()->district) }}" placeholder="Ex: ঢাকা / চট্টগ্রাম"
+                               class="w-full bg-white border border-gray-300 text-gray-900 px-3.5 py-2.5 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">নতুন পাসওয়ার্ড (Optional)</label>
+                        <input type="password" name="password" placeholder="পরিবর্তন না করতে চাইলে ফাঁকা রাখুন..." 
+                               class="w-full bg-white border border-gray-300 text-gray-900 px-3.5 py-2.5 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">পাসওয়ার্ড নিশ্চিত করুন</label>
+                        <input type="password" name="password_confirmation" placeholder="পুনরায় নতুন পাসওয়ার্ড লিখুন" 
+                               class="w-full bg-white border border-gray-300 text-gray-900 px-3.5 py-2.5 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
                     </div>
                 </div>
                 <div class="mt-5 text-right">
-                    <button type="submit" class="bg-gray-800 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-gray-900 transition shadow cursor-pointer text-sm">
-                        Update Profile
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold transition shadow-md cursor-pointer text-sm">
+                        💾 Update Profile & Info
                     </button>
                 </div>
             </div>

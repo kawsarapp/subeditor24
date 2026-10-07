@@ -1269,24 +1269,48 @@ class SettingsController extends Controller
     }
 
     /**
-     * ১১. প্রোফাইল আপডেট
+     * ১১. প্রোফাইল আপডেট (রেজিস্ট্রেশনের সকল তথ্যসহ)
      */
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'password' => 'nullable|string|min:6|confirmed',
+            'name'         => 'required|string|max:255',
+            'email'        => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'phone'        => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
+            'brand_name'   => 'nullable|string|max:255',
+            'website_url'  => 'nullable|url|max:255',
+            'district'     => 'nullable|string|max:100',
+            'password'     => 'nullable|string|min:6|confirmed',
         ]);
 
-        $user->name  = $request->name;
-        $user->email = $request->email;
+        // ১. ইউজার মডেল ফিল্ড আপডেট
+        $user->name  = trim($request->name);
+        $user->email = strtolower(trim($request->email));
+        if ($request->has('phone')) {
+            $user->phone = trim($request->phone);
+        }
+        if ($request->has('district')) {
+            $user->district = trim($request->district);
+        }
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
         $user->save();
-        return back()->with('success', 'প্রোফাইল আপডেট হয়েছে!');
+
+        // ২. ইউজার সেটিংস (ব্র্যান্ড নাম ও ওয়েবসাইট ইউআরএল) আপডেট
+        $effectiveAdmin = in_array($user->role, ['staff', 'reporter']) ? ($user->parent ?: $user) : $user;
+        $settings = UserSetting::firstOrCreate(['user_id' => $effectiveAdmin->id]);
+        
+        if ($request->filled('brand_name')) {
+            $settings->brand_name = trim($request->brand_name);
+        }
+        if ($request->filled('website_url')) {
+            $settings->wp_url = trim($request->website_url);
+        }
+        $settings->save();
+
+        return back()->with('success', 'আপনার প্রোফাইল তথ্য সফলভাবে আপডেট করা হয়েছে!');
     }
 
     /**
