@@ -134,15 +134,6 @@ class NewsScraperService
             }
         }
 
-        if (!$proxy) {
-            if (config('app.env') === 'local') {
-                // Log::warning("⚠️ Running on LOCALHOST without Proxy/API. Proceeding directly (DEV MODE).");
-            } else {
-                Log::error("❌ Security Block [Article Fallback]: Universal API failed and NO PROXY available. Aborting instead of leaking Hosting Server IP.");
-                $this->logScraperRun($website?->id, $url, 'article', 'failed', 'None', 403, 'Security Block: Fallback to direct download blocked.');
-                return null;
-            }
-        }
 
         // 🐍 STEP 1: PYTHON SCRAPER
         $pythonData = $this->runPythonScraper($url, $userId);

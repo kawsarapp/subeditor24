@@ -118,19 +118,29 @@ class ScrapeWebsite implements ShouldQueue
                     $listPageHtml = $scraper->fetchWithUniversalScrapingApi($website->url, $this->userId);
 
                     if (!$listPageHtml || strlen($listPageHtml) < 500) {
-                        if (!$proxy) {
-                            Log::error("❌ Security Block: Universal API failed and no Proxy available. Aborting.");
-                            $this->logScraperRun($website->id, $website->url, 'list', 'failed', 'Universal API', 502, 'Universal API failed and no fallback Proxy available.');
-                            return;
-                        }
-                        Log::info("🔄 Universal API failed or unconfigured — falling back to Python/Puppeteer.");
+                        Log::info("🔄 Universal API failed or returned empty — falling back to Python Scraper.");
                         $listPageHtml = $scraper->fetchHtmlWithPython($website->url, $this->userId);
                     }
                     if (!$listPageHtml || strlen($listPageHtml) < 500) {
-                        if (!$proxy) {
-                            $this->logScraperRun($website->id, $website->url, 'list', 'failed', 'None', 500, 'Universal API returned empty/short HTML and no fallback proxy is configured.');
-                            return; // Prevent fallback
+                        Log::info("🔄 Python failed — falling back to Direct HTTP.");
+                        try {
+                            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            ])->withOptions([
+                                'proxy' => $proxy,
+                                'verify' => false,
+                                'connect_timeout' => 20,
+                            ])->timeout(60)->get($website->url);
+
+                            if ($response->successful()) {
+                                $listPageHtml = $response->body();
+                            }
+                        } catch (\Exception $e) {
+                            Log::warning("⚠️ Direct HTTP fallback failed: " . $e->getMessage());
                         }
+                    }
+                    if (!$listPageHtml || strlen($listPageHtml) < 500) {
+                        Log::info("🔄 Direct HTTP failed — falling back to Puppeteer.");
                         $listPageHtml = $scraper->runPuppeteer($website->url, $this->userId);
                     }
                 } else {

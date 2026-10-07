@@ -58,13 +58,12 @@ class WebsiteController extends Controller
     }
 
     // ==========================================
-    // ২. ওয়েবসাইট যোগ করা (সুপার অ্যাডমিন এবং পারমিশন থাকা অ্যাডমিন/ইউজার)
+    // ২. ওয়েবসাইট যোগ করা (শুধুমাত্র সুপার অ্যাডমিন)
     // ==========================================
     public function store(Request $request)
     {
-        $user = Auth::user();
-        if ($user->role !== 'super_admin' && !$user->hasPermission('can_scrape') && $user->role !== 'admin') {
-            return back()->with('error', 'অনুমতি নেই।');
+        if (Auth::user()->role !== 'super_admin') {
+            return back()->with('error', 'অনুমতি নেই। শুধুমাত্র সুপার অ্যাডমিন নতুন সোর্স যোগ করতে পারবেন।');
         }
 
         $request->validate([
@@ -176,16 +175,15 @@ class WebsiteController extends Controller
     }
 
     // ==========================================
-    // ৪. ওয়েবসাইট আপডেট করা
+    // ৪. ওয়েবসাইট আপডেট করা (শুধুমাত্র সুপার অ্যাডমিন)
     // ==========================================
     public function update(Request $request, $id)
     {
-        $user = Auth::user();
-        if ($user->role === 'super_admin') {
-            $website = Website::withoutGlobalScopes()->findOrFail($id);
-        } else {
-            $website = Website::withoutGlobalScopes()->where('user_id', $user->id)->findOrFail($id);
+        if (Auth::user()->role !== 'super_admin') {
+            return back()->with('error', 'অনুমতি নেই।');
         }
+        
+        $website = Website::withoutGlobalScopes()->findOrFail($id);
         
         $data = $request->validate([
             'name' => 'required',
@@ -200,7 +198,7 @@ class WebsiteController extends Controller
         $data = array_merge($request->all(), $data);
         $data['scraper_method'] = ($request->input('scraper_method') === 'auto' || empty($request->input('scraper_method'))) ? null : $request->input('scraper_method');
         $data['use_scraping_api'] = $request->has('use_scraping_api') ? 1 : 0;
-        $data['is_central_active'] = $user->role === 'super_admin' ? ($request->has('is_central_active') ? 1 : 0) : 0;
+        $data['is_central_active'] = $request->has('is_central_active') ? 1 : 0;
         $data['scrape_interval_minutes'] = (int) ($request->input('scrape_interval_minutes') ?: 5);
         
         $website->update($data);
@@ -297,15 +295,12 @@ class WebsiteController extends Controller
     }
 
     // ==========================================
-    // ৬. 🗑️ ওয়েবসাইট মুছে ফেলা (Safety Confirmation Required)
+    // ৬. 🗑️ ওয়েবসাইট মুছে ফেলা (শুধুমাত্র সুপার অ্যাডমিন)
     // ==========================================
     public function destroy(Request $request, $id)
     {
-        $user = Auth::user();
-        if ($user->role === 'super_admin') {
-            $website = Website::withoutGlobalScopes()->findOrFail($id);
-        } else {
-            $website = Website::withoutGlobalScopes()->where('user_id', $user->id)->findOrFail($id);
+        if (Auth::user()->role !== 'super_admin') {
+            return back()->with('error', 'অনুমতি নেই।');
         }
 
         $confirmText = strtoupper(trim($request->input('confirm_text', '')));
@@ -313,6 +308,7 @@ class WebsiteController extends Controller
             return back()->with('error', 'ডিলিট সম্পন্ন করতে কনফার্মেশন বক্সে "DELETE" শব্দটি সঠিকভাবে টাইপ করুন।');
         }
 
+        $website = Website::withoutGlobalScopes()->findOrFail($id);
         $websiteName = $website->name;
         $website->delete();
 
