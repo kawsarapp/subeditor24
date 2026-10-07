@@ -324,7 +324,7 @@
                                 </td>
                                 <td class="py-3 px-4 text-right">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        <a href="{{ route('database.backups.download', $backup['filename']) }}" class="px-2.5 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                                        <a href="{{ route('database.backups.download') }}?file={{ urlencode($backup['filename']) }}" class="px-2.5 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
                                             <i class="fa-solid fa-download"></i> Download
                                         </a>
                                         <button type="button" onclick="confirmRestoreBackup('{{ $backup['filename'] }}')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
@@ -3713,7 +3713,7 @@ https://yourdomain.com/api/external-news-post`
         backups.forEach(b => {
             const safetyTag = b.is_safety ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">🛡️ Auto-Safety</span>` : `<i class="fa-solid fa-database text-cyan-600"></i>`;
             const formatTag = b.is_compressed ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">GZIP (.sql.gz)</span>` : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">SQL (.sql)</span>`;
-            const downloadUrl = `{{ url('/admin/database-backups/download') }}/${encodeURIComponent(b.filename)}`;
+            const downloadUrl = `{{ route('database.backups.download') }}?file=${encodeURIComponent(b.filename)}`;
 
             html += `
                 <tr class="hover:bg-slate-50/80 transition" id="row-${b.filename.replace(/[^a-zA-Z0-9]/g, '')}">
@@ -3781,12 +3781,14 @@ https://yourdomain.com/api/external-news-post`
             return;
         }
 
-        fetch(`{{ url('/admin/database-backups/delete') }}/${encodeURIComponent(filename)}`, {
+        fetch('{{ route("database.backups.delete") }}', {
             method: 'DELETE',
             headers: {
+                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json'
-            }
+            },
+            body: JSON.stringify({ filename: filename })
         })
         .then(res => res.json())
         .then(data => {

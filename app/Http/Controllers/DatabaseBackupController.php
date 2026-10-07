@@ -76,16 +76,26 @@ class DatabaseBackupController extends Controller
     /**
      * Download an existing backup file
      */
-    public function download(string $filename)
+    public function download(Request $request, ?string $filename = null)
     {
         $this->authorizeSuperAdmin();
 
-        $path = $this->backupService->getBackupPath($filename);
-        if (!$path) {
-            return redirect()->back()->with('error', 'ব্যাকআপ ফাইলটি পাওয়া যায়নি।');
+        $file = $filename ?? $request->query('file') ?? $request->query('filename');
+        if (empty($file)) {
+            return redirect()->back()->with('error', 'ব্যাকআপ ফাইলের নাম দেওয়া হয়নি।');
         }
 
-        return response()->download($path, basename($filename));
+        $path = $this->backupService->getBackupPath($file);
+        if (!$path || !file_exists($path)) {
+            return redirect()->back()->with('error', 'ব্যাকআপ ফাইলটি পাওয়া যায়নি বা মুছে ফেলা হয়েছে।');
+        }
+
+        $mime = str_ends_with(strtolower($file), '.gz') ? 'application/gzip' : 'application/sql';
+
+        return response()->download($path, basename($file), [
+            'Content-Type'        => $mime,
+            'Content-Disposition' => 'attachment; filename="' . basename($file) . '"'
+        ]);
     }
 
     /**
@@ -150,11 +160,19 @@ class DatabaseBackupController extends Controller
     /**
      * Delete a backup file
      */
-    public function destroy(string $filename)
+    public function destroy(Request $request, ?string $filename = null)
     {
         $this->authorizeSuperAdmin();
 
-        $deleted = $this->backupService->deleteBackup($filename);
+        $file = $filename ?? $request->input('filename') ?? $request->query('filename') ?? $request->query('file');
+        if (empty($file)) {
+            return response()->json([
+                'success' => false,
+                'message' => '❌ ফাইলের নাম প্রদান করা হয়নি।'
+            ], 400);
+        }
+
+        $deleted = $this->backupService->deleteBackup($file);
 
         if ($deleted) {
             return response()->json([
@@ -166,7 +184,7 @@ class DatabaseBackupController extends Controller
 
         return response()->json([
             'success' => false,
-            'message' => '❌ ব্যাকআপ ফাইল মুছতে ব্যর্থ হয়েছে।',
+            'message' => '❌ ব্যাকআপ ফাইল মুছতে ব্যর্থ হয়েছে বা ফাইলটি পাওয়া যায়নি।',
         ], 400);
     }
 }

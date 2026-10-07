@@ -116,9 +116,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::prefix('admin/database-backups')->name('database.backups.')->group(function () {
             Route::get('/', [\App\Http\Controllers\DatabaseBackupController::class, 'index'])->name('index');
             Route::post('/create', [\App\Http\Controllers\DatabaseBackupController::class, 'create'])->name('create');
-            Route::get('/download/{filename}', [\App\Http\Controllers\DatabaseBackupController::class, 'download'])->name('download');
+            Route::get('/download', [\App\Http\Controllers\DatabaseBackupController::class, 'download'])->name('download');
+            Route::get('/download/{filename}', [\App\Http\Controllers\DatabaseBackupController::class, 'download'])->where('filename', '.*')->name('download.file');
             Route::post('/restore', [\App\Http\Controllers\DatabaseBackupController::class, 'restore'])->name('restore');
-            Route::delete('/delete/{filename}', [\App\Http\Controllers\DatabaseBackupController::class, 'destroy'])->name('delete');
+            Route::delete('/delete', [\App\Http\Controllers\DatabaseBackupController::class, 'destroy'])->name('delete');
+            Route::delete('/delete/{filename}', [\App\Http\Controllers\DatabaseBackupController::class, 'destroy'])->where('filename', '.*')->name('delete.file');
         });
         
         Route::prefix('settings/test')->name('settings.')->group(function () {
