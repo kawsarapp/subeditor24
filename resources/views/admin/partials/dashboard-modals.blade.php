@@ -380,6 +380,7 @@
                         'can_settings_target_language' => '🌍 Target Language Settings',
                         'can_settings_ai'       => '🤖 AI API Settings',
                         'can_settings_ai_prompt'=> '✍️ Custom AI Rewrite Prompt Settings',
+                        'can_settings_tts'      => '🎙️ Voice Narration (TTS / Audio News) Settings',
                         'can_settings_wp_laravel'=> '🔗 WordPress & Laravel API',
                         'can_settings_social'   => '📱 Social Media (FB, X, Telegram)',
                         'can_settings_category' => '📂 Category Mapping',

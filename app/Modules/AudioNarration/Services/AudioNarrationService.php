@@ -218,16 +218,20 @@ class AudioNarrationService
     }
 
     /**
-     * Resolve API key for provider from settings or env
+     * Resolve API key for provider from settings, fallback to Super Admin or env
      */
     protected function resolveApiKey(string $provider, ?UserSetting $settings): ?string
     {
-        if (!$settings) return null;
+        $userId = $settings?->user_id;
 
         return match ($provider) {
-            'openai'     => $settings->tts_openai_key ?: ($settings->openai_api_key ?: config('services.openai.api_key')),
-            'elevenlabs' => $settings->tts_elevenlabs_key ?: config('services.elevenlabs.api_key'),
-            'google'     => $settings->tts_google_key ?: config('services.google.tts_api_key'),
+            'openai'     => UserSetting::getSettingWithFallback($userId, 'tts_openai_key')
+                            ?: UserSetting::getSettingWithFallback($userId, 'openai_api_key')
+                            ?: config('services.openai.api_key'),
+            'elevenlabs' => UserSetting::getSettingWithFallback($userId, 'tts_elevenlabs_key')
+                            ?: config('services.elevenlabs.api_key'),
+            'google'     => UserSetting::getSettingWithFallback($userId, 'tts_google_key')
+                            ?: config('services.google.tts_api_key'),
             default      => null,
         };
     }

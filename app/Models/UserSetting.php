@@ -203,23 +203,32 @@ class UserSetting extends Model
 
     public static function getSettingWithFallback($userId, $key)
     {
-        // 1. Try finding it for the current user ID
+        // 1. Try finding it for the specified user ID
         if ($userId) {
             $setting = self::where('user_id', $userId)->first();
             if ($setting && !empty($setting->$key)) {
                 return $setting->$key;
             }
+
+            // If user is staff/reporter, check their parent admin's settings
+            $userObj = User::find($userId);
+            if ($userObj && in_array($userObj->role, ['staff', 'reporter']) && $userObj->parent_id) {
+                $parentSetting = self::where('user_id', $userObj->parent_id)->first();
+                if ($parentSetting && !empty($parentSetting->$key)) {
+                    return $parentSetting->$key;
+                }
+            }
         }
         
-        // 2. Try falling back to Super Admin
+        // 2. Always fallback to Super Admin's configuration if user has not provided their own
         $superAdmin = User::where('role', 'super_admin')->first();
-        if ($superAdmin) {
+        if ($superAdmin && (!$userId || $userId != $superAdmin->id)) {
             $setting = self::where('user_id', $superAdmin->id)->first();
             if ($setting && !empty($setting->$key)) {
                 return $setting->$key;
             }
         }
         
-        return null; // Return null so callers can fallback to .env 
+        return null; // Return null so callers can fallback to .env / config
     }
 }

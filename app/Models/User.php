@@ -262,29 +262,37 @@ class User extends Authenticatable
     {
         if ($this->role === 'super_admin') return true;
 
-        $baseNewsroomPermissions = [
-            'can_settings', 'can_settings_branding', 'can_settings_target_language',
-            'can_settings_wp_laravel', 'can_settings_social', 'can_settings_category',
-            'can_settings_ai_prompt', 'can_scrape', 'can_ai', 'can_studio', 
-            'can_direct_publish', 'can_view_published', 'can_auto_post', 
-            'can_central_feed', 'can_custom_photo_card', 'can_manage_staff'
-        ];
+        // 1. If Super Admin has explicitly customized permissions for this user (stored as array in DB)
+        if (is_array($this->permissions)) {
+            if (in_array($permission, $this->permissions)) {
+                return true;
+            }
 
-        // An admin (newsroom owner) has newsroom management permissions
-        if ($this->role === 'admin' && in_array($permission, $baseNewsroomPermissions)) {
-            return true;
+            // Sub-permission fallback for settings sections
+            if (in_array($permission, [
+                'can_settings_branding', 'can_settings_target_language',
+                'can_settings_wp_laravel', 'can_settings_social', 'can_settings_category',
+                'can_settings_ai_prompt', 'can_settings_proxy', 'can_settings_ai', 'can_settings_tts'
+            ]) && in_array('can_settings', $this->permissions)) {
+                return true;
+            }
+
+            return false;
         }
 
-        // If a user has 'can_settings' permission, allow standard settings features
-        if (in_array($permission, [
-            'can_settings', 'can_settings_branding', 'can_settings_target_language',
-            'can_settings_wp_laravel', 'can_settings_social', 'can_settings_category',
-            'can_settings_ai_prompt'
-        ]) && is_array($this->permissions) && in_array('can_settings', $this->permissions)) {
-            return true;
+        // 2. Default fallback for newly registered admins before Super Admin customizes their permissions
+        if ($this->role === 'admin') {
+            $defaultAdminPermissions = [
+                'can_settings', 'can_settings_branding', 'can_settings_target_language',
+                'can_settings_wp_laravel', 'can_settings_social', 'can_settings_category',
+                'can_settings_ai_prompt', 'can_scrape', 'can_ai', 'can_studio', 
+                'can_direct_publish', 'can_view_published', 'can_auto_post', 
+                'can_central_feed', 'can_custom_photo_card', 'can_manage_staff'
+            ];
+            return in_array($permission, $defaultAdminPermissions);
         }
 
-        return is_array($this->permissions) && in_array($permission, $this->permissions);
+        return false;
     }
 
     // ==========================================
