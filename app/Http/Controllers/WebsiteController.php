@@ -27,28 +27,43 @@ class WebsiteController extends Controller
             // সুপার অ্যাডমিন সব ওয়েবসাইট দেখবে
             $websites = Website::withoutGlobalScopes()->get();
         } elseif (in_array($user->role, ['user', 'admin'])) {
-            // অ্যাডমিন (Client) তার নিজের তৈরি করা এবং সুপার অ্যাডমিনের দেওয়া সাইটগুলো দেখবে
+            // অ্যাডমিন (Client) গ্লোবাল সাইটসমূহ (সুপার এডমিনের তৈরি), নিজের তৈরি করা সাইট এবং অ্যাসাইন করা সাইট দেখবে
             $websites = Website::withoutGlobalScopes()
-                ->where('user_id', $user->id)
-                ->orWhereHas('users', function($q) use ($user) {
-                    $q->where('users.id', $user->id); // 🔥 Data ambiguity এড়াতে users.id দেওয়া হলো
+                ->where(function($query) use ($user) {
+                    $query->where('user_id', $user->id)
+                          ->orWhereNull('user_id')
+                          ->orWhereHas('user', function($sq) {
+                              $sq->where('role', 'super_admin');
+                          })
+                          ->orWhereHas('users', function($q) use ($user) {
+                              $q->where('users.id', $user->id);
+                          });
                 })->get();
         } else {
-            // Staff বা Reporter: অ্যাডমিন তাদেরকে যে সোর্সগুলো পারমিশন দিয়েছে, শুধু সেগুলো দেখবে
-            $websites = $user->accessibleWebsites()
-                        ->withoutGlobalScopes()
-                        ->get();
+            // Staff বা Reporter: অ্যাডমিনের সাইট, গ্লোবাল সাইট অথবা স্টাফের জন্য নির্ধারিত সাইট
+            $websites = Website::withoutGlobalScopes()
+                ->where(function($query) use ($user) {
+                    $query->where('user_id', $user->parent_id)
+                          ->orWhereNull('user_id')
+                          ->orWhereHas('user', function($sq) {
+                              $sq->where('role', 'super_admin');
+                          })
+                          ->orWhereHas('users', function($q) use ($user) {
+                              $q->where('users.id', $user->id);
+                          });
+                })->get();
         }
         
         return view('websites.index', compact('websites'));
     }
 
     // ==========================================
-    // ২. ওয়েবসাইট যোগ করা (শুধু সুপার অ্যাডমিন)
+    // ২. ওয়েবসাইট যোগ করা (সুপার অ্যাডমিন এবং পারমিশন থাকা অ্যাডমিন/ইউজার)
     // ==========================================
     public function store(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') {
+        $user = Auth::user();
+        if ($user->role !== 'super_admin' && !$user->hasPermission('can_scrape') && $user->role !== 'admin') {
             return back()->with('error', 'অনুমতি নেই।');
         }
 
@@ -68,7 +83,7 @@ class WebsiteController extends Controller
         $data['selector_title'] = $request->input('selector_title') ?: 'h1, h2, h3, .title, .heading';
         $data['scraper_method'] = ($request->input('scraper_method') === 'auto' || empty($request->input('scraper_method'))) ? null : $request->input('scraper_method');
         $data['use_scraping_api'] = $request->has('use_scraping_api') ? 1 : 0;
-        $data['is_central_active'] = $request->has('is_central_active') ? 1 : ($request->exists('is_central_active') ? 0 : 1);
+        $data['is_central_active'] = $user->role === 'super_admin' ? ($request->has('is_central_active') ? 1 : ($request->exists('is_central_active') ? 0 : 1)) : 0;
         $data['scrape_interval_minutes'] = (int) ($request->input('scrape_interval_minutes') ?: 5);
 
         Website::create($data);
@@ -105,16 +120,27 @@ class WebsiteController extends Controller
             $website = Website::withoutGlobalScopes()
                 ->where(function($query) use ($user) {
                     $query->where('user_id', $user->id)
+                          ->orWhereNull('user_id')
+                          ->orWhereHas('user', function($sq) {
+                              $sq->where('role', 'super_admin');
+                          })
                           ->orWhereHas('users', function($q) use ($user) {
-                              $q->where('users.id', $user->id); // 🔥 Data ambiguity এড়াতে users.id দেওয়া হলো
+                              $q->where('users.id', $user->id);
                           });
                 })->findOrFail($id);
         } else {
-            // স্টাফের যদি এই সাইট স্ক্র্যাপ করার অনুমতি থাকে, তবেই সে পারবে
-            $website = $user->accessibleWebsites()
-                ->withoutGlobalScopes()
-                ->where('websites.id', $id)
-                ->firstOrFail();
+            // স্টাফের অ্যাডমিন অথবা প্ল্যাটফর্ম গ্লোবাল সাইট
+            $website = Website::withoutGlobalScopes()
+                ->where(function($query) use ($user) {
+                    $query->where('user_id', $user->parent_id)
+                          ->orWhereNull('user_id')
+                          ->orWhereHas('user', function($sq) {
+                              $sq->where('role', 'super_admin');
+                          })
+                          ->orWhereHas('users', function($q) use ($user) {
+                              $q->where('users.id', $user->id);
+                          });
+                })->findOrFail($id);
         }
 
         // ২. 🔥 ডাইনামিক মিনিটের চেকিং লজিক (Cool-down Check for the specific website, PER USER)
@@ -142,7 +168,7 @@ class WebsiteController extends Controller
         // Optionally update global timestamp for super admin tracking (optional, kept for record)
         $website->update(['last_scraped_at' => now()]);
 
-        // ৪. জব ডিসপ্যাচ (🔥 এখানে $adminUser->id দেওয়া হলো, যাতে প্রক্সি এবং লিমিট অ্যাডমিনের প্রোফাইল থেকে নেয়)
+        // ৪. জব ডিসপ্যাচ (🔥 এখানে $adminUser->id দেওয়া হলো, যাতে প্রক্সি এবং লিমিট অ্যাডমিনের প্রোফাইল থেকে নেয় এবং নিউজ আইটেম এই ইউজারের ড্যাশবোর্ডে সেভ হয়)
         ScrapeWebsite::dispatch($website->id, $adminUser->id);
         
         return redirect()->route('news.index', ['scraping' => 'started'])
@@ -154,11 +180,12 @@ class WebsiteController extends Controller
     // ==========================================
     public function update(Request $request, $id)
     {
-        if (Auth::user()->role !== 'super_admin') {
-            return back()->with('error', 'Permission Denied');
+        $user = Auth::user();
+        if ($user->role === 'super_admin') {
+            $website = Website::withoutGlobalScopes()->findOrFail($id);
+        } else {
+            $website = Website::withoutGlobalScopes()->where('user_id', $user->id)->findOrFail($id);
         }
-        
-        $website = Website::withoutGlobalScopes()->findOrFail($id);
         
         $data = $request->validate([
             'name' => 'required',
@@ -173,7 +200,7 @@ class WebsiteController extends Controller
         $data = array_merge($request->all(), $data);
         $data['scraper_method'] = ($request->input('scraper_method') === 'auto' || empty($request->input('scraper_method'))) ? null : $request->input('scraper_method');
         $data['use_scraping_api'] = $request->has('use_scraping_api') ? 1 : 0;
-        $data['is_central_active'] = $request->has('is_central_active') ? 1 : 0;
+        $data['is_central_active'] = $user->role === 'super_admin' ? ($request->has('is_central_active') ? 1 : 0) : 0;
         $data['scrape_interval_minutes'] = (int) ($request->input('scrape_interval_minutes') ?: 5);
         
         $website->update($data);
@@ -274,8 +301,11 @@ class WebsiteController extends Controller
     // ==========================================
     public function destroy(Request $request, $id)
     {
-        if (Auth::user()->role !== 'super_admin') {
-            return back()->with('error', 'অনুমতি নেই।');
+        $user = Auth::user();
+        if ($user->role === 'super_admin') {
+            $website = Website::withoutGlobalScopes()->findOrFail($id);
+        } else {
+            $website = Website::withoutGlobalScopes()->where('user_id', $user->id)->findOrFail($id);
         }
 
         $confirmText = strtoupper(trim($request->input('confirm_text', '')));
@@ -283,7 +313,6 @@ class WebsiteController extends Controller
             return back()->with('error', 'ডিলিট সম্পন্ন করতে কনফার্মেশন বক্সে "DELETE" শব্দটি সঠিকভাবে টাইপ করুন।');
         }
 
-        $website = Website::withoutGlobalScopes()->findOrFail($id);
         $websiteName = $website->name;
         $website->delete();
 

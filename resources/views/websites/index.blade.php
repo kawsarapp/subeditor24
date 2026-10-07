@@ -9,8 +9,8 @@
         </h1>
     </div>
 
-    {{-- SUPER ADMIN ONLY: ADD NEW WEBSITE FORM --}}
-    @if(auth()->user()->role === 'super_admin')
+    {{-- ADD NEW WEBSITE FORM (Super Admin & Permitted Client Admins) --}}
+    @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_scrape') || auth()->user()->role === 'admin')
     <div class="luxe-card p-5 sm:p-8 rounded-3xl border border-slate-200/90 mb-8 sm:mb-10">
         <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 mb-6 border-b border-slate-100 pb-3 flex items-center gap-2">
             <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm border border-indigo-200/60 font-bold">➕</span> 
@@ -220,19 +220,31 @@
                             </div>
                         </td>
                         <td class="px-4 md:px-6 py-4 text-right">
-                             <a href="{{ route('websites.scrape', $site->id) }}" 
-                               id="btn-{{ $site->id }}"
-                               class="scrape-btn bg-indigo-600 text-white px-4 py-2 md:px-6 md:py-2.5 rounded-lg text-xs md:text-sm font-bold hover:bg-indigo-700 shadow-md transition-all inline-flex items-center gap-2 justify-center {{ $isDisabled ? 'disabled opacity-50 cursor-not-allowed pointer-events-none' : '' }}"
-                               data-id="{{ $site->id }}"
-                               data-remaining="{{ $remainingSeconds }}"
-                               onclick="return handleScrapeClick(this)">
-                                
-                               @if($isDisabled)
-                                   ⏳ <span id="timer-{{ $site->id }}">Wait</span>
-                               @else
-                                   <span id="text-{{ $site->id }}">📥 Click</span>
-                               @endif
-                            </a>
+                            <div class="flex justify-end items-center gap-2">
+                                @if($site->user_id === auth()->id())
+                                    <button onclick='openEditModal(@json($site))' 
+                                            class="bg-blue-100 text-blue-700 px-2.5 py-2 rounded-lg text-xs font-bold hover:bg-blue-200" title="Edit Source">
+                                        ✏️
+                                    </button>
+                                    <button onclick="openDeleteModal('{{ $site->id }}', '{{ addslashes($site->name) }}')" 
+                                            class="bg-red-100 text-red-700 px-2.5 py-2 rounded-lg text-xs font-bold hover:bg-red-200" title="Delete Source">
+                                        🗑️
+                                    </button>
+                                @endif
+                                <a href="{{ route('websites.scrape', $site->id) }}" 
+                                   id="btn-{{ $site->id }}"
+                                   class="scrape-btn bg-indigo-600 text-white px-4 py-2 md:px-6 md:py-2.5 rounded-lg text-xs md:text-sm font-bold hover:bg-indigo-700 shadow-md transition-all inline-flex items-center gap-2 justify-center {{ $isDisabled ? 'disabled opacity-50 cursor-not-allowed pointer-events-none' : '' }}"
+                                   data-id="{{ $site->id }}"
+                                   data-remaining="{{ $remainingSeconds }}"
+                                   onclick="return handleScrapeClick(this)">
+                                    
+                                   @if($isDisabled)
+                                       ⏳ <span id="timer-{{ $site->id }}">Wait</span>
+                                   @else
+                                       <span id="text-{{ $site->id }}">📥 Click</span>
+                                   @endif
+                                </a>
+                            </div>
                         </td>
                     @endif
                 </tr>
@@ -243,8 +255,8 @@
 </div>
 </div>
 
-{{-- Edit Modal Structure (Only for Admin) --}}
-@if(auth()->user()->role === 'super_admin')
+{{-- Edit Modal Structure --}}
+@if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin' || auth()->user()->hasPermission('can_scrape'))
 <div id="editModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 backdrop-blur-sm">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden transform transition-all scale-100">
         <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">

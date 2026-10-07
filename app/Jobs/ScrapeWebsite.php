@@ -53,17 +53,10 @@ class ScrapeWebsite implements ShouldQueue
 
             // ১. প্রক্সি লোড করা
             $proxy = $scraper->getProxyConfig($this->userId, $website->url);
-            if ($proxy) Log::info("🌐 Scraping with Proxy: " . parse_url($proxy, PHP_URL_HOST));
-
-            // 🔥 STRICT SECURITY ENFORCEMENT
-            if (!$proxy && !$website->use_scraping_api) {
-                if (config('app.env') === 'local') {
-                    Log::warning("⚠️ Running on LOCALHOST without Proxy/API. Proceeding directly (DEV MODE).");
-                } else {
-                    Log::error("❌ Security Block [List]: No Proxy configured AND API disabled. Aborting to protect Hosting Server IP.");
-                    $this->logScraperRun($website->id, $website->url, 'list', 'failed', 'None', 403, 'Security Block: No Proxy configured AND Scraping API disabled.');
-                    return;
-                }
+            if ($proxy) {
+                Log::info("🌐 Scraping with Proxy: " . parse_url($proxy, PHP_URL_HOST));
+            } else {
+                Log::info("🌐 No custom user proxy found for user {$this->userId}. Falling back to system Scraping API / Engine.");
             }
 
             // ২. লিস্ট পেজ লোড (Raw HTML)

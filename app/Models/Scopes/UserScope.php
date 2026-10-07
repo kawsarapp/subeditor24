@@ -23,10 +23,13 @@ class UserScope implements Scope
 
         if (in_array($user->role, ['staff', 'reporter'])) {
             if ($table === 'websites') {
-                // Staff শুধু তাদের assigned websites দেখবে (user_website pivot)
-                // অথবা তাদের admin-এর owned websites
+                // Staff: admin-এর websites, assigned websites, অথবা platform global websites
                 $builder->where(function ($q) use ($user) {
                     $q->where('user_id', $user->parent_id)
+                      ->orWhereNull('user_id')
+                      ->orWhereHas('user', function ($sq) {
+                          $sq->where('role', 'super_admin');
+                      })
                       ->orWhereHas('users', function ($q2) use ($user) {
                           $q2->where('users.id', $user->id);
                       });
@@ -39,8 +42,22 @@ class UserScope implements Scope
                 });
             }
         } else {
-            // Admin: নিজের data
-            $builder->where($table . '.user_id', $user->id);
+            if ($table === 'websites') {
+                // Websites table: Client Admin sees their own websites + global websites (created by super admin or null) + pivot assigned
+                $builder->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                      ->orWhereNull('user_id')
+                      ->orWhereHas('user', function ($sq) {
+                          $sq->where('role', 'super_admin');
+                      })
+                      ->orWhereHas('users', function ($q2) use ($user) {
+                          $q2->where('users.id', $user->id);
+                      });
+                });
+            } else {
+                // news_items etc: STRICT TENANT ISOLATION (নিজের user_id এর ডাটা)
+                $builder->where($table . '.user_id', $user->id);
+            }
         }
     }
 }

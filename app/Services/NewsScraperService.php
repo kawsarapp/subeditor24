@@ -45,18 +45,7 @@ class NewsScraperService
             $useApi = true;
         }
 
-        // 🔥 STRICT SECURITY ENFORCEMENT
-        if (!$proxy && !$useApi && $method !== 'curl') {
-            if (config('app.env') === 'local') {
-                Log::warning("⚠️ Running on LOCALHOST without Proxy/API. Proceeding directly (DEV MODE).");
-            } else {
-                Log::error("❌ Security Block [Article]: No Proxy configured AND API disabled. Aborting to protect Hosting Server IP.");
-                $this->logScraperRun($website?->id, $url, 'article', 'failed', 'None', 403, 'Security Block: No Proxy/API configured in production.');
-                return null;
-            }
-        }
-
-        $proxyLog = $proxy ? parse_url($proxy, PHP_URL_HOST) : ($method ?: "Universal API");
+        $proxyLog = $proxy ? parse_url($proxy, PHP_URL_HOST) : ($method ?: "Universal API / System Fallback");
         Log::info("🚀 START SCRAPE: $url | Engine: " . ($method ?: 'Auto') . " | via $proxyLog");
 
         $lastError = 'Unknown error';
