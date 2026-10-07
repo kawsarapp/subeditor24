@@ -155,7 +155,29 @@ class ScrapeWebsite implements ShouldQueue
                         Log::info("🔐 Force-API site detected ({$website->url}) — using Universal Scraping API.");
                         $listPageHtml = $scraper->fetchWithUniversalScrapingApi($website->url, $this->userId);
                         if (!$listPageHtml || strlen($listPageHtml) < 500) {
-                            Log::warning("⚠️ Universal API failed for force-API site. Trying Puppeteer fallback.");
+                            Log::warning("⚠️ Universal API failed for force-API site. Trying Python Scraper fallback.");
+                            $listPageHtml = $scraper->fetchHtmlWithPython($website->url, $this->userId);
+                        }
+                        if (!$listPageHtml || strlen($listPageHtml) < 500) {
+                            Log::warning("⚠️ Python failed for force-API site. Trying Direct HTTP fallback.");
+                            try {
+                                $response = \Illuminate\Support\Facades\Http::withHeaders([
+                                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                                ])->withOptions([
+                                    'proxy' => $proxy,
+                                    'verify' => false,
+                                    'connect_timeout' => 20,
+                                ])->timeout(60)->get($website->url);
+
+                                if ($response->successful()) {
+                                    $listPageHtml = $response->body();
+                                }
+                            } catch (\Exception $e) {
+                                Log::warning("⚠️ Direct HTTP fallback failed: " . $e->getMessage());
+                            }
+                        }
+                        if (!$listPageHtml || strlen($listPageHtml) < 500) {
+                            Log::warning("⚠️ Direct HTTP failed for force-API site. Trying Puppeteer fallback.");
                             $listPageHtml = $scraper->runPuppeteer($website->url, $this->userId);
                         }
                     } elseif ($isJsRendered) {
@@ -307,6 +329,25 @@ class ScrapeWebsite implements ShouldQueue
                 $jugantorAjaxUrl = 'https://www.jugantor.com/ajax/load/latestnews/tab/10/0/0';
                 try {
                     $jugantorJson = $scraper->fetchWithUniversalScrapingApi($jugantorAjaxUrl, $this->userId);
+                    if (!$jugantorJson || strlen($jugantorJson) < 20) {
+                        $jugantorJson = $scraper->fetchHtmlWithPython($jugantorAjaxUrl, $this->userId);
+                    }
+                    if (!$jugantorJson || strlen($jugantorJson) < 20) {
+                        try {
+                            $res = \Illuminate\Support\Facades\Http::withHeaders([
+                                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                                'X-Requested-With' => 'XMLHttpRequest',
+                                'Referer' => 'https://www.jugantor.com/',
+                            ])->withOptions([
+                                'proxy' => $proxy,
+                                'verify' => false,
+                                'connect_timeout' => 15,
+                            ])->timeout(30)->get($jugantorAjaxUrl);
+                            if ($res->successful()) {
+                                $jugantorJson = $res->body();
+                            }
+                        } catch (\Exception $ex) {}
+                    }
                     $jugantorData = json_decode($jugantorJson, true);
                     if (!empty($jugantorData) && is_array($jugantorData)) {
                         Log::info("✅ Jugantor AJAX Parser: Found " . count($jugantorData) . " items.");
