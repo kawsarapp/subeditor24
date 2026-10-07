@@ -143,10 +143,12 @@ class DatabaseBackupService
             $write($footer);
 
         } finally {
-            if ($compress) {
-                gzclose($fileHandle);
-            } else {
-                fclose($fileHandle);
+            if (!empty($fileHandle)) {
+                if ($compress) {
+                    @gzclose($fileHandle);
+                } else {
+                    @fclose($fileHandle);
+                }
             }
         }
 

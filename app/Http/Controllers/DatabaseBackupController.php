@@ -90,12 +90,25 @@ class DatabaseBackupController extends Controller
             return redirect()->back()->with('error', 'ব্যাকআপ ফাইলটি পাওয়া যায়নি বা মুছে ফেলা হয়েছে।');
         }
 
-        $mime = str_ends_with(strtolower($file), '.gz') ? 'application/gzip' : 'application/sql';
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
 
-        return response()->download($path, basename($file), [
-            'Content-Type'        => $mime,
-            'Content-Disposition' => 'attachment; filename="' . basename($file) . '"'
-        ]);
+        $cleanFilename = basename($file);
+        $isGz = str_ends_with(strtolower($cleanFilename), '.gz');
+
+        $headers = [
+            'Content-Description'       => 'File Transfer',
+            'Content-Type'              => $isGz ? 'application/gzip' : 'application/octet-stream',
+            'Content-Disposition'       => 'attachment; filename="' . $cleanFilename . '"',
+            'Content-Transfer-Encoding' => 'binary',
+            'Expires'                   => '0',
+            'Cache-Control'             => 'must-revalidate, post-check=0, pre-check=0',
+            'Pragma'                    => 'public',
+            'Content-Length'            => filesize($path),
+        ];
+
+        return response()->download($path, $cleanFilename, $headers);
     }
 
     /**
