@@ -46,7 +46,8 @@ class TrendingController extends Controller
             return view('trending.index', compact('trendingList', 'timeframe'));
         }
         
-        $cacheKey = "trending_internal_cache_{$timeframe}";
+        $adminId = in_array(Auth::user()->role, ['staff', 'reporter']) ? Auth::user()->parent_id : Auth::id();
+        $cacheKey = "trending_internal_cache_{$adminId}_{$timeframe}";
         if ($forceRefresh) {
             \Illuminate\Support\Facades\Cache::forget($cacheKey);
         }
