@@ -97,9 +97,9 @@ class GenerateAIContent implements ShouldQueue
             $news->update([
                 'ai_title' => $aiResponse['title'] ?? $news->title,
                 'ai_content' => $aiResponse['content'],
-                'short_summary' => $news->short_summary ?: $autoSummary,
-                'tags' => $news->tags ?: ($tagsList ?: $focusKw),
-                'hashtags' => $news->hashtags ?: ($tagsList ?: $focusKw),
+                'short_summary' => $autoSummary ?: $news->short_summary,
+                'tags' => $tagsList ?: ($focusKw ?: $news->tags),
+                'hashtags' => $tagsList ?: ($focusKw ?: $news->hashtags),
                 'status' => 'draft',
                 'is_rewritten' => true,
                 'staff_id' => $staffId ?? $news->staff_id, // 🔥 স্টাফ আইডি সেভ করা হলো

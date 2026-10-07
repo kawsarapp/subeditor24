@@ -90,13 +90,13 @@ EOT;
         return <<<EOT
 
 **OUTPUT FORMAT (JSON):**
-Return ONLY a valid JSON object.
+Return ONLY a valid JSON object. ALL fields (title, content, meta_description, focus_keyword, tags) MUST strictly be generated in {$langLabel}. Do NOT leave any field in another language.
 {
     "title": "A professional, catchy news headline in {$langLabel} (Max 10-12 words)",
-    "content": "HTML string with <p> tags only. No bold, no headings.",
+    "content": "HTML string with <p> tags only. No bold, no headings in {$langLabel}.",
     "meta_description": "A crisp, engaging SEO meta description in {$langLabel} (120-150 characters)",
     "focus_keyword": "Primary focus keyword in {$langLabel}",
-    "tags": ["tag1", "tag2", "tag3"]
+    "tags": ["tag1 in {$langLabel}", "tag2 in {$langLabel}", "tag3 in {$langLabel}"]
 }
 EOT;
     }

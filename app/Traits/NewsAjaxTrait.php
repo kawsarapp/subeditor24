@@ -347,12 +347,21 @@ trait NewsAjaxTrait
         }
 
         $adminUser = $this->getEffectiveAdminForAjax();
-        $targetLanguage = $request->input('target_language', 'bn');
+        $targetLanguage = $request->input('target_language');
+        if (empty($targetLanguage)) {
+            $isBangla = (bool) preg_match('/[\x{0980}-\x{09FF}]/u', $title . ' ' . $content);
+            $targetLanguage = $isBangla ? 'bn' : 'en';
+        }
+
         $seoData = $aiWriter->extractFocusKeywords($title, $content, $adminUser->id, $targetLanguage);
 
         return response()->json([
-            'success' => true,
-            'data'    => $seoData
+            'success'          => true,
+            'primary_keyword'  => $seoData['primary_keyword'] ?? '',
+            'keywords'         => $seoData['keywords'] ?? [],
+            'meta_description' => $seoData['meta_description'] ?? '',
+            'tags'             => $seoData['tags'] ?? [],
+            'data'             => $seoData
         ]);
     }
 }

@@ -133,19 +133,38 @@ trait NewsDraftsTrait
         // 🔍 Deduplication Check for this specific news item
         $duplicates = app(\App\Services\NewsDeduplicationService::class)->findDuplicates($user, $news->title, $news->id, 55.0);
 
+        $isTitleBangla = (bool) preg_match('/[\x{0980}-\x{09FF}]/u', $title . ' ' . $content);
+
         $rawText = strip_tags($content);
         $rawText = preg_replace('/\s+/', ' ', $rawText);
         $fallbackMeta = mb_substr(trim($rawText), 0, 150);
-        $metaDescription = !empty($news->short_summary) ? $news->short_summary : $fallbackMeta;
 
-        $focusKeywords = $news->tags ?: $news->hashtags;
+        // Meta description: check language consistency
+        $metaDescription = $fallbackMeta;
+        if (!empty($news->short_summary)) {
+            $isSummaryBangla = (bool) preg_match('/[\x{0980}-\x{09FF}]/u', $news->short_summary);
+            if ($isTitleBangla === $isSummaryBangla) {
+                $metaDescription = $news->short_summary;
+            }
+        }
+
+        // Focus Keywords / Tags: check language consistency
+        $focusKeywords = '';
+        $existingKeywords = $news->tags ?: $news->hashtags;
+        if (!empty($existingKeywords)) {
+            $isKeywordsBangla = (bool) preg_match('/[\x{0980}-\x{09FF}]/u', $existingKeywords);
+            if ($isTitleBangla === $isKeywordsBangla) {
+                $focusKeywords = $existingKeywords;
+            }
+        }
+
         if (empty($focusKeywords) && !empty($title)) {
             $cleanTitle = preg_replace('/[।!?:;,"\'\(\)\[\]\{\}]/u', ' ', $title);
             $words = array_values(array_filter(explode(' ', trim($cleanTitle))));
             $stopWords = [
                 'এবং', 'ও', 'বা', 'কিন্তু', 'যদি', 'তবে', 'জন্য', 'নিয়ে', 'দিয়ে', 'থেকে', 'হতে', 'করে', 
                 'হয়ে', 'হলো', 'হবে', 'করলো', 'গেছে', 'আছে', 'ছিল', 'বলেন', 'জানান', 'পর', 'এই', 'সেই', 
-                'তার', 'তাদের', 'the', 'a', 'an', 'in', 'on', 'to', 'for', 'of', 'with', 'by', 'as', 'is', 'are'
+                'তার', 'তাদের', 'the', 'a', 'an', 'in', 'on', 'to', 'for', 'of', 'with', 'by', 'as', 'is', 'are', 'and', 'or', 'at', 'from'
             ];
             $filtered = [];
             foreach ($words as $w) {
@@ -164,6 +183,15 @@ trait NewsDraftsTrait
             }
         }
 
+        // Hashtags language check
+        $hashtags = $news->hashtags;
+        if (!empty($hashtags)) {
+            $isHashtagsBangla = (bool) preg_match('/[\x{0980}-\x{09FF}]/u', $hashtags);
+            if ($isTitleBangla !== $isHashtagsBangla) {
+                $hashtags = !empty($focusKeywords) ? implode(' ', array_map(fn($k) => '#' . preg_replace('/\s+/', '', trim($k)), explode(',', $focusKeywords))) : '';
+            }
+        }
+
         return response()->json([
             'success'          => true,
             'title'            => $title,
@@ -171,7 +199,7 @@ trait NewsDraftsTrait
             'original_title'   => $news->title,
             'original_content' => $news->content,
             'source_name'      => $news->website->name ?? 'Custom / Reporter',
-            'hashtags'         => $news->hashtags,
+            'hashtags'         => $hashtags,
             'focus_keyword'    => $focusKeywords,
             'meta_description' => $metaDescription,
             'short_summary'    => $metaDescription,
