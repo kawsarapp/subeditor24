@@ -283,6 +283,7 @@ class User extends Authenticatable
         // 2. Default fallback for newly registered admins before Super Admin customizes their permissions
         if ($this->role === 'admin') {
             $defaultAdminPermissions = [
+                'can_latest_news',
                 'can_settings', 'can_settings_branding', 'can_settings_target_language',
                 'can_settings_wp_laravel', 'can_settings_social', 'can_settings_category',
                 'can_settings_ai_prompt', 'can_scrape', 'can_ai', 'can_studio', 

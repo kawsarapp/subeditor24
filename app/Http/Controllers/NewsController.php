@@ -46,6 +46,22 @@ class NewsController extends Controller
         $user = Auth::user();
         if (!$user) return redirect()->route('login');
 
+        if ($user->role !== 'super_admin' && !$user->hasPermission('can_latest_news')) {
+            if ($user->hasPermission('can_central_feed')) {
+                return redirect()->route('central-feed.index');
+            }
+            if ($user->hasPermission('can_ai')) {
+                return redirect()->route('news.drafts');
+            }
+            if ($user->hasPermission('can_view_published')) {
+                return redirect()->route('news.published');
+            }
+            if ($user->hasPermission('can_custom_photo_card')) {
+                return redirect()->route('custom-photo-card.index');
+            }
+            abort(403, 'আপনার Latest News Feed ব্যবহারের অনুমতি নেই। সুপার অ্যাডমিনের সাথে যোগাযোগ করুন।');
+        }
+
         $adminUser = $this->getEffectiveAdmin(); 
 
         $search = $request->input('search');

@@ -601,6 +601,7 @@
                 @php
                     $adminPerms = is_array($admin->permissions) ? $admin->permissions : json_decode($admin->permissions, true) ?? [];
                     $allFeatures = [
+                        'can_latest_news'       => '📰 Latest News Feed Access',
                         'can_settings'          => '⚙️ Settings Page Access',
                         'can_settings_branding' => '🎨 Branding Settings',
                         'can_settings_proxy'    => '🌐 Proxy & Scraper Settings',

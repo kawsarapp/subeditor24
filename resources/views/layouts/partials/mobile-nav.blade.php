@@ -130,9 +130,11 @@
         <div class="p-3 space-y-1">
             <p class="px-3 pt-2 pb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">General Menu</p>
             
+            @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_latest_news'))
             <a href="{{ route('news.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('news.index') ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-100' }}">
                 <i class="fa-solid fa-newspaper text-indigo-500 w-5 text-center text-sm"></i> Latest News
             </a>
+            @endif
 
             @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_central_feed'))
             <a href="{{ route('central-feed.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('central-feed.*') ? 'bg-indigo-600 text-white' : 'text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100' }}">

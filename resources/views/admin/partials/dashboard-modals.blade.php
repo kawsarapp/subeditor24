@@ -351,6 +351,7 @@
             <div class="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
                 @php
                     $perms = [
+                        'can_latest_news'       => '📰 Latest News Feed Access',
                         'can_scrape'            => '🌐 News Scraper Access',
                         'can_central_feed'      => '⚡ Central Live Feed & Wire Pool',
                         'can_direct_publish'    => '📝 Direct Create (News Feed)',

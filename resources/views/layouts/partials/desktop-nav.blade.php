@@ -47,9 +47,11 @@
                     @endphp
                     <div class="flex items-center bg-slate-100/90 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 gap-0.5 xl:gap-1 shadow-inner shrink-0">
                         {{-- 1. Feed --}}
+                        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_latest_news'))
                         <a href="{{ route('news.index') }}" class="flex items-center gap-1 px-2.5 xl:px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 {{ request()->routeIs('news.index') ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-md border border-slate-200/60 dark:border-slate-600 scale-[1.02]' : 'text-slate-700 dark:text-slate-300 hover:text-indigo-600 hover:bg-white/60 dark:hover:bg-slate-700/60' }}">
                             <span class="hidden xl:inline">Latest </span><span>News</span>
                         </a>
+                        @endif
 
                         {{-- 1.5 Central Live Wire Feed --}}
                         @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_central_feed'))
