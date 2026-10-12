@@ -7,25 +7,25 @@
 {{-- 🚀 DIRECT FACEBOOK POST MODAL (WITH FIRST COMMENT SUPPORT)                --}}
 {{-- ========================================================================= --}}
 <div id="directFacebookPostModal" 
-     class="fixed inset-0 z-[120] bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 overflow-y-auto"
+     class="fixed inset-0 z-[120] bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-2.5 sm:p-5 overflow-y-auto"
      aria-labelledby="directFbModalTitle" 
      role="dialog" 
      aria-modal="true">
 
-    <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 my-auto overflow-hidden transition-all transform animate-fade-in-up font-bangla flex flex-col max-h-[92vh]">
+    <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 my-auto overflow-hidden transition-all transform animate-fade-in-up font-bangla flex flex-col max-h-[88vh] sm:max-h-[92vh]">
         
         {{-- MODAL HEADER --}}
-        <div class="px-5 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white dark:from-slate-800/80 dark:to-slate-900 flex items-center justify-between gap-3 shrink-0">
-            <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-600 text-white flex items-center justify-center text-xl shadow-md shadow-blue-500/20 shrink-0">
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-white dark:from-slate-800/80 dark:to-slate-900 flex items-center justify-between gap-2.5 sm:gap-3 shrink-0">
+            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-600 text-white flex items-center justify-center text-lg sm:text-xl shadow-md shadow-blue-500/20 shrink-0">
                     <i class="fa-brands fa-facebook"></i>
                 </div>
                 <div class="min-w-0">
-                    <h3 id="directFbModalTitle" class="text-base sm:text-lg font-black text-slate-800 dark:text-white flex items-center gap-2 truncate">
+                    <h3 id="directFbModalTitle" class="text-sm sm:text-lg font-black text-slate-800 dark:text-white flex items-center gap-1.5 sm:gap-2 truncate">
                         <span>ফেসবুকে পোস্ট করুন</span>
                         <span class="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-extrabold px-2 py-0.5 rounded-full border border-blue-200/60 dark:border-blue-800 hidden sm:inline-block">Direct Publish</span>
                     </h3>
-                    <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
+                    <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
                         সংযুক্ত ফেসবুক পেজে ফটো, ক্যাপশন ও স্বয়ংক্রিয় ১ম কমেন্ট পোস্ট করুন
                     </p>
                 </div>
@@ -40,43 +40,43 @@
         </div>
 
         {{-- MODAL BODY (SCROLLABLE) --}}
-        <form id="directFacebookPostForm" onsubmit="submitDirectFacebookPost(event)" class="overflow-y-auto custom-scrollbar p-5 sm:p-6 space-y-5 text-sm flex-grow">
+        <form id="directFacebookPostForm" onsubmit="submitDirectFacebookPost(event)" class="overflow-y-auto custom-scrollbar p-3.5 sm:p-6 space-y-4 sm:space-y-5 text-sm flex-grow">
             @csrf
 
             {{-- 1. FACEBOOK PAGES SELECTION --}}
             <div class="space-y-2">
-                <div class="flex items-center justify-between gap-2 flex-wrap">
+                <div class="flex items-center justify-between gap-1.5 sm:gap-2 flex-wrap">
                     <label class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                         <i class="fa-brands fa-facebook text-blue-600 text-sm"></i>
                         <span>টার্গেট ফেসবুক পেজ নির্বাচন করুন <span class="text-rose-500">*</span></span>
                     </label>
 
                     @if($modalFbPages->count() > 1)
-                        <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 select-none bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200/60 dark:border-blue-800/60 transition">
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer text-[11px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 select-none bg-blue-50 dark:bg-blue-950/60 px-2 sm:px-2.5 py-1 rounded-lg border border-blue-200/60 dark:border-blue-800/60 transition shrink-0">
                             <input type="checkbox" 
                                    id="directFbSelectAll" 
                                    checked 
                                    onchange="toggleAllDirectFbPages(this.checked)" 
                                    class="form-checkbox text-blue-600 rounded w-3.5 h-3.5 cursor-pointer">
-                            <span>সবগুলো পেজ নির্বাচন (All Pages)</span>
+                            <span>সবগুলো পেজ নির্বাচন (All)</span>
                         </label>
                     @endif
                 </div>
 
                 @if($modalFbPages->count() > 0)
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar p-1" id="directFbPagesList">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar p-0.5" id="directFbPagesList">
                         @foreach($modalFbPages as $page)
-                            <label class="direct-fb-page-card flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 hover:border-blue-300 transition cursor-pointer select-none">
+                            <label class="direct-fb-page-card flex items-center gap-2 sm:gap-2.5 p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 hover:border-blue-300 transition cursor-pointer select-none min-w-0">
                                 <input type="checkbox" 
                                        name="pages[]" 
                                        value="{{ $page->id }}" 
-                                       class="direct-fb-page-checkbox form-checkbox text-blue-600 rounded w-4 h-4 cursor-pointer" 
+                                       class="direct-fb-page-checkbox form-checkbox text-blue-600 rounded w-4 h-4 cursor-pointer shrink-0" 
                                        checked 
                                        onchange="checkDirectFbSelectAllState()">
                                 <div class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300 flex items-center justify-center text-xs font-black shrink-0">
                                     <i class="fa-brands fa-facebook-f"></i>
                                 </div>
-                                <div class="min-w-0 flex-grow">
+                                <div class="min-w-0 flex-1">
                                     <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200 truncate leading-tight">{{ $page->page_name }}</p>
                                     <p class="text-[10px] text-slate-400 font-mono truncate">ID: {{ $page->page_id }}</p>
                                 </div>
@@ -84,7 +84,7 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3 text-amber-800 dark:text-amber-300 text-xs">
+                    <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-2.5 sm:gap-3 text-amber-800 dark:text-amber-300 text-xs">
                         <i class="fa-solid fa-triangle-exclamation text-base mt-0.5 shrink-0 text-amber-600"></i>
                         <div class="space-y-1">
                             <p class="font-bold">আপনার কোনো সক্রিয় ফেসবুক পেজ সংযুক্ত নেই!</p>
@@ -112,7 +112,7 @@
                           rows="3" 
                           oninput="updateDirectFbCharCount(this)" 
                           placeholder="এখানে ফেসবুক পোস্টের মূল বক্তব্য, সংবাদ বা ক্যাপশন লিখুন..." 
-                          class="w-full border border-slate-200 dark:border-slate-700 rounded-2xl p-3 text-xs sm:text-sm font-medium text-slate-800 dark:text-white bg-slate-50/60 dark:bg-slate-950/60 focus:bg-white dark:focus:bg-slate-950 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition placeholder:text-slate-400"></textarea>
+                          class="w-full border border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl p-2.5 sm:p-3 text-xs sm:text-sm font-medium text-slate-800 dark:text-white bg-slate-50/60 dark:bg-slate-950/60 focus:bg-white dark:focus:bg-slate-950 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition placeholder:text-slate-400"></textarea>
             </div>
 
             {{-- 3. MEDIA / IMAGE ATTACHMENT --}}
@@ -136,21 +136,21 @@
                      ondragover="handleDirectFbDragOver(event)"
                      ondragleave="handleDirectFbDragLeave(event)"
                      ondrop="handleDirectFbDrop(event)"
-                     class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl p-4 text-center cursor-pointer bg-slate-50/60 dark:bg-slate-950/40 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all flex flex-col items-center justify-center gap-1.5 group">
-                    <div class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                     class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center cursor-pointer bg-slate-50/60 dark:bg-slate-950/40 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all flex flex-col items-center justify-center gap-1 sm:gap-1.5 group">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 flex items-center justify-center text-base sm:text-lg group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                     </div>
                     <div class="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        <span class="text-blue-600 dark:text-blue-400 font-extrabold hover:underline">ছবি নির্বাচন করতে ক্লিক করুন</span> অথবা এখানে টেনে আনুন
+                        <span class="text-blue-600 dark:text-blue-400 font-extrabold hover:underline">ছবি নির্বাচন করতে ক্লিক করুন</span> <span class="hidden sm:inline">অথবা এখানে টেনে আনুন</span>
                     </div>
-                    <p class="text-[11px] text-slate-400">JPG, PNG, WebP (সর্বোচ্চ ২০ মেগাবাইট)</p>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400">JPG, PNG, WebP (সর্বোচ্চ ২০ মেগাবাইট)</p>
                 </div>
 
                 {{-- Selected Image Preview Container --}}
-                <div id="directFbImagePreviewContainer" class="hidden relative rounded-2xl border border-slate-200 dark:border-slate-700 p-2.5 bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <img id="directFbImagePreviewImg" src="" alt="Preview" class="w-14 h-14 object-cover rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 shrink-0">
-                        <div class="min-w-0">
+                <div id="directFbImagePreviewContainer" class="hidden relative rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 p-2 sm:p-2.5 bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between gap-2.5 sm:gap-3">
+                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                        <img id="directFbImagePreviewImg" src="" alt="Preview" class="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 shrink-0">
+                        <div class="min-w-0 flex-1">
                             <p id="directFbImageFileName" class="text-xs font-extrabold text-slate-800 dark:text-slate-200 truncate">image.jpg</p>
                             <p id="directFbImageFileSize" class="text-[10px] text-slate-400 font-mono">0 KB</p>
                         </div>
@@ -160,7 +160,7 @@
                             class="px-2.5 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 font-bold text-xs transition flex items-center gap-1 shrink-0" 
                             title="ছবিটি বাদ দিন">
                         <i class="fa-solid fa-trash-can text-[11px]"></i>
-                        <span>মুছে ফেলুন</span>
+                        <span class="hidden sm:inline">মুছে ফেলুন</span>
                     </button>
                 </div>
             </div>
@@ -180,9 +180,9 @@
                           name="first_comment" 
                           rows="2" 
                           placeholder="যেমন: বিস্তারিত খবরের লিংক বা সোর্স কমেন্টে দিন..." 
-                          class="w-full border border-slate-200 dark:border-slate-700 rounded-2xl p-3 text-xs sm:text-sm font-medium text-slate-800 dark:text-white bg-slate-50/60 dark:bg-slate-950/60 focus:bg-white dark:focus:bg-slate-950 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition placeholder:text-slate-400"></textarea>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                    <i class="fa-solid fa-circle-info text-blue-500"></i>
+                          class="w-full border border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl p-2.5 sm:p-3 text-xs sm:text-sm font-medium text-slate-800 dark:text-white bg-slate-50/60 dark:bg-slate-950/60 focus:bg-white dark:focus:bg-slate-950 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition placeholder:text-slate-400"></textarea>
+                <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 flex items-start sm:items-center gap-1">
+                    <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 sm:mt-0 shrink-0"></i>
                     <span>ফেসবুক পেজে পোস্ট হওয়া মাত্রই এই বার্তাটি স্বয়ংক্রিয়ভাবে প্রথম কমেন্ট হিসেবে যুক্ত হবে।</span>
                 </p>
             </div>
@@ -192,19 +192,19 @@
         </form>
 
         {{-- MODAL FOOTER --}}
-        <div class="px-5 sm:px-6 py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900 flex items-center justify-between gap-3 shrink-0">
+        <div class="px-4 sm:px-6 py-3 sm:py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900 flex items-center justify-between gap-2.5 sm:gap-3 shrink-0">
             <button type="button" 
                     onclick="closeDirectFacebookPostModal()" 
-                    class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-bold text-xs transition cursor-pointer">
+                    class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-bold text-xs transition cursor-pointer shrink-0">
                 বাতিল
             </button>
 
             <button type="button" 
                     id="directFbSubmitBtn" 
                     onclick="submitDirectFacebookPost(event)" 
-                    class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs sm:text-sm shadow-md shadow-blue-500/25 transition transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-2 {{ $modalFbPages->count() === 0 ? 'opacity-50 pointer-events-none' : '' }}">
+                    class="flex-1 sm:flex-initial px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs sm:text-sm shadow-md shadow-blue-500/25 transition transform active:scale-95 cursor-pointer flex items-center justify-center gap-2 text-center {{ $modalFbPages->count() === 0 ? 'opacity-50 pointer-events-none' : '' }}">
                 <span id="directFbSubmitIcon"><i class="fa-solid fa-paper-plane"></i></span>
-                <span id="directFbSubmitText">ফেসবুকে পোস্ট করুন 🚀</span>
+                <span id="directFbSubmitText" class="truncate">ফেসবুকে পোস্ট করুন 🚀</span>
             </button>
         </div>
     </div>

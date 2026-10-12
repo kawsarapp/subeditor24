@@ -1,36 +1,36 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+<div class="max-w-4xl mx-auto py-6 sm:py-10 px-3 sm:px-6 lg:px-8">
     
     <!-- Top Header -->
-    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-2.5">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-2 sm:gap-2.5">
                 <i class="fas fa-sliders text-indigo-600"></i> Settings & Integrations
             </h1>
-            <p class="text-gray-500 mt-1 text-sm">Configure user profile, AI models, website webhooks, scrapers, and publishing preferences.</p>
+            <p class="text-gray-500 mt-1 text-xs sm:text-sm">Configure user profile, AI models, website webhooks, scrapers, and publishing preferences.</p>
         </div>
-        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl shadow-lg text-center">
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl shadow-lg text-center w-full md:w-auto">
             <p class="text-xs opacity-80 uppercase tracking-wider">Available Balance</p>
-            <p class="text-2xl font-bold">{{ auth()->user()->credits }} <span class="text-sm font-normal">Credits</span></p>
+            <p class="text-xl sm:text-2xl font-bold">{{ auth()->user()->credits }} <span class="text-sm font-normal">Credits</span></p>
         </div>
     </div>
 
     <!-- Global Accordion Expand/Collapse Controls & Diagnostics -->
-    <div class="flex flex-wrap justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm mb-6 gap-3">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm mb-6 gap-3">
         <div class="flex items-center gap-2 text-xs text-gray-600 dark:text-slate-400 font-semibold">
             <i class="fas fa-layer-group text-indigo-600 text-sm"></i>
             <span>Settings sections are grouped by category.</span>
         </div>
-        <div class="flex items-center gap-2">
-            <button type="button" onclick="runDiagnosticsModal()" class="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition cursor-pointer">
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="runDiagnosticsModal()" class="px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition cursor-pointer">
                 <i class="fa-solid fa-heart-pulse"></i> System Diagnostics
             </button>
-            <button type="button" onclick="expandAllSettings()" class="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 flex items-center gap-1.5 transition cursor-pointer shadow-sm">
+            <button type="button" onclick="expandAllSettings()" class="px-3 sm:px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 flex items-center gap-1.5 transition cursor-pointer shadow-sm">
                 <i class="fas fa-expand-alt"></i> Expand All
             </button>
-            <button type="button" onclick="collapseAllSettings()" class="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg border border-gray-300 flex items-center gap-1.5 transition cursor-pointer shadow-sm">
+            <button type="button" onclick="collapseAllSettings()" class="px-3 sm:px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg border border-gray-300 flex items-center gap-1.5 transition cursor-pointer shadow-sm">
                 <i class="fas fa-compress-alt"></i> Collapse All
             </button>
         </div>
@@ -2030,7 +2030,7 @@
 
         <!-- Sticky or Bottom Save Bar -->
         <div class="flex justify-end pt-4 sticky bottom-4 z-20">
-            <button type="submit" id="btnSaveSettings" form="mainSettingsForm" class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-3 rounded-xl font-bold text-base hover:shadow-xl transition transform hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer shadow-lg">
+            <button type="submit" id="btnSaveSettings" form="mainSettingsForm" class="w-full sm:w-auto justify-center bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 sm:px-8 py-3 rounded-xl font-bold text-sm sm:text-base hover:shadow-xl transition transform active:scale-95 flex items-center gap-2 cursor-pointer shadow-lg text-center">
                 <i class="fas fa-save"></i> <span>Save Changes</span>
             </button>
         </div>
