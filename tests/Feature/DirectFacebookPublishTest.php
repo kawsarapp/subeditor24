@@ -13,6 +13,7 @@ use Tests\TestCase;
 class DirectFacebookPublishTest extends TestCase
 {
     use RefreshDatabase;
+    use \Illuminate\Foundation\Testing\WithoutMiddleware;
 
     public function test_publish_direct_post_text_only_with_first_comment(): void
     {

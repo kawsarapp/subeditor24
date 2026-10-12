@@ -424,25 +424,59 @@ class CustomPhotoCardController extends Controller
             $tempFilePath = $tempDir . '/post_' . time() . '_' . Str::random(6) . '.png';
             file_put_contents($tempFilePath, $decoded);
 
-            // Post to Facebook Graph API
-            $endpoint = "https://graph.facebook.com/v19.0/{$fbPage->page_id}/photos";
+            // Post to Facebook Graph API using 2-step Attached Media (or no_story=false fallback)
+            // Step 1: Upload photo as unpublished asset to get photo ID
+            $photoUploadEndpoint = "https://graph.facebook.com/v19.0/{$fbPage->page_id}/photos";
             $caption = $request->input('caption') ?: '';
 
-            $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(30)
+            $photoResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(30)
                 ->attach('source', file_get_contents($tempFilePath), 'photocard.png')
-                ->post($endpoint, [
-                    'message'      => $caption,
+                ->post($photoUploadEndpoint, [
                     'access_token' => $tokenToUse,
-                    'published'    => true,
+                    'published'    => false,
                 ]);
+
+            $photoData = $photoResponse->json() ?? [];
+            $postId = null;
+
+            if ($photoResponse->successful() && !empty($photoData['id'])) {
+                // Step 2: Publish feed story to guarantee timeline visibility
+                $feedEndpoint = "https://graph.facebook.com/v19.0/{$fbPage->page_id}/feed";
+                $feedResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(30)
+                    ->post($feedEndpoint, [
+                        'message'        => $caption,
+                        'attached_media' => [
+                            ['media_fbid' => (string) $photoData['id']]
+                        ],
+                        'access_token'   => $tokenToUse,
+                        'published'      => true,
+                    ]);
+
+                $feedData = $feedResponse->json() ?? [];
+                if ($feedResponse->successful() && !empty($feedData['id'])) {
+                    $postId = $feedData['id'];
+                }
+            }
+
+            // Fallback if attached_media feed story wasn't created
+            if (!$postId) {
+                $fallbackResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(30)
+                    ->attach('source', file_get_contents($tempFilePath), 'photocard.png')
+                    ->post($photoUploadEndpoint, [
+                        'caption'      => $caption,
+                        'message'      => $caption,
+                        'access_token' => $tokenToUse,
+                        'published'    => true,
+                        'no_story'     => false,
+                    ]);
+                $fallbackData = $fallbackResponse->json() ?? [];
+                $postId = $fallbackData['post_id'] ?? $fallbackData['id'] ?? null;
+            }
 
             // Clean temp file
             @unlink($tempFilePath);
 
-            $data = $response->json();
-
-            if ($response->successful() && !empty($data['id'])) {
-                $postId = $data['id'];
+            if ($postId) {
                 $firstComment = trim($request->input('first_comment', ''));
                 if (!empty($firstComment)) {
                     try {
