@@ -4,6 +4,7 @@ namespace App\Modules\SeoIntelligence\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\SeoIntelligence\Models\SeoWebsite;
+use App\Modules\SeoIntelligence\Jobs\ExecuteSeoCrawlJob;
 use App\Modules\SeoIntelligence\Services\WebsiteCrawlerEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,8 +35,21 @@ class SeoConnectController extends Controller
         ]);
 
         $rawUrl = strtolower(trim($request->target_url));
+
+        if (!$this->crawlerEngine->isPublicUrl($rawUrl)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Invalid URL: Target URL must be a public website. Local, private, or loopback addresses are not permitted.');
+        }
+
         $host = parse_url($rawUrl, PHP_URL_HOST);
         $domain = preg_replace('/^www\./', '', $host);
+
+        if (SeoWebsite::where('user_id', $user->id)->where('domain', $domain)->exists()) {
+            $existingWebsite = SeoWebsite::where('user_id', $user->id)->where('domain', $domain)->first();
+            return redirect()->route('seo.index', ['website_id' => $existingWebsite->id])
+                ->with('warning', "Website {$domain} is already connected. Selected existing website.");
+        }
 
         $txtToken = 'subeditor24-verify-' . Str::random(24);
 
@@ -47,13 +61,15 @@ class SeoConnectController extends Controller
             'is_verified' => true, // Auto-verified for local/client domains
             'sitemap_url' => $rawUrl . '/sitemap.xml',
             'robots_txt_url' => $rawUrl . '/robots.txt',
+            'crawl_status' => 'queued',
+            'crawl_progress' => 0,
         ]);
 
-        // Run initial quick crawl
-        $this->crawlerEngine->crawlWebsite($website);
+        // Dispatch background crawl job to prevent gateway timeouts
+        ExecuteSeoCrawlJob::dispatch($website->id);
 
         return redirect()->route('seo.index', ['website_id' => $website->id])
-            ->with('success', "Website {$domain} connected and initial audit completed successfully!");
+            ->with('success', "Website {$domain} connected! Technical SEO audit is running in the background.");
     }
 
     /**

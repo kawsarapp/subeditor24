@@ -2297,9 +2297,15 @@
     }
 
     function testFacebook() {
+        const pageIdEl = document.getElementById('fb_page_id');
+        const tokenEl  = document.getElementById('fb_access_token');
+        if (!pageIdEl || !tokenEl) {
+            alert('অনুগ্রহ করে Facebook Pages সেকশনে গিয়ে পেজ টেস্ট করুন।');
+            return;
+        }
         genericTest('facebook', {
-            fb_page_id: document.getElementById('fb_page_id').value,
-            fb_access_token: document.getElementById('fb_access_token').value
+            fb_page_id: pageIdEl.value,
+            fb_access_token: tokenEl.value
         }, 'fb_status_msg', document.activeElement);
     }
 

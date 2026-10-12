@@ -400,7 +400,8 @@ class CustomPhotoCardController extends Controller
             // Strict tenant ownership validation
             $fbPage = $user->facebookPages()->where('id', $request->input('page_id'))->firstOrFail();
 
-            if (empty($fbPage->page_access_token) || empty($fbPage->page_id)) {
+            $tokenToUse = $fbPage->access_token ?: $fbPage->page_access_token;
+            if (empty($tokenToUse) || empty($fbPage->page_id)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'এই ফেসবুক পেজের অ্যাক্সেস টোকেন পাওয়া যায়নি।'
@@ -426,10 +427,11 @@ class CustomPhotoCardController extends Controller
             $endpoint = "https://graph.facebook.com/v19.0/{$fbPage->page_id}/photos";
             $caption = $request->input('caption') ?: '';
 
-            $response = \Illuminate\Support\Facades\Http::attach('source', file_get_contents($tempFilePath), 'photocard.png')
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(30)
+                ->attach('source', file_get_contents($tempFilePath), 'photocard.png')
                 ->post($endpoint, [
                     'message'      => $caption,
-                    'access_token' => $fbPage->page_access_token,
+                    'access_token' => $tokenToUse,
                     'published'    => true,
                 ]);
 

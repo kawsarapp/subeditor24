@@ -17,12 +17,24 @@ class WebsiteCrawlerEngine
         try {
             $targetUrl = rtrim($website->target_url, '/');
             
-            if (!filter_var($targetUrl, FILTER_VALIDATE_URL)) {
+            if (!filter_var($targetUrl, FILTER_VALIDATE_URL) || !$this->isPublicUrl($targetUrl)) {
+                Log::notice("SSRF blocked or invalid target domain for crawling: {$targetUrl}");
+                $website->update([
+                    'crawl_status' => 'failed',
+                    'crawl_progress' => 0,
+                    'crawl_error' => "Invalid or restricted target domain for crawling: {$targetUrl}",
+                ]);
                 return [
                     'success' => false,
-                    'message' => "Invalid target domain for crawling: {$targetUrl}"
+                    'message' => "Invalid or restricted target domain for crawling: {$targetUrl}"
                 ];
             }
+
+            $website->update([
+                'crawl_status' => 'running',
+                'crawl_progress' => 10,
+                'crawl_error' => null,
+            ]);
 
             $startTime = microtime(true);
             $response = Http::timeout(15)->withHeaders([
@@ -44,33 +56,36 @@ class WebsiteCrawlerEngine
             $homepageAudit = $this->parseHtmlContent($targetUrl, $body, $statusCode, $loadTimeMs);
             $this->savePageAudit($website->id, $targetUrl, $statusCode, $homepageAudit, $loadTimeMs);
 
+            $website->update(['crawl_progress' => 25]);
+
             // Audit Discovered News Articles (Sampled Batch Audit + Fast Status Verification)
             $scannedPagesCount = 1;
             $allIssues = $homepageAudit['issues'];
             $sampleUrls = array_slice($discoveredUrls, 0, 30); // Deep audit top sample pages
+            $sampleCount = count($sampleUrls);
 
-            foreach ($sampleUrls as $pageUrl) {
+            foreach ($sampleUrls as $idx => $pageUrl) {
                 if ($pageUrl === $targetUrl) continue;
-                try {
-                    $pageStart = microtime(true);
-                    $pageRes = Http::timeout(5)->withHeaders([
-                        'User-Agent' => 'Subeditor24-SeoBot/1.0'
-                    ])->get($pageUrl);
-                    $pageLoadMs = round((microtime(true) - $pageStart) * 1000, 2);
-
-                    $pageAudit = $this->parseHtmlContent($pageUrl, $pageRes->body(), $pageRes->status(), $pageLoadMs);
-                    $this->savePageAudit($website->id, $pageUrl, $pageRes->status(), $pageAudit, $pageLoadMs);
-
+                $pageResult = $this->crawlPage($pageUrl, $website->id);
+                if ($pageResult) {
                     $scannedPagesCount++;
-                    $allIssues = array_merge($allIssues, $pageAudit['issues']);
-                } catch (\Exception $e) {
-                    Log::info("Skipped deep page crawl for {$pageUrl}: " . $e->getMessage());
+                    $allIssues = array_merge($allIssues, $pageResult['audit']['issues']);
+                }
+
+                if ($sampleCount > 0 && ($idx % 3 === 0 || $idx === $sampleCount - 1)) {
+                    $prog = (int) round(25 + (($idx + 1) / $sampleCount) * 45); // 25% -> 70%
+                    $website->update(['crawl_progress' => min($prog, 70)]);
                 }
             }
 
             // Verify real HTTP status for remaining discovered news URLs (Detect 404 News Articles)
             $remainingUrls = array_slice($discoveredUrls, 30);
-            foreach ($remainingUrls as $extraUrl) {
+            $remCount = count($remainingUrls);
+            foreach ($remainingUrls as $rIdx => $extraUrl) {
+                if (!$this->isPublicUrl($extraUrl)) {
+                    Log::notice("SSRF blocked discovered URL during verification: {$extraUrl}");
+                    continue;
+                }
                 try {
                     $headRes = Http::timeout(3)->withHeaders([
                         'User-Agent' => 'Subeditor24-SeoBot/1.0'
@@ -101,6 +116,11 @@ class WebsiteCrawlerEngine
                         'crawled_at' => now(),
                     ]
                 );
+
+                if ($remCount > 0 && ($rIdx % 10 === 0 || $rIdx === $remCount - 1)) {
+                    $prog = (int) round(70 + (($rIdx + 1) / $remCount) * 20); // 70% -> 90%
+                    $website->update(['crawl_progress' => min($prog, 90)]);
+                }
             }
 
             // Compute Overall Health Score
@@ -108,6 +128,10 @@ class WebsiteCrawlerEngine
             $website->seo_health_score = $score;
             $website->sitemap_url = $targetUrl . '/sitemap.xml';
             $website->robots_txt_url = $targetUrl . '/robots.txt';
+            $website->crawl_status = 'completed';
+            $website->crawl_progress = 100;
+            $website->last_crawled_at = now();
+            $website->crawl_error = null;
             $website->save();
 
             // Populate Real Measured Core Web Vitals from HTTP server response
@@ -132,10 +156,48 @@ class WebsiteCrawlerEngine
             ];
         } catch (\Exception $e) {
             Log::warning("SeoCrawlerEngine failed for domain {$website->domain}: " . $e->getMessage());
+            $website->update([
+                'crawl_status' => 'failed',
+                'crawl_progress' => 0,
+                'crawl_error' => $e->getMessage(),
+            ]);
             return [
                 'success' => false,
                 'message' => $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Crawl a single page with SSRF check, audit its contents, and optionally persist the audit
+     */
+    public function crawlPage(string $pageUrl, ?int $websiteId = null): ?array
+    {
+        if (!$this->isPublicUrl($pageUrl)) {
+            Log::notice("SSRF blocked or invalid page URL: {$pageUrl}");
+            return null;
+        }
+
+        try {
+            $pageStart = microtime(true);
+            $pageRes = Http::timeout(5)->withHeaders([
+                'User-Agent' => 'Subeditor24-SeoBot/1.0'
+            ])->get($pageUrl);
+            $pageLoadMs = round((microtime(true) - $pageStart) * 1000, 2);
+
+            $pageAudit = $this->parseHtmlContent($pageUrl, $pageRes->body(), $pageRes->status(), $pageLoadMs);
+            if ($websiteId !== null) {
+                $this->savePageAudit($websiteId, $pageUrl, $pageRes->status(), $pageAudit, $pageLoadMs);
+            }
+
+            return [
+                'status_code' => $pageRes->status(),
+                'load_time_ms' => $pageLoadMs,
+                'audit' => $pageAudit,
+            ];
+        } catch (\Exception $e) {
+            Log::info("Skipped deep page crawl for {$pageUrl}: " . $e->getMessage());
+            return null;
         }
     }
 
@@ -156,6 +218,10 @@ class WebsiteCrawlerEngine
         ];
 
         foreach ($sitemapCandidates as $sitemapUrl) {
+            if (!$this->isPublicUrl($sitemapUrl)) {
+                Log::notice("SSRF blocked sitemap candidate: {$sitemapUrl}");
+                continue;
+            }
             try {
                 $res = Http::timeout(4)->get($sitemapUrl);
                 if ($res->successful()) {
@@ -234,19 +300,84 @@ class WebsiteCrawlerEngine
     /**
      * SSRF Safety Guard
      */
-    protected function isPublicUrl(string $url): bool
+    public function isPublicUrl(string $url): bool
     {
-        $host = parse_url($url, PHP_URL_HOST);
-        if (!$host) return false;
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return false;
+        }
 
-        $ip = gethostbyname($host);
-        if ($ip === $host) {
-            if (!filter_var($host, FILTER_VALIDATE_IP)) {
-                return true;
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            return false;
+        }
+
+        $host = parse_url($url, PHP_URL_HOST);
+        if (!$host) {
+            return false;
+        }
+
+        // Check for localhost, loopback names, and private domains
+        $lowerHost = strtolower($host);
+        if (in_array($lowerHost, ['localhost', 'localhost.localdomain', '127.0.0.1', '::1', '0.0.0.0'], true)
+            || str_ends_with($lowerHost, '.local')
+            || str_ends_with($lowerHost, '.internal')
+            || str_ends_with($lowerHost, '.lan')
+        ) {
+            return false;
+        }
+
+        // Host is direct IP address
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            return $this->isPublicIp($host);
+        }
+
+        // Host is a domain name - resolve DNS to check target IP addresses
+        $ips = gethostbynamel($host);
+        if ($ips === false || empty($ips)) {
+            $singleIp = gethostbyname($host);
+            if ($singleIp !== $host && filter_var($singleIp, FILTER_VALIDATE_IP)) {
+                return $this->isPublicIp($singleIp);
+            }
+            return true;
+        }
+
+        foreach ($ips as $ip) {
+            if (!$this->isPublicIp($ip)) {
+                return false;
             }
         }
 
-        return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
+        return true;
+    }
+
+    /**
+     * Validate whether an IP address is a public IP (rejects private, loopback, cloud metadata)
+     */
+    public function isPublicIp(string $ip): bool
+    {
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            return false;
+        }
+
+        $long = ip2long($ip);
+        if ($long !== false) {
+            $blockedRanges = [
+                ['127.0.0.0', '127.255.255.255'],     // 127.0.0.0/8 (Loopback)
+                ['10.0.0.0', '10.255.255.255'],       // 10.0.0.0/8 (Private Class A)
+                ['172.16.0.0', '172.31.255.255'],     // 172.16.0.0/12 (Private Class B)
+                ['192.168.0.0', '192.168.255.255'],   // 192.168.0.0/16 (Private Class C)
+                ['169.254.0.0', '169.254.255.255'],   // 169.254.0.0/16 (Link-local & Cloud Metadata 169.254.169.254)
+                ['0.0.0.0', '0.255.255.255'],         // 0.0.0.0/8
+            ];
+
+            foreach ($blockedRanges as [$start, $end]) {
+                if ($long >= ip2long($start) && $long <= ip2long($end)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -357,6 +488,10 @@ class WebsiteCrawlerEngine
             if ($checkedLinks >= 8) break; // Sample internal links per article for ultra-fast performance
             $fullLink = $this->canonicalizeUrl($href, $url);
             if ($fullLink && strpos($fullLink, parse_url($url, PHP_URL_HOST)) !== false) {
+                if (!$this->isPublicUrl($fullLink)) {
+                    Log::notice("SSRF blocked internal link audit: {$fullLink}");
+                    continue;
+                }
                 $checkedLinks++;
                 try {
                     $linkResp = Http::timeout(3)->head($fullLink);

@@ -1,5 +1,5 @@
 {{-- ========================================================================= --}}
-{{-- 🔵 FACEBOOK PAGES INTEGRATION & 1-CLICK OAUTH SECTION --}}
+{{-- 🔵 FACEBOOK PAGES INTEGRATION & MULTI-PAGE CONNECT SECTION --}}
 {{-- ========================================================================= --}}
 <div class="settings-accordion-card bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden transition-all duration-200">
     <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-white hover:bg-slate-50 transition" onclick="toggleSettingsAccordion(this)">
@@ -9,10 +9,10 @@
             </div>
             <div>
                 <h2 class="text-base font-black text-slate-800 flex items-center gap-2">
-                    <span>Facebook Pages & 1-Click Auto Post</span>
-                    <span class="text-[10px] bg-blue-100 text-blue-800 font-extrabold px-2 py-0.5 rounded-full border border-blue-200">1-Click Connect</span>
+                    <span>Facebook Pages & Multi-Page Connect</span>
+                    <span class="text-[10px] bg-blue-100 text-blue-800 font-extrabold px-2 py-0.5 rounded-full border border-blue-200">Multi-Page & 1-Click</span>
                 </h2>
-                <p class="text-xs text-slate-500 font-medium mt-0.5">১-ক্লিকে ফেসবুক পেজ কানেক্ট করুন এবং সোশ্যাল অটো-পোস্টিং ও ফটো কার্ড শেয়ারিং নিয়ন্ত্রণ করুন</p>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">সহজে ফেসবুক পেজ যুক্ত করুন, টোকেন যাচাই করুন এবং সংবাদ ফটো কার্ড স্বয়ংক্রিয়ভাবে পাবলিশ করুন</p>
             </div>
         </div>
         <div class="flex items-center gap-2.5">
@@ -25,15 +25,15 @@
     
     <div class="settings-accordion-body hidden p-5 sm:p-6 border-t border-slate-100 bg-slate-50/40 text-sm space-y-6">
         
-        {{-- 1. HERO 1-CLICK CONNECT ACTION BAR --}}
+        {{-- 1. HERO 1-CLICK & CONNECT ACTION BAR --}}
         <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 rounded-2xl p-5 sm:p-6 text-white shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div class="space-y-1.5 relative z-10 max-w-xl">
                 <div class="inline-flex items-center gap-1.5 bg-white/20 text-white text-[11px] font-extrabold px-3 py-0.5 rounded-full backdrop-blur-xs">
-                    <i class="fa-solid fa-bolt text-amber-300"></i> 1-Click Direct OAuth
+                    <i class="fa-solid fa-bolt text-amber-300"></i> Multi-Page & 1-Click Connect
                 </div>
                 <h3 class="text-lg sm:text-xl font-black tracking-tight">সহজতম উপায়ে ফেসবুক পেজ সংযুক্ত করুন</h3>
                 <p class="text-xs text-blue-100 leading-relaxed font-medium">
-                    নিচের বাটনে ক্লিক করলেই ফেসবুক ডায়ালগ আসবে। আইডি পাসওয়ার্ড দিয়ে পেজ সিলেক্ট করুন—সিস্টেম স্বয়ংক্রিয়ভাবে পার্মানেন্ট টোকেন ও পেজ আইডি সেভ করে নিবে।
+                    ১-ক্লিক কানেক্ট করুন, অথবা "স্মার্ট টোকেন" পেস্ট করে সকল পেজ একসাথে ডিটেক্ট ও কানেক্ট করুন। এছাড়াও যেকোনো Page Access Token ম্যানুয়ালি দিয়ে সেভ করতে পারেন।
                 </p>
             </div>
 
@@ -42,24 +42,49 @@
                     <i class="fa-brands fa-facebook text-base text-blue-600"></i>
                     <span>Connect with Facebook 🚀</span>
                 </a>
-                <button type="button" onclick="openSmartTokenModal()" class="inline-flex items-center gap-1.5 bg-blue-800/80 hover:bg-blue-800 text-white font-bold text-xs px-3.5 py-3 rounded-xl border border-white/20 transition cursor-pointer" title="টোকেন পেস্ট করে সব পেজ অটো-ফেচ করুন">
+                <button type="button" onclick="openSmartTokenModal()" class="inline-flex items-center gap-2 bg-blue-800/90 hover:bg-blue-800 text-white font-bold text-xs px-4 py-3 rounded-xl border border-white/20 shadow-sm transition cursor-pointer" title="টোকেন পেস্ট করে সব পেজ একসাথে ডিটেক্ট ও কানেক্ট করুন">
                     <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
                     <span>স্মার্ট টোকেন ফেচ</span>
                 </button>
-                <button type="button" onclick="openManualFbModal()" class="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-3 py-3 rounded-xl border border-white/15 transition cursor-pointer" title="ম্যানুয়ালি পেজ আইডি ও টোকেন বসান">
+                <button type="button" onclick="openManualFbModal()" class="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white font-bold text-xs px-4 py-3 rounded-xl border border-white/20 transition cursor-pointer" title="ম্যানুয়ালি পেজ আইডি ও অ্যাক্সেস টোকেন বসান">
                     <i class="fa-solid fa-pen-to-square"></i>
+                    <span>ম্যানুয়াল এন্ট্রি</span>
                 </button>
             </div>
         </div>
 
-        {{-- 2. CONNECTED FACEBOOK PAGES LIST --}}
+        {{-- 2. MASTER AUTO-POST TOGGLE BANNER --}}
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-base shrink-0">
+                    <i class="fa-solid fa-share-nodes"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-black text-slate-800 flex items-center gap-2">
+                        <span>স্বয়ংক্রিয় ফেসবুক পোস্টিং (Auto-Post Engine)</span>
+                        <span id="masterFbBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-md {{ ($settings->post_to_fb ?? true) ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">
+                            {{ ($settings->post_to_fb ?? true) ? '🟢 সক্রিয়' : '⚪ বন্ধ' }}
+                        </span>
+                    </h4>
+                    <p class="text-[11px] text-slate-500">সংবাদ তৈরি বা ড্রাফট করার সময় সক্রিয় ফেসবুক পেজগুলোতে স্বয়ংক্রিয়ভাবে ফটো কার্ড পাবলিশ হবে</p>
+                </div>
+            </div>
+            <div>
+                <label class="inline-flex items-center gap-2 cursor-pointer bg-slate-50 hover:bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 transition">
+                    <input type="checkbox" id="masterFbCheckbox" {{ ($settings->post_to_fb ?? true) ? 'checked' : '' }} onchange="toggleMasterFbPosting(this.checked)" class="form-checkbox text-blue-600 rounded w-4 h-4">
+                    <span>অটো-পোস্ট সক্রিয় রাখুন</span>
+                </label>
+            </div>
+        </div>
+
+        {{-- 3. CONNECTED FACEBOOK PAGES LIST --}}
         <div class="space-y-3">
             <div class="flex items-center justify-between">
                 <h4 class="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
                     <i class="fa-solid fa-list-check text-blue-600"></i> সংযুক্ত ফেসবুক পেজসমূহ ({{ $fbPages->count() }})
                 </h4>
                 <div class="text-[11px] text-slate-400">
-                    নিউজ তৈরি হলে একটিভ পেজগুলোতে স্বয়ংক্রিয়ভাবে পাবলিশ হবে
+                    একাধিক পেজ থাকলে স্টুডিও থেকে ইচ্ছামতো নির্বাচন করা যাবে
                 </div>
             </div>
 
@@ -74,13 +99,15 @@
                                     <i class="fa-brands fa-facebook"></i>
                                 </div>
                                 <div>
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-2 flex-wrap">
                                         <a href="https://facebook.com/{{ $page->page_id }}" target="_blank" class="font-black text-slate-800 hover:text-blue-600 transition text-sm flex items-center gap-1">
                                             <span>{{ $page->page_name }}</span>
                                             <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400"></i>
                                         </a>
                                         @if($page->test_status === 'connected')
-                                            <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-md border border-emerald-200">✅ Active</span>
+                                            <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-md border border-emerald-200">✅ Connected</span>
+                                        @elseif($page->test_status === 'failed')
+                                            <span class="text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-md border border-rose-200">❌ Failed</span>
                                         @else
                                             <span class="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-md border border-amber-200">⚠️ Untested</span>
                                         @endif
@@ -95,7 +122,7 @@
                             </div>
 
                             {{-- Right: Controls & Toggles --}}
-                            <div class="flex flex-wrap items-center gap-3 justify-end pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                            <div class="flex flex-wrap items-center gap-2.5 justify-end pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
                                 
                                 {{-- Comment Link Toggle --}}
                                 <label class="inline-flex items-center gap-1.5 cursor-pointer bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 transition" title="নিউজ সোর্স লিংক ১ম কমেন্টে যাবে নাকি ক্যাপশনে">
@@ -120,7 +147,7 @@
                                 </button>
 
                                 {{-- Delete Button --}}
-                                <button type="button" onclick="deleteFbPage('{{ $page->id }}', '{{ $page->page_name }}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="মুছে ফেলুন">
+                                <button type="button" onclick="deleteFbPage('{{ $page->id }}', '{{ addslashes($page->page_name) }}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="মুছে ফেলুন">
                                     <i class="fa-solid fa-trash-can text-sm"></i>
                                 </button>
                             </div>
@@ -135,13 +162,13 @@
                     </div>
                     <h4 class="text-sm font-bold text-slate-800">কোনো ফেসবুক পেজ কানেক্ট করা নেই</h4>
                     <p class="text-xs text-slate-500 max-w-md mx-auto">
-                        আপনার ফেসবুক পেজে অটোমেটিক ফটো কার্ড ও নিউজ পোস্ট করতে উপরের <strong>"Connect with Facebook"</strong> বাটনে ক্লিক করুন।
+                        আপনার ফেসবুক পেজে অটোমেটিক ফটো কার্ড ও সংবাদ পোস্ট করতে উপরের <strong>"Connect with Facebook"</strong> অথবা <strong>"স্মার্ট টোকেন ফেচ"</strong> বাটনে ক্লিক করুন।
                     </p>
                 </div>
             @endif
         </div>
 
-        {{-- 3. META DEVELOPER APP CONFIGURATION (SUPER ADMIN ONLY) --}}
+        {{-- 4. META DEVELOPER APP CONFIGURATION (SUPER ADMIN ONLY) --}}
         @if(auth()->user()->role === 'super_admin')
             <div class="border-t border-slate-200 pt-5 space-y-3">
                 <div class="flex items-center justify-between cursor-pointer select-none" onclick="toggleMetaAppConfig()">
@@ -157,7 +184,7 @@
                             <i class="fa-solid fa-circle-info"></i> ১-ক্লিক লগইন চালুর জন্য প্রয়োজনীয় Meta App সেটিংস:
                         </div>
                         <p class="text-[11px] text-slate-300">
-                            <strong>[developers.facebook.com](https://developers.facebook.com)</strong>-এ একটি অ্যাপ তৈরি করে নিচের ক্রেডেনশিয়ালগুলো বসান।
+                            <strong><a href="https://developers.facebook.com" target="_blank" class="underline text-blue-400">developers.facebook.com</a></strong>-এ একটি অ্যাপ তৈরি করে নিচের ক্রেডেনশিয়ালগুলো বসান।
                         </p>
                     </div>
 
@@ -173,30 +200,14 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-xs font-bold text-slate-300">Valid OAuth Redirect URIs (Meta Developer App $\rightarrow$ Facebook Login $\rightarrow$ Settings-এ নিচের লিংকগুলো বসান):</label>
+                        <label class="block text-xs font-bold text-slate-300">Valid OAuth Redirect URIs (Meta Developer App $\rightarrow$ Facebook Login $\rightarrow$ Settings-এ নিচের লিংকটি যোগ করুন):</label>
                         
-                        {{-- 🌐 Live Production Domain --}}
+                        {{-- 🌐 Current Host Callback URI --}}
                         <div class="space-y-1">
-                            <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                                <i class="fa-solid fa-globe"></i> Live Production Domain (অফিশিয়াল লাইভ লিংক):
-                            </span>
                             <div class="flex items-center gap-2">
-                                <input type="text" id="fbOAuthLiveUri" value="https://subeditor24.com/facebook-pages/callback" readonly class="w-full bg-slate-950 border border-emerald-800/80 rounded-xl px-3 py-2 text-xs font-mono text-emerald-300 select-all outline-none">
-                                <button type="button" onclick="copyTextValue('https://subeditor24.com/facebook-pages/callback', '✅ Live Domain URI কপি হয়েছে!')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1 cursor-pointer">
-                                    <i class="fa-solid fa-copy"></i> <span>Copy Live URI</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        {{-- 💻 Current Environment / Local / DDEV --}}
-                        <div class="space-y-1 pt-1">
-                            <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                                <i class="fa-solid fa-server"></i> Current Active Host:
-                            </span>
-                            <div class="flex items-center gap-2">
-                                <input type="text" id="fbOAuthRedirectUri" value="{{ route('fb-pages.callback') }}" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-blue-400 select-all outline-none">
-                                <button type="button" onclick="copyTextValue('{{ route('fb-pages.callback') }}', '✅ Current Callback URI কপি হয়েছে!')" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1 cursor-pointer">
-                                    <i class="fa-solid fa-copy"></i> <span>Copy Current</span>
+                                <input type="text" id="fbOAuthRedirectUri" value="{{ url('/facebook-pages/callback') }}" readonly class="w-full bg-slate-950 border border-emerald-800/80 rounded-xl px-3 py-2 text-xs font-mono text-emerald-300 select-all outline-none">
+                                <button type="button" onclick="copyTextValue('{{ url('/facebook-pages/callback') }}', '✅ OAuth Callback URI কপি হয়েছে!')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fa-solid fa-copy"></i> <span>Copy URI</span>
                                 </button>
                             </div>
                         </div>
@@ -207,7 +218,7 @@
                         <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-400">
                             <li>Meta App-এর বাম পাশের মেনু থেকে <strong>App Roles $\rightarrow$ Roles</strong>-এ যান।</li>
                             <li><strong>Add Testers</strong> বাটনে ক্লিক করে ক্লায়েন্টের ফেসবুক নাম/আইডি দিয়ে ইনভাইট দিন।</li>
-                            <li>ক্লায়েন্ট <strong>[developers.facebook.com/requests](https://developers.facebook.com/requests)</strong> এ ঢুকে <strong>Accept</strong> চাপলেই ১-ক্লিকে সব কাজ করতে পারবে!</li>
+                            <li>ক্লায়েন্ট <strong><a href="https://developers.facebook.com/requests" target="_blank" class="underline text-blue-400">developers.facebook.com/requests</a></strong> এ ঢুকে <strong>Accept</strong> চাপলেই ১-ক্লিকে সব কাজ করতে পারবে!</li>
                         </ol>
                     </div>
 
@@ -215,7 +226,7 @@
 
                     <div class="flex flex-wrap items-center justify-end gap-2.5 pt-1">
                         <button type="button" id="btnTestMetaApp" onclick="testMetaAppCredentials()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-bolt text-amber-400"></i> <span>⚡ Test Meta App Connection</span>
+                            <i class="fa-solid fa-bolt text-amber-400"></i> <span>⚡ Test Meta App Handshake</span>
                         </button>
                         <button type="button" onclick="saveMetaAppCredentials()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer">
                             <i class="fa-solid fa-save"></i> <span>Save Meta App Credentials</span>
@@ -229,7 +240,7 @@
 </div>
 
 {{-- ========================================================================= --}}
-{{-- ⚡ SMART TOKEN AUTO-FETCH MODAL --}}
+{{-- ⚡ SMART TOKEN AUTO-FETCH & MULTI-CONNECT MODAL --}}
 {{-- ========================================================================= --}}
 <div id="smartTokenModal" class="fixed inset-0 bg-slate-950/70 hidden items-center justify-center z-[110] backdrop-blur-md transition-all">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
@@ -239,29 +250,45 @@
                     <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-black">স্মার্ট ফেসবুক পেজ ফেচ</h3>
-                    <p class="text-[11px] text-white/80 font-semibold">টোকেন পেস্ট করলেই সব পেজ অটো-ডিটেক্ট হবে</p>
+                    <h3 class="text-base font-black">স্মার্ট ফেসবুক পেজ ফেচ ও মাল্টি-কানেক্ট</h3>
+                    <p class="text-[11px] text-white/80 font-semibold">User অথবা Page Token পেস্ট করলেই সব পেজ অটো-ডিটেক্ট হবে</p>
                 </div>
             </div>
             <button type="button" onclick="closeSmartTokenModal()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition cursor-pointer">✕</button>
         </div>
 
-        <div class="p-6 overflow-y-auto space-y-4 font-bangla">
+        <div class="p-6 overflow-y-auto space-y-4 font-sans">
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">User or Page Access Token</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1">User or Page Access Token <span class="text-rose-500">*</span></label>
                 <textarea id="smartTokenInput" rows="3" placeholder="EAAB... টোকেনটি এখানে পেস্ট করুন" class="w-full border border-slate-300 rounded-xl p-3 text-xs font-mono focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                <span class="text-[11px] text-slate-400 mt-1 block">Graph API Explorer বা Meta Developer Tools থেকে পাওয়া যেকোনো টোকেন এখানে দিন।</span>
             </div>
 
             <div class="flex justify-end">
                 <button type="button" id="btnFetchPages" onclick="fetchPagesWithToken()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-magnifying-glass"></i> <span>পেজসমূহ খুঁজুন</span>
+                    <i class="fa-solid fa-magnifying-glass"></i> <span>পেজসমূহ খুঁজুন 🚀</span>
                 </button>
             </div>
 
             {{-- Resulting Pages List --}}
-            <div id="smartFetchedPagesContainer" class="hidden space-y-2 pt-3 border-t border-slate-100">
-                <div class="text-xs font-bold text-slate-700">পাওয়া গেছে এমন পেজসমূহ:</div>
-                <div id="smartFetchedPagesList" class="space-y-2 max-h-60 overflow-y-auto"></div>
+            <div id="smartFetchedPagesContainer" class="hidden space-y-3 pt-3 border-t border-slate-100">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-check text-emerald-600"></i> প্রাপ্ত পেজসমূহ: (<span id="smartFetchedCount">0</span>)
+                    </span>
+                    <label class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer select-none">
+                        <input type="checkbox" id="selectAllFetchedPages" checked onchange="toggleSelectAllFetchedPages(this.checked)" class="form-checkbox text-blue-600 rounded">
+                        <span>সবগুলো সিলেক্ট</span>
+                    </label>
+                </div>
+
+                <div id="smartFetchedPagesList" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+
+                <div class="pt-2">
+                    <button type="button" id="btnConnectSelectedPages" onclick="connectSelectedPages()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> <span>নির্বাচিত সকল পেজ একসাথে কানেক্ট করুন 🚀</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -283,34 +310,44 @@
                 </div>
                 <div>
                     <h3 class="text-sm font-black">ম্যানুয়াল ফেসবুক পেজ যুক্ত করুন</h3>
-                    <p class="text-[10px] text-slate-400">Page ID ও Never-Expiring Token বসান</p>
+                    <p class="text-[10px] text-slate-400">Page ID অথবা Token দিয়ে সরাসরি সেভ করুন</p>
                 </div>
             </div>
             <button type="button" onclick="closeManualFbModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">✕</button>
         </div>
 
-        <form onsubmit="submitManualFbPage(event)" class="p-6 space-y-4 font-bangla text-xs">
-            <div>
-                <label class="block font-bold text-slate-700 mb-1">Facebook Page ID <span class="text-rose-500">*</span></label>
-                <input type="text" id="manualFbPageId" placeholder="e.g. 1000928374658" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-mono focus:ring-2 focus:ring-blue-500 outline-none" required>
-            </div>
-
+        <form onsubmit="submitManualFbPage(event)" class="p-6 space-y-4 font-sans text-xs">
             <div>
                 <label class="block font-bold text-slate-700 mb-1">Page Access Token <span class="text-rose-500">*</span></label>
                 <textarea id="manualFbToken" rows="3" placeholder="EAAB..." class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-mono focus:ring-2 focus:ring-blue-500 outline-none" required></textarea>
+                <span class="text-[10px] text-slate-400 mt-0.5 block">টোকেনটি পেস্ট করলেই সিস্টেম নিজে থেকে পেজের নাম ও আইডি শনাক্ত করার চেষ্টা করবে।</span>
             </div>
 
             <div>
-                <label class="block font-bold text-slate-700 mb-1">Page Name (ঐচ্ছিক)</label>
+                <label class="block font-bold text-slate-700 mb-1">Facebook Page ID <span class="text-slate-400 font-normal">(ঐচ্ছিক - টোকেন দিলে অটোমেটিক ডিটেক্ট হবে)</span></label>
+                <input type="text" id="manualFbPageId" placeholder="e.g. 1000928374658 বা পেজ লিংক" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Page Name <span class="text-slate-400 font-normal">(ঐচ্ছিক)</span></label>
                 <input type="text" id="manualFbPageName" placeholder="My News Page" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
 
-            <div class="flex items-center gap-2 pt-2">
+            <div class="flex items-center gap-2 pt-1">
                 <label class="flex items-center gap-2 cursor-pointer font-bold text-slate-700">
                     <input type="checkbox" id="manualFbCommentLink" class="form-checkbox text-blue-600 rounded">
                     <span>মূল খবরের লিংক ১ম কমেন্টে পোস্ট করুন</span>
                 </label>
             </div>
+
+            <div class="flex items-center gap-2 pt-1 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                <label class="flex items-center gap-2 cursor-pointer font-bold text-amber-900 text-[11px]">
+                    <input type="checkbox" id="manualFbForceSave" class="form-checkbox text-amber-600 rounded">
+                    <span>যাচাইকরণ ব্যর্থ হলেও সেভ করুন (Force Save)</span>
+                </label>
+            </div>
+
+            <div id="manualFbStatusMsg" class="hidden p-3 rounded-xl text-xs font-bold"></div>
 
             <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button type="button" onclick="closeManualFbModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition">Cancel</button>
@@ -323,6 +360,9 @@
 </div>
 
 <script>
+    // Global variable to store fetched pages in memory
+    let fetchedPagesCache = [];
+
     // Toggle Meta App Config
     function toggleMetaAppConfig() {
         const container = document.getElementById('metaAppConfigContainer');
@@ -335,10 +375,33 @@
         });
     }
 
-    function copyFbRedirectUri() {
-        const input = document.getElementById('fbOAuthRedirectUri');
-        if (!input) return;
-        copyTextValue(input.value, '✅ OAuth Redirect URI কপি করা হয়েছে!');
+    // Toggle Master Auto-Post Switch
+    function toggleMasterFbPosting(enabled) {
+        fetch('{{ route("fb-pages.toggle-master-autopost") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ enabled: enabled })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const badge = document.getElementById('masterFbBadge');
+                if (badge) {
+                    if (data.post_to_fb) {
+                        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700';
+                        badge.innerText = '🟢 সক্রিয়';
+                    } else {
+                        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500';
+                        badge.innerText = '⚪ বন্ধ';
+                    }
+                }
+            }
+        })
+        .catch(err => alert('❌ Error: ' + err.message));
     }
 
     function testMetaAppCredentials() {
@@ -555,17 +618,22 @@
         .then(r => r.json())
         .then(data => {
             if (data.success && data.pages && data.pages.length > 0) {
+                fetchedPagesCache = data.pages;
                 const container = document.getElementById('smartFetchedPagesContainer');
                 const list = document.getElementById('smartFetchedPagesList');
+                const countBadge = document.getElementById('smartFetchedCount');
+
                 container.classList.remove('hidden');
+                countBadge.innerText = data.pages.length;
                 list.innerHTML = '';
 
-                data.pages.forEach(p => {
+                data.pages.forEach((p, idx) => {
                     const row = document.createElement('div');
-                    row.className = 'flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl';
+                    row.className = 'flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl gap-3';
                     row.innerHTML = `
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" class="fetched-page-checkbox form-checkbox text-blue-600 rounded w-4 h-4" checked data-index="${idx}">
+                            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
                                 <i class="fa-brands fa-facebook"></i>
                             </div>
                             <div>
@@ -573,7 +641,7 @@
                                 <span class="text-[10px] text-slate-400 font-mono">ID: ${p.id}</span>
                             </div>
                         </div>
-                        <button type="button" onclick="connectSinglePage('${p.id}', '${escape(p.name)}', '${p.access_token}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition shadow-xs">
+                        <button type="button" onclick="connectSingleFetchedPage(${idx}, this)" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition shadow-xs shrink-0 cursor-pointer">
                             Connect 🚀
                         </button>
                     `;
@@ -590,7 +658,20 @@
         });
     }
 
-    function connectSinglePage(id, name, token) {
+    function toggleSelectAllFetchedPages(checked) {
+        document.querySelectorAll('.fetched-page-checkbox').forEach(cb => {
+            cb.checked = checked;
+        });
+    }
+
+    function connectSingleFetchedPage(idx, btn) {
+        const page = fetchedPagesCache[idx];
+        if (!page) return;
+
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
         fetch('{{ route("fb-pages.store") }}', {
             method: 'POST',
             headers: {
@@ -599,10 +680,11 @@
                 'Accept': 'application/json'
             },
             body: JSON.stringify({
-                page_id: id,
-                page_name: unescape(name),
-                access_token: token,
-                comment_link: false
+                page_id: page.id,
+                page_name: page.name,
+                access_token: page.access_token,
+                comment_link: false,
+                force_save: true
             })
         })
         .then(r => r.json())
@@ -612,7 +694,66 @@
                 window.location.reload();
             } else {
                 alert(data.message);
+                btn.disabled = false;
+                btn.innerHTML = orig;
             }
+        })
+        .catch(err => {
+            alert('❌ এরর: ' + err.message);
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        });
+    }
+
+    function connectSelectedPages() {
+        const checkboxes = document.querySelectorAll('.fetched-page-checkbox:checked');
+        if (checkboxes.length === 0) {
+            alert('❌ অন্তত একটি পেজ সিলেক্ট করুন!');
+            return;
+        }
+
+        const selectedPages = [];
+        checkboxes.forEach(cb => {
+            const idx = parseInt(cb.getAttribute('data-index'), 10);
+            if (fetchedPagesCache[idx]) {
+                selectedPages.push({
+                    page_id: fetchedPagesCache[idx].id,
+                    page_name: fetchedPagesCache[idx].name,
+                    access_token: fetchedPagesCache[idx].access_token,
+                    comment_link: false
+                });
+            }
+        });
+
+        const btn = document.getElementById('btnConnectSelectedPages');
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> কানেক্ট হচ্ছে...';
+
+        fetch('{{ route("fb-pages.store-multiple") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ pages: selectedPages })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.message || '❌ পেজ সেভ ব্যর্থ হয়েছে!');
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            }
+        })
+        .catch(err => {
+            alert('❌ এরর: ' + err.message);
+            btn.disabled = false;
+            btn.innerHTML = orig;
         });
     }
 
@@ -622,6 +763,8 @@
         if (modal) {
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            const statusBox = document.getElementById('manualFbStatusMsg');
+            if (statusBox) statusBox.className = 'hidden';
         }
     }
     function closeManualFbModal() {
@@ -638,11 +781,20 @@
         const token = document.getElementById('manualFbToken').value.trim();
         const name = document.getElementById('manualFbPageName').value.trim();
         const commentLink = document.getElementById('manualFbCommentLink').checked;
+        const forceSave = document.getElementById('manualFbForceSave').checked;
+        const statusBox = document.getElementById('manualFbStatusMsg');
+
+        if (!token) {
+            alert('❌ অনুগ্রহ করে Page Access Token প্রদান করুন!');
+            return;
+        }
 
         const btn = document.getElementById('btnSaveManualFb');
         const orig = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing & Saving...';
+
+        statusBox.className = 'hidden';
 
         fetch('{{ route("fb-pages.store") }}', {
             method: 'POST',
@@ -655,19 +807,32 @@
                 page_id: pageId,
                 access_token: token,
                 page_name: name,
-                comment_link: commentLink
+                comment_link: commentLink,
+                force_save: forceSave
             })
         })
         .then(r => r.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
-                window.location.reload();
+                statusBox.className = 'p-3 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 block';
+                statusBox.innerText = data.message;
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             } else {
-                alert(data.message);
+                statusBox.className = 'p-3 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 block whitespace-pre-line';
+                statusBox.innerText = data.message;
+
+                // If user didn't check force save, prompt them
+                if (data.can_force_save) {
+                    document.getElementById('manualFbForceSave').checked = true;
+                }
             }
         })
-        .catch(err => alert('❌ Error: ' + err.message))
+        .catch(err => {
+            statusBox.className = 'p-3 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200 block';
+            statusBox.innerText = '❌ এরর: ' + err.message;
+        })
         .finally(() => {
             btn.disabled = false;
             btn.innerHTML = orig;

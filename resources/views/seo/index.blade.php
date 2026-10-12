@@ -47,10 +47,15 @@
         </div>
 
         @if($activeWebsite)
-        <div class="flex items-center gap-2 shrink-0">
-            <button onclick="triggerSiteCrawl('{{ $activeWebsite->id }}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold px-4 py-2 rounded-xl text-xs border border-indigo-200 flex items-center gap-1.5 transition">
+            @if(in_array($activeWebsite->crawl_status, ['queued', 'running']))
+            <button id="headerCrawlBtn" onclick="triggerSiteCrawl('{{ $activeWebsite->id }}')" class="bg-amber-50 hover:bg-amber-100 text-amber-700 font-extrabold px-4 py-2 rounded-xl text-xs border border-amber-200 flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-spinner fa-spin text-amber-500"></i> Crawl In Progress (<span id="headerCrawlPercent">{{ $activeWebsite->crawl_progress ?? 0 }}%</span>)
+            </button>
+            @else
+            <button id="headerCrawlBtn" onclick="triggerSiteCrawl('{{ $activeWebsite->id }}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold px-4 py-2 rounded-xl text-xs border border-indigo-200 flex items-center gap-1.5 transition">
                 <i class="fa-solid fa-rotate text-indigo-500"></i> Re-Crawl & Audit
             </button>
+            @endif
             <form action="{{ route('seo.connect.destroy', $activeWebsite->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this website?')">
                 @csrf
                 @method('DELETE')
@@ -123,6 +128,17 @@
                         @else
                             <button onclick="openGoogleConnectModal()" class="text-xs font-black bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white px-4 py-2 rounded-xl shadow-md transition flex items-center gap-1.5">
                                 <i class="fa-brands fa-google"></i> Connect Google Account
+                            </button>
+                        @endif
+
+                        {{-- Service Account JSON Button --}}
+                        @if($activeWebsite->hasServiceAccount())
+                            <button onclick="openGoogleServiceAccountModal()" class="text-xs font-black bg-emerald-100 text-emerald-800 hover:bg-emerald-200 px-3 py-1.5 rounded-xl border border-emerald-300 flex items-center gap-1.5 transition" title="{{ $activeWebsite->getGoogleServiceAccountEmail() }}">
+                                <i class="fa-solid fa-key text-emerald-600"></i> Service Account Active
+                            </button>
+                        @else
+                            <button onclick="openGoogleServiceAccountModal()" class="text-xs font-bold bg-violet-100 text-violet-800 hover:bg-violet-200 px-3 py-1.5 rounded-xl border border-violet-300 flex items-center gap-1.5 transition" title="Upload Service Account JSON for Instant Indexing">
+                                <i class="fa-solid fa-key text-violet-600"></i> Service Account JSON
                             </button>
                         @endif
                     </div>
@@ -361,9 +377,14 @@
             <h3 class="font-extrabold text-slate-800 text-base flex items-center gap-2">
                 <i class="fa-solid fa-bolt text-amber-500"></i> Instant Indexing API (Google & Bing Fast Push)
             </h3>
-            <span class="text-xs font-bold bg-violet-50 text-violet-700 px-3 py-1 rounded-full border border-violet-200">
-                ⚡ 15-Second Fast Push
-            </span>
+            <div class="flex items-center gap-2">
+                <button onclick="openGoogleServiceAccountModal()" class="text-xs font-extrabold px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-key text-amber-500"></i> {{ $activeWebsite?->hasServiceAccount() ? 'Manage Service Account JSON' : 'Upload Service Account JSON' }}
+                </button>
+                <span class="text-xs font-bold bg-violet-50 text-violet-700 px-3 py-1 rounded-full border border-violet-200">
+                    ⚡ 15-Second Fast Push
+                </span>
+            </div>
         </div>
         <p class="text-xs text-slate-600 mb-4 font-medium">Notify Google Webmaster Indexing API and Bing IndexNow Protocol within 15 seconds of publication to ensure fast search discovery:</p>
 
@@ -375,6 +396,55 @@
                     <i class="fa-solid fa-circle-notch fa-spin text-slate-500 text-lg"></i>
                     <span>Connecting and checking Google & Bing API Health...</span>
                 </div>
+            </div>
+        </div>
+
+        {{-- SERVICE ACCOUNT STATUS DETAIL CARD --}}
+        <div class="mb-5 p-4 rounded-2xl border {{ $activeWebsite->hasServiceAccount() ? 'bg-gradient-to-r from-emerald-50/70 to-teal-50/50 border-emerald-200' : 'bg-gradient-to-r from-violet-50/70 to-indigo-50/50 border-violet-200' }} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl {{ $activeWebsite->hasServiceAccount() ? 'bg-emerald-100 text-emerald-700' : 'bg-violet-100 text-violet-700' }} flex items-center justify-center text-lg shrink-0 mt-0.5">
+                    <i class="fa-solid {{ $activeWebsite->hasServiceAccount() ? 'fa-shield-halved' : 'fa-file-shield' }}"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h4 class="text-xs font-black text-slate-800 uppercase tracking-wide">
+                            Google Service Account Key
+                        </h4>
+                        @if($activeWebsite->hasServiceAccount())
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-200 text-emerald-800">
+                                🟢 Configured &amp; Active
+                            </span>
+                        @else
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">
+                                ⚠️ Not Uploaded Yet
+                            </span>
+                        @endif
+                    </div>
+                    <p class="text-xs text-slate-600 mt-0.5">
+                        @if($activeWebsite->hasServiceAccount())
+                            Client Email: <span class="font-mono font-bold text-slate-800">{{ $activeWebsite->getGoogleServiceAccountEmail() }}</span>
+                            @if($activeWebsite->getGoogleServiceAccountProjectId())
+                                &bull; Project: <span class="font-mono text-slate-600">{{ $activeWebsite->getGoogleServiceAccountProjectId() }}</span>
+                            @endif
+                        @else
+                            Upload your Google Service Account JSON key to enable automated 15-second Google Indexing without manual OAuth re-authorization.
+                        @endif
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <button onclick="openGoogleServiceAccountModal()" class="text-xs font-extrabold px-3.5 py-2 rounded-xl {{ $activeWebsite->hasServiceAccount() ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-violet-600 hover:bg-violet-700 text-white' }} shadow-sm transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> {{ $activeWebsite->hasServiceAccount() ? 'Replace / Update Key' : 'Upload Service Account JSON' }}
+                </button>
+                @if($activeWebsite->hasServiceAccount())
+                    <form action="{{ route('seo.service_account.remove', $activeWebsite->id) }}" method="POST" onsubmit="return confirm('আপনি কি নিশ্চিত যে গুগল সার্ভিস অ্যাকাউন্ট কি মুছে ফেলতে চান?');" class="inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-xs font-extrabold px-3 py-2 rounded-xl bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 transition" title="Delete Key">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </form>
+                @endif
             </div>
         </div>
         @endif
@@ -639,7 +709,7 @@
                         </span>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
-                        <button onclick="approveInternalLink('{{ $suggestion['audit_id'] }}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-3.5 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
+                        <button onclick="approveInternalLink('{{ $suggestion['audit_id'] }}', this)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-3.5 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition">
                             <i class="fa-solid fa-check"></i> Approve & Apply Link
                         </button>
                         <button onclick="alert('❌ AI Link Suggestion Rejected!')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold px-3 py-1.5 rounded-xl text-xs transition">
@@ -1493,7 +1563,6 @@
                 <button onclick="changeAuditPage('image', 1)" id="image-next-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl transition disabled:opacity-50" disabled>Next</button>
             </div>
         </div>
-        </div>
     </div>
 
     {{-- DYNAMIC TAB 11: AI SEO ASSISTANT --}}
@@ -1529,7 +1598,7 @@
                 </div>
                 <h4 class="font-extrabold text-xs text-indigo-900 mb-1">Generate High-CTR Google Discover Headlines</h4>
                 <p class="text-[11px] text-indigo-800 font-medium mb-3">Use AI recommendations to craft high-CTR headlines for breaking news coverage.</p>
-                <button onclick="generateDiscoverHeadlines()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-xs shadow-xs transition">
+                <button onclick="generateDiscoverHeadlines('{{ $activeWebsite?->id }}')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-xs shadow-xs transition">
                     🔥 Generate Viral Discover Titles
                 </button>
             </div>
@@ -1612,6 +1681,16 @@
                     💡 Clicking "Sign in with Google" will automatically authorize and sync Search Console and Analytics.
                 </div>
 
+                <div class="p-3 bg-violet-50/80 rounded-xl border border-violet-100 text-[11px] font-bold text-violet-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <div>
+                        <span>⚡ Google Instant Indexing (15s Push):</span>
+                        <span class="block text-[10px] text-violet-700 font-normal">Use a Service Account JSON key for reliable server-to-server instant indexing.</span>
+                    </div>
+                    <button type="button" onclick="closeGoogleConnectModal(); openGoogleServiceAccountModal();" class="text-xs font-black text-violet-700 hover:text-violet-900 underline shrink-0">
+                        Upload Service Account JSON &rarr;
+                    </button>
+                </div>
+
                 <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end gap-2">
                     <button type="button" onclick="closeGoogleConnectModal()" class="px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-600 bg-slate-100 hover:bg-slate-200">Cancel</button>
                     <button type="submit" class="bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs shadow-md flex items-center gap-2">
@@ -1619,6 +1698,102 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+{{-- GOOGLE SERVICE ACCOUNT JSON UPLOAD MODAL --}}
+<div id="googleServiceAccountModal" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden">
+        {{-- Header --}}
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-violet-100 text-violet-700 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-key"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-slate-900 text-base">Google Service Account JSON</h3>
+                    <p class="text-[11px] text-slate-500 font-medium">Google Webmaster Instant Indexing API Credentials</p>
+                </div>
+            </div>
+            <button onclick="closeGoogleServiceAccountModal()" class="w-8 h-8 rounded-full bg-slate-200/70 text-slate-600 hover:bg-slate-300 flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        {{-- Scrollable body --}}
+        <div class="p-6 overflow-y-auto custom-scrollbar space-y-4 text-xs">
+            @if($activeWebsite && $activeWebsite->hasServiceAccount())
+                <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="font-black text-emerald-900 uppercase text-[10px]">Active Service Account Connected</span>
+                        </div>
+                        <p class="font-mono text-xs font-bold text-emerald-800 mt-1 break-all">
+                            {{ $activeWebsite->getGoogleServiceAccountEmail() }}
+                        </p>
+                        @if($activeWebsite->getGoogleServiceAccountProjectId())
+                            <span class="text-[10px] text-emerald-700 font-mono">Project ID: {{ $activeWebsite->getGoogleServiceAccountProjectId() }}</span>
+                        @endif
+                    </div>
+                    <form action="{{ route('seo.service_account.remove', $activeWebsite->id) }}" method="POST" onsubmit="return confirm('Remove active service account key?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can"></i> Remove
+                        </button>
+                    </form>
+                </div>
+            @endif
+
+            {{-- Step-by-Step Setup Guide --}}
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-slate-700">
+                <h4 class="font-extrabold text-slate-900 text-xs flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-info text-violet-600"></i> Setup Guide (৩টি সহজ ধাপ):
+                </h4>
+                <ol class="list-decimal list-inside space-y-1.5 text-[11px] text-slate-600 font-medium leading-relaxed">
+                    <li>Google Cloud Console-এ প্রজেক্ট তৈরি করে <strong>"Web Search Indexing API"</strong> অন (Enable) করুন।</li>
+                    <li><strong>IAM &amp; Admin &gt; Service Accounts</strong> থেকে একটি সার্ভিস অ্যাকাউন্ট তৈরি করে <strong>Keys &gt; Create new key (JSON)</strong> ডাউনলোড করুন।</li>
+                    <li><strong>Google Search Console &gt; Settings &gt; Users &amp; permissions</strong>-এ গিয়ে সার্ভিস অ্যাকাউন্টের ইমেইলটিকে <strong>Owner</strong> পারমিশন দিন।</li>
+                </ol>
+            </div>
+
+            {{-- Upload Form --}}
+            @if($activeWebsite)
+            <form action="{{ route('seo.service_account.upload', $activeWebsite->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-[11px] font-extrabold text-slate-700 uppercase mb-1.5">
+                        📁 Option 1: Upload JSON Key File (.json)
+                    </label>
+                    <input type="file" name="service_account_file" accept=".json,application/json" class="w-full border border-slate-300 rounded-xl p-2 text-xs text-slate-700 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-violet-600 file:text-white hover:file:bg-violet-700 cursor-pointer">
+                    <span class="block text-[10px] text-slate-500 mt-1">Google Cloud থেকে ডাউনলোড করা `service-account.json` ফাইল সিলেক্ট করুন।</span>
+                </div>
+
+                <div class="relative flex py-1 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink mx-3 text-slate-400 text-[10px] font-extrabold uppercase">OR Paste JSON Content</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-extrabold text-slate-700 uppercase mb-1.5">
+                        📝 Option 2: Paste Service Account JSON Text
+                    </label>
+                    <textarea name="service_account_json" rows="4" placeholder='{"type": "service_account", "project_id": "...", "private_key": "-----BEGIN PRIVATE KEY-----...", "client_email": "..."}' class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-violet-500"></textarea>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2 border-t border-slate-100">
+                    <button type="button" onclick="closeGoogleServiceAccountModal()" class="px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs shadow-md flex items-center gap-2 transition">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Save Service Account Key
+                    </button>
+                </div>
+            </form>
+            @endif
         </div>
     </div>
 </div>
@@ -1712,6 +1887,12 @@
             <span>Audit & Compliance Status</span>
             <span id="seoProgressPercentText" class="text-indigo-600 font-black text-sm">0%</span>
         </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 flex justify-center">
+            <button type="button" onclick="dismissCrawlModal()" class="text-slate-400 hover:text-slate-600 text-xs font-bold transition flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-100">
+                <i class="fa-solid fa-eye-slash"></i> Hide & Run in Background
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1725,8 +1906,18 @@ function copyToClipboard(text) {
     });
 }
 
+function openGoogleServiceAccountModal() {
+    const m = document.getElementById('googleServiceAccountModal');
+    if (m) m.classList.remove('hidden');
+}
+
+function closeGoogleServiceAccountModal() {
+    const m = document.getElementById('googleServiceAccountModal');
+    if (m) m.classList.add('hidden');
+}
+
 function openGoogleApiHelpModal() {
-    alert(`🔑 Google Webmaster Indexing API Setup Guide:\n\n1. Download your Service Account JSON key from Google Cloud Console.\n2. Save the file at: storage/app/seo/google-indexing-credentials.json\n3. Add your Service Account email to Google Search Console as Owner.\n\nOnce added, Google Webmaster Instant Indexing API (15s fast push) will be 100% active!`);
+    openGoogleServiceAccountModal();
 }
 
 function filterBrokenLinksTable() {
@@ -1808,8 +1999,103 @@ function openAiCompetitorStrategyModal(keyword) {
 }
 
 function runCompetitorGap(siteId) {
-    const compDomain = document.getElementById('competitorInputDomain')?.value || 'prothomalo.com';
-    alert('🔍 Analyzing Keyword Gap vs ' + compDomain + '...\n\nResult: Analyzed missing high-volume news keywords for your site!');
+    siteId = siteId || '{{ $activeWebsite?->id ?? '' }}';
+    if (!siteId) {
+        alert('⚠️ Please select or connect a website first.');
+        return;
+    }
+    const compDomain = document.getElementById('competitorInputDomain')?.value?.trim() || 'prothomalo.com';
+    const resultsBox = document.getElementById('competitorGapResultsBox');
+
+    if (resultsBox) {
+        resultsBox.style.opacity = '0.5';
+    }
+
+    fetch(`/seo/competitor-gap/${siteId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ competitor_domain: compDomain })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (resultsBox) {
+            resultsBox.style.opacity = '1';
+            let rowsHtml = '';
+            const missingKeywords = data.missing_keywords || [];
+
+            if (missingKeywords.length === 0) {
+                rowsHtml = `<tr><td colspan="5" class="p-6 text-center text-slate-500 font-bold">No keyword gaps found against ${escapeHtml(data.competitor_domain || compDomain)}. Great job!</td></tr>`;
+            } else {
+                rowsHtml = missingKeywords.map(kw => {
+                    const diffColor = kw.difficulty === 'Low' ? 'bg-emerald-100 text-emerald-800' : (kw.difficulty === 'Medium' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800');
+                    return `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-3 font-extrabold text-rose-700">• ${escapeHtml(kw.keyword)}</td>
+                            <td class="p-3 font-black text-slate-900">Rank #${escapeHtml(String(kw.competitor_pos))}</td>
+                            <td class="p-3 font-mono font-bold text-indigo-600">${Number(kw.vol || 0).toLocaleString()} searches/mo</td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 ${diffColor} rounded font-black text-[10px]">
+                                    ${escapeHtml(kw.difficulty)} Difficulty
+                                </span>
+                            </td>
+                            <td class="p-3 text-right">
+                                <button onclick="openAiCompetitorStrategyModal('${escapeHtml(kw.keyword)}')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-1 rounded-xl text-[10px] shadow-xs transition">
+                                    🤖 AI Coverage Plan
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            resultsBox.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl">
+                        <span class="text-[10px] font-black text-indigo-900 uppercase">Target Domain</span>
+                        <p class="text-lg font-black text-indigo-700 mt-0.5 truncate">${escapeHtml(data.target_domain || '')}</p>
+                        <span class="text-[10px] font-bold text-indigo-600">Health Score: {{ $activeWebsite?->seo_health_score ?? 100 }}/100</span>
+                    </div>
+                    <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl">
+                        <span class="text-[10px] font-black text-rose-900 uppercase">Competitor Domain</span>
+                        <p class="text-lg font-black text-rose-700 mt-0.5 truncate">${escapeHtml(data.competitor_domain || compDomain)}</p>
+                        <span class="text-[10px] font-bold text-rose-600">Market Leader</span>
+                    </div>
+                    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
+                        <span class="text-[10px] font-black text-emerald-900 uppercase">Keyword Gap Score</span>
+                        <p class="text-2xl font-black text-emerald-700 mt-0.5">${data.gap_score ?? 0}%</p>
+                        <span class="text-[10px] font-bold text-emerald-600">High Growth Potential</span>
+                    </div>
+                </div>
+
+                <h4 class="font-extrabold text-slate-800 text-xs uppercase tracking-wider mb-3">🔥 ${escapeHtml(data.competitor_domain || compDomain)} Top ranking competitor keyword opportunities:</h4>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs text-slate-700 border border-slate-200 rounded-2xl overflow-hidden">
+                        <thead class="bg-slate-100 text-slate-800 uppercase text-[10px] font-black border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">Missing Keyword</th>
+                                <th class="p-3">Competitor Rank</th>
+                                <th class="p-3">Monthly Search Volume</th>
+                                <th class="p-3">SEO Difficulty</th>
+                                <th class="p-3 text-right">AI Strategy Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium">
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        alert(`✅ Competitor Keyword Gap Analysis Complete!\n\n• Target Domain: ${data.target_domain || 'Current'}\n• Competitor: ${data.competitor_domain || compDomain}\n• Gap Score: ${data.gap_score}%\n• Opportunities Found: ${data.missing_keywords?.length || 0}`);
+    })
+    .catch(err => {
+        if (resultsBox) resultsBox.style.opacity = '1';
+        console.error('Competitor gap analysis error:', err);
+        alert('❌ Failed to run competitor gap analysis. Please try again.');
+    });
 }
 
 function testTelegramAlert(siteId) {
@@ -1852,8 +2138,8 @@ function triggerInstantIndexing(siteId, targetUrl) {
         applyInstantIndexingFilter();
     })
     .catch(err => {
-        alert('⚡ Instant Indexing Push Complete! Pushed to Google Indexing API & IndexNow Protocol.');
-        applyInstantIndexingFilter();
+        console.error('Instant Indexing error:', err);
+        alert('❌ Instant Indexing Push Failed! Please verify the URL and your API credentials.');
     });
 }
 
@@ -1955,7 +2241,14 @@ function resetInstantIndexingFilter() {
     applyInstantIndexingFilter();
 }
 
-function approveInternalLink(auditId) {
+function approveInternalLink(auditId, btnEl) {
+    if (!btnEl && typeof event !== 'undefined' && event) {
+        btnEl = event.currentTarget || event.target;
+    }
+    if (!btnEl) {
+        btnEl = document.querySelector(`button[onclick*="approveInternalLink('${auditId}'"]`);
+    }
+
     fetch('/seo/approve-link', {
         method: 'POST',
         headers: {
@@ -1970,6 +2263,10 @@ function approveInternalLink(auditId) {
             btnEl.outerHTML = '<span class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full font-black text-xs border border-emerald-300">✅ Link Active</span>';
         }
         alert(data.message || '✅ Human Approval Received! Internal link inserted safely.');
+    })
+    .catch(err => {
+        console.error('Error approving internal link:', err);
+        alert('❌ Failed to approve internal link. Please try again.');
     });
 }
 
@@ -1977,7 +2274,7 @@ function generateSmartUtmLink() {
     const url = document.getElementById('utmTargetUrl')?.value || '{{ $activeWebsite?->target_url ?? '' }}';
     const platform = document.getElementById('utmPlatform')?.value || 'facebook';
 
-    fetch('/seo/generate-utm', {
+    fetch('{{ route('seo.utm_generate') }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1997,6 +2294,10 @@ function generateSmartUtmLink() {
             navigator.clipboard.writeText(data.utm_url);
             alert(`🔗 Smart UTM Link Generated & Copied to Clipboard!\n\n${data.utm_url}`);
         }
+    })
+    .catch(err => {
+        console.error('Error generating UTM link:', err);
+        alert('❌ Failed to generate UTM link. Please try again.');
     });
 }
 
@@ -2008,6 +2309,11 @@ function set301Redirect(auditId, brokenUrl) {
 }
 
 function generateDiscoverHeadlines(siteId) {
+    siteId = siteId || '{{ $activeWebsite?->id ?? '' }}';
+    if (!siteId) {
+        alert('⚠️ Please select or connect a website first.');
+        return;
+    }
     const inputTitle = document.getElementById('discoverInputTitle')?.value || 'Breaking News Coverage';
     fetch(`/seo/discover-check/${siteId}`, {
         method: 'POST',
@@ -2084,34 +2390,118 @@ function closeConnectModal() {
     document.getElementById('connectWebsiteModal').classList.add('hidden');
 }
 
-function triggerSiteCrawl(siteId) {
+let crawlPollTimer = null;
+
+function dismissCrawlModal() {
     const modal = document.getElementById('seoAuditProgressModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function updateCrawlModalUI(percent, message) {
     const bar = document.getElementById('seoProgressBar');
     const percentText = document.getElementById('seoProgressPercentText');
     const stepText = document.getElementById('seoProgressStepText');
+    const headerPercent = document.getElementById('headerCrawlPercent');
 
-    if (modal) modal.classList.remove('hidden');
-    let currentPercent = 0;
+    const safePercent = Math.min(100, Math.max(0, percent));
+    if (bar) bar.style.width = safePercent + '%';
+    if (percentText) percentText.innerText = safePercent + '%';
+    if (headerPercent) headerPercent.innerText = safePercent + '%';
+    if (stepText && message) stepText.innerText = message;
+}
 
-    const interval = setInterval(() => {
-        if (currentPercent < 90) {
-            currentPercent += Math.floor(Math.random() * 15) + 10;
-            if (currentPercent > 90) currentPercent = 90;
+function getStepMessage(percent) {
+    if (percent < 25) {
+        return "🌐 1/4: Scanning Sitemap & News URLs...";
+    } else if (percent < 60) {
+        return "⚡ 2/4: Checking Titles, Meta Descriptions & Image ALT Tags...";
+    } else if (percent < 85) {
+        return "📊 3/4: Analyzing Core Web Vitals, H1 Tags & HTTP Status Codes...";
+    } else if (percent < 100) {
+        return "🤖 4/4: Computing Overall SEO Health Score & AI Recommendations...";
+    } else {
+        return "✅ SEO Audit Complete!";
+    }
+}
 
-            if (bar) bar.style.width = currentPercent + '%';
-            if (percentText) percentText.innerText = currentPercent + '%';
+function pollCrawlStatus(siteId, initialPercent = 10) {
+    if (crawlPollTimer) clearInterval(crawlPollTimer);
 
-            if (currentPercent < 30) {
-                if (stepText) stepText.innerText = "🌐 1/4: Scanning Sitemap & News URLs...";
-            } else if (currentPercent < 60) {
-                if (stepText) stepText.innerText = "⚡ 2/4: Checking Titles, Meta Descriptions & Image ALT Tags...";
-            } else if (currentPercent < 85) {
-                if (stepText) stepText.innerText = "📊 3/4: Analyzing Core Web Vitals, H1 Tags & HTTP Status Codes...";
-            } else {
-                if (stepText) stepText.innerText = "🤖 4/4: Computing Overall SEO Health Score & AI Recommendations...";
-            }
+    const modal = document.getElementById('seoAuditProgressModal');
+    let displayedPercent = initialPercent;
+    let pollAttempts = 0;
+    const maxAttempts = 200; // ~5 minutes max
+
+    crawlPollTimer = setInterval(async () => {
+        pollAttempts++;
+        if (pollAttempts > maxAttempts) {
+            clearInterval(crawlPollTimer);
+            if (modal) modal.classList.add('hidden');
+            alert('⏱️ The crawl audit is taking longer than expected in the background. Please refresh this page shortly to see completed results.');
+            return;
         }
-    }, 400);
+
+        try {
+            const res = await fetch(`/seo/crawl-status/${siteId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!res.ok) {
+                return;
+            }
+
+            const data = await res.json();
+            if (!data.success) {
+                clearInterval(crawlPollTimer);
+                if (modal) modal.classList.add('hidden');
+                alert('❌ Error: ' + (data.message || 'Failed to fetch crawl status.'));
+                return;
+            }
+
+            if (data.status === 'completed') {
+                clearInterval(crawlPollTimer);
+                updateCrawlModalUI(100, '✅ SEO Audit Complete! Health Score: ' + (data.health_score ?? 100) + '/100');
+                setTimeout(() => {
+                    location.reload();
+                }, 900);
+                return;
+            }
+
+            if (data.status === 'failed') {
+                clearInterval(crawlPollTimer);
+                if (modal) modal.classList.add('hidden');
+                alert('❌ Crawl error: ' + (data.error || 'The background crawler encountered an error.'));
+                return;
+            }
+
+            // Status is 'queued' or 'running'
+            const serverProgress = parseInt(data.progress, 10) || 10;
+            if (serverProgress > displayedPercent) {
+                displayedPercent = serverProgress;
+            } else if (displayedPercent < 92) {
+                displayedPercent = Math.min(displayedPercent + 1, 92);
+            }
+
+            const stepMsg = data.status === 'queued'
+                ? '⏳ Queued in background: Waiting for crawler worker...'
+                : getStepMessage(displayedPercent);
+
+            updateCrawlModalUI(displayedPercent, stepMsg);
+
+        } catch (err) {
+            console.warn('Crawl polling attempt error:', err);
+        }
+    }, 1500);
+}
+
+function triggerSiteCrawl(siteId) {
+    const modal = document.getElementById('seoAuditProgressModal');
+    if (modal) modal.classList.remove('hidden');
+
+    updateCrawlModalUI(5, '🚀 Initializing Technical Crawl Request...');
 
     fetch(`/seo/crawl/${siteId}`, {
         method: 'POST',
@@ -2131,24 +2521,29 @@ function triggerSiteCrawl(siteId) {
         return data;
     })
     .then(data => {
-        clearInterval(interval);
-        if (data.success) {
-            if (bar) bar.style.width = '100%';
-            if (percentText) percentText.innerText = '100%';
-            if (stepText) stepText.innerText = '✅ SEO Audit Complete! Health Score: ' + (data.health_score || 100) + '/100';
+        if (!data.success) {
+            if (modal) modal.classList.add('hidden');
+            alert('❌ Crawl error: ' + (data.message || 'Unknown error occurred while dispatching crawl'));
+            return;
+        }
 
+        // If synchronously finished already (e.g. sync queue driver)
+        if (data.status === 'completed') {
+            updateCrawlModalUI(100, '✅ SEO Audit Complete! Health Score: ' + (data.health_score || 100) + '/100');
             setTimeout(() => {
                 location.reload();
             }, 800);
-        } else {
-            if (modal) modal.classList.add('hidden');
-            alert('❌ Crawl error: ' + (data.message || 'Unknown error occurred while crawling'));
+            return;
         }
+
+        // Otherwise queued or already running in background, poll for status
+        const initialProgress = data.progress || 10;
+        updateCrawlModalUI(initialProgress, data.status === 'queued' ? '⏳ Crawl job queued in background...' : '🌐 Scanning Website Pages...');
+        pollCrawlStatus(siteId, initialProgress);
     })
     .catch(err => {
-        clearInterval(interval);
         if (modal) modal.classList.add('hidden');
-        alert('❌ Error: ' + err.message);
+        alert('❌ Network error: ' + err.message);
     });
 }
 
@@ -2422,24 +2817,24 @@ function loadUptimeData(siteId) {
 
             // Update Uptime card
             const uptimeCard = container.children[0];
-            uptimeCard.className = `p-4 \${isOnline ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'} rounded-2xl border text-center`;
+            uptimeCard.className = `p-4 ${isOnline ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'} rounded-2xl border text-center`;
             uptimeCard.innerHTML = `
-                <span class="text-[10px] font-black \${isOnline ? 'text-emerald-800' : 'text-rose-800'} uppercase">Website Server Uptime</span>
-                <p class="text-xl font-black \${isOnline ? 'text-emerald-700' : 'text-rose-700'} my-1">
-                    \${isOnline ? '🟢 ' + statusText : '🔴 Server Offline (' + statusText + ')'}
+                <span class="text-[10px] font-black ${isOnline ? 'text-emerald-800' : 'text-rose-800'} uppercase">Website Server Uptime</span>
+                <p class="text-xl font-black ${isOnline ? 'text-emerald-700' : 'text-rose-700'} my-1">
+                    ${isOnline ? '🟢 ' + statusText : '🔴 Server Offline (' + statusText + ')'}
                 </p>
-                <span class="text-[10px] font-bold \${isOnline ? 'text-emerald-600' : 'text-rose-600'}">Server Response: \${responseTime}ms</span>
+                <span class="text-[10px] font-bold ${isOnline ? 'text-emerald-600' : 'text-rose-600'}">Server Response: ${responseTime}ms</span>
             `;
 
             // Update SSL card
             const sslCard = container.children[1];
-            sslCard.className = `p-4 \${sslValid ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'} rounded-2xl border text-center`;
+            sslCard.className = `p-4 ${sslValid ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'} rounded-2xl border text-center`;
             sslCard.innerHTML = `
-                <span class="text-[10px] font-black \${sslValid ? 'text-emerald-800' : 'text-amber-800'} uppercase">SSL Certificate Security</span>
-                <p class="text-xl font-black \${sslValid ? 'text-emerald-700' : 'text-amber-700'} my-1">
-                    \${sslValid ? '🔒 Valid HTTPS Active' : '⚠️ SSL Expired / Invalid'}
+                <span class="text-[10px] font-black ${sslValid ? 'text-emerald-800' : 'text-amber-800'} uppercase">SSL Certificate Security</span>
+                <p class="text-xl font-black ${sslValid ? 'text-emerald-700' : 'text-amber-700'} my-1">
+                    ${sslValid ? '🔒 Valid HTTPS Active' : '⚠️ SSL Expired / Invalid'}
                 </p>
-                <span class="text-[10px] font-bold \${sslValid ? 'text-emerald-600' : 'text-amber-600'}">SSL Issuer: \${sslIssuer}</span>
+                <span class="text-[10px] font-bold ${sslValid ? 'text-emerald-600' : 'text-amber-600'}">SSL Issuer: ${sslIssuer}</span>
             `;
         })
         .catch(err => {
@@ -2459,20 +2854,24 @@ function loadIndexingHealth(siteId) {
             const googleWorking = data.google_status === 'working';
             const googleLabel = data.google_label;
             const indexNowLabel = data.indexnow_label;
+            const saEmail = data.service_account_email;
 
             container.className = "grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5";
             container.innerHTML = `
-                <div class="p-4 rounded-2xl border \${googleWorking ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-amber-50 border-amber-200 text-amber-900'} flex items-center justify-between">
+                <div class="p-4 rounded-2xl border ${googleWorking ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-amber-50 border-amber-200 text-amber-900'} flex items-center justify-between">
                     <div class="flex items-center gap-2 text-xs font-extrabold">
                         <i class="fa-brands fa-google text-lg"></i>
-                        <span>\${googleLabel}</span>
+                        <div>
+                            <span>${googleLabel}</span>
+                            ${saEmail ? `<span class="block text-[10px] text-emerald-700 font-mono font-normal truncate max-w-[200px] sm:max-w-xs">${saEmail}</span>` : ''}
+                        </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 rounded font-black text-[10px] uppercase \${googleWorking ? 'bg-emerald-200 text-emerald-800' : 'bg-amber-200 text-amber-800'}">
-                            \${googleWorking ? 'Operational 🟢' : 'Setup Required ⚠️'}
+                        <span class="px-2 py-0.5 rounded font-black text-[10px] uppercase ${googleWorking ? 'bg-emerald-200 text-emerald-800' : 'bg-amber-200 text-amber-800'}">
+                            ${googleWorking ? 'Operational 🟢' : 'Setup Required ⚠️'}
                         </span>
-                        <button onclick="openGoogleApiHelpModal()" class="text-amber-800 hover:text-amber-950 font-black text-[10px] underline">
-                            ❓ API Help
+                        <button onclick="openGoogleServiceAccountModal()" class="text-indigo-700 hover:text-indigo-950 font-black text-[10px] underline">
+                            ${data.has_service_account ? '⚙️ Key Settings' : '🔑 Setup Key'}
                         </button>
                     </div>
                 </div>
@@ -2480,7 +2879,7 @@ function loadIndexingHealth(siteId) {
                 <div class="p-4 rounded-2xl border bg-sky-50 border-sky-200 text-sky-900 flex items-center justify-between">
                     <div class="flex items-center gap-2 text-xs font-extrabold">
                         <i class="fa-solid fa-bolt text-amber-500 text-lg"></i>
-                        <span>\${indexNowLabel}</span>
+                        <span>${indexNowLabel}</span>
                     </div>
                     <span class="px-2 py-0.5 rounded font-black text-[10px] uppercase bg-sky-200 text-sky-800">
                         Operational 🟢
@@ -2493,6 +2892,23 @@ function loadIndexingHealth(siteId) {
             container.innerHTML = `<div class="p-4 border border-rose-200 bg-rose-50 text-rose-800 text-xs rounded-2xl col-span-2">Failed to load API connection status. Please refresh the page.</div>`;
         });
 }
+
+@if(isset($activeWebsite) && $activeWebsite && in_array($activeWebsite->crawl_status, ['queued', 'running']))
+document.addEventListener('DOMContentLoaded', () => {
+    fetch(`/seo/crawl-status/{{ $activeWebsite->id }}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && (data.status === 'queued' || data.status === 'running')) {
+                const modal = document.getElementById('seoAuditProgressModal');
+                if (modal) modal.classList.remove('hidden');
+                const initialProg = data.progress || 10;
+                updateCrawlModalUI(initialProg, data.status === 'queued' ? '⏳ Crawl job queued in background...' : getStepMessage(initialProg));
+                pollCrawlStatus('{{ $activeWebsite->id }}', initialProg);
+            }
+        })
+        .catch(e => console.log('Initial crawl status check:', e));
+});
+@endif
 </script>
 @endpush
 @endsection

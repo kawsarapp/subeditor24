@@ -5,6 +5,7 @@ namespace App\Modules\SeoIntelligence\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\SeoIntelligence\Models\SeoWebsite;
 use App\Modules\SeoIntelligence\Models\SeoPageAudit;
+use App\Modules\SeoIntelligence\Jobs\ExecuteSeoCrawlJob;
 use App\Modules\SeoIntelligence\Services\WebsiteCrawlerEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -111,7 +112,7 @@ class SeoDashboardController extends Controller
     }
 
     /**
-     * Trigger On-Demand Technical Crawl for Selected Website
+     * Trigger On-Demand Technical Crawl for Selected Website (Queued)
      */
     public function crawl(Request $request, $id)
     {
@@ -125,16 +126,64 @@ class SeoDashboardController extends Controller
             return response()->json(['success' => false, 'message' => 'Website record not found.'], 404);
         }
 
-        try {
-            $result = $this->crawlerEngine->crawlWebsite($website);
-            return response()->json($result);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("SEO Crawl failed: " . $e->getMessage());
+        // If crawl is currently running, return existing state unless stale (>10 min)
+        if ($website->crawl_status === 'running' && $website->updated_at && $website->updated_at->gt(now()->subMinutes(10))) {
             return response()->json([
-                'success' => false,
-                'message' => 'Crawl failed: ' . $e->getMessage()
-            ], 200);
+                'success' => true,
+                'already_running' => true,
+                'status' => 'running',
+                'progress' => (int) ($website->crawl_progress ?? 10),
+                'message' => 'Crawl is already running in background.',
+                'website_id' => $website->id,
+            ]);
         }
+
+        $website->update([
+            'crawl_status' => 'queued',
+            'crawl_progress' => 0,
+            'crawl_error' => null,
+        ]);
+
+        ExecuteSeoCrawlJob::dispatch($website->id);
+
+        $website->refresh();
+
+        return response()->json([
+            'success' => true,
+            'queued' => true,
+            'status' => $website->crawl_status ?? 'queued',
+            'progress' => (int) ($website->crawl_progress ?? 0),
+            'health_score' => $website->seo_health_score,
+            'message' => 'Technical crawl job dispatched to background queue.',
+            'website_id' => $website->id,
+        ]);
+    }
+
+    /**
+     * Get Crawl Status and Progress for Selected Website
+     */
+    public function crawlStatus(Request $request, $id)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'super_admin' && !$user->hasPermission('can_seo_intelligence')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $website = SeoWebsite::where('user_id', $user->id)->find($id);
+        if (!$website) {
+            return response()->json(['success' => false, 'message' => 'Website record not found.'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'website_id' => $website->id,
+            'status' => $website->crawl_status ?? 'idle',
+            'progress' => (int) ($website->crawl_progress ?? 0),
+            'health_score' => $website->seo_health_score,
+            'last_crawled_at' => $website->last_crawled_at ? $website->last_crawled_at->diffForHumans() : null,
+            'last_crawled_timestamp' => $website->last_crawled_at ? $website->last_crawled_at->toIso8601String() : null,
+            'error' => $website->crawl_error,
+        ]);
     }
 
     /**
@@ -343,7 +392,11 @@ class SeoDashboardController extends Controller
         $query = SeoPageAudit::where('seo_website_id', $website->id);
 
         if ($type === 'broken') {
-            $query->where('status_code', '!=', 200);
+            $query->where(function ($q) {
+                $q->where('status_code', '>=', 400)
+                  ->orWhere('status_code', '!=', 200)
+                  ->orWhere('issues_found', 'like', '%broken_link%');
+            });
         }
 
         $paginator = $query->latest('crawled_at')->paginate($perPage);
@@ -356,5 +409,133 @@ class SeoDashboardController extends Controller
             'total' => $paginator->total(),
             'per_page' => $paginator->perPage(),
         ]);
+    }
+
+    /**
+     * Upload and securely store Google Service Account JSON for Google Instant Indexing
+     */
+    public function uploadServiceAccount(Request $request, $id)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'super_admin' && !$user->hasPermission('can_seo_intelligence')) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+            abort(403);
+        }
+
+        $website = SeoWebsite::where('user_id', $user->id)->findOrFail($id);
+
+        $request->validate([
+            'service_account_file' => 'nullable|file|max:2048',
+            'service_account_json' => 'nullable|string',
+        ]);
+
+        $rawJson = null;
+
+        if ($request->hasFile('service_account_file')) {
+            $file = $request->file('service_account_file');
+            $rawJson = file_get_contents($file->getRealPath());
+        } elseif ($request->filled('service_account_json')) {
+            $rawJson = trim($request->input('service_account_json'));
+        }
+
+        if (empty($rawJson)) {
+            $errorMsg = 'অনুগ্রহ করে সার্ভিস অ্যাকাউন্ট JSON ফাইল আপলোড করুন অথবা JSON কনটেন্ট পেস্ট করুন।';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $errorMsg], 422);
+            }
+            return redirect()->back()->with('error', $errorMsg);
+        }
+
+        $parsed = json_decode($rawJson, true);
+        if (!is_array($parsed) || empty($parsed['client_email']) || empty($parsed['private_key'])) {
+            $errorMsg = 'ভুল JSON ফরম্যাট: ফাইলে "client_email" এবং "private_key" থাকা আবশ্যক। Google Cloud Console থেকে ডাউনলোড করা সঠিক Service Account JSON ফাইল দিন।';
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $errorMsg], 422);
+            }
+            return redirect()->back()->with('error', $errorMsg);
+        }
+
+        // 1. Encrypt and save in database
+        $website->google_service_account_json = json_encode($parsed);
+        $website->save();
+
+        // 2. Also save to secure local storage directory (storage/app/seo/)
+        try {
+            $storageDir = storage_path('app/seo');
+            if (!is_dir($storageDir)) {
+                mkdir($storageDir, 0750, true);
+            }
+            $filePath = $storageDir . "/service_account_{$website->id}.json";
+            file_put_contents($filePath, json_encode($parsed, JSON_PRETTY_PRINT));
+            @chmod($filePath, 0600);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Could not write service account file to storage: " . $e->getMessage());
+        }
+
+        // Clear cached token and indexing health
+        try {
+            cache()->forget('seo_indexing_health_' . $website->id);
+            cache()->forget('gsa_indexing_token_' . md5($parsed['client_email']));
+        } catch (\Throwable $e) {}
+
+        $clientEmail = $parsed['client_email'];
+        $projectId = $parsed['project_id'] ?? 'N/A';
+        $successMsg = "গুগল সার্ভিস অ্যাকাউন্ট সফলভাবে সংযুক্ত হয়েছে! (Email: {$clientEmail})";
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $successMsg,
+                'client_email' => $clientEmail,
+                'project_id' => $projectId,
+            ]);
+        }
+
+        return redirect()->back()->with('success', $successMsg);
+    }
+
+    /**
+     * Remove Google Service Account JSON
+     */
+    public function removeServiceAccount(Request $request, $id)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'super_admin' && !$user->hasPermission('can_seo_intelligence')) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+            abort(403);
+        }
+
+        $website = SeoWebsite::where('user_id', $user->id)->findOrFail($id);
+
+        $saEmail = $website->getGoogleServiceAccountEmail();
+        if ($saEmail) {
+            try {
+                cache()->forget('gsa_indexing_token_' . md5($saEmail));
+            } catch (\Throwable $e) {}
+        }
+
+        $website->google_service_account_json = null;
+        $website->save();
+
+        $filePath = storage_path("app/seo/service_account_{$website->id}.json");
+        if (file_exists($filePath)) {
+            @unlink($filePath);
+        }
+
+        try {
+            cache()->forget('seo_indexing_health_' . $website->id);
+        } catch (\Throwable $e) {}
+
+        $msg = 'গুগল সার্ভিস অ্যাকাউন্ট সফলভাবে মুছে ফেলা হয়েছে।';
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => $msg]);
+        }
+
+        return redirect()->back()->with('success', $msg);
     }
 }

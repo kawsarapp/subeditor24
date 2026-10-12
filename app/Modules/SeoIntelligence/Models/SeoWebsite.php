@@ -25,12 +25,19 @@ class SeoWebsite extends Model
         'sitemap_url',
         'robots_txt_url',
         'seo_health_score',
+        'crawl_status',
+        'crawl_progress',
+        'last_crawled_at',
+        'crawl_error',
+        'google_service_account_json',
     ];
 
     protected $casts = [
         'is_verified' => 'boolean',
         'google_token_expires_at' => 'datetime',
         'seo_health_score' => 'integer',
+        'crawl_progress' => 'integer',
+        'last_crawled_at' => 'datetime',
     ];
 
     public function user()
@@ -82,5 +89,66 @@ class SeoWebsite extends Model
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    public function setGoogleServiceAccountJsonAttribute($value)
+    {
+        $this->attributes['google_service_account_json'] = $value ? Crypt::encryptString(is_array($value) ? json_encode($value) : $value) : null;
+    }
+
+    public function getGoogleServiceAccountJsonAttribute($value)
+    {
+        if (!$value) return null;
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Exception $e) {
+            return $value;
+        }
+    }
+
+    /**
+     * Get parsed Service Account JSON data
+     */
+    public function getGoogleServiceAccountData(): ?array
+    {
+        $raw = $this->google_service_account_json;
+        if (!$raw) {
+            $path = storage_path("app/seo/service_account_{$this->id}.json");
+            if (file_exists($path)) {
+                $raw = @file_get_contents($path);
+            }
+        }
+        if (!$raw) {
+            return null;
+        }
+
+        $data = json_decode($raw, true);
+        return is_array($data) ? $data : null;
+    }
+
+    /**
+     * Check if website has Google Service Account configured
+     */
+    public function hasServiceAccount(): bool
+    {
+        return !empty($this->getGoogleServiceAccountData());
+    }
+
+    /**
+     * Get Service Account Client Email
+     */
+    public function getGoogleServiceAccountEmail(): ?string
+    {
+        $data = $this->getGoogleServiceAccountData();
+        return $data['client_email'] ?? null;
+    }
+
+    /**
+     * Get Service Account Project ID
+     */
+    public function getGoogleServiceAccountProjectId(): ?string
+    {
+        $data = $this->getGoogleServiceAccountData();
+        return $data['project_id'] ?? null;
     }
 }

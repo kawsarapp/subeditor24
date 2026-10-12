@@ -70,12 +70,24 @@ class SocialPostService
                 'published'    => true,
             ];
 
-            if (file_exists($imagePathOrUrl)) {
-                $response = Http::attach('source', file_get_contents($imagePathOrUrl), 'news-card.jpg')
+            $resolvedImagePath = null;
+            if (!empty($imagePathOrUrl)) {
+                if (file_exists($imagePathOrUrl)) {
+                    $resolvedImagePath = $imagePathOrUrl;
+                } elseif (file_exists(public_path($imagePathOrUrl))) {
+                    $resolvedImagePath = public_path($imagePathOrUrl);
+                } elseif (file_exists(storage_path('app/public/' . ltrim($imagePathOrUrl, '/')))) {
+                    $resolvedImagePath = storage_path('app/public/' . ltrim($imagePathOrUrl, '/'));
+                }
+            }
+
+            if ($resolvedImagePath) {
+                $response = Http::withoutVerifying()->timeout(30)
+                    ->attach('source', file_get_contents($resolvedImagePath), 'news-card.jpg')
                     ->post($endpoint, $payload);
             } else {
                 $payload['url'] = $imagePathOrUrl;
-                $response       = Http::post($endpoint, $payload);
+                $response       = Http::withoutVerifying()->timeout(30)->post($endpoint, $payload);
             }
 
             $data   = $response->json();
@@ -85,7 +97,7 @@ class SocialPostService
                 // Comment-এ link দেওয়া (যদি চালু থাকে)
                 if (!empty($page->comment_link)) {
                     try {
-                        Http::post("https://graph.facebook.com/v19.0/{$postId}/comments", [
+                        Http::withoutVerifying()->timeout(15)->post("https://graph.facebook.com/v19.0/{$postId}/comments", [
                             'message'      => 'বিস্তারিত পড়ুন: ' . $newsLink,
                             'access_token' => $page->access_token,
                         ]);

@@ -19,6 +19,7 @@ Route::middleware(['web', 'auth', 'nocache', 'permission:can_seo_intelligence'])
     Route::post('/connect', [SeoConnectController::class, 'store'])->name('connect.store');
     Route::delete('/connect/{id}', [SeoConnectController::class, 'destroy'])->name('connect.destroy');
     Route::post('/crawl/{id}', [SeoDashboardController::class, 'crawl'])->name('crawl');
+    Route::get('/crawl-status/{id}', [SeoDashboardController::class, 'crawlStatus'])->name('crawl_status');
 
     // Google OAuth Routes for GSC & GA4
     Route::get('/google/redirect', [SeoConnectController::class, 'redirectToGoogle'])->name('google.redirect');
@@ -27,10 +28,13 @@ Route::middleware(['web', 'auth', 'nocache', 'permission:can_seo_intelligence'])
     // Advanced Enterprise Features Routes
     Route::post('/instant-index/{id}', [SeoDashboardController::class, 'instantIndex'])->name('instant_index');
     Route::get('/instant-index-logs/{id}', [SeoDashboardController::class, 'instantIndexLogs'])->name('instant_index_logs');
+    Route::post('/service-account/{id}', [SeoDashboardController::class, 'uploadServiceAccount'])->name('service_account.upload');
+    Route::delete('/service-account/{id}', [SeoDashboardController::class, 'removeServiceAccount'])->name('service_account.remove');
     Route::post('/approve-link', [SeoDashboardController::class, 'approveInternalLink'])->name('approve_link');
     Route::post('/discover-check/{id}', [SeoDashboardController::class, 'discoverCheck'])->name('discover_check');
     Route::post('/telegram-alert/{id}', [SeoDashboardController::class, 'telegramAlert'])->name('telegram_alert');
     Route::post('/utm-generate', [SeoDashboardController::class, 'generateUtm'])->name('utm_generate');
+    Route::post('/generate-utm', [SeoDashboardController::class, 'generateUtm'])->name('utm_generate_alias');
     Route::post('/competitor-gap/{id}', [SeoDashboardController::class, 'competitorGap'])->name('competitor_gap');
     Route::post('/content-decay/{id}', [SeoDashboardController::class, 'contentDecay'])->name('content_decay');
     Route::post('/gsc-sync/{id}', [SeoDashboardController::class, 'gscSync'])->name('gsc_sync');

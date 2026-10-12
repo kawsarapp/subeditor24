@@ -142,6 +142,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/fetch-token', [FacebookPageController::class, 'fetchPagesWithToken'])->name('fetch-token');
             Route::post('/save-credentials', [FacebookPageController::class, 'saveAppCredentials'])->name('save-credentials');
             Route::post('/test-app-credentials', [FacebookPageController::class, 'testAppCredentials'])->name('test-app-credentials');
+            Route::post('/store-multiple', [FacebookPageController::class, 'storeMultiple'])->name('store-multiple');
+            Route::post('/toggle-master-autopost', [FacebookPageController::class, 'toggleMasterAutoPost'])->name('toggle-master-autopost');
             Route::post('/', [FacebookPageController::class, 'store'])->name('store');
             Route::put('/{id}', [FacebookPageController::class, 'update'])->name('update');
             Route::delete('/{id}', [FacebookPageController::class, 'destroy'])->name('destroy');

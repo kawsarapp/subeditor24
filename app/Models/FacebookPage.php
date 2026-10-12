@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Crypt;
 
 class FacebookPage extends Model
 {
@@ -25,9 +26,50 @@ class FacebookPage extends Model
         'is_active'         => 'boolean',
         'is_studio_default' => 'boolean',
         'comment_link'      => 'boolean',
-        'access_token'      => 'encrypted',
         'last_tested_at'    => 'datetime',
     ];
+
+    /**
+     * Safely decrypt access token without crashing if plaintext or invalid payload
+     */
+    public function getAccessTokenAttribute($value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Throwable $e) {
+            // Return raw value if not encrypted or decryption fails
+            return $value;
+        }
+    }
+
+    /**
+     * Safely encrypt access token
+     */
+    public function setAccessTokenAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['access_token'] = null;
+            return;
+        }
+        try {
+            // Check if already encrypted to avoid double encryption
+            Crypt::decryptString($value);
+            $this->attributes['access_token'] = $value;
+        } catch (\Throwable $e) {
+            $this->attributes['access_token'] = Crypt::encryptString(trim($value));
+        }
+    }
+
+    /**
+     * Alias for code calling page_access_token
+     */
+    public function getPageAccessTokenAttribute(): ?string
+    {
+        return $this->access_token;
+    }
 
     public function user()
     {
