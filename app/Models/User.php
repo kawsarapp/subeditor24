@@ -262,6 +262,11 @@ class User extends Authenticatable
 	{
 		return $this->belongsTo(User::class, 'parent_id');
 	}
+
+	public function parentUser()
+	{
+		return $this->belongsTo(User::class, 'parent_id');
+	}
 	
 	// ==========================================
 	// 🎭 ROLE CHECKS & RBAC HELPERS

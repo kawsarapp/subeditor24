@@ -24,6 +24,7 @@ class NewsItem extends Model
         'status',
         'is_posted',
         'wp_post_id',
+        'target_post_url',
         'posted_at',
         'error_message',
         'is_rewritten',
@@ -96,7 +97,11 @@ class NewsItem extends Model
 	
 	public function getLiveUrlAttribute()
     {
-        $settings = $this->user->settings ?? null;
+        if (!empty($this->target_post_url)) {
+            return $this->target_post_url;
+        }
+
+        $settings = $this->user?->parent_id ? ($this->user->parentUser?->settings ?? $this->user?->settings) : $this->user?->settings;
         if (!$settings) return null;
 
         if ($this->wp_post_id && $settings->wp_url) {

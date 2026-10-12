@@ -27,6 +27,9 @@ trait WordPressPostingTrait
                 $result['success'] = true;
                 $result['remote_id'] = $postResult['post_id'];
                 $result['published_url'] = $postResult['link'] ?? $publishedUrl;
+                if (!empty($result['published_url'])) {
+                    $news->update(['target_post_url' => $result['published_url']]);
+                }
                 Log::info("✅ WP Action Success: ID {$result['remote_id']} | Link: {$result['published_url']}");
             } else {
                 $errorMsg = $postResult['message'] ?? 'Unknown WP Error';

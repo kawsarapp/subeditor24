@@ -153,7 +153,7 @@ class WordPressService
         $response = Http::withBasicAuth($username, $appPassword)->post($url, $data);
 
         if ($response->successful()) {
-            return ['success' => true, 'post_id' => $response->json()['id']];
+            return ['success' => true, 'post_id' => $response->json()['id'], 'link' => $response->json()['link'] ?? null];
         }
         return ['success' => false, 'message' => $response->body()];
     }

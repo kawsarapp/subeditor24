@@ -127,11 +127,11 @@ class ProcessNewsPost implements ShouldQueue
             // Update Database Immediately for Reporters & Staff
             if ($wpSuccess || $laravelSuccess) {
                 $news->update([
-                    'is_posted'  => 1,
-                    'live_url'   => $publishedUrl,
-                    'wp_post_id' => $remotePostId,
-                    'status'     => 'published',
-                    'error_message' => null
+                    'is_posted'       => 1,
+                    'target_post_url' => $publishedUrl,
+                    'wp_post_id'      => $remotePostId,
+                    'status'          => 'published',
+                    'error_message'   => null,
                 ]);
             }
 
