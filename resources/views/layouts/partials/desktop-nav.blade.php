@@ -82,6 +82,17 @@
                         </a>
                         @endif
 
+                        @php
+                            $toolPermKeys = [
+                                'can_custom_photo_card', 'can_studio', 'manage_templates', 'can_youtube_automate',
+                                'can_scrape', 'can_viral_predictor', 'can_seo_intelligence', 'can_manage_staff',
+                                'manage_reporters', 'can_analytics'
+                            ];
+                            $hasToolPermissions = (auth()->user()->role === 'super_admin') 
+                                || collect($toolPermKeys)->contains(fn($k) => auth()->user()->hasPermission($k));
+                        @endphp
+
+                        @if($hasToolPermissions)
                         {{-- VERTICAL DIVIDER --}}
                         <div class="w-[1px] h-4 bg-slate-300 dark:bg-slate-600 mx-0.5 xl:mx-1"></div>
 
@@ -296,6 +307,7 @@
                                 </a>
                             </div>
                         </div>
+                        @endif
 
                     </div>
                 @endif
@@ -407,6 +419,9 @@
                                 <div class="px-4 pt-1 pb-0.5 text-[9px] font-extrabold uppercase text-slate-400">Admin Control</div>
                                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
                                     <i class="fa-solid fa-shield-halved text-indigo-500 w-4"></i> Admin Panel
+                                </a>
+                                <a href="{{ route('admin.roles.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-purple-700 hover:bg-purple-50 hover:text-purple-900 transition-colors">
+                                    <i class="fa-solid fa-user-shield text-purple-600 w-4"></i> রোলস ও পারমিশন (Roles & Permissions)
                                 </a>
                                 <a href="{{ route('admin.billing.orders') }}" class="flex items-center justify-between px-4 py-2 text-xs font-black text-indigo-700 hover:bg-indigo-50 transition-colors">
                                     <div class="flex items-center gap-2.5">

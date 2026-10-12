@@ -65,37 +65,78 @@ class SocialPostService
     private function sendToOnePage($page, $title, $imagePathOrUrl, $newsLink, ?string $firstComment = null)
     {
         try {
-            $endpoint = "https://graph.facebook.com/v19.0/{$page->page_id}/photos";
-            $payload  = [
-                'caption'      => $title,
-                'message'      => $title,
-                'access_token' => $page->access_token,
-                'published'    => true,
-                'no_story'     => false,
-            ];
+            $postId = null;
+            $data   = [];
 
-            $resolvedImagePath = null;
             if (!empty($imagePathOrUrl)) {
-                if (file_exists($imagePathOrUrl)) {
-                    $resolvedImagePath = $imagePathOrUrl;
-                } elseif (file_exists(public_path($imagePathOrUrl))) {
-                    $resolvedImagePath = public_path($imagePathOrUrl);
-                } elseif (file_exists(storage_path('app/public/' . ltrim($imagePathOrUrl, '/')))) {
-                    $resolvedImagePath = storage_path('app/public/' . ltrim($imagePathOrUrl, '/'));
+                // Meta Best Practice for Timeline Feed Story:
+                // Step 1: Upload image asset to /{page_id}/photos with published=false
+                // Step 2: Publish feed story to /{page_id}/feed with attached_media to guarantee timeline visibility
+                $photoUploadEndpoint = "https://graph.facebook.com/v19.0/{$page->page_id}/photos";
+                $photoPayload = [
+                    'access_token' => $page->access_token,
+                    'published'    => false,
+                ];
+
+                $photoResponse = $this->sendPhotoRequest($photoUploadEndpoint, $photoPayload, $imagePathOrUrl);
+                $photoData     = $photoResponse->json() ?? [];
+                $photoId       = $photoData['id'] ?? null;
+
+                if ($photoResponse->successful() && !empty($photoId)) {
+                    // Step 2: Publish feed story
+                    try {
+                        $feedEndpoint = "https://graph.facebook.com/v19.0/{$page->page_id}/feed";
+                        $feedPayload  = [
+                            'message'        => $title,
+                            'attached_media' => json_encode([['media_fbid' => (string) $photoId]]),
+                            'access_token'   => $page->access_token,
+                        ];
+
+                        $feedResponse = Http::withoutVerifying()->timeout(30)->post($feedEndpoint, $feedPayload);
+                        $feedData     = $feedResponse->json() ?? [];
+
+                        if ($feedResponse->successful() && !empty($feedData['id'])) {
+                            $postId = $feedData['id'];
+                            $data   = $feedData;
+                        } else {
+                            Log::warning("⚠️ FB auto-post feed story with attached_media failed [{$page->page_name}]: " . json_encode($feedData) . ". Falling back to direct /photos.");
+                        }
+                    } catch (\Throwable $feedEx) {
+                        Log::warning("⚠️ FB auto-post feed story exception [{$page->page_name}]: " . $feedEx->getMessage() . ". Falling back to direct /photos.");
+                    }
+                } else {
+                    Log::warning("⚠️ FB auto-post unpublished photo upload failed [{$page->page_name}]: " . json_encode($photoData) . ". Falling back to direct /photos.");
+                }
+
+                // Fallback: If 2-step publishing did not produce postId, fallback to direct /photos with published=true & no_story=false
+                if (!$postId) {
+                    $fallbackPayload = [
+                        'caption'      => $title,
+                        'message'      => $title,
+                        'access_token' => $page->access_token,
+                        'published'    => true,
+                        'no_story'     => false,
+                    ];
+
+                    $fallbackResponse = $this->sendPhotoRequest($photoUploadEndpoint, $fallbackPayload, $imagePathOrUrl);
+                    $data             = $fallbackResponse->json() ?? [];
+                    $postId           = $data['post_id'] ?? $data['id'] ?? null;
+                }
+            } else {
+                // Text Only: POST /{page_id}/feed with message
+                $feedEndpoint = "https://graph.facebook.com/v19.0/{$page->page_id}/feed";
+                $feedPayload  = [
+                    'message'      => $title,
+                    'access_token' => $page->access_token,
+                    'published'    => true,
+                ];
+
+                $feedResponse = Http::withoutVerifying()->timeout(30)->post($feedEndpoint, $feedPayload);
+                $data         = $feedResponse->json() ?? [];
+                if ($feedResponse->successful() && !empty($data['id'])) {
+                    $postId = $data['id'];
                 }
             }
-
-            if ($resolvedImagePath) {
-                $response = Http::withoutVerifying()->timeout(30)
-                    ->attach('source', file_get_contents($resolvedImagePath), 'news-card.jpg')
-                    ->post($endpoint, $payload);
-            } else {
-                $payload['url'] = $imagePathOrUrl;
-                $response       = Http::withoutVerifying()->timeout(30)->post($endpoint, $payload);
-            }
-
-            $data   = $response->json();
-            $postId = $data['post_id'] ?? $data['id'] ?? null;
 
             if ($postId) {
                 // Comment-এ link দেওয়া (যদি চালু থাকে অথবা custom first comment দেওয়া হয়)
@@ -341,7 +382,7 @@ class SocialPostService
                 $photoUploadEndpoint = "https://graph.facebook.com/v19.0/{$fbPageId}/photos";
                 $photoPayload = [
                     'access_token' => $accessToken,
-                    'published'    => 'false',
+                    'published'    => false,
                 ];
 
                 $photoResponse = $this->sendPhotoRequest($photoUploadEndpoint, $photoPayload, $image);
@@ -350,45 +391,40 @@ class SocialPostService
                 if ($photoResponse->successful() && !empty($photoData['id'])) {
                     $mediaFbid = $photoData['id'];
 
-                    // Step 2: Publish feed story
-                    $feedEndpoint = "https://graph.facebook.com/v19.0/{$fbPageId}/feed";
-                    $feedPayload = [
-                        'message'        => $message ?? '',
-                        'attached_media' => [
-                            ['media_fbid' => (string) $mediaFbid]
-                        ],
-                        'access_token'   => $accessToken,
-                        'published'      => 'true',
-                    ];
-
-                    $response = Http::withoutVerifying()->timeout(35)->post($feedEndpoint, $feedPayload);
-                    $data = $response->json() ?? [];
-
-                    if ($response->successful() && !empty($data['id'])) {
-                        $postId = $data['id'];
-                    } else {
-                        // Fallback: If feed story with attached_media failed, publish photo directly with no_story=false
-                        $fallbackPayload = [
-                            'caption'      => $message ?? '',
-                            'message'      => $message ?? '',
-                            'access_token' => $accessToken,
-                            'published'    => 'true',
-                            'no_story'     => 'false',
+                    // Step 2: Publish feed story to guarantee timeline visibility
+                    try {
+                        $feedEndpoint = "https://graph.facebook.com/v19.0/{$fbPageId}/feed";
+                        $feedPayload = [
+                            'message'        => $message ?? '',
+                            'attached_media' => json_encode([['media_fbid' => (string) $mediaFbid]]),
+                            'access_token'   => $accessToken,
                         ];
-                        $response = $this->sendPhotoRequest($photoUploadEndpoint, $fallbackPayload, $image);
+
+                        $response = Http::withoutVerifying()->timeout(35)->post($feedEndpoint, $feedPayload);
                         $data = $response->json() ?? [];
-                        $postId = $data['post_id'] ?? $data['id'] ?? null;
+
+                        if ($response->successful() && !empty($data['id'])) {
+                            $postId = $data['id'];
+                        } else {
+                            Log::warning("⚠️ FB 2-step feed post failed [{$pageName}]: " . json_encode($data) . ". Falling back to direct /photos.");
+                        }
+                    } catch (\Throwable $feedEx) {
+                        Log::warning("⚠️ FB 2-step feed post exception [{$pageName}]: " . $feedEx->getMessage() . ". Falling back to direct /photos.");
                     }
                 } else {
-                    // Direct photo upload fallback
-                    $directPayload = [
+                    Log::warning("⚠️ FB unpublished photo upload failed [{$pageName}]: " . json_encode($photoData) . ". Falling back to direct /photos.");
+                }
+
+                // Fallback: If 2-step publishing did not produce postId, fallback to direct /photos with published=true & no_story=false
+                if (!$postId) {
+                    $fallbackPayload = [
                         'caption'      => $message ?? '',
                         'message'      => $message ?? '',
                         'access_token' => $accessToken,
-                        'published'    => 'true',
-                        'no_story'     => 'false',
+                        'published'    => true,
+                        'no_story'     => false,
                     ];
-                    $response = $this->sendPhotoRequest($photoUploadEndpoint, $directPayload, $image);
+                    $response = $this->sendPhotoRequest($photoUploadEndpoint, $fallbackPayload, $image);
                     $data = $response->json() ?? [];
                     $postId = $data['post_id'] ?? $data['id'] ?? null;
                 }

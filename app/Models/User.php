@@ -66,6 +66,11 @@ class User extends Authenticatable
     // 🔥 RELATIONSHIPS
     // ==========================================
 
+    public function roleRelation()
+    {
+        return $this->belongsTo(Role::class, 'role', 'name');
+    }
+
     public function department()
     {
         return $this->belongsTo(Department::class);
@@ -258,17 +263,60 @@ class User extends Authenticatable
 		return $this->belongsTo(User::class, 'parent_id');
 	}
 	
-	public function hasPermission($permission)
-    {
-        if ($this->role === 'super_admin') return true;
+	// ==========================================
+	// 🎭 ROLE CHECKS & RBAC HELPERS
+	// ==========================================
 
-        // 1. If Super Admin has explicitly customized permissions for this user (stored as array in DB)
-        if (is_array($this->permissions)) {
-            return in_array($permission, $this->permissions);
+	public function isSuperAdmin(): bool
+	{
+		return $this->role === 'super_admin';
+	}
+
+	public function isAdmin(): bool
+	{
+		return $this->role === 'admin';
+	}
+
+	public function isEditor(): bool
+	{
+		return $this->role === 'editor';
+	}
+
+	public function isSubEditor(): bool
+	{
+		return $this->role === 'sub_editor';
+	}
+
+	public function isReporter(): bool
+	{
+		return $this->role === 'reporter';
+	}
+
+	public function isStaff(): bool
+	{
+		return $this->role === 'staff';
+	}
+
+	public function hasPermission($permission): bool
+    {
+        // 1. Super Admin has unrestricted access to all system features
+        if ($this->isSuperAdmin()) {
+            return true;
         }
 
-        // 2. Default fallback for newly registered admins before Super Admin customizes their permissions
-        if ($this->role === 'admin') {
+        // 2. Explicit permission overrides set on this user in DB take priority
+        if (is_array($this->permissions)) {
+            return in_array($permission, $this->permissions, true);
+        }
+
+        // 3. Fallback to assigned role's default_permissions from roles table or static defaults
+        $rolePermissions = $this->roleRelation?->default_permissions ?? \App\Models\Role::getDefaultPermissionsFor($this->role ?? '');
+        if (is_array($rolePermissions) && !empty($rolePermissions)) {
+            return in_array($permission, $rolePermissions, true);
+        }
+
+        // 4. Backward-compatible fallback for admin before roles table is hydrated
+        if ($this->isAdmin()) {
             $defaultAdminPermissions = [
                 'can_latest_news',
                 'can_settings', 'can_settings_branding', 'can_settings_target_language',
@@ -277,9 +325,11 @@ class User extends Authenticatable
                 'can_direct_publish', 'can_view_published', 'can_auto_post', 
                 'can_central_feed', 'can_custom_photo_card', 'can_manage_staff'
             ];
-            return in_array($permission, $defaultAdminPermissions);
+            return in_array($permission, $defaultAdminPermissions, true);
         }
 
+        // 5. Multi-tenant constraint: If parent_id is set (Staff/Reporter), the permission is NOT blocked
+        // even if the parent lacks the feature, honoring the explicit or role permission assigned above.
         return false;
     }
 

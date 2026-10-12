@@ -6,8 +6,10 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use App\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +26,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // 🔐 Register Dynamic Permission Gates for Blade (@can) and Authorization
+        foreach (Role::getAllPermissionSlugs() as $perm) {
+            Gate::define($perm, fn ($user) => $user->hasPermission($perm));
+        }
+
         try {
             $version = Cache::get('github_version', 'v1.0.0');
         } catch (\Throwable $e) {

@@ -366,4 +366,17 @@ class AdminController extends Controller
 
         return back()->with('success', 'ইউজার পারমিশন সফলভাবে আপডেট করা হয়েছে!');
     }
+
+    // ==========================================
+    // 👑 5. SaaS Role & Permissions Matrix
+    // ==========================================
+    public function rolesIndex()
+    {
+        return app(AdminRoleController::class)->index();
+    }
+
+    public function updateRolePermissions(Request $request, string $role)
+    {
+        return app(AdminRoleController::class)->updatePermissions($request, $role);
+    }
 }

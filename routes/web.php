@@ -62,7 +62,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/stop-impersonate', [AdminController::class, 'stopImpersonate'])->name('stop.impersonate');
 
     // 📢 Direct Facebook Publishing API & Service Route
-    Route::post('/facebook/direct-publish', [FacebookPageController::class, 'directPublish'])->name('facebook.direct-publish');
+    Route::post('/facebook/direct-publish', [FacebookPageController::class, 'directPublish'])
+        ->middleware('permission:can_custom_photo_card')
+        ->name('facebook.direct-publish');
 
     // 🤖 AI Assistant Copilot Route
     Route::post('/ai-assistant/chat', [\App\Http\Controllers\AiAssistantController::class, 'chat'])->name('ai-assistant.chat');
@@ -147,7 +149,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/test-app-credentials', [FacebookPageController::class, 'testAppCredentials'])->name('test-app-credentials');
             Route::post('/store-multiple', [FacebookPageController::class, 'storeMultiple'])->name('store-multiple');
             Route::post('/toggle-master-autopost', [FacebookPageController::class, 'toggleMasterAutoPost'])->name('toggle-master-autopost');
-            Route::post('/direct-publish', [FacebookPageController::class, 'directPublish'])->name('direct-publish');
+            Route::post('/direct-publish', [FacebookPageController::class, 'directPublish'])
+                ->middleware('permission:can_custom_photo_card')
+                ->name('direct-publish');
             Route::post('/', [FacebookPageController::class, 'store'])->name('store');
             Route::put('/{id}', [FacebookPageController::class, 'update'])->name('update');
             Route::delete('/{id}', [FacebookPageController::class, 'destroy'])->name('destroy');
@@ -288,21 +292,22 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
 
 // Admin (Client) er Staff Management Routes
-Route::middleware(['auth'])->prefix('client')->name('client.')->group(function () {
-    Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
-    Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+Route::middleware(['auth', 'permission:can_manage_staff'])->prefix('client')->name('client.')->group(function () {
+    Route::get('/staff', [\App\Http\Controllers\ClientStaffController::class, 'index'])->name('staff.index');
+    Route::post('/staff', [\App\Http\Controllers\ClientStaffController::class, 'store'])->name('staff.store');
     
     // 🔥 নতুন পারমিশন, সোর্স এবং টেমপ্লেট রাউট
-    Route::put('/staff/{id}/permissions', [StaffController::class, 'updatePermissions'])->name('staff.permissions');
-    Route::put('/staff/{id}/websites', [StaffController::class, 'updateWebsites'])->name('staff.websites');
-    Route::put('/staff/{id}/templates', [StaffController::class, 'updateTemplates'])->name('staff.templates');
-    Route::put('/staff/{id}/signature', [StaffController::class, 'updateSignature'])->name('staff.signature');
-    Route::put('/staff/{id}/info', [StaffController::class, 'updateInfo'])->name('staff.update_info');
-    Route::post('/staff/{id}/toggle-status', [StaffController::class, 'toggleStatus'])->name('staff.toggle_status');
-    Route::post('/staff/{id}/reset-password', [StaffController::class, 'resetPassword'])->name('staff.reset_password');
-    Route::get('/staff/{id}/news', [StaffController::class, 'showNews'])->name('staff.news');
+    Route::put('/staff/{id}/permissions', [\App\Http\Controllers\ClientStaffController::class, 'updatePermissions'])->name('staff.permissions');
+    Route::put('/staff/{id}/websites', [\App\Http\Controllers\ClientStaffController::class, 'updateWebsites'])->name('staff.websites');
+    Route::put('/staff/{id}/templates', [\App\Http\Controllers\ClientStaffController::class, 'updateTemplates'])->name('staff.templates');
+    Route::put('/staff/{id}/signature', [\App\Http\Controllers\ClientStaffController::class, 'updateSignature'])->name('staff.signature');
+    Route::put('/staff/{id}/info', [\App\Http\Controllers\ClientStaffController::class, 'updateInfo'])->name('staff.update_info');
+    Route::put('/staff/{id}', [\App\Http\Controllers\ClientStaffController::class, 'update'])->name('staff.update');
+    Route::post('/staff/{id}/toggle-status', [\App\Http\Controllers\ClientStaffController::class, 'toggleStatus'])->name('staff.toggle_status');
+    Route::post('/staff/{id}/reset-password', [\App\Http\Controllers\ClientStaffController::class, 'resetPassword'])->name('staff.reset_password');
+    Route::get('/staff/{id}/news', [\App\Http\Controllers\ClientStaffController::class, 'showNews'])->name('staff.news');
     
-    Route::delete('/staff/{id}', [StaffController::class, 'destroy'])->name('staff.destroy');
+    Route::delete('/staff/{id}', [\App\Http\Controllers\ClientStaffController::class, 'destroy'])->name('staff.destroy');
 
     // --- 🏢 Departments & Designations Management ---
     Route::post('/departments', [\App\Http\Controllers\DepartmentDesignationController::class, 'storeDepartment'])->name('departments.store');
@@ -353,6 +358,12 @@ Route::middleware(['auth', 'nocache', AdminMiddleware::class])->group(function (
             Route::put('/update', [AdminController::class, 'updateUser'])->name('update');
         });
         Route::post('/users/create', [AdminController::class, 'store'])->name('users.store');
+
+        // 👑 Roles & Permissions Matrix Management (Super Admin)
+        Route::prefix('roles')->name('roles.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\AdminRoleController::class, 'index'])->name('index');
+            Route::post('/{role}/permissions', [\App\Http\Controllers\AdminRoleController::class, 'updatePermissions'])->name('update-permissions');
+        });
 
         // 🏷️ Dynamic Pricing Plans & Coupons Management (Super Admin)
         Route::prefix('pricing')->name('pricing.')->group(function () {

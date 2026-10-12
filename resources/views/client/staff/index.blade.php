@@ -96,15 +96,26 @@
                         @if($staff->phone)
                             <p class="text-xs text-slate-600 mt-0.5"><i class="fa-solid fa-phone text-indigo-400 mr-1"></i>{{ $staff->phone }}</p>
                         @endif
-                        @if($staff->department || $staff->designation)
-                            <p class="text-xs font-bold text-indigo-600 mt-0.5 bg-indigo-50/50 px-1.5 py-0.5 rounded border border-indigo-100/30 inline-block">
-                                {{ $staff->department->name ?? '' }} @if($staff->department && $staff->designation) • @endif {{ $staff->designation->name ?? '' }}
-                            </p>
-                        @else
-                            <span class="inline-block mt-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded text-[10px] font-bold uppercase tracking-wider">
-                                {{ $staff->role ?? 'Staff' }}
+                        <div class="flex items-center gap-1.5 flex-wrap mt-1">
+                            @php
+                                $roleMeta = ($roles ?? [])[$staff->role] ?? null;
+                            @endphp
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider
+                                {{ match($staff->role) {
+                                    'editor' => 'bg-indigo-100 text-indigo-800 border border-indigo-200',
+                                    'sub_editor' => 'bg-blue-100 text-blue-800 border border-blue-200',
+                                    'staff' => 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+                                    'reporter' => 'bg-amber-100 text-amber-800 border border-amber-200',
+                                    default => 'bg-slate-100 text-slate-700 border border-slate-200'
+                                } }}">
+                                {{ $roleMeta['display_name'] ?? ucfirst($staff->role ?? 'Staff') }}
                             </span>
-                        @endif
+                            @if($staff->department || $staff->designation)
+                                <span class="text-[11px] font-bold text-slate-600 bg-slate-100/70 px-1.5 py-0.5 rounded border border-slate-200/50">
+                                    {{ $staff->department->name ?? '' }} @if($staff->department && $staff->designation) • @endif {{ $staff->designation->name ?? '' }}
+                                </span>
+                            @endif
+                        </div>
 
                         @if($staff->working_location || $staff->district || $staff->upazila)
                             <p class="text-[10px] text-slate-500 mt-1.5 flex items-center gap-1 font-semibold">
@@ -133,6 +144,8 @@
                             data-id="{{ $staff->id }}" 
                             data-name="{{ $staff->name }}"
                             data-email="{{ $staff->email }}"
+                            data-role="{{ $staff->role ?? 'staff' }}"
+                            data-perms='@json($staff->permissions ?? [])'
                             data-dept="{{ $staff->department_id }}"
                             data-desg="{{ $staff->designation_id }}"
                             data-joining="{{ $staff->joining_date ? $staff->joining_date->format('Y-m-d') : '' }}"
@@ -366,226 +379,10 @@
 {{-- ================= MODALS ================= --}}
 
 {{-- 1. Add Employee Modal --}}
-<div id="addStaffModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]">
-        <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
-            <h3 class="font-bold text-gray-800">Add New Employee</h3>
-            <button onclick="closeAddStaffModal()" class="text-gray-400 hover:text-red-500 text-2xl">&times;</button>
-        </div>
-        <form action="{{ route('client.staff.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
-            @csrf
-            <div class="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Employee Name</label>
-                    <input type="text" name="name" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Email (Login ID)</label>
-                    <input type="email" name="email" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Password</label>
-                    <input type="password" name="password" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500" required minlength="6">
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Department</label>
-                        <select name="department_id" id="add_department_id" onchange="loadDesignations('add')" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm outline-none bg-white">
-                            <option value="">-- Select --</option>
-                            @foreach($departments as $dept)
-                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Designation</label>
-                        <select name="designation_id" id="add_designation_id" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm outline-none bg-white">
-                            <option value="">-- Select --</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">District</label>
-                        <input type="text" name="district" placeholder="e.g. Dhaka, Bogura" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Upazila / Sub-district</label>
-                        <input type="text" name="upazila" placeholder="e.g. Mirpur, Shibganj" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1">Working Location</label>
-                    <input type="text" name="working_location" placeholder="e.g. Dhaka Bureau, Head Office" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Phone Number</label>
-                        <input type="text" name="phone" placeholder="e.g. +88017xxxxxxxx" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Emergency Contact</label>
-                        <input type="text" name="emergency_contact" placeholder="e.g. +88018xxxxxxxx" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">NID Number</label>
-                        <input type="text" name="nid" placeholder="NID Number" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Blood Group</label>
-                        <select name="blood_group" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none">
-                            <option value="">-- Select --</option>
-                            <option value="A+">A+</option>
-                            <option value="A-">A-</option>
-                            <option value="B+">B+</option>
-                            <option value="B-">B-</option>
-                            <option value="O+">O+</option>
-                            <option value="O-">O-</option>
-                            <option value="AB+">AB+</option>
-                            <option value="AB-">AB-</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Present Address</label>
-                        <textarea name="present_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none" placeholder="Present Address"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Permanent Address</label>
-                        <textarea name="permanent_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none" placeholder="Permanent Address"></textarea>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Joining Date</label>
-                        <input type="date" name="joining_date" value="{{ date('Y-m-d') }}" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Expire Date</label>
-                        <input type="date" name="expire_date" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                </div>
-            </div>
-            <div class="p-6 bg-gray-50 border-t flex justify-end flex-shrink-0">
-                <button type="submit" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold w-full hover:bg-indigo-700 transition">Create Employee</button>
-            </div>
-        </form>
-    </div>
-</div>
+@include('client.staff.partials.create-modal')
 
 {{-- 1.5 Edit Staff Info Modal --}}
-<div id="editStaffModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]">
-        <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
-            <h3 class="font-bold text-gray-800">Edit Employee Info</h3>
-            <button onclick="closeEditStaffModal()" class="text-gray-400 hover:text-red-500 text-2xl">&times;</button>
-        </div>
-        <form id="editStaffForm" method="POST" class="flex flex-col flex-1 overflow-hidden">
-            @csrf @method('PUT')
-            <div class="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Employee Name</label>
-                    <input type="text" name="name" id="edit_name" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Email</label>
-                    <input type="email" name="email" id="edit_email" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">New Password (Leave blank to keep current)</label>
-                    <input type="password" name="password" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500" minlength="6">
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Department</label>
-                        <select name="department_id" id="edit_department_id" onchange="loadDesignations('edit')" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm outline-none bg-white">
-                            <option value="">-- Select --</option>
-                            @foreach($departments as $dept)
-                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Designation</label>
-                        <select name="designation_id" id="edit_designation_id" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm outline-none bg-white">
-                            <option value="">-- Select --</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">District</label>
-                        <input type="text" name="district" id="edit_district" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Upazila / Sub-district</label>
-                        <input type="text" name="upazila" id="edit_upazila" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1">Working Location</label>
-                    <input type="text" name="working_location" id="edit_working_location" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Phone Number</label>
-                        <input type="text" name="phone" id="edit_phone" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Emergency Contact</label>
-                        <input type="text" name="emergency_contact" id="edit_emergency_contact" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">NID Number</label>
-                        <input type="text" name="nid" id="edit_nid" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Blood Group</label>
-                        <select name="blood_group" id="edit_blood_group" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none">
-                            <option value="">-- Select --</option>
-                            <option value="A+">A+</option>
-                            <option value="A-">A-</option>
-                            <option value="B+">B+</option>
-                            <option value="B-">B-</option>
-                            <option value="O+">O+</option>
-                            <option value="O-">O-</option>
-                            <option value="AB+">AB+</option>
-                            <option value="AB-">AB-</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Present Address</label>
-                        <textarea name="present_address" id="edit_present_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Permanent Address</label>
-                        <textarea name="permanent_address" id="edit_permanent_address" rows="2" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white outline-none"></textarea>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Joining Date</label>
-                        <input type="date" name="joining_date" id="edit_joining_date" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">Expire Date</label>
-                        <input type="date" name="expire_date" id="edit_expire_date" class="w-full border rounded-lg p-2.5 focus:ring-indigo-500 text-sm bg-white">
-                    </div>
-                </div>
-            </div>
-            <div class="p-6 bg-gray-50 border-t flex justify-end flex-shrink-0">
-                <button type="submit" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold w-full hover:bg-indigo-700 transition">Update Employee Info</button>
-            </div>
-        </form>
-    </div>
-</div>
+@include('client.staff.partials.edit-modal')
 
 {{-- 2. Permissions Modal --}}
 <div id="permissionModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
@@ -823,15 +620,62 @@
             .catch(err => console.error('Error fetching designations:', err));
     }
 
-    // --- Add Staff ---
-    function openAddStaffModal() { document.getElementById('addStaffModal').classList.remove('hidden'); document.getElementById('addStaffModal').classList.add('flex'); }
-    function closeAddStaffModal() { document.getElementById('addStaffModal').classList.add('hidden'); document.getElementById('addStaffModal').classList.remove('flex'); }
+    // --- Role Defaults Dictionary for JS ---
+    window.roleDefaults = @json($roleDefaults ?? []);
 
-    // --- Edit Staff Info ---
+    function onRoleChanged(mode) {
+        applyRoleDefaults(mode);
+    }
+
+    function applyRoleDefaults(mode) {
+        const selectId = mode === 'add' ? 'add_role' : 'edit_role';
+        const role = document.getElementById(selectId)?.value;
+        if (!role || !window.roleDefaults[role]) return;
+
+        const defaults = window.roleDefaults[role] || [];
+        const checkClass = mode === 'add' ? '.add-perm-check' : '.edit-perm-check';
+
+        document.querySelectorAll(checkClass).forEach(cb => {
+            if (!cb.disabled) {
+                cb.checked = defaults.includes(cb.value);
+            }
+        });
+    }
+
+    function toggleAllPerms(mode, state) {
+        const checkClass = mode === 'add' ? '.add-perm-check' : '.edit-perm-check';
+        document.querySelectorAll(checkClass).forEach(cb => {
+            if (!cb.disabled) {
+                cb.checked = state;
+            }
+        });
+    }
+
+    // --- Add Staff ---
+    function openAddStaffModal() {
+        document.getElementById('addStaffModal').classList.remove('hidden');
+        document.getElementById('addStaffModal').classList.add('flex');
+        // Auto-check defaults for selected role if none checked
+        applyRoleDefaults('add');
+    }
+    function closeAddStaffModal() {
+        document.getElementById('addStaffModal').classList.add('hidden');
+        document.getElementById('addStaffModal').classList.remove('flex');
+    }
+
+    // --- Edit Staff Info & Role ---
     function openEditStaffModal(btn) {
         const id = btn.getAttribute('data-id');
         const name = btn.getAttribute('data-name');
         const email = btn.getAttribute('data-email');
+        const role = btn.getAttribute('data-role') || 'staff';
+        let perms = [];
+        try {
+            perms = JSON.parse(btn.getAttribute('data-perms') || '[]');
+        } catch(e) {
+            perms = [];
+        }
+
         const departmentId = btn.getAttribute('data-dept');
         const designationId = btn.getAttribute('data-desg');
         const joiningDate = btn.getAttribute('data-joining');
@@ -849,6 +693,24 @@
         document.getElementById('editStaffForm').action = `/client/staff/${id}/info`;
         document.getElementById('edit_name').value = name || '';
         document.getElementById('edit_email').value = email || '';
+        const badge = document.getElementById('editModalStaffNameBadge');
+        if (badge) badge.innerText = name || 'Edit';
+
+        // Set role dropdown
+        const roleSelect = document.getElementById('edit_role');
+        if (roleSelect) {
+            roleSelect.value = role;
+        }
+
+        // Set permissions checkboxes
+        // If user already has perms array saved, reflect that. Otherwise apply role defaults.
+        const effectivePerms = (Array.isArray(perms) && perms.length > 0) ? perms : (window.roleDefaults[role] || []);
+        document.querySelectorAll('.edit-perm-check').forEach(cb => {
+            if (!cb.disabled) {
+                cb.checked = effectivePerms.includes(cb.value);
+            }
+        });
+
         document.getElementById('edit_joining_date').value = joiningDate || '';
         document.getElementById('edit_expire_date').value = expireDate || '';
         document.getElementById('edit_district').value = district || '';

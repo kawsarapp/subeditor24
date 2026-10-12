@@ -263,6 +263,10 @@
             </a>
             @endif
 
+            <a href="{{ route('admin.roles.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('admin.roles.*') ? 'bg-indigo-600 text-white' : 'text-purple-700 bg-purple-50 hover:bg-purple-100' }}">
+                <i class="fa-solid fa-user-shield text-purple-600 w-5 text-center text-sm"></i> রোলস ও পারমিশন (Roles & Permissions)
+            </a>
+
             @php
                 $mPendingOrders = \App\Models\SubscriptionOrder::where('status', 'pending')->count();
             @endphp

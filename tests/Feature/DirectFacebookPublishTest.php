@@ -70,8 +70,10 @@ class DirectFacebookPublishTest extends TestCase
 
         Http::fake([
             'https://graph.facebook.com/v19.0/999888777/photos' => Http::response([
-                'id'      => 'photo_111',
-                'post_id' => '999888777_post_222',
+                'id' => 'photo_111',
+            ], 200),
+            'https://graph.facebook.com/v19.0/999888777/feed' => Http::response([
+                'id' => '999888777_post_222',
             ], 200),
         ]);
 
@@ -86,6 +88,12 @@ class DirectFacebookPublishTest extends TestCase
 
         Http::assertSent(function ($request) {
             return str_contains($request->url(), '/photos');
+        });
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/feed') &&
+                   $request['message'] === 'Photo caption here' &&
+                   str_contains($request['attached_media'], 'photo_111');
         });
     }
 
@@ -228,5 +236,108 @@ class DirectFacebookPublishTest extends TestCase
         $response->assertJson([
             'success' => false,
         ]);
+    }
+
+    public function test_publish_direct_post_image_fallback_when_feed_fails(): void
+    {
+        $user = User::factory()->create();
+        $page = FacebookPage::create([
+            'user_id'      => $user->id,
+            'page_name'    => 'Fallback Page',
+            'page_id'      => '555666777',
+            'access_token' => 'EAABtokenFallback',
+            'is_active'    => true,
+        ]);
+
+        Http::fake([
+            'https://graph.facebook.com/v19.0/555666777/photos' => Http::sequence()
+                ->push(['id' => 'photo_step1'], 200) // Step 1 unpublished
+                ->push(['post_id' => '555666777_fallback_post'], 200), // Fallback direct
+            'https://graph.facebook.com/v19.0/555666777/feed' => Http::response([
+                'error' => ['message' => 'Feed service unavailable'],
+            ], 500),
+        ]);
+
+        $file = UploadedFile::fake()->image('test_fallback.jpg', 600, 400);
+
+        $service = new SocialPostService();
+        $result = $service->publishDirectPost($page, 'Fallback caption text', $file, null);
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals('555666777_fallback_post', $result['post_id']);
+    }
+
+    public function test_send_to_one_page_auto_post_uses_2_step_feed_story(): void
+    {
+        $user = User::factory()->create();
+        $page = FacebookPage::create([
+            'user_id'      => $user->id,
+            'page_name'    => 'Auto Post Page',
+            'page_id'      => '777888999',
+            'access_token' => 'EAABtokenAuto',
+            'is_active'    => true,
+            'comment_link' => true,
+        ]);
+
+        Http::fake([
+            'https://graph.facebook.com/v19.0/777888999/photos' => Http::response(['id' => 'photo_auto_111'], 200),
+            'https://graph.facebook.com/v19.0/777888999/feed'   => Http::response(['id' => '777888999_post_auto_222'], 200),
+            'https://graph.facebook.com/v19.0/777888999_post_auto_222/comments' => Http::response(['id' => 'comm_123'], 200),
+        ]);
+
+        $settings = (object)[
+            'user_id' => $user->id,
+        ];
+
+        $service = new SocialPostService();
+        $results = $service->postToFacebook($settings, 'Breaking Auto Post', 'https://example.com/test.jpg', 'https://example.com/news/1', [$page->id]);
+
+        $this->assertCount(1, $results);
+        $this->assertTrue($results[0]['success']);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/777888999/feed') &&
+                   $request['message'] === 'Breaking Auto Post' &&
+                   str_contains($request['attached_media'], 'photo_auto_111');
+        });
+    }
+
+    public function test_custom_photo_card_controller_publish_to_facebook_2_step(): void
+    {
+        $user = User::factory()->create(['role' => 'super_admin']);
+        $page = FacebookPage::create([
+            'user_id'      => $user->id,
+            'page_name'    => 'Studio Page',
+            'page_id'      => '444555666',
+            'access_token' => 'token_studio_123',
+            'is_active'    => true,
+        ]);
+
+        Http::fake([
+            'https://graph.facebook.com/v19.0/444555666/photos' => Http::response(['id' => 'photo_studio_888'], 200),
+            'https://graph.facebook.com/v19.0/444555666/feed'   => Http::response(['id' => '444555666_post_999'], 200),
+            'https://graph.facebook.com/v19.0/444555666_post_999/comments' => Http::response(['id' => 'comment_studio_1'], 200),
+        ]);
+
+        $fakeBase64 = 'data:image/png;base64,' . base64_encode('fake-image-binary-data');
+
+        $response = $this->actingAs($user)->postJson('/studio/custom-photo-card/publish-facebook', [
+            'page_id'       => $page->id,
+            'image'         => $fakeBase64,
+            'caption'       => 'Studio custom card caption',
+            'first_comment' => 'Read more at our site',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'post_id' => '444555666_post_999',
+        ]);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/444555666/feed') &&
+                   $request['message'] === 'Studio custom card caption' &&
+                   str_contains($request['attached_media'], 'photo_studio_888');
+        });
     }
 }

@@ -438,28 +438,33 @@ class CustomPhotoCardController extends Controller
 
             $photoData = $photoResponse->json() ?? [];
             $postId = null;
+            $data = $photoData;
 
             if ($photoResponse->successful() && !empty($photoData['id'])) {
                 // Step 2: Publish feed story to guarantee timeline visibility
-                $feedEndpoint = "https://graph.facebook.com/v19.0/{$fbPage->page_id}/feed";
-                $feedResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(30)
-                    ->post($feedEndpoint, [
-                        'message'        => $caption,
-                        'attached_media' => [
-                            ['media_fbid' => (string) $photoData['id']]
-                        ],
-                        'access_token'   => $tokenToUse,
-                        'published'      => true,
-                    ]);
+                try {
+                    $feedEndpoint = "https://graph.facebook.com/v19.0/{$fbPage->page_id}/feed";
+                    $feedResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(30)
+                        ->post($feedEndpoint, [
+                            'message'        => $caption,
+                            'attached_media' => json_encode([['media_fbid' => (string) $photoData['id']]]),
+                            'access_token'   => $tokenToUse,
+                        ]);
 
-                $feedData = $feedResponse->json() ?? [];
-                if ($feedResponse->successful() && !empty($feedData['id'])) {
-                    $postId = $feedData['id'];
+                    $feedData = $feedResponse->json() ?? [];
+                    if ($feedResponse->successful() && !empty($feedData['id'])) {
+                        $postId = $feedData['id'];
+                        $data   = $feedData;
+                    } else {
+                        Log::warning("⚠️ CustomPhotoCard 2-step feed post failed: " . json_encode($feedData) . ". Falling back to direct /photos.");
+                    }
+                } catch (\Throwable $feedEx) {
+                    Log::warning("⚠️ CustomPhotoCard 2-step feed post exception: " . $feedEx->getMessage() . ". Falling back to direct /photos.");
                 }
             }
 
             // Fallback if attached_media feed story wasn't created
-            if (!$postId) {
+            if (!$postId && file_exists($tempFilePath)) {
                 $fallbackResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(30)
                     ->attach('source', file_get_contents($tempFilePath), 'photocard.png')
                     ->post($photoUploadEndpoint, [
@@ -470,6 +475,7 @@ class CustomPhotoCardController extends Controller
                         'no_story'     => false,
                     ]);
                 $fallbackData = $fallbackResponse->json() ?? [];
+                $data = $fallbackData;
                 $postId = $fallbackData['post_id'] ?? $fallbackData['id'] ?? null;
             }
 
