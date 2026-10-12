@@ -723,7 +723,8 @@
         try {
             const formData = new FormData(); formData.append('design_image', dataURLToBlob(canvas.toDataURL({ format: 'png', multiplier: 1.5, quality: 1.0 })), 'studio-final.png');
             if (isSocialOnly) formData.append('social_only', '1'); else if (categoryId) formData.append('category_id', categoryId);
-            formData.append('social_caption', caption); 
+            const firstComment = document.getElementById('modalFirstComment')?.value;
+            if (firstComment) formData.append('first_comment', firstComment); 
             
             // 🔥 Multi-select Facebook pages logic
             if (document.getElementById('fbPageCheckboxList')) {

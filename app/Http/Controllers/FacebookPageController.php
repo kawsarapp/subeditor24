@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FacebookPage;
 use App\Models\UserSetting;
+use App\Services\SocialPostService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -852,5 +853,97 @@ class FacebookPageController extends Controller
         $page->delete();
 
         return response()->json(['success' => true, 'message' => "🗑️ '{$pageName}' মুছে ফেলা হয়েছে।"]);
+    }
+
+    /**
+     * 🚀 Direct Facebook Publishing with First Comment support
+     * POST /facebook/direct-publish
+     */
+    public function directPublish(Request $request, SocialPostService $socialPostService)
+    {
+        if (!$request->has('pages') && $request->has('page_ids')) {
+            $request->merge(['pages' => (array) $request->input('page_ids')]);
+        }
+        if (!$request->has('message') && $request->has('caption')) {
+            $request->merge(['message' => $request->input('caption')]);
+        }
+
+        $request->validate([
+            'pages'         => 'required|array|min:1',
+            'pages.*'       => 'required',
+            'message'       => 'required_without:image|nullable|string',
+            'image'         => 'nullable',
+            'first_comment' => 'nullable|string|max:5000',
+        ], [
+            'pages.required'           => 'অন্তত একটি ফেসবুক পেজ নির্বাচন করুন।',
+            'pages.min'                => 'অন্তত একটি ফেসবুক পেজ নির্বাচন করুন।',
+            'message.required_without' => 'ছবি না থাকলে পোস্টের টেক্সট বা ক্যাপশন প্রদান করা আবশ্যক।',
+        ]);
+
+        if ($request->hasFile('image')) {
+            $request->validate([
+                'image' => 'file|image|max:20480',
+            ], [
+                'image.image' => 'আপলোড করা ফাইলটি একটি সঠিক ইমেজ (JPG, PNG, WebP) হতে হবে।',
+                'image.max'   => 'ইমেজের সাইজ সর্বোচ্চ ২০ মেগাবাইট হতে পারবে।',
+            ]);
+        }
+
+        $user = Auth::user();
+        $pageInput = $request->input('pages', []);
+
+        // Strict tenant isolation: fetch only active/connected pages belonging to this user
+        $pages = $user->facebookPages()
+            ->where(function ($query) use ($pageInput) {
+                $query->whereIn('id', $pageInput)
+                      ->orWhereIn('page_id', $pageInput);
+            })
+            ->get();
+
+        if ($pages->isEmpty()) {
+            $errorPayload = [
+                'success' => false,
+                'message' => '❌ নির্বাচিত কোনো ফেসবুক পেজ পাওয়া যায়নি অথবা আপনার অ্যাকাউন্টে যুক্ত নেই।',
+                'results' => [],
+            ];
+
+            if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
+                return response()->json($errorPayload, 404);
+            }
+
+            return back()->with('error', $errorPayload['message']);
+        }
+
+        $image = $request->file('image') ?: $request->input('image');
+        $message = $request->input('message');
+        $firstComment = $request->input('first_comment');
+
+        $results = $socialPostService->publishDirectToPages($pages, $message, $image, $firstComment);
+
+        $hasSuccess = collect($results)->contains(fn($r) => !empty($r['success']));
+        $allSuccess = collect($results)->every(fn($r) => !empty($r['success']));
+
+        $statusMessage = $allSuccess
+            ? '✅ সকল নির্বাচিত পেজে সফলভাবে পোস্ট সম্পন্ন হয়েছে!'
+            : ($hasSuccess
+                ? '⚠️ কিছু পেজে সফলভাবে পোস্ট হয়েছে, তবে কিছু পেজে ব্যর্থ হয়েছে।'
+                : '❌ ফেসবুক পেজে পোস্ট প্রকাশ করতে ব্যর্থ হয়েছে।');
+
+        if ($request->wantsJson() || $request->ajax() || $request->isJson()) {
+            return response()->json([
+                'success'     => $hasSuccess,
+                'all_success' => $allSuccess,
+                'message'     => $statusMessage,
+                'results'     => $results,
+            ], $hasSuccess ? 200 : 422);
+        }
+
+        if ($allSuccess) {
+            return back()->with('success', $statusMessage)->with('publish_results', $results);
+        } elseif ($hasSuccess) {
+            return back()->with('warning', $statusMessage)->with('publish_results', $results);
+        } else {
+            return back()->with('error', $statusMessage)->with('publish_results', $results);
+        }
     }
 }

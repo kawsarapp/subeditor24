@@ -61,6 +61,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/stop-impersonate', [AdminController::class, 'stopImpersonate'])->name('stop.impersonate');
 
+    // 📢 Direct Facebook Publishing API & Service Route
+    Route::post('/facebook/direct-publish', [FacebookPageController::class, 'directPublish'])->name('facebook.direct-publish');
+
     // 🤖 AI Assistant Copilot Route
     Route::post('/ai-assistant/chat', [\App\Http\Controllers\AiAssistantController::class, 'chat'])->name('ai-assistant.chat');
 
@@ -144,6 +147,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/test-app-credentials', [FacebookPageController::class, 'testAppCredentials'])->name('test-app-credentials');
             Route::post('/store-multiple', [FacebookPageController::class, 'storeMultiple'])->name('store-multiple');
             Route::post('/toggle-master-autopost', [FacebookPageController::class, 'toggleMasterAutoPost'])->name('toggle-master-autopost');
+            Route::post('/direct-publish', [FacebookPageController::class, 'directPublish'])->name('direct-publish');
             Route::post('/', [FacebookPageController::class, 'store'])->name('store');
             Route::put('/{id}', [FacebookPageController::class, 'update'])->name('update');
             Route::delete('/{id}', [FacebookPageController::class, 'destroy'])->name('destroy');

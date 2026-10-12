@@ -122,6 +122,15 @@
                                         <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400"></span>
                                     @endif
                                 </a>
+
+                                {{-- Direct Facebook Post --}}
+                                <button type="button" onclick="openDirectFacebookPostModal()" class="w-full flex items-center justify-between px-3.5 py-2 mx-1.5 rounded-xl text-xs font-bold transition-colors text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-950/70 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer text-left">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-brands fa-facebook text-blue-600 w-4 text-center"></i>
+                                        <span>Direct Facebook Post</span>
+                                    </div>
+                                    <span class="text-[9px] bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-extrabold px-1.5 py-0.5 rounded">Fast</span>
+                                </button>
                                 @endif
 
                                 {{-- Photocard Templates --}}

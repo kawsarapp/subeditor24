@@ -38,9 +38,13 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2.5 shrink-0 relative z-10">
-                <a href="{{ route('fb-pages.connect') }}" class="inline-flex items-center gap-2 bg-white hover:bg-blue-50 text-blue-700 font-black text-xs sm:text-sm px-5 py-3 rounded-xl shadow-md transition transform hover:-translate-y-0.5 cursor-pointer">
+                <button type="button" onclick="openDirectFacebookPostModal()" class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs sm:text-sm px-4 sm:px-5 py-3 rounded-xl shadow-md transition transform hover:-translate-y-0.5 cursor-pointer" title="সরাসরি ফেসবুক পেজে ছবি, ক্যাপশন ও প্রথম কমেন্ট পোস্ট করুন">
+                    <i class="fa-solid fa-paper-plane text-white"></i>
+                    <span>ফেসবুক পোস্ট করুন 🚀</span>
+                </button>
+                <a href="{{ route('fb-pages.connect') }}" class="inline-flex items-center gap-2 bg-white hover:bg-blue-50 text-blue-700 font-black text-xs sm:text-sm px-4 sm:px-5 py-3 rounded-xl shadow-md transition transform hover:-translate-y-0.5 cursor-pointer">
                     <i class="fa-brands fa-facebook text-base text-blue-600"></i>
-                    <span>Connect with Facebook 🚀</span>
+                    <span>Connect with Facebook</span>
                 </a>
                 <button type="button" onclick="openSmartTokenModal()" class="inline-flex items-center gap-2 bg-blue-800/90 hover:bg-blue-800 text-white font-bold text-xs px-4 py-3 rounded-xl border border-white/20 shadow-sm transition cursor-pointer" title="টোকেন পেস্ট করে সব পেজ একসাথে ডিটেক্ট ও কানেক্ট করুন">
                     <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
@@ -139,6 +143,11 @@
                                 {{-- Active Switch --}}
                                 <button type="button" onclick="toggleFbActive('{{ $page->id }}')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold border transition {{ $page->is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200' }}">
                                     {{ $page->is_active ? '🟢 On' : '⚪ Off' }}
+                                </button>
+
+                                {{-- Direct Post Button --}}
+                                <button type="button" onclick="openDirectFacebookPostModal('{{ $page->id }}')" class="px-2.5 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="এই পেজে সরাসরি পোস্ট করুন">
+                                    <i class="fa-solid fa-paper-plane text-[10px]"></i> <span>পোস্ট</span>
                                 </button>
 
                                 {{-- Test Button --}}

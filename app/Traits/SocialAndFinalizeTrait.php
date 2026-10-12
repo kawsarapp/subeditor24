@@ -80,7 +80,8 @@ trait SocialAndFinalizeTrait
             $shouldPostFb = ($settings->post_to_fb || $hasActiveFbPages) && !$skipFb;
 
             if ($shouldPostFb) {
-                $fbResults = $socialPoster->postToFacebook($settings, $captionToPost, $imageToPost, $newsLink, $selectedPageIds);
+                $customFirstComment = $this->customData['first_comment'] ?? null;
+                $fbResults = $socialPoster->postToFacebook($settings, $captionToPost, $imageToPost, $newsLink, $selectedPageIds, $customFirstComment);
 
                 // সব results loop করে যেকোনো ১টি success হলে 'success' রাখি
                 $fbOverallSuccess = collect($fbResults)->contains('success', true);

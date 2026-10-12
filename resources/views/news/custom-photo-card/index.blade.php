@@ -327,6 +327,18 @@
                 <textarea id="direct-publish-caption-input" rows="3" placeholder="Message or caption for this post..." class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 outline-none focus:border-blue-500 bg-slate-50"></textarea>
             </div>
 
+            <div>
+                <label class="text-xs font-bold text-slate-700 block mb-1.5 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-regular fa-comment-dots text-blue-600"></i>
+                        <span>💬 প্রথম কমেন্ট (First Comment / Link)</span>
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-normal">ঐচ্ছিক</span>
+                </label>
+                <textarea id="direct-publish-comment-input" rows="2" placeholder="যেমন: বিস্তারিত খবরের লিংক বা সোর্স কমেন্টে দিন..." class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 outline-none focus:border-blue-500 bg-slate-50"></textarea>
+                <p class="text-[10px] text-slate-400 mt-1">ছবি পাবলিশ হওয়ার সাথে সাথে এই লেখাটি পেজে ১ম কমেন্ট হিসেবে যুক্ত হবে।</p>
+            </div>
+
             <div class="flex items-center gap-2 pt-2">
                 <button type="button" onclick="closeDirectPublishModal()" class="flex-1 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs rounded-xl transition">
                     Cancel
@@ -379,7 +391,8 @@
     function confirmDirectPublishFacebook() {
         const pageId = document.getElementById('direct-publish-page-select')?.value;
         const caption = document.getElementById('direct-publish-caption-input')?.value;
-        window.customStudio.publishToFacebook(pageId, caption);
+        const firstComment = document.getElementById('direct-publish-comment-input')?.value;
+        window.customStudio.publishToFacebook(pageId, caption, firstComment);
     }
 
     // Tab Switching

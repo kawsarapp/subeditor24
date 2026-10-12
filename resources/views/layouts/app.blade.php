@@ -174,6 +174,7 @@
     {{-- Modals & Overlays --}}
     @include('layouts.partials.shortcuts-modal')
     @include('layouts.partials.ai-copilot')
+    @include('partials.direct_facebook_post_modal')
 
     {{-- Scripts --}}
     @include('layouts.partials.scripts')

@@ -203,6 +203,14 @@
                 <i class="fa-solid fa-paintbrush text-violet-500 w-5 text-center text-sm"></i> Photo Card Studio
             </a>
 
+            <button type="button" onclick="toggleMobileDrawer(); openDirectFacebookPostModal();" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-extrabold text-blue-700 bg-blue-50/80 hover:bg-blue-100 transition text-left cursor-pointer">
+                <div class="flex items-center gap-3">
+                    <i class="fa-brands fa-facebook text-blue-600 w-5 text-center text-sm"></i>
+                    <span>Direct Facebook Post</span>
+                </div>
+                <span class="text-[9px] bg-blue-200/70 text-blue-800 font-extrabold px-1.5 py-0.5 rounded">1-Click</span>
+            </button>
+
             {{-- ⚡ Quick Card Generator --}}
             <a href="{{ route('free-photocard.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-extrabold {{ request()->routeIs('free-photocard.*') ? 'bg-indigo-600 text-white' : 'text-amber-700 bg-amber-50 hover:bg-amber-100' }}">
                 <i class="fa-solid fa-clone text-amber-500 w-5 text-center text-sm"></i> Quick Card Generator

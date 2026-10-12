@@ -303,7 +303,7 @@ trait NewsPublishingTrait
 
     public function publishStudioDesign(Request $request, $id)
     {
-        $request->validate(['design_image' => 'required|image|max:20480', 'category_id' => 'nullable', 'social_caption' => 'nullable|string', 'selected_fb_page_ids' => 'nullable|array', 'selected_fb_page_ids.*' => 'nullable|integer']);
+        $request->validate(['design_image' => 'required|image|max:20480', 'category_id' => 'nullable', 'social_caption' => 'nullable|string', 'first_comment' => 'nullable|string|max:2000', 'selected_fb_page_ids' => 'nullable|array', 'selected_fb_page_ids.*' => 'nullable|integer']);
         $news = NewsItem::findOrFail($id);
         $adminUser = $this->getEffectiveAdmin();
         $staffId = Auth::id() !== $adminUser->id ? Auth::id() : null; // 🔥 Staff ID
@@ -333,6 +333,7 @@ trait NewsPublishingTrait
                     'website_image' => $news->thumbnail_url, 'social_image' => $studioImageUrl,
                     'category_ids' => [$request->category_id ?? 1],
                     'social_caption' => $request->social_caption ?? ($news->ai_title ?? $news->title),
+                    'first_comment' => $request->input('first_comment'),
                     'selected_fb_page_ids' => $request->input('selected_fb_page_ids', []),
                     'skip_fb' => $request->has('skip_fb'),
                 ], true);

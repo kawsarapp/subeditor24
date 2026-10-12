@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\FacebookPage;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -19,7 +21,7 @@ class SocialPostService
      * @param  array  $selectedPageIds  DB IDs of FacebookPage records to post to
      * @return array  [['page_name' => ..., 'success' => bool, 'message' => ...], ...]
      */
-    public function postToFacebook($settings, $title, $imagePathOrUrl, $newsLink, array $selectedPageIds = [])
+    public function postToFacebook($settings, $title, $imagePathOrUrl, $newsLink, array $selectedPageIds = [], ?string $firstComment = null)
     {
         // ১. User এর সব active Facebook page গুলো নিই
         $user  = User::with('facebookPages')->find($settings->user_id);
@@ -49,7 +51,7 @@ class SocialPostService
 
         // ৪. প্রতিটি page-এ আলাদাভাবে পোস্ট করি
         foreach ($pages as $page) {
-            $result                = $this->sendToOnePage($page, $title, $imagePathOrUrl, $newsLink);
+            $result                = $this->sendToOnePage($page, $title, $imagePathOrUrl, $newsLink, $firstComment);
             $result['page_name']   = $page->page_name ?? 'Unknown Page';
             $results[]             = $result;
         }
@@ -60,7 +62,7 @@ class SocialPostService
     /**
      * একটি নির্দিষ্ট page-এ পোস্ট পাঠানো (internal helper)
      */
-    private function sendToOnePage($page, $title, $imagePathOrUrl, $newsLink)
+    private function sendToOnePage($page, $title, $imagePathOrUrl, $newsLink, ?string $firstComment = null)
     {
         try {
             $endpoint = "https://graph.facebook.com/v19.0/{$page->page_id}/photos";
@@ -94,11 +96,15 @@ class SocialPostService
             $postId = $data['post_id'] ?? null;
 
             if ($postId) {
-                // Comment-এ link দেওয়া (যদি চালু থাকে)
-                if (!empty($page->comment_link)) {
+                // Comment-এ link দেওয়া (যদি চালু থাকে অথবা custom first comment দেওয়া হয়)
+                $commentMessage = !empty($firstComment) 
+                    ? $firstComment 
+                    : (!empty($page->comment_link) && !empty($newsLink) ? 'বিস্তারিত পড়ুন: ' . $newsLink : null);
+
+                if (!empty($commentMessage)) {
                     try {
                         Http::withoutVerifying()->timeout(15)->post("https://graph.facebook.com/v19.0/{$postId}/comments", [
-                            'message'      => 'বিস্তারিত পড়ুন: ' . $newsLink,
+                            'message'      => $commentMessage,
                             'access_token' => $page->access_token,
                         ]);
                     } catch (\Exception $e) {
@@ -235,5 +241,310 @@ class SocialPostService
             Log::error('❌ Twitter Exception: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Publish a direct post to Facebook Page(s) with optional image and first comment.
+     * Supports a single page (FacebookPage model or ID) or multiple pages (array/Collection).
+     *
+     * @param  mixed        $pageId        FacebookPage model, DB ID, FB page_id, or array/Collection of them
+     * @param  string|null  $message       Post text/caption
+     * @param  mixed        $image         UploadedFile, local path, base64 data, URL, or null
+     * @param  string|null  $firstComment  Optional first comment
+     * @return array                       Summary array (or array of summary arrays if multiple)
+     */
+    public function publishDirectPost($pageId, ?string $message = null, $image = null, ?string $firstComment = null)
+    {
+        if (is_array($pageId) || $pageId instanceof \Illuminate\Support\Collection) {
+            return $this->publishDirectToPages($pageId, $message, $image, $firstComment);
+        }
+
+        return $this->publishDirectToOnePage($pageId, $message, $image, $firstComment);
+    }
+
+    /**
+     * Publish direct post to multiple Facebook Pages in a loop.
+     *
+     * @param  iterable     $pages
+     * @param  string|null  $message
+     * @param  mixed        $image
+     * @param  string|null  $firstComment
+     * @return array        Array of status summaries for each page
+     */
+    public function publishDirectToPages(iterable $pages, ?string $message = null, $image = null, ?string $firstComment = null): array
+    {
+        $summaries = [];
+        foreach ($pages as $page) {
+            $summaries[] = $this->publishDirectToOnePage($page, $message, $image, $firstComment);
+        }
+        return $summaries;
+    }
+
+    /**
+     * Publish direct post to a single Facebook Page.
+     *
+     * @param  mixed        $pageIdentifier
+     * @param  string|null  $message
+     * @param  mixed        $image
+     * @param  string|null  $firstComment
+     * @return array        Status summary: [page_id, page_name, success, post_id, comment_status, comment_id, error]
+     */
+    public function publishDirectToOnePage($pageIdentifier, ?string $message = null, $image = null, ?string $firstComment = null): array
+    {
+        // 1. Resolve page model
+        $page = $this->resolveFacebookPage($pageIdentifier);
+
+        if (!$page) {
+            $rawId = is_object($pageIdentifier) ? ($pageIdentifier->page_id ?? $pageIdentifier->id ?? null) : $pageIdentifier;
+            return [
+                'page_id'        => $rawId,
+                'page_name'      => is_object($pageIdentifier) ? ($pageIdentifier->page_name ?? 'Unknown Page') : 'Unknown Page',
+                'success'        => false,
+                'post_id'        => null,
+                'comment_status' => 'skipped',
+                'comment_id'     => null,
+                'error'          => 'ফেসবুক পেজ খুঁজে পাওয়া যায়নি।',
+            ];
+        }
+
+        $pageName    = $page->page_name ?? 'Facebook Page';
+        $fbPageId    = $page->page_id ?? null;
+        $accessToken = $page->access_token ?: ($page->page_access_token ?? null);
+
+        if (!empty($accessToken)) {
+            $accessToken = trim(preg_replace('/^Bearer\s+/i', '', (string)$accessToken), " \t\n\r\0\x0B\"'");
+        }
+
+        if (empty($fbPageId) || empty($accessToken)) {
+            return [
+                'page_id'        => $fbPageId,
+                'page_name'      => $pageName,
+                'success'        => false,
+                'post_id'        => null,
+                'comment_status' => 'skipped',
+                'comment_id'     => null,
+                'error'          => "পেজ '{$pageName}' এর অ্যাক্সেস টোকেন বা পেজ আইডি অনুপস্থিত।",
+            ];
+        }
+
+        try {
+            $hasImage = !empty($image);
+            $postId = null;
+            $data = [];
+
+            if ($hasImage) {
+                // Image Post: POST /{page_id}/photos with caption and published=true
+                $endpoint = "https://graph.facebook.com/v19.0/{$fbPageId}/photos";
+                $payload = [
+                    'caption'      => $message ?? '',
+                    'message'      => $message ?? '',
+                    'access_token' => $accessToken,
+                    'published'    => 'true',
+                ];
+
+                $response = $this->sendPhotoRequest($endpoint, $payload, $image);
+            } else {
+                // Text Only: POST /{page_id}/feed with message
+                $endpoint = "https://graph.facebook.com/v19.0/{$fbPageId}/feed";
+                $payload = [
+                    'message'      => $message ?? '',
+                    'access_token' => $accessToken,
+                    'published'    => 'true',
+                ];
+
+                $response = Http::withoutVerifying()->timeout(35)->post($endpoint, $payload);
+            }
+
+            $data = $response->json() ?? [];
+
+            // Graph API photos endpoint returns {"id": "photo_id", "post_id": "page_id_post_id"}
+            // feed endpoint returns {"id": "page_id_post_id"}
+            if ($response->successful() && (!empty($data['post_id']) || !empty($data['id']))) {
+                $postId = $data['post_id'] ?? $data['id'];
+            }
+
+            if ($postId) {
+                Log::info("✅ FB Direct Post Success [{$pageName}] Page ID [{$fbPageId}]: Post ID {$postId}");
+
+                // First Comment handling
+                $commentStatus = 'skipped';
+                $commentId = null;
+
+                if (!empty(trim((string)$firstComment))) {
+                    try {
+                        $commentRes = Http::withoutVerifying()->timeout(20)
+                            ->post("https://graph.facebook.com/v19.0/{$postId}/comments", [
+                                'message'      => trim((string)$firstComment),
+                                'access_token' => $accessToken,
+                            ]);
+
+                        $commentData = $commentRes->json() ?? [];
+
+                        if ($commentRes->successful() && !empty($commentData['id'])) {
+                            $commentId = $commentData['id'];
+                            $commentStatus = 'published';
+                            Log::info("✅ FB First Comment Success [{$pageName}] on Post [{$postId}]: Comment ID {$commentId}");
+                        } else {
+                            $commentStatus = 'failed';
+                            $errDetail = $commentData['error']['message'] ?? 'Unknown error';
+                            Log::warning("⚠️ FB First Comment Failed [{$pageName}] on Post [{$postId}]: {$errDetail}");
+                        }
+                    } catch (\Throwable $ce) {
+                        $commentStatus = 'failed';
+                        Log::warning("⚠️ FB First Comment Exception [{$pageName}] on Post [{$postId}]: " . $ce->getMessage());
+                    }
+                }
+
+                return [
+                    'page_id'        => $fbPageId,
+                    'page_name'      => $pageName,
+                    'success'        => true,
+                    'post_id'        => $postId,
+                    'comment_status' => $commentStatus,
+                    'comment_id'     => $commentId,
+                    'error'          => null,
+                ];
+            } else {
+                $errorData   = $data['error'] ?? [];
+                $detailedMsg = $errorData['error_user_msg'] ?? null;
+                $titleMsg    = $errorData['error_user_title'] ?? null;
+                $genericMsg  = $errorData['message'] ?? 'Unknown Facebook Graph API Error';
+                $finalError  = $detailedMsg ?: ($titleMsg ? "{$titleMsg}: {$genericMsg}" : $genericMsg);
+
+                Log::error("❌ FB Direct Post Failed [{$pageName}]: " . json_encode($data));
+
+                return [
+                    'page_id'        => $fbPageId,
+                    'page_name'      => $pageName,
+                    'success'        => false,
+                    'post_id'        => null,
+                    'comment_status' => 'skipped',
+                    'comment_id'     => null,
+                    'error'          => $finalError,
+                ];
+            }
+
+        } catch (\Throwable $e) {
+            Log::error("❌ FB Direct Post Exception [{$pageName}]: " . $e->getMessage());
+
+            return [
+                'page_id'        => $fbPageId,
+                'page_name'      => $pageName,
+                'success'        => false,
+                'post_id'        => null,
+                'comment_status' => 'skipped',
+                'comment_id'     => null,
+                'error'          => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Dispatch photo upload request via file attachment or public URL.
+     */
+    protected function sendPhotoRequest(string $endpoint, array $payload, $image)
+    {
+        // 1. UploadedFile
+        if ($image instanceof UploadedFile && $image->isValid()) {
+            return Http::withoutVerifying()->timeout(60)
+                ->attach('source', file_get_contents($image->getRealPath()), $image->getClientOriginalName() ?: 'upload.jpg')
+                ->post($endpoint, $payload);
+        }
+
+        // 2. Base64 data string (e.g. data:image/png;base64,...)
+        if (is_string($image) && preg_match('/^data:image\/(\w+);base64,/', $image, $matches)) {
+            $raw = substr($image, strpos($image, ',') + 1);
+            $decoded = base64_decode($raw);
+            $ext = strtolower($matches[1] ?? 'png');
+            return Http::withoutVerifying()->timeout(60)
+                ->attach('source', $decoded, 'image.' . $ext)
+                ->post($endpoint, $payload);
+        }
+
+        // 3. Local file path check
+        $localPath = null;
+        if (is_string($image)) {
+            if (file_exists($image)) {
+                $localPath = $image;
+            } elseif (file_exists(public_path($image))) {
+                $localPath = public_path($image);
+            } elseif (file_exists(storage_path('app/public/' . ltrim($image, '/')))) {
+                $localPath = storage_path('app/public/' . ltrim($image, '/'));
+            }
+        }
+
+        if ($localPath && is_file($localPath)) {
+            return Http::withoutVerifying()->timeout(60)
+                ->attach('source', file_get_contents($localPath), basename($localPath))
+                ->post($endpoint, $payload);
+        }
+
+        // 4. URL string
+        if (is_string($image) && filter_var($image, FILTER_VALIDATE_URL)) {
+            $parsed = parse_url($image);
+            $host = $parsed['host'] ?? '';
+            $isLocal = in_array($host, ['localhost', '127.0.0.1', '::1']) || str_ends_with($host, '.test') || str_ends_with($host, '.local');
+            if ($isLocal && !empty($parsed['path'])) {
+                $devPath = public_path(ltrim($parsed['path'], '/'));
+                if (file_exists($devPath) && is_file($devPath)) {
+                    return Http::withoutVerifying()->timeout(60)
+                        ->attach('source', file_get_contents($devPath), basename($devPath))
+                        ->post($endpoint, $payload);
+                }
+            }
+
+            $payload['url'] = $image;
+            return Http::withoutVerifying()->timeout(60)->post($endpoint, $payload);
+        }
+
+        // 5. Fallback: if raw binary or string given
+        if (is_string($image) && strlen($image) > 0) {
+            return Http::withoutVerifying()->timeout(60)
+                ->attach('source', $image, 'photo.jpg')
+                ->post($endpoint, $payload);
+        }
+
+        // Final fallback: normal post without attachment
+        return Http::withoutVerifying()->timeout(60)->post($endpoint, $payload);
+    }
+
+    /**
+     * Resolve FacebookPage instance from model, ID or array
+     */
+    protected function resolveFacebookPage($pageIdentifier): ?FacebookPage
+    {
+        if ($pageIdentifier instanceof FacebookPage) {
+            return $pageIdentifier;
+        }
+
+        if (is_numeric($pageIdentifier)) {
+            $page = FacebookPage::find($pageIdentifier);
+            if ($page) {
+                return $page;
+            }
+            return FacebookPage::where('page_id', (string)$pageIdentifier)->first();
+        }
+
+        if (is_string($pageIdentifier) && !empty($pageIdentifier)) {
+            $page = FacebookPage::where('page_id', $pageIdentifier)->first();
+            if ($page) {
+                return $page;
+            }
+            return FacebookPage::find($pageIdentifier);
+        }
+
+        if (is_array($pageIdentifier)) {
+            $p = new FacebookPage();
+            $p->forceFill($pageIdentifier);
+            return $p;
+        }
+
+        if (is_object($pageIdentifier) && isset($pageIdentifier->access_token) && isset($pageIdentifier->page_id)) {
+            $p = new FacebookPage();
+            $p->forceFill((array)$pageIdentifier);
+            return $p;
+        }
+
+        return null;
     }
 }

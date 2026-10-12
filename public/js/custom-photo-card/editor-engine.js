@@ -4004,7 +4004,7 @@
          * 🌐 DIRECT PUBLISH TO FACEBOOK & ATTACH TO NEWS
          * ====================================================================
          */
-        async publishToFacebook(pageId, caption = '') {
+        async publishToFacebook(pageId, caption = '', firstComment = '') {
             if (!pageId) {
                 this.showNotification("warning", "দয়া করে একটি ফেসবুক পেজ নির্বাচন করুন।");
                 return;
@@ -4035,6 +4035,9 @@
                 formData.append('page_id', pageId);
                 formData.append('image', dataUrl);
                 formData.append('caption', caption || '');
+                if (firstComment) {
+                    formData.append('first_comment', firstComment);
+                }
                 formData.append('_token', this.config.csrfToken);
 
                 const targetUrl = this.config.publishFacebookUrl || "/studio/custom-photo-card/publish-facebook";

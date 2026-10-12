@@ -59,6 +59,18 @@
                 <label class="block text-sm font-bold text-gray-700 mb-1">Social Caption</label>
                 <textarea id="modalCaption" rows="4" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500" placeholder="Write something...">{{ $newsItem->ai_title ?? $newsItem->title }}</textarea>
             </div>
+
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <label class="block text-sm font-bold text-gray-700 flex items-center gap-1.5">
+                        <i class="fa-regular fa-comment-dots text-indigo-600"></i>
+                        <span>💬 প্রথম কমেন্ট (First Comment / Link)</span>
+                    </label>
+                    <span class="text-xs text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">ঐচ্ছিক (Auto-Comment)</span>
+                </div>
+                <textarea id="modalFirstComment" rows="2" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 bg-white" placeholder="যেমন: বিস্তারিত খবরের লিংক বা সোর্স কমেন্টে দিন...">{{ !empty($newsItem->source_url) ? 'বিস্তারিত পড়ুন: ' . $newsItem->source_url : '' }}</textarea>
+                <p class="text-[11px] text-gray-500 mt-1">পোস্ট হওয়ার পর ফেসবুক পেজে স্বয়ংক্রিয়ভাবে এই লেখাটি প্রথম কমেন্ট হিসেবে দেওয়া হবে।</p>
+            </div>
         </div>
 
         <div class="bg-gray-50 px-6 py-4 border-t flex justify-end gap-3">

@@ -391,9 +391,10 @@ class CustomPhotoCardController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'page_id' => 'required|integer',
-            'image'   => 'required|string',
-            'caption' => 'nullable|string|max:2000',
+            'page_id'       => 'required|integer',
+            'image'         => 'required|string',
+            'caption'       => 'nullable|string|max:2000',
+            'first_comment' => 'nullable|string|max:2000',
         ]);
 
         try {
@@ -441,10 +442,23 @@ class CustomPhotoCardController extends Controller
             $data = $response->json();
 
             if ($response->successful() && !empty($data['id'])) {
+                $postId = $data['id'];
+                $firstComment = trim($request->input('first_comment', ''));
+                if (!empty($firstComment)) {
+                    try {
+                        \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(15)->post("https://graph.facebook.com/v19.0/{$postId}/comments", [
+                            'message'      => $firstComment,
+                            'access_token' => $tokenToUse,
+                        ]);
+                    } catch (\Exception $commentEx) {
+                        Log::error("CustomPhotoCard FB First Comment Error: " . $commentEx->getMessage());
+                    }
+                }
+
                 return response()->json([
                     'success' => true,
-                    'post_id' => $data['id'],
-                    'message' => 'ফেসবুক পেজে সফলভাবে পোস্ট করা হয়েছে!'
+                    'post_id' => $postId,
+                    'message' => 'ফেসবুক পেজে সফলভাবে পোস্ট করা হয়েছে!' . (!empty($firstComment) ? ' (১ম কমেন্ট যুক্ত হয়েছে)' : '')
                 ]);
             } else {
                 $errorMsg = $data['error']['message'] ?? 'ফেসবুকে পোস্ট করতে ব্যর্থ হয়েছে।';
