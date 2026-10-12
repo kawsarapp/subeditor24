@@ -140,10 +140,17 @@ class SocialPostService
             }
 
             if ($postId) {
-                // Comment-এ link দেওয়া (যদি চালু থাকে অথবা custom first comment দেওয়া হয়)
-                $commentMessage = !empty($firstComment) 
-                    ? $firstComment 
-                    : (!empty($page->comment_link) && !empty($newsLink) ? 'বিস্তারিত পড়ুন: ' . $newsLink : null);
+                // Comment-এ link দেওয়া: custom first comment দেওয়া থাকলে সেটা,
+                // অন্যথায় news link থাকলে স্বয়ংক্রিয়ভাবে 'বিস্তারিত পড়ুন: ...' দেওয়া হবে।
+                $resolvedNewsLink = $newsLink;
+                if ($newsLink instanceof \App\Models\NewsItem) {
+                    $resolvedNewsLink = $newsLink->live_url ?: $newsLink->original_link;
+                }
+
+                $firstCommentTrimmed = trim((string)$firstComment);
+                $commentMessage = !empty($firstCommentTrimmed) 
+                    ? $firstCommentTrimmed 
+                    : (!empty($resolvedNewsLink) ? 'বিস্তারিত পড়ুন: ' . $resolvedNewsLink : null);
 
                 if (!empty($commentMessage)) {
                     try {
