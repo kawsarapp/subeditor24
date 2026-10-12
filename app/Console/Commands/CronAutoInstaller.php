@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 use App\Services\DynamicCronService;
 
 class CronAutoInstaller extends Command
@@ -51,7 +52,9 @@ class CronAutoInstaller extends Command
                 $tmpFile = tempnam(sys_get_temp_dir(), 'cron_');
                 file_put_contents($tmpFile, $newCrontab);
                 $result = shell_exec("crontab {$tmpFile} 2>&1");
-                @unlink($tmpFile);
+                try {
+                    if (File::exists($tmpFile)) File::delete($tmpFile);
+                } catch (\Throwable $e) {}
 
                 $this->info("🎉 Server Crontab successfully installed dynamically!");
                 $this->line("   -> Entry: <comment>{$cronEntry}</comment>");
@@ -83,7 +86,9 @@ class CronAutoInstaller extends Command
                 $tmpFile = tempnam(sys_get_temp_dir(), 'cron_');
                 file_put_contents($tmpFile, !empty($newCrontab) ? $newCrontab . "\n" : "");
                 shell_exec("crontab {$tmpFile} 2>&1");
-                @unlink($tmpFile);
+                try {
+                    if (File::exists($tmpFile)) File::delete($tmpFile);
+                } catch (\Throwable $e) {}
 
                 $this->info("✅ Project crontab entry removed successfully.");
                 break;

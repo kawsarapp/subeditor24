@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\File;
 use App\Models\User;
 use App\Models\UserSetting;
 
@@ -518,7 +519,13 @@ trait ScraperEnginesTrait
         $htmlContent = null;
         if (file_exists($tempFile)) {
             $htmlContent = file_get_contents($tempFile);
-            unlink($tempFile);
+            try {
+                if (is_file($tempFile)) {
+                    File::delete($tempFile);
+                }
+            } catch (\Throwable $e) {
+                Log::warning("⚠️ Failed to delete Puppeteer temp file [{$tempFile}]: " . $e->getMessage());
+            }
         } else {
             Log::warning("⚠️ Puppeteer: No output file created for [$cleanUrl]. Raw stderr: " . substr($rawOutput ?? 'empty/null', 0, 800));
         }

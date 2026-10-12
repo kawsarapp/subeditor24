@@ -480,7 +480,13 @@ class CustomPhotoCardController extends Controller
             }
 
             // Clean temp file
-            @unlink($tempFilePath);
+            try {
+                if (File::exists($tempFilePath)) {
+                    File::delete($tempFilePath);
+                }
+            } catch (\Throwable $e) {
+                Log::warning("⚠️ Failed to delete photocard temp file [{$tempFilePath}]: " . $e->getMessage());
+            }
 
             if ($postId) {
                 $firstComment = trim($request->input('first_comment', ''));

@@ -4,6 +4,7 @@ namespace App\Modules\AudioNarration\Engines;
 
 use App\Modules\AudioNarration\Contracts\TtsEngineInterface;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
 
@@ -162,8 +163,12 @@ PYTHON;
                 'error'   => $e->getMessage(),
             ];
         } finally {
-            @unlink($tempTextFile);
-            @unlink($tempPyScript);
+            try {
+                if (File::exists($tempTextFile)) File::delete($tempTextFile);
+                if (File::exists($tempPyScript)) File::delete($tempPyScript);
+            } catch (\Throwable $e) {
+                Log::warning("⚠️ Failed to delete TTS temp files: " . $e->getMessage());
+            }
         }
     }
 

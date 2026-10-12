@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use App\Notifications\PostPublishedNotification;
 
 trait SocialAndFinalizeTrait
@@ -118,8 +119,14 @@ trait SocialAndFinalizeTrait
             }
 
             // স্টুডিওর টেম্পরারি ইমেজ ডিলিট করে দেওয়া
-            if (strpos($imageToPost, 'news-cards/studio') !== false && file_exists($imageToPost)) {
-                unlink($imageToPost);
+            if (strpos($imageToPost, 'news-cards/studio') !== false) {
+                try {
+                    if (file_exists($imageToPost) && is_file($imageToPost)) {
+                        \Illuminate\Support\Facades\File::delete($imageToPost);
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("⚠️ Failed to delete temporary studio card [{$imageToPost}]: " . $e->getMessage());
+                }
             }
         } else {
             if (!$isFromStudio) {

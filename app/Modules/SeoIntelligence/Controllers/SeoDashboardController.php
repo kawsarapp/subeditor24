@@ -9,6 +9,8 @@ use App\Modules\SeoIntelligence\Jobs\ExecuteSeoCrawlJob;
 use App\Modules\SeoIntelligence\Services\WebsiteCrawlerEngine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 
 class SeoDashboardController extends Controller
 {
@@ -522,8 +524,12 @@ class SeoDashboardController extends Controller
         $website->save();
 
         $filePath = storage_path("app/seo/service_account_{$website->id}.json");
-        if (file_exists($filePath)) {
-            @unlink($filePath);
+        try {
+            if (File::exists($filePath)) {
+                File::delete($filePath);
+            }
+        } catch (\Throwable $e) {
+            Log::warning("⚠️ Failed to delete SEO service account file [{$filePath}]: " . $e->getMessage());
         }
 
         try {

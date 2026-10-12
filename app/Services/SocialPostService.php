@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
 
 class SocialPostService
 {
@@ -255,7 +256,13 @@ class SocialPostService
             $media = $connection->upload('media/upload', ['media' => $tmpPath]);
 
             if ($isUrl && file_exists($tmpPath)) {
-                unlink($tmpPath);
+                try {
+                    if (is_file($tmpPath)) {
+                        File::delete($tmpPath);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("⚠️ Failed to delete Twitter temp file [{$tmpPath}]: " . $e->getMessage());
+                }
             }
 
             if (isset($media->media_id_string)) {

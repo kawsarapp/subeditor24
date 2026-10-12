@@ -136,10 +136,25 @@ class ProcessNewsPost implements ShouldQueue
             }
 
             // --- 3. Finalize & Social --- (এখানেও $adminUser পাস করা হয়েছে)
-            $this->executeFinalization($news, $adminUser, $settings, $wpSuccess, $laravelSuccess, $socialOnly, $skipSocial, $remotePostId, $publishedUrl, $websiteImage, $socialImage, $hashtags, $finalTitle, $socialPoster, $cardGenerator);
+            try {
+                $this->executeFinalization($news, $adminUser, $settings, $wpSuccess, $laravelSuccess, $socialOnly, $skipSocial, $remotePostId, $publishedUrl, $websiteImage, $socialImage, $hashtags, $finalTitle, $socialPoster, $cardGenerator);
+            } catch (\Throwable $finalizeException) {
+                if ($wpSuccess || $laravelSuccess) {
+                    Log::warning("⚠️ ProcessNewsPost Finalization/Cleanup Error for News #{$news->id} (Content already published): " . $finalizeException->getMessage());
+                } else {
+                    throw $finalizeException;
+                }
+            }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error("ProcessNewsPost Job Exception: " . $e->getMessage());
+
+            $news = NewsItem::withoutGlobalScopes()->find($this->newsId);
+            if ($news && ($news->is_posted || $news->status === 'published')) {
+                Log::warning("⚠️ News #{$news->id} is already published. Suppressing job failure state.");
+                return;
+            }
+
             $this->fail($e);
         }
     }
@@ -148,6 +163,10 @@ class ProcessNewsPost implements ShouldQueue
     {
         $news = NewsItem::withoutGlobalScopes()->find($this->newsId);
         if ($news) {
+            if ($news->is_posted || $news->status === 'published') {
+                Log::warning("⚠️ ProcessNewsPost failed hook called for already published News #{$this->newsId}: " . $exception->getMessage());
+                return;
+            }
             $news->update(['status' => 'failed', 'error_message' => 'Action Error: ' . $exception->getMessage()]);
         }
     }
