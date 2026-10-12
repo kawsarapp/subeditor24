@@ -558,8 +558,8 @@ class User extends Authenticatable
                 'can_viral_predictor', 'can_seo_intelligence', 'can_seo_audit', 'can_seo_gsc', 'can_seo_ga4',
                 'can_seo_cwv', 'can_seo_links', 'can_seo_ai', 'can_fact_check', 'can_auto_post',
                 'can_manage_staff', 'manage_reporters', 'reporter_direct', 'can_analytics',
-                'can_settings', 'can_settings_branding', 'can_settings_proxy', 'can_settings_target_language',
-                'can_settings_ai', 'can_settings_ai_prompt', 'can_settings_wp_laravel', 'can_settings_social', 'can_settings_category'
+                'can_settings', 'can_settings_branding', 'can_settings_target_language',
+                'can_settings_ai_prompt', 'can_settings_wp_laravel', 'can_settings_social', 'can_settings_category'
             ];
             $this->permissions = array_values(array_unique(array_merge($currentPerms, $vipPerms)));
         } else {

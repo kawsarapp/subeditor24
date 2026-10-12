@@ -370,7 +370,7 @@
     <form action="{{ route('settings.update') }}" method="POST" class="space-y-6" novalidate id="mainSettingsForm">
         @csrf
 
-        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_proxy'))
+        @if(auth()->user()->isSuperAdmin() || auth()->user()->role === 'super_admin')
         {{-- SCRAPER PROXY & DECODO SETTINGS (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-blue-50/40 hover:bg-blue-50/80 transition" onclick="toggleSettingsAccordion(this)">
@@ -833,7 +833,7 @@
         </div>
         @endif
 
-        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_ai'))
+        @if(auth()->user()->isSuperAdmin() || auth()->user()->role === 'super_admin')
         {{-- AI CONFIGURATION (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-indigo-50/40 hover:bg-indigo-50/80 transition" onclick="toggleSettingsAccordion(this)">
@@ -1040,7 +1040,7 @@
         </div>
         @endif
 
-        @if(auth()->user()->role === 'super_admin' || auth()->user()->hasPermission('can_settings_ai'))
+        @if(auth()->user()->isSuperAdmin() || auth()->user()->role === 'super_admin')
         {{-- PHOTOROOM API SETTINGS (Collapsible) --}}
         <div class="settings-accordion-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200">
             <div class="p-4 sm:p-5 flex justify-between items-center cursor-pointer select-none bg-purple-50/40 hover:bg-purple-50/80 transition" onclick="toggleSettingsAccordion(this)">

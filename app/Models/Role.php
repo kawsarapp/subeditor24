@@ -165,7 +165,11 @@ class Role extends Model
     public static function getDefaultPermissionsForRole(string $roleName): array
     {
         return match ($roleName) {
-            'super_admin', 'admin' => self::getAllPermissionSlugs(),
+            'super_admin' => self::getAllPermissionSlugs(),
+            'admin'       => array_values(array_diff(self::getAllPermissionSlugs(), [
+                'can_settings_proxy',
+                'can_settings_ai',
+            ])),
             'editor' => [
                 'can_latest_news',
                 'can_central_feed',

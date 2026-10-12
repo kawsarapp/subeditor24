@@ -61,6 +61,11 @@ return new class extends Migration
         ];
 
         $now = now();
+        $adminPermissions = array_values(array_diff($allPermissions, [
+            'can_settings_proxy',
+            'can_settings_ai',
+        ]));
+
         $roles = [
             [
                 'name' => 'super_admin',
@@ -76,7 +81,7 @@ return new class extends Migration
                 'display_name' => 'অ্যাডমিন / ক্লায়েন্ট (Admin)',
                 'description' => 'নিউজ ব্যবস্থাপনা, সেটিংস, রিপোর্টার ও স্টাফ ম্যানেজমেন্ট',
                 'is_system' => true,
-                'default_permissions' => json_encode($allPermissions),
+                'default_permissions' => json_encode($adminPermissions),
                 'created_at' => $now,
                 'updated_at' => $now,
             ],

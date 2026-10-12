@@ -69,6 +69,7 @@ class UserSetting extends Model
         'groq_model',
         'qwen_api_key',
         'qwen_model',
+        'claude_api_key',
         'huggingface_api_key',
         'huggingface_model',
         'smartproxy_api_token',
@@ -127,6 +128,7 @@ class UserSetting extends Model
         'deepseek_api_key' => 'encrypted',
         'groq_api_key' => 'encrypted',
         'qwen_api_key' => 'encrypted',
+        'claude_api_key' => 'encrypted',
         'huggingface_api_key' => 'encrypted',
         'smartproxy_api_token' => 'encrypted',
         'scrape_do_token' => 'encrypted',
@@ -201,34 +203,153 @@ class UserSetting extends Model
         return $default;
     }
 
-    public static function getSettingWithFallback($userId, $key)
-    {
-        // 1. Try finding it for the specified user ID
-        if ($userId) {
-            $setting = self::where('user_id', $userId)->first();
-            if ($setting && !empty($setting->$key)) {
-                return $setting->$key;
-            }
+    /**
+     * Platform-wide AI and Proxy infrastructure keys strictly managed by Super Admin.
+     * Tenant overrides are strictly ignored for these settings.
+     */
+    public const LOCKED_PLATFORM_KEYS = [
+        'proxy_host',
+        'proxy_port',
+        'proxy_username',
+        'proxy_password',
+        'smartproxy_api_token',
+        'scrape_do_token',
+        'scraping_api_provider',
+        'primary_ai',
+        'openai_api_key',
+        'gemini_api_key',
+        'deepseek_api_key',
+        'groq_api_key',
+        'qwen_api_key',
+        'claude_api_key',
+        'photoroom_api_key',
+        'tts_openai_key',
+        'tts_elevenlabs_key',
+        'tts_google_key',
+    ];
 
-            // If user is staff/reporter, check their parent admin's settings
-            $userObj = User::find($userId);
-            if ($userObj && in_array($userObj->role, ['staff', 'reporter']) && $userObj->parent_id) {
-                $parentSetting = self::where('user_id', $userObj->parent_id)->first();
-                if ($parentSetting && !empty($parentSetting->$key)) {
-                    return $parentSetting->$key;
+    /**
+     * Explicit Super Admin settings lookup with environment variable and default fallback.
+     *
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function getSuperAdminSetting(string $key, $default = null)
+    {
+        try {
+            $superAdmin = User::where('role', 'super_admin')->first();
+            if ($superAdmin) {
+                $setting = self::where('user_id', $superAdmin->id)->first();
+                if ($setting && !empty($setting->$key)) {
+                    return $setting->$key;
                 }
             }
+        } catch (\Throwable $e) {
+            // Database not reachable, fallback to env
         }
-        
-        // 2. Always fallback to Super Admin's configuration if user has not provided their own
-        $superAdmin = User::where('role', 'super_admin')->first();
-        if ($superAdmin && (!$userId || $userId != $superAdmin->id)) {
-            $setting = self::where('user_id', $superAdmin->id)->first();
-            if ($setting && !empty($setting->$key)) {
-                return $setting->$key;
+
+        $envFallback = self::getEnvFallbackForKey($key);
+        if ($envFallback !== null && $envFallback !== '') {
+            return $envFallback;
+        }
+
+        return $default;
+    }
+
+    /**
+     * Resolve environment variable fallback for platform configuration keys.
+     *
+     * @param string $key
+     * @return mixed
+     */
+    public static function getEnvFallbackForKey(string $key): mixed
+    {
+        $specific = match ($key) {
+            'proxy_host'            => env('SMARTPROXY_HOST') ?: env('PROXY_HOST'),
+            'proxy_port'            => env('SMARTPROXY_PORT') ?: env('PROXY_PORT'),
+            'proxy_username'        => env('SMARTPROXY_USER') ?: env('PROXY_USERNAME'),
+            'proxy_password'        => env('SMARTPROXY_PASS') ?: env('PROXY_PASSWORD'),
+            'smartproxy_api_token'  => env('SMARTPROXY_SCRAPING_API_TOKEN') ?: env('SMARTPROXY_API_TOKEN'),
+            'scrape_do_token'       => env('SCRAPE_DO_TOKEN'),
+            'scraping_api_provider' => env('SCRAPING_API_PROVIDER', 'scrape_do'),
+            'primary_ai'            => env('PRIMARY_AI', 'deepseek'),
+            'openai_api_key'        => config('services.openai.key') ?: env('OPENAI_API_KEY'),
+            'gemini_api_key'        => config('services.gemini.key') ?: env('GEMINI_API_KEY'),
+            'deepseek_api_key'      => config('services.deepseek.key') ?: env('DEEPSEEK_API_KEY'),
+            'groq_api_key'          => env('GROQ_API_KEY'),
+            'qwen_api_key'          => env('QWEN_API_KEY') ?: env('DASHSCOPE_API_KEY'),
+            'claude_api_key'        => env('CLAUDE_API_KEY') ?: env('ANTHROPIC_API_KEY'),
+            'photoroom_api_key'     => config('services.photoroom.api_key') ?: env('PHOTOROOM_API_KEY'),
+            'tts_openai_key'        => env('TTS_OPENAI_KEY') ?: (config('services.openai.key') ?: env('OPENAI_API_KEY')),
+            'tts_elevenlabs_key'    => env('TTS_ELEVENLABS_KEY') ?: config('services.elevenlabs.api_key'),
+            'tts_google_key'        => env('TTS_GOOGLE_KEY') ?: config('services.google.tts_api_key'),
+            default                 => null,
+        };
+
+        if ($specific !== null && $specific !== '') {
+            return $specific;
+        }
+
+        $envVal = env(strtoupper($key));
+        if ($envVal !== null && $envVal !== '') {
+            return $envVal;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get user setting with fallback to parent admin or Super Admin / .env default.
+     * Platform AI and Proxy infrastructure settings are strictly resolved from Super Admin.
+     *
+     * @param int|null $userId
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function getSettingWithFallback($userId, $key, $default = null)
+    {
+        // 0. Platform-wide AI and Proxy infrastructure settings are strictly controlled by Super Admin
+        if (in_array($key, self::LOCKED_PLATFORM_KEYS, true)) {
+            return self::getSuperAdminSetting($key, $default);
+        }
+
+        try {
+            // 1. Try finding it for the specified user ID
+            if ($userId) {
+                $setting = self::where('user_id', $userId)->first();
+                if ($setting && !empty($setting->$key)) {
+                    return $setting->$key;
+                }
+
+                // If user is staff/reporter, check their parent admin's settings
+                $userObj = User::find($userId);
+                if ($userObj && in_array($userObj->role, ['staff', 'reporter']) && $userObj->parent_id) {
+                    $parentSetting = self::where('user_id', $userObj->parent_id)->first();
+                    if ($parentSetting && !empty($parentSetting->$key)) {
+                        return $parentSetting->$key;
+                    }
+                }
             }
+            
+            // 2. Always fallback to Super Admin's configuration if user has not provided their own
+            $superAdmin = User::where('role', 'super_admin')->first();
+            if ($superAdmin && (!$userId || $userId != $superAdmin->id)) {
+                $setting = self::where('user_id', $superAdmin->id)->first();
+                if ($setting && !empty($setting->$key)) {
+                    return $setting->$key;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Database not reachable, fallback to env
         }
         
-        return null; // Return null so callers can fallback to .env / config
+        $envFallback = self::getEnvFallbackForKey($key);
+        if ($envFallback !== null && $envFallback !== '') {
+            return $envFallback;
+        }
+
+        return $default; // Return default (or null) so callers can fallback to .env / config
     }
 }

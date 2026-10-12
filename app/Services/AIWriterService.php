@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\UserSetting;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AIWriterService
 {
@@ -106,11 +109,208 @@ EOT;
         $this->systemPrompt = self::getDefaultPrompt('bn') . "\n\n" . self::getJsonOutputRequirement('bn');
     }
 
-    // 🔥 আপডেট: $isRetry, $userId এবং $targetLanguage প্যারামিটার যুক্ত করা হয়েছে
+    /* =========================================================================
+     * 🛡️ CIRCUIT BREAKER, RESILIENCE & CASCADING FAILOVER HELPERS
+     * ========================================================================= */
+
+    /**
+     * Define the automated fallback chain prioritized by speed and reliability.
+     */
+    public function getCascadeOrder(?string $primaryAi = null): array
+    {
+        $defaultChain = ['deepseek', 'groq', 'gemini', 'openai', 'qwen', 'huggingface'];
+        $primaryAi = strtolower(trim((string) $primaryAi));
+
+        if (!empty($primaryAi) && in_array($primaryAi, $defaultChain)) {
+            $order = [$primaryAi];
+            foreach ($defaultChain as $provider) {
+                if ($provider !== $primaryAi) {
+                    $order[] = $provider;
+                }
+            }
+            return $order;
+        }
+
+        return $defaultChain;
+    }
+
+    private static array $inMemoryCooldown = [];
+
+    /**
+     * Check if a provider is currently marked in circuit breaker cooldown.
+     */
+    public function isProviderInCooldown(string $provider): bool
+    {
+        $provider = strtolower($provider);
+        if (isset(self::$inMemoryCooldown[$provider]) && self::$inMemoryCooldown[$provider] > time()) {
+            return true;
+        }
+
+        try {
+            return (bool) Cache::get("ai_provider_cooldown_" . $provider, false);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Place an unstable/rate-limited provider into cooldown.
+     */
+    public function markProviderCooldown(string $provider, int $minutes = 3, ?string $reason = null): void
+    {
+        $provider = strtolower($provider);
+        self::$inMemoryCooldown[$provider] = time() + ($minutes * 60);
+
+        try {
+            Cache::put("ai_provider_cooldown_{$provider}", true, now()->addMinutes($minutes));
+        } catch (\Throwable $e) {
+            Log::debug("Cache put failed for AI cooldown: " . $e->getMessage());
+        }
+        Log::warning("🚨 AI Provider [{$provider}] placed in cooldown for {$minutes}m. Reason: " . ($reason ?? 'Rate limit or failure'));
+    }
+
+    /**
+     * Clear circuit breaker cooldown for a provider.
+     */
+    public function clearProviderCooldown(string $provider): void
+    {
+        $provider = strtolower($provider);
+        unset(self::$inMemoryCooldown[$provider]);
+
+        try {
+            Cache::forget("ai_provider_cooldown_" . $provider);
+        } catch (\Throwable $e) {
+            // ignore
+        }
+    }
+
+    /**
+     * Detect if an error/exception is due to HTTP 429 rate limit or quota exhaustion.
+     */
+    public function isRateLimitOrQuotaError(\Throwable $e, ?int $statusCode = null): bool
+    {
+        if (in_array($statusCode, [429, 402])) {
+            return true;
+        }
+
+        $message = strtolower($e->getMessage());
+        $patterns = [
+            '429', 'rate limit', 'rate_limit', 'quota', 'resource_exhausted',
+            'too many requests', 'insufficient_quota', 'tokens per minute',
+            'requests per minute', 'rate_limit_exceeded', 'credits exhausted',
+            'exceeded your current quota', 'tpm', 'rpm'
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (str_contains($message, $pattern)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Execute an AI callback with 1 quick retry for transient hiccups,
+     * and immediate cooldown marking + failover propagation on rate limits.
+     */
+    public function executeWithRetry(callable $callback, string $provider, int $maxRetries = 1)
+    {
+        $attempts = 0;
+        while (true) {
+            try {
+                $attempts++;
+                return $callback();
+            } catch (\Throwable $e) {
+                $isRateLimit = $this->isRateLimitOrQuotaError($e);
+                if ($isRateLimit) {
+                    $this->markProviderCooldown($provider, 3, $e->getMessage());
+                    throw $e; // Immediately escalate to failover without waiting
+                }
+
+                if ($attempts <= $maxRetries) {
+                    Log::warning("⚠️ Transient hiccup in [{$provider}] (attempt {$attempts}): {$e->getMessage()}. Retrying in 300ms...");
+                    usleep(300000); // 300ms
+                    continue;
+                }
+
+                throw $e;
+            }
+        }
+    }
+
+    /**
+     * Retrieve the API key for a specified provider.
+     */
+    public function getProviderApiKey(string $provider, ?int $userId = null): ?string
+    {
+        return match (strtolower($provider)) {
+            'deepseek'    => UserSetting::getSettingWithFallback($userId, 'deepseek_api_key') ?? (config('services.deepseek.key') ?? env('DEEPSEEK_API_KEY')),
+            'gemini'      => UserSetting::getSettingWithFallback($userId, 'gemini_api_key') ?? (config('services.gemini.key') ?? env('GEMINI_API_KEY')),
+            'openai'      => UserSetting::getSettingWithFallback($userId, 'openai_api_key') ?? (config('services.openai.key') ?? env('OPENAI_API_KEY')),
+            'groq'        => UserSetting::getSettingWithFallback($userId, 'groq_api_key') ?? env('GROQ_API_KEY'),
+            'qwen'        => UserSetting::getSettingWithFallback($userId, 'qwen_api_key') ?? env('QWEN_API_KEY'),
+            'huggingface' => UserSetting::getSettingWithFallback($userId, 'huggingface_api_key') ?? env('HUGGINGFACE_API_KEY'),
+            default       => null,
+        };
+    }
+
+    /**
+     * Check if a provider has credentials configured.
+     */
+    public function hasProviderCredentials(string $provider, ?int $userId = null): bool
+    {
+        return !empty($this->getProviderApiKey($provider, $userId));
+    }
+
+    /**
+     * Get prioritized providers list, placing non-cooldown configured providers first.
+     */
+    public function getPrioritizedProviders(?string $primaryAi = null, ?int $userId = null): array
+    {
+        $chain = $this->getCascadeOrder($primaryAi);
+        $active = [];
+        $cooldown = [];
+
+        foreach ($chain as $p) {
+            // Check credentials to skip unconfigured providers early
+            if (!$this->hasProviderCredentials($p, $userId)) {
+                continue;
+            }
+
+            if ($this->isProviderInCooldown($p)) {
+                $cooldown[] = $p;
+            } else {
+                $active[] = $p;
+            }
+        }
+
+        // Return active configured providers first; fallback to cooled-down ones if none active
+        $result = array_merge($active, $cooldown);
+
+        // If no configured provider found, return default cascade so env keys can be tried
+        return !empty($result) ? $result : $chain;
+    }
+
+    /* =========================================================================
+     * ✍️ CORE AI OPERATION 1: NEWS REWRITE (rewriteNews / rewrite)
+     * ========================================================================= */
+
+    /**
+     * Public alias for rewrite
+     */
+    public function rewriteNews($content, $title, $isRetry = false, $userId = null, $targetLanguage = 'bn')
+    {
+        return $this->rewrite($content, $title, $isRetry, $userId, $targetLanguage);
+    }
+
+    /**
+     * Enterprise Cascading Rewrite Engine
+     */
     public function rewrite($content, $title, $isRetry = false, $userId = null, $targetLanguage = 'bn')
     {
         // Check if user or super-admin has configured a custom rewrite prompt
-        $customPrompt = $userId ? \App\Models\UserSetting::getSettingWithFallback($userId, 'custom_rewrite_prompt') : null;
+        $customPrompt = $userId ? UserSetting::getSettingWithFallback($userId, 'custom_rewrite_prompt') : null;
         if (!empty(trim($customPrompt ?? ''))) {
             $this->systemPrompt = trim($customPrompt) . "\n\n" . self::getJsonOutputRequirement($targetLanguage);
         } else {
@@ -123,52 +323,56 @@ EOT;
 
         $safeContent = mb_substr($content, 0, 8000, 'UTF-8'); 
 
-        // 🔥 আপডেট: পুনরায় লেখার জন্য বিশেষ নির্দেশিকা
         $retryInstruction = $isRetry 
             ? "\n\n⚠️ NOTE: This is a RE-WRITE request. Your previous version was not satisfactory. Please use DIFFERENT vocabulary, change the sentence structure, and try a MORE ENGAGING lead paragraph while maintaining the same facts."
             : "";
 
         $finalInput = "Title: $title\n\nContent: $safeContent" . $retryInstruction;
 
-        $settings = $userId ? \App\Models\UserSetting::where('user_id', $userId)->first() : null;
-        $primaryAi = ($settings && $settings->primary_ai) ? $settings->primary_ai : 'deepseek';
+        // Bug fix: Use UserSetting::getSettingWithFallback to ensure Super Admin's setting is used
+        $primaryAi = UserSetting::getSettingWithFallback($userId, 'primary_ai') 
+            ?? UserSetting::getSettingWithFallback(null, 'primary_ai', 'deepseek');
 
         $providers = [
-            'qwen'        => fn() => $this->callQwen($finalInput, $title, $isRetry, $userId),
-            'groq'        => fn() => $this->callGroq($finalInput, $title, $isRetry, $userId),
-            'huggingface' => fn() => $this->callHuggingFace($finalInput, $title, $isRetry, $userId),
             'deepseek'    => fn() => $this->callDeepSeek($finalInput, $title, $isRetry, $userId),
+            'groq'        => fn() => $this->callGroq($finalInput, $title, $isRetry, $userId),
+            'gemini'      => fn() => $this->callGemini($finalInput, $title, $isRetry, $userId),
             'openai'      => fn() => $this->callOpenAI($finalInput, $title, $isRetry, $userId),
-            'gemini'      => fn() => $this->callGemini($finalInput, $title, $isRetry, $userId)
+            'qwen'        => fn() => $this->callQwen($finalInput, $title, $isRetry, $userId),
+            'huggingface' => fn() => $this->callHuggingFace($finalInput, $title, $isRetry, $userId),
         ];
 
-        // Reorder providers to place primaryAi at the start
-        $fallbackOrder = [$primaryAi];
-        foreach (['deepseek', 'openai', 'gemini', 'qwen', 'groq', 'huggingface'] as $p) {
-            if ($p !== $primaryAi) {
-                $fallbackOrder[] = $p;
-            }
-        }
-
+        $fallbackOrder = $this->getPrioritizedProviders($primaryAi, $userId);
         $lastException = null;
 
         foreach ($fallbackOrder as $providerName) {
+            if (!isset($providers[$providerName])) {
+                continue;
+            }
+
             try {
-                return $providers[$providerName]();
-            } catch (\Exception $e) {
+                $result = $this->executeWithRetry(
+                    fn() => $providers[$providerName](),
+                    $providerName,
+                    1
+                );
+                if ($result) {
+                    return $result;
+                }
+            } catch (\Throwable $e) {
                 $lastException = $e;
-                Log::warning("⚠️ " . ucfirst($providerName) . " Failed: " . $e->getMessage() . ". Switching to next provider...");
+                Log::warning("⚠️ " . ucfirst($providerName) . " rewrite failed: " . $e->getMessage() . ". Switching to next provider in cascade chain...");
             }
         }
 
         Log::error("❌ ALL AI SERVICES FAILED: " . ($lastException ? $lastException->getMessage() : "Unknown error"));
-        throw new \Exception("ALL_AI_FAILED");
+        throw new \Exception("ALL_AI_FAILED: " . ($lastException ? $lastException->getMessage() : "All configured providers exhausted"));
     }
 
     private function callDeepSeek($content, $title, $isRetry, $userId)
     {
-        $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'deepseek_api_key') ?? (config('services.deepseek.key') ?? env('DEEPSEEK_API_KEY'));
-        $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'deepseek_model') ?? "deepseek-chat";
+        $apiKey = $this->getProviderApiKey('deepseek', $userId);
+        $model = UserSetting::getSettingWithFallback($userId, 'deepseek_model') ?? "deepseek-chat";
 
         if (!$apiKey) throw new \Exception("DeepSeek API Key Missing");
 
@@ -190,18 +394,15 @@ EOT;
 
     private function callGemini($content, $title, $isRetry, $userId)
     {
-        $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'gemini_api_key') ?? (config('services.gemini.key') ?? env('GEMINI_API_KEY'));
+        // Bug fix: Remove smartproxy_api_token from Gemini key fallback!
+        $apiKey = $this->getProviderApiKey('gemini', $userId);
         
         if (!$apiKey) throw new \Exception("Gemini API Key Missing");
 
-        // Use custom model if available, else standard fallback array
-        $customModel = \App\Models\UserSetting::getSettingWithFallback($userId, 'gemini_model');
-        if ($customModel) {
-            $modelsToTry = [$customModel];
-        } else {
-            $modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro"];
-        }
+        $customModel = UserSetting::getSettingWithFallback($userId, 'gemini_model');
+        $modelsToTry = $customModel ? [$customModel] : ["gemini-1.5-flash", "gemini-1.5-pro"];
 
+        $lastError = null;
         foreach ($modelsToTry as $model) {
             try {
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
@@ -226,15 +427,27 @@ EOT;
                     Log::info("✅ Rewritten by: Gemini ($model)");
                     return $this->processRawJson($rawText, 'Gemini');
                 }
-            } catch (\Exception $e) { continue; }
+
+                $status = $response->status();
+                $body = $response->body();
+                if ($status === 429 || str_contains(strtolower($body), 'quota') || str_contains(strtolower($body), 'resource_exhausted')) {
+                    $this->markProviderCooldown('gemini', 3, "HTTP {$status}: " . mb_substr($body, 0, 120));
+                }
+                $lastError = "Status {$status}: " . mb_substr($body, 0, 100);
+            } catch (\Throwable $e) {
+                if ($this->isRateLimitOrQuotaError($e)) {
+                    $this->markProviderCooldown('gemini', 3, $e->getMessage());
+                }
+                $lastError = $e->getMessage();
+            }
         }
-        throw new \Exception("Gemini Failed.");
+        throw new \Exception("Gemini Failed: " . ($lastError ?? 'Unknown error'));
     }
 
     private function callOpenAI($content, $title, $isRetry, $userId)
     {
-        $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'openai_api_key') ?? (config('services.openai.key') ?? env('OPENAI_API_KEY'));
-        $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'openai_model') ?? "gpt-4o-mini";
+        $apiKey = $this->getProviderApiKey('openai', $userId);
+        $model = UserSetting::getSettingWithFallback($userId, 'openai_model') ?? "gpt-4o-mini";
 
         if (!$apiKey) throw new \Exception("OpenAI API Key Missing");
 
@@ -256,8 +469,8 @@ EOT;
 
     private function callGroq($content, $title, $isRetry, $userId)
     {
-        $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'groq_api_key') ?? env('GROQ_API_KEY');
-        $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'groq_model') ?? "llama-3.3-70b-versatile";
+        $apiKey = $this->getProviderApiKey('groq', $userId);
+        $model = UserSetting::getSettingWithFallback($userId, 'groq_model') ?? "llama-3.3-70b-versatile";
 
         if (!$apiKey) throw new \Exception("Groq API Key Missing");
 
@@ -279,12 +492,11 @@ EOT;
 
     private function callQwen($content, $title, $isRetry, $userId)
     {
-        $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'qwen_api_key') ?? env('QWEN_API_KEY');
-        $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'qwen_model') ?? "qwen-plus";
+        $apiKey = $this->getProviderApiKey('qwen', $userId);
+        $model = UserSetting::getSettingWithFallback($userId, 'qwen_model') ?? "qwen-plus";
 
         if (!$apiKey) throw new \Exception("Qwen API Key Missing");
 
-        // DashScope API for Qwen is fully OpenAI Compatible
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $apiKey,
             'Content-Type'  => 'application/json',
@@ -294,7 +506,6 @@ EOT;
                 ["role" => "system", "content" => $this->systemPrompt], 
                 ["role" => "user", "content" => $content]
             ],
-            // Note: DashScope's json_object may vary in support, using format is mostly safe
             "response_format" => ["type" => "json_object"],
             "temperature" => $isRetry ? 0.85 : 0.7
         ]);
@@ -304,8 +515,8 @@ EOT;
 
     private function callHuggingFace($content, $title, $isRetry, $userId)
     {
-        $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'huggingface_api_key') ?? env('HUGGINGFACE_API_KEY');
-        $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'huggingface_model') ?? "Qwen/Qwen2.5-72B-Instruct";
+        $apiKey = $this->getProviderApiKey('huggingface', $userId);
+        $model = UserSetting::getSettingWithFallback($userId, 'huggingface_model') ?? "Qwen/Qwen2.5-72B-Instruct";
 
         if (!$apiKey) throw new \Exception("HuggingFace API Key Missing");
 
@@ -334,7 +545,14 @@ EOT;
             Log::info("✅ Rewritten by: $providerName");
             return $this->processRawJson($rawContent, $providerName);
         }
-        throw new \Exception("$providerName API Error: " . $response->status());
+
+        $status = $response->status();
+        $body = $response->body();
+        if ($status === 429 || str_contains(strtolower($body), 'rate limit') || str_contains(strtolower($body), 'quota')) {
+            $this->markProviderCooldown(strtolower($providerName), 3, "HTTP {$status}: " . mb_substr($body, 0, 120));
+        }
+
+        throw new \Exception("$providerName API Error: {$status} - " . mb_substr($body, 0, 150));
     }
 
     private function processRawJson($rawContent, $providerName)
@@ -387,6 +605,10 @@ EOT;
         return trim($string);
     }
 
+    /* =========================================================================
+     * 🔍 FACT-CHECK & PLAGIARISM AUDIT
+     * ========================================================================= */
+
     public function analyzeFactAndPlagiarism($originalContent, $rewrittenContent, $userId = null)
     {
         if (empty($originalContent) || empty($rewrittenContent)) {
@@ -431,27 +653,25 @@ EOT;
 
         $input = "### ORIGINAL SOURCE:\n$safeOriginal\n\n### REWRITTEN NEWS:\n$safeRewritten";
 
-        $settings = $userId ? \App\Models\UserSetting::where('user_id', $userId)->first() : null;
-        $primaryAi = ($settings && $settings->primary_ai) ? $settings->primary_ai : 'deepseek';
+        $primaryAi = UserSetting::getSettingWithFallback($userId, 'primary_ai') 
+            ?? UserSetting::getSettingWithFallback(null, 'primary_ai', 'deepseek');
 
-        $fallbackOrder = [$primaryAi];
-        foreach (['deepseek', 'openai', 'gemini', 'qwen', 'groq', 'huggingface'] as $p) {
-            if ($p !== $primaryAi) {
-                $fallbackOrder[] = $p;
-            }
-        }
-
+        $fallbackOrder = $this->getPrioritizedProviders($primaryAi, $userId);
         $lastException = null;
 
         foreach ($fallbackOrder as $providerName) {
             try {
-                $response = $this->callProviderForAnalysis($providerName, $systemPrompt, $input, $userId);
+                $response = $this->executeWithRetry(
+                    fn() => $this->callProviderForAnalysis($providerName, $systemPrompt, $input, $userId),
+                    $providerName,
+                    1
+                );
                 if ($response) {
                     return $response;
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $lastException = $e;
-                Log::warning("⚠️ Fact Check Provider " . ucfirst($providerName) . " Failed: " . $e->getMessage());
+                Log::warning("⚠️ Fact Check Provider " . ucfirst($providerName) . " Failed: " . $e->getMessage() . ". Cascading to next provider...");
             }
         }
 
@@ -467,10 +687,11 @@ EOT;
 
     private function callProviderForAnalysis($provider, $systemPrompt, $input, $userId)
     {
+        $provider = strtolower($provider);
         switch ($provider) {
             case 'openai':
-                $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'openai_api_key') ?? (config('services.openai.key') ?? env('OPENAI_API_KEY'));
-                $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'openai_model') ?? "gpt-4o-mini";
+                $apiKey = $this->getProviderApiKey('openai', $userId);
+                $model = UserSetting::getSettingWithFallback($userId, 'openai_model') ?? "gpt-4o-mini";
                 if (!$apiKey) throw new \Exception("OpenAI API Key Missing");
                 $response = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $apiKey,
@@ -487,9 +708,9 @@ EOT;
                 return $this->parseAnalysisResponse($response, 'OpenAI');
 
             case 'gemini':
-                $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'gemini_api_key') ?? (config('services.gemini.key') ?? env('GEMINI_API_KEY'));
+                $apiKey = $this->getProviderApiKey('gemini', $userId);
                 if (!$apiKey) throw new \Exception("Gemini API Key Missing");
-                $customModel = \App\Models\UserSetting::getSettingWithFallback($userId, 'gemini_model') ?? "gemini-1.5-flash";
+                $customModel = UserSetting::getSettingWithFallback($userId, 'gemini_model') ?? "gemini-1.5-flash";
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/{$customModel}:generateContent?key={$apiKey}";
                 $response = Http::withHeaders(['Content-Type' => 'application/json'])
                     ->timeout(30)
@@ -504,11 +725,14 @@ EOT;
                     $rawText = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
                     return $this->processAnalysisRawJson($rawText, 'Gemini');
                 }
-                throw new \Exception("Gemini analysis request failed.");
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('gemini', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("Gemini analysis request failed with status " . $response->status());
 
             case 'deepseek':
-                $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'deepseek_api_key') ?? (config('services.deepseek.key') ?? env('DEEPSEEK_API_KEY'));
-                $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'deepseek_model') ?? "deepseek-chat";
+                $apiKey = $this->getProviderApiKey('deepseek', $userId);
+                $model = UserSetting::getSettingWithFallback($userId, 'deepseek_model') ?? "deepseek-chat";
                 if (!$apiKey) throw new \Exception("DeepSeek API Key Missing");
                 $response = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $apiKey,
@@ -525,8 +749,8 @@ EOT;
                 return $this->parseAnalysisResponse($response, 'DeepSeek');
 
             case 'groq':
-                $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'groq_api_key') ?? env('GROQ_API_KEY');
-                $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'groq_model') ?? "llama-3.3-70b-versatile";
+                $apiKey = $this->getProviderApiKey('groq', $userId);
+                $model = UserSetting::getSettingWithFallback($userId, 'groq_model') ?? "llama-3.3-70b-versatile";
                 if (!$apiKey) throw new \Exception("Groq API Key Missing");
                 $response = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $apiKey,
@@ -543,8 +767,8 @@ EOT;
                 return $this->parseAnalysisResponse($response, 'Groq');
 
             case 'qwen':
-                $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'qwen_api_key') ?? env('QWEN_API_KEY');
-                $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'qwen_model') ?? "qwen-plus";
+                $apiKey = $this->getProviderApiKey('qwen', $userId);
+                $model = UserSetting::getSettingWithFallback($userId, 'qwen_model') ?? "qwen-plus";
                 if (!$apiKey) throw new \Exception("Qwen API Key Missing");
                 $response = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $apiKey,
@@ -561,8 +785,8 @@ EOT;
                 return $this->parseAnalysisResponse($response, 'Qwen');
 
             case 'huggingface':
-                $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'huggingface_api_key') ?? env('HUGGINGFACE_API_KEY');
-                $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'huggingface_model') ?? "Qwen/Qwen2.5-72B-Instruct";
+                $apiKey = $this->getProviderApiKey('huggingface', $userId);
+                $model = UserSetting::getSettingWithFallback($userId, 'huggingface_model') ?? "Qwen/Qwen2.5-72B-Instruct";
                 if (!$apiKey) throw new \Exception("HuggingFace API Key Missing");
                 $response = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $apiKey,
@@ -588,7 +812,14 @@ EOT;
             $rawContent = $data['choices'][0]['message']['content'] ?? null;
             return $this->processAnalysisRawJson($rawContent, $providerName);
         }
-        throw new \Exception("$providerName API Error: " . $response->status());
+
+        $status = $response->status();
+        $body = $response->body();
+        if ($status === 429 || str_contains(strtolower($body), 'rate limit') || str_contains(strtolower($body), 'quota')) {
+            $this->markProviderCooldown(strtolower($providerName), 3, "HTTP {$status}: " . mb_substr($body, 0, 120));
+        }
+
+        throw new \Exception("$providerName API Error: " . $status);
     }
 
     private function processAnalysisRawJson($rawContent, $providerName)
@@ -606,9 +837,10 @@ EOT;
         throw new \Exception("$providerName returned invalid analysis format");
     }
 
-    /**
-     * 🔥 AI Viral & Trending Script Generator
-     */
+    /* =========================================================================
+     * 🔥 AI VIRAL & TRENDING SCRIPT GENERATOR
+     * ========================================================================= */
+
     public function generateViralPredictionScript($title, $content, $userId = null)
     {
         $safeContent = mb_substr(strip_tags($content), 0, 4000, 'UTF-8');
@@ -633,26 +865,27 @@ EOT;
 
         $input = "Title: {$title}\n\nContent: {$safeContent}";
 
-        $settings = $userId ? \App\Models\UserSetting::where('user_id', $userId)->first() : null;
-        $primaryAi = ($settings && $settings->primary_ai) ? $settings->primary_ai : 'deepseek';
+        $primaryAi = UserSetting::getSettingWithFallback($userId, 'primary_ai') 
+            ?? UserSetting::getSettingWithFallback(null, 'primary_ai', 'deepseek');
 
-        $providers = ['deepseek', 'gemini', 'openai', 'groq', 'qwen', 'huggingface'];
-        // Reorder primaryAi first
-        array_unshift($providers, $primaryAi);
-        $providers = array_unique($providers);
+        $providers = $this->getPrioritizedProviders($primaryAi, $userId);
 
         foreach ($providers as $provider) {
             try {
-                $res = $this->callAiForJsonPrompt($provider, $systemPrompt, $input, $userId);
+                $res = $this->executeWithRetry(
+                    fn() => $this->callAiForJsonPrompt($provider, $systemPrompt, $input, $userId),
+                    $provider,
+                    1
+                );
                 if ($res && isset($res['viral_angle'])) {
                     Log::info("✅ Viral prediction generated successfully using provider: {$provider}");
                     return $res;
                 }
-            } catch (\Exception $e) {
-                Log::warning("⚠️ Viral prediction provider failed ({$provider}): " . $e->getMessage());
+            } catch (\Throwable $e) {
+                Log::warning("⚠️ Viral prediction provider failed ({$provider}): " . $e->getMessage() . ". Switching to next provider in cascade chain...");
             }
         }
-        Log::notice("ℹ️ All AI viral prediction providers unconfigured/failed. Used intelligent fallback response for: {$title}");
+        Log::notice("ℹ️ All AI viral prediction providers failed. Used intelligent fallback response for: {$title}");
 
         // Fallback default response if all AI calls fail
         return [
@@ -669,13 +902,21 @@ EOT;
         ];
     }
 
-    private function callAiForJsonPrompt($provider, $systemPrompt, $input, $userId)
+    /**
+     * Complete multi-provider caller for arbitrary JSON prompt requests
+     */
+    public function callAiForJsonPrompt($provider, $systemPrompt, $input, $userId)
     {
+        $provider = strtolower($provider);
+        $apiKey = $this->getProviderApiKey($provider, $userId);
+
+        if (!$apiKey) {
+            throw new \Exception(ucfirst($provider) . " API Key Missing");
+        }
+
         switch ($provider) {
             case 'gemini':
-                $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'gemini_api_key') ?? \App\Models\UserSetting::getSettingWithFallback($userId, 'smartproxy_api_token') ?? env('GEMINI_API_KEY');
-                if (!$apiKey) throw new \Exception("Gemini Key Missing");
-                $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'gemini_model') ?? "gemini-1.5-flash";
+                $model = UserSetting::getSettingWithFallback($userId, 'gemini_model') ?? "gemini-1.5-flash";
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
                 $response = Http::withHeaders(['Content-Type' => 'application/json'])->timeout(25)->post($url, [
                     "contents" => [["parts" => [["text" => $systemPrompt . "\n\n" . $input]]]],
@@ -685,12 +926,13 @@ EOT;
                     $raw = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? null;
                     return json_decode($this->cleanJsonString($raw), true);
                 }
-                break;
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('gemini', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("Gemini JSON request failed with status " . $response->status());
 
             case 'deepseek':
-                $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'deepseek_api_key') ?? env('DEEPSEEK_API_KEY');
-                if (!$apiKey) throw new \Exception("DeepSeek Key Missing");
-                $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'deepseek_model') ?? "deepseek-chat";
+                $model = UserSetting::getSettingWithFallback($userId, 'deepseek_model') ?? "deepseek-chat";
                 $response = Http::withHeaders(['Authorization' => 'Bearer ' . $apiKey, 'Content-Type' => 'application/json'])
                     ->timeout(25)->post("https://api.deepseek.com/chat/completions", [
                         "model" => $model,
@@ -702,12 +944,13 @@ EOT;
                     $raw = $response->json()['choices'][0]['message']['content'] ?? null;
                     return json_decode($this->cleanJsonString($raw), true);
                 }
-                break;
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('deepseek', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("DeepSeek JSON request failed with status " . $response->status());
 
             case 'openai':
-                $apiKey = \App\Models\UserSetting::getSettingWithFallback($userId, 'openai_api_key') ?? env('OPENAI_API_KEY');
-                if (!$apiKey) throw new \Exception("OpenAI Key Missing");
-                $model = \App\Models\UserSetting::getSettingWithFallback($userId, 'openai_model') ?? "gpt-4o-mini";
+                $model = UserSetting::getSettingWithFallback($userId, 'openai_model') ?? "gpt-4o-mini";
                 $response = Http::withHeaders(['Authorization' => 'Bearer ' . $apiKey, 'Content-Type' => 'application/json'])
                     ->timeout(25)->post("https://api.openai.com/v1/chat/completions", [
                         "model" => $model,
@@ -719,9 +962,79 @@ EOT;
                     $raw = $response->json()['choices'][0]['message']['content'] ?? null;
                     return json_decode($this->cleanJsonString($raw), true);
                 }
-                break;
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('openai', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("OpenAI JSON request failed with status " . $response->status());
+
+            case 'groq':
+                $model = UserSetting::getSettingWithFallback($userId, 'groq_model') ?? "llama-3.3-70b-versatile";
+                $response = Http::withHeaders(['Authorization' => 'Bearer ' . $apiKey, 'Content-Type' => 'application/json'])
+                    ->timeout(25)->post("https://api.groq.com/openai/v1/chat/completions", [
+                        "model" => $model,
+                        "messages" => [["role" => "system", "content" => $systemPrompt], ["role" => "user", "content" => $input]],
+                        "response_format" => ["type" => "json_object"],
+                        "temperature" => 0.4
+                    ]);
+                if ($response->successful()) {
+                    $raw = $response->json()['choices'][0]['message']['content'] ?? null;
+                    return json_decode($this->cleanJsonString($raw), true);
+                }
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('groq', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("Groq JSON request failed with status " . $response->status());
+
+            case 'qwen':
+                $model = UserSetting::getSettingWithFallback($userId, 'qwen_model') ?? "qwen-plus";
+                $response = Http::withHeaders(['Authorization' => 'Bearer ' . $apiKey, 'Content-Type' => 'application/json'])
+                    ->timeout(25)->post("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", [
+                        "model" => $model,
+                        "messages" => [["role" => "system", "content" => $systemPrompt], ["role" => "user", "content" => $input]],
+                        "response_format" => ["type" => "json_object"],
+                        "temperature" => 0.4
+                    ]);
+                if ($response->successful()) {
+                    $raw = $response->json()['choices'][0]['message']['content'] ?? null;
+                    return json_decode($this->cleanJsonString($raw), true);
+                }
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('qwen', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("Qwen JSON request failed with status " . $response->status());
+
+            case 'huggingface':
+                $model = UserSetting::getSettingWithFallback($userId, 'huggingface_model') ?? "Qwen/Qwen2.5-72B-Instruct";
+                $response = Http::withHeaders(['Authorization' => 'Bearer ' . $apiKey, 'Content-Type' => 'application/json'])
+                    ->timeout(25)->post("https://router.huggingface.co/v1/chat/completions", [
+                        "model" => $model,
+                        "messages" => [["role" => "system", "content" => $systemPrompt], ["role" => "user", "content" => $input]],
+                        "response_format" => ["type" => "json_object"],
+                        "temperature" => 0.4
+                    ]);
+                if ($response->successful()) {
+                    $raw = $response->json()['choices'][0]['message']['content'] ?? null;
+                    return json_decode($this->cleanJsonString($raw), true);
+                }
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('huggingface', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("HuggingFace JSON request failed with status " . $response->status());
         }
+
         return null;
+    }
+
+    /* =========================================================================
+     * 🎯 CORE AI OPERATION 2: HEADLINE GENERATION (generateHeadlines)
+     * ========================================================================= */
+
+    /**
+     * Standard headline generation method
+     */
+    public function generateHeadlines($title, $content = '', $userId = null): array
+    {
+        return $this->generateViralHeadlines($title, $content, $userId);
     }
 
     /**
@@ -745,29 +1058,28 @@ Return ONLY valid JSON:
 }
 EOT;
 
-        $input = "শিরোনাম: " . $title . "\n\nবিস্তারিত: " . \Illuminate\Support\Str::limit(strip_tags($content), 500);
-        $provider = \App\Models\UserSetting::getSettingWithFallback($userId, 'ai_provider') ?? 'gemini';
+        $input = "শিরোনাম: " . $title . "\n\nবিস্তারিত: " . Str::limit(strip_tags($content), 500);
 
-        // Try primary provider
-        try {
-            $result = $this->callAiForJsonPrompt($provider, $systemPrompt, $input, $userId);
-            if ($result && !empty($result['informative']) && !empty($result['viral']) && !empty($result['breaking'])) {
-                return $result;
-            }
-        } catch (\Exception $e) {
-            Log::warning("Headline generation with primary provider ({$provider}) failed: " . $e->getMessage());
-        }
+        // Bug fix: Use primary_ai instead of ai_provider with proper fallback to Super Admin
+        $primaryAi = UserSetting::getSettingWithFallback($userId, 'primary_ai') 
+            ?? UserSetting::getSettingWithFallback(null, 'primary_ai', 'deepseek');
 
-        // Try fallbacks
-        $fallbacks = ['gemini', 'deepseek', 'openai', 'groq'];
-        foreach ($fallbacks as $fb) {
-            if ($fb === $provider) continue;
+        $providers = $this->getPrioritizedProviders($primaryAi, $userId);
+
+        foreach ($providers as $provider) {
             try {
-                $result = $this->callAiForJsonPrompt($fb, $systemPrompt, $input, $userId);
+                $result = $this->executeWithRetry(
+                    fn() => $this->callAiForJsonPrompt($provider, $systemPrompt, $input, $userId),
+                    $provider,
+                    1
+                );
                 if ($result && !empty($result['informative']) && !empty($result['viral']) && !empty($result['breaking'])) {
+                    Log::info("✅ Viral headlines generated with provider: {$provider}");
                     return $result;
                 }
-            } catch (\Exception $e) { continue; }
+            } catch (\Throwable $e) {
+                Log::warning("⚠️ Headline generation with provider ({$provider}) failed: " . $e->getMessage() . ". Switching to next provider in cascade chain...");
+            }
         }
 
         // Programmatic intelligent Bengali fallback
@@ -775,13 +1087,268 @@ EOT;
         return [
             'informative' => $cleanTitle,
             'viral'       => $cleanTitle . ': বিস্তারিত যা জানা গেল',
-            'breaking'    => 'ব্রেকিং: ' . \Illuminate\Support\Str::limit($cleanTitle, 45)
+            'breaking'    => 'ব্রেকিং: ' . Str::limit($cleanTitle, 45)
         ];
     }
 
+    /* =========================================================================
+     * 📝 CORE AI OPERATION 3: SUMMARY GENERATION (generateSummary)
+     * ========================================================================= */
+
     /**
-     * 🔍 1-Click SEO Focus Keyword & Meta Extractor
+     * Generate an executive summary of news content with key bullet points.
      */
+    public function generateSummary($content, $title = '', $userId = null, $targetLanguage = 'bn'): array
+    {
+        if (empty($content)) {
+            return [
+                'summary' => '',
+                'key_points' => [],
+                'reading_time' => '1 min',
+                'provider' => 'none',
+            ];
+        }
+
+        $langLabel = ($targetLanguage === 'en') ? 'English' : 'Bengali';
+        $systemPrompt = <<<EOT
+You are an expert news editor and executive briefing specialist.
+Summarize the provided news article into {$langLabel}.
+Provide:
+1. "summary": A crisp, high-level summary paragraph (2-3 sentences, 40-60 words).
+2. "key_points": Array of 3-5 concise bullet points highlighting key factual takeaways.
+3. "reading_time": Estimated reading time string (e.g. "1 min").
+
+Return ONLY valid JSON matching this schema:
+{
+    "summary": "A concise summary paragraph in {$langLabel}...",
+    "key_points": ["Point 1 in {$langLabel}", "Point 2 in {$langLabel}", "Point 3 in {$langLabel}"],
+    "reading_time": "1 min"
+}
+EOT;
+
+        $safeContent = mb_substr(strip_tags($content), 0, 4000, 'UTF-8');
+        $input = "Title: {$title}\n\nContent: {$safeContent}";
+
+        $primaryAi = UserSetting::getSettingWithFallback($userId, 'primary_ai') 
+            ?? UserSetting::getSettingWithFallback(null, 'primary_ai', 'deepseek');
+
+        $providers = $this->getPrioritizedProviders($primaryAi, $userId);
+
+        foreach ($providers as $provider) {
+            try {
+                $result = $this->executeWithRetry(
+                    fn() => $this->callAiForJsonPrompt($provider, $systemPrompt, $input, $userId),
+                    $provider,
+                    1
+                );
+                if ($result && !empty($result['summary'])) {
+                    Log::info("✅ News summary generated successfully using provider: {$provider}");
+                    return [
+                        'summary' => trim($result['summary']),
+                        'key_points' => is_array($result['key_points'] ?? null) ? $result['key_points'] : [],
+                        'reading_time' => $result['reading_time'] ?? '1 min',
+                        'provider' => $provider,
+                    ];
+                }
+            } catch (\Throwable $e) {
+                Log::warning("⚠️ Summary generation provider [{$provider}] failed: " . $e->getMessage() . ". Switching to next provider in cascade chain...");
+            }
+        }
+
+        // Programmatic intelligent fallback
+        $plain = strip_tags($content);
+        $sentences = preg_split('/(?<=[.?!।])\s+/u', $plain, -1, PREG_SPLIT_NO_EMPTY);
+        $firstFew = array_slice($sentences, 0, 3);
+        $summaryText = implode(' ', $firstFew) ?: Str::limit($plain, 180);
+
+        return [
+            'summary' => $summaryText,
+            'key_points' => array_slice($sentences, 0, 4),
+            'reading_time' => max(1, ceil(str_word_count($plain) / 180)) . ' min',
+            'provider' => 'fallback',
+        ];
+    }
+
+    /* =========================================================================
+     * 💬 CORE AI OPERATION 4: AI ASSISTANT CHAT (chat)
+     * ========================================================================= */
+
+    /**
+     * Enterprise Cascading Chat / Copilot Assistant
+     */
+    public function chat($message, array $context = [], array $history = [], $userId = null): array
+    {
+        $primaryAi = UserSetting::getSettingWithFallback($userId, 'primary_ai') 
+            ?? UserSetting::getSettingWithFallback(null, 'primary_ai', 'deepseek');
+
+        $systemPrompt = "You are a professional AI newsroom assistant and editorial copilot. Respond concisely, factually, and professionally in standard Promit Bangla (or English if the user prompts in English).";
+        if (!empty($context['title'])) {
+            $systemPrompt .= "\nCurrent News Context - Title: " . $context['title'];
+        }
+        if (!empty($context['content'])) {
+            $systemPrompt .= "\nContent Preview: " . Str::limit(strip_tags($context['content']), 600);
+        }
+
+        $providers = $this->getPrioritizedProviders($primaryAi, $userId);
+
+        foreach ($providers as $provider) {
+            try {
+                $reply = $this->executeWithRetry(
+                    fn() => $this->callProviderForChat($provider, $systemPrompt, $message, $history, $userId),
+                    $provider,
+                    1
+                );
+                if (!empty($reply)) {
+                    Log::info("✅ Chat response generated successfully using provider: {$provider}");
+                    return [
+                        'success'  => true,
+                        'provider' => $provider,
+                        'reply'    => trim($reply),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                Log::warning("⚠️ Chat provider [{$provider}] failed: " . $e->getMessage() . ". Switching to next provider in cascade chain...");
+            }
+        }
+
+        return [
+            'success' => false,
+            'provider' => 'none',
+            'reply'   => "দুঃখিত, সমস্ত এআই সার্ভার বর্তমানে ব্যস্ত বা অনুপলব্ধ রয়েছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।",
+        ];
+    }
+
+    private function callProviderForChat($provider, $systemPrompt, $message, array $history, $userId)
+    {
+        $provider = strtolower($provider);
+        $apiKey = $this->getProviderApiKey($provider, $userId);
+
+        if (!$apiKey) {
+            throw new \Exception(ucfirst($provider) . " API Key Missing");
+        }
+
+        $messages = [["role" => "system", "content" => $systemPrompt]];
+        foreach ($history as $h) {
+            if (!empty($h['role']) && !empty($h['content'])) {
+                $messages[] = [
+                    "role" => in_array($h['role'], ['user', 'assistant']) ? $h['role'] : 'user',
+                    "content" => (string) $h['content']
+                ];
+            }
+        }
+        $messages[] = ["role" => "user", "content" => $message];
+
+        switch ($provider) {
+            case 'gemini':
+                $model = UserSetting::getSettingWithFallback($userId, 'gemini_model') ?? "gemini-1.5-flash";
+                $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+                $contents = [];
+                foreach ($messages as $m) {
+                    $contents[] = [
+                        "role" => $m['role'] === 'assistant' ? 'model' : 'user',
+                        "parts" => [["text" => $m['content']]]
+                    ];
+                }
+                $response = Http::withHeaders(['Content-Type' => 'application/json'])->timeout(25)->post($url, [
+                    "contents" => $contents,
+                    "generationConfig" => ["temperature" => 0.5]
+                ]);
+                if ($response->successful()) {
+                    return $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                }
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('gemini', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("Gemini Chat failed with status " . $response->status());
+
+            case 'deepseek':
+                $model = UserSetting::getSettingWithFallback($userId, 'deepseek_model') ?? "deepseek-chat";
+                $response = Http::withHeaders(['Authorization' => 'Bearer ' . $apiKey, 'Content-Type' => 'application/json'])
+                    ->timeout(25)->post("https://api.deepseek.com/chat/completions", [
+                        "model" => $model,
+                        "messages" => $messages,
+                        "temperature" => 0.5
+                    ]);
+                if ($response->successful()) {
+                    return $response->json()['choices'][0]['message']['content'] ?? null;
+                }
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('deepseek', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("DeepSeek Chat failed with status " . $response->status());
+
+            case 'openai':
+                $model = UserSetting::getSettingWithFallback($userId, 'openai_model') ?? "gpt-4o-mini";
+                $response = Http::withHeaders(['Authorization' => 'Bearer ' . $apiKey, 'Content-Type' => 'application/json'])
+                    ->timeout(25)->post("https://api.openai.com/v1/chat/completions", [
+                        "model" => $model,
+                        "messages" => $messages,
+                        "temperature" => 0.5
+                    ]);
+                if ($response->successful()) {
+                    return $response->json()['choices'][0]['message']['content'] ?? null;
+                }
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('openai', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("OpenAI Chat failed with status " . $response->status());
+
+            case 'groq':
+                $model = UserSetting::getSettingWithFallback($userId, 'groq_model') ?? "llama-3.3-70b-versatile";
+                $response = Http::withHeaders(['Authorization' => 'Bearer ' . $apiKey, 'Content-Type' => 'application/json'])
+                    ->timeout(25)->post("https://api.groq.com/openai/v1/chat/completions", [
+                        "model" => $model,
+                        "messages" => $messages,
+                        "temperature" => 0.5
+                    ]);
+                if ($response->successful()) {
+                    return $response->json()['choices'][0]['message']['content'] ?? null;
+                }
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('groq', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("Groq Chat failed with status " . $response->status());
+
+            case 'qwen':
+                $model = UserSetting::getSettingWithFallback($userId, 'qwen_model') ?? "qwen-plus";
+                $response = Http::withHeaders(['Authorization' => 'Bearer ' . $apiKey, 'Content-Type' => 'application/json'])
+                    ->timeout(25)->post("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", [
+                        "model" => $model,
+                        "messages" => $messages,
+                        "temperature" => 0.5
+                    ]);
+                if ($response->successful()) {
+                    return $response->json()['choices'][0]['message']['content'] ?? null;
+                }
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('qwen', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("Qwen Chat failed with status " . $response->status());
+
+            case 'huggingface':
+                $model = UserSetting::getSettingWithFallback($userId, 'huggingface_model') ?? "Qwen/Qwen2.5-72B-Instruct";
+                $response = Http::withHeaders(['Authorization' => 'Bearer ' . $apiKey, 'Content-Type' => 'application/json'])
+                    ->timeout(25)->post("https://router.huggingface.co/v1/chat/completions", [
+                        "model" => $model,
+                        "messages" => $messages,
+                        "temperature" => 0.5
+                    ]);
+                if ($response->successful()) {
+                    return $response->json()['choices'][0]['message']['content'] ?? null;
+                }
+                if ($response->status() === 429 || str_contains(strtolower($response->body()), 'quota')) {
+                    $this->markProviderCooldown('huggingface', 3, "HTTP " . $response->status());
+                }
+                throw new \Exception("HuggingFace Chat failed with status " . $response->status());
+        }
+
+        return null;
+    }
+
+    /* =========================================================================
+     * 🔍 1-CLICK SEO FOCUS KEYWORD & META EXTRACTOR
+     * ========================================================================= */
+
     public function extractFocusKeywords($title, $content = '', $userId = null, $targetLanguage = 'bn'): array
     {
         $langName = $targetLanguage === 'en' ? 'English' : 'Bengali';
@@ -799,28 +1366,31 @@ Return ONLY valid JSON matching this schema:
 }
 EOT;
 
-        $cleanContent = \Illuminate\Support\Str::limit(strip_tags($content), 1200);
+        $cleanContent = Str::limit(strip_tags($content), 1200);
         $input = "Headline: " . $title . "\n\nContent:\n" . $cleanContent;
 
-        $settings = $userId ? \App\Models\UserSetting::where('user_id', $userId)->first() : null;
-        $primaryAi = ($settings && $settings->primary_ai) ? $settings->primary_ai : 'deepseek';
+        $primaryAi = UserSetting::getSettingWithFallback($userId, 'primary_ai') 
+            ?? UserSetting::getSettingWithFallback(null, 'primary_ai', 'deepseek');
 
-        $providers = [$primaryAi, 'deepseek', 'gemini', 'openai', 'groq'];
-        $providers = array_unique($providers);
+        $providers = $this->getPrioritizedProviders($primaryAi, $userId);
 
         foreach ($providers as $provider) {
             try {
-                $result = $this->callAiForJsonPrompt($provider, $systemPrompt, $input, $userId);
+                $result = $this->executeWithRetry(
+                    fn() => $this->callAiForJsonPrompt($provider, $systemPrompt, $input, $userId),
+                    $provider,
+                    1
+                );
                 if ($result && !empty($result['keywords']) && is_array($result['keywords'])) {
                     return [
                         'primary_keyword'  => $result['primary_keyword'] ?? ($result['keywords'][0] ?? $title),
                         'keywords'         => array_values(array_filter(array_map('trim', $result['keywords']))),
-                        'meta_description' => $result['meta_description'] ?? \Illuminate\Support\Str::limit(strip_tags($content), 150),
+                        'meta_description' => $result['meta_description'] ?? Str::limit(strip_tags($content), 150),
                         'tags'             => !empty($result['tags']) && is_array($result['tags']) ? array_values(array_filter($result['tags'])) : []
                     ];
                 }
-            } catch (\Exception $e) {
-                Log::warning("Keyword extraction with provider ({$provider}) failed: " . $e->getMessage());
+            } catch (\Throwable $e) {
+                Log::warning("⚠️ Keyword extraction with provider ({$provider}) failed: " . $e->getMessage() . ". Switching to next provider in cascade chain...");
             }
         }
 
@@ -833,7 +1403,7 @@ EOT;
         return [
             'primary_keyword'  => $freq[0] ?? $title,
             'keywords'         => !empty($freq) ? $freq : [$title],
-            'meta_description' => \Illuminate\Support\Str::limit(strip_tags($content ?: $title), 150),
+            'meta_description' => Str::limit(strip_tags($content ?: $title), 150),
             'tags'             => array_slice($freq, 0, 4)
         ];
     }
