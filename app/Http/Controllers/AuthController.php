@@ -89,16 +89,23 @@ class AuthController extends Controller
                 ]);
             }
 
-            // ২. মেয়াদোত্তীর্ণ হওয়ার ডেট চেক (Expire Date Check)
-            if ($user->expire_date && \Carbon\Carbon::parse($user->expire_date)->endOfDay()->isPast()) {
-                Auth::logout();
-                return back()->withErrors([
-                    'email' => 'আপনার অ্যাকাউন্টের মেয়াদ শেষ হয়ে গেছে। অনুগ্রহ করে এডমিনের সাথে যোগাযোগ করুন।',
-                ]);
-            }
-
             $request->session()->regenerate();
             $request->session()->flash('meta_login_event', true);
+
+            // ২. সাবস্ক্রিপশন মেয়াদ চেক (Subscription Expire Check)
+            if ($user->role !== 'super_admin' && !$user->isSubscriptionActive()) {
+                if ($user->parent_id) {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+                    return redirect()->route('login')->withErrors([
+                        'email' => 'আপনার প্রতিষ্ঠানের সাবস্ক্রিপশনের মেয়াদ শেষ হয়ে গেছে। অনুগ্রহ করে কর্তৃপক্ষের সাথে যোগাযোগ করুন।',
+                    ]);
+                }
+
+                // Redirect expired user directly to billing page so they can self-service renew!
+                return redirect()->route('billing.my-subscription')->with('warning', 'আপনার সাবস্ক্রিপশনের মেয়াদ শেষ হয়ে গেছে। সেবা চালু রাখতে অনুগ্রহ করে প্যাকেজটি রিনিউ করুন।');
+            }
 
             if ($user->role === 'super_admin') {
                 return redirect()->route('admin.dashboard');

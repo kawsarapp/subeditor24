@@ -3,8 +3,10 @@
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use App\Models\NewsItem;
 use App\Models\User;
+use App\Models\Notification;
 use App\Jobs\ProcessNewsPost;
 use Carbon\Carbon;
 
@@ -21,11 +23,16 @@ Artisan::command('news:autopost', function () {
     $this->info("বোট: মোট " . $users->count() . " জন একটিভ ইউজার পাওয়া গেছে।");
 
     foreach ($users as $user) {
+        if (!$user->isSubscriptionActive()) {
+            Log::info("Skipping autopost for expired tenant ID: {$user->id}");
+            $this->warn("⛔ User {$user->name} (ID: {$user->id}) subscription has expired. Skipping autopost.");
+            continue;
+        }
 		
 		if (!$user->hasPermission('can_auto_post')) {
-        $this->warn("⛔ User {$user->name} does not have 'can_auto_post' permission. Skipping.");
-        continue;
-    }
+            $this->warn("⛔ User {$user->name} does not have 'can_auto_post' permission. Skipping.");
+            continue;
+        }
         $this->info("--- চেকিং ইউজার: {$user->name} ---");
 
         // ক্রেডিট চেক (সুপার এডমিন বাদে)
@@ -122,6 +129,11 @@ Artisan::command('news:process-scheduled', function () {
         $user = User::find($news->user_id);
         if (!$user) continue;
 
+        if (!$user->isSubscriptionActive()) {
+            Log::info("Skipping scheduled news publish [ID: {$news->id}] for expired tenant ID: {$user->id}");
+            continue;
+        }
+
         Log::info("⏰ Processing Scheduled News [ID: {$news->id}] for User: {$user->name}");
         $news->update(['status' => 'publishing']);
         ProcessNewsPost::dispatch($news->id, $user->id, [], true);
@@ -132,9 +144,16 @@ Artisan::command('news:process-scheduled', function () {
 Artisan::command('youtube:autopilot-sync', function () {
     $channels = \App\Modules\YouTubeAutomation\Models\YouTubeChannel::where('is_active', true)
         ->where('auto_pilot_enabled', true)
+        ->with('user')
         ->get();
 
     foreach ($channels as $channel) {
+        $user = $channel->user ?? User::find($channel->user_id);
+        if ($user && !$user->isSubscriptionActive()) {
+            Log::info("Skipping YouTube autopilot sync for channel [ID: {$channel->id}] belonging to expired tenant ID: {$user->id}");
+            continue;
+        }
+
         \App\Modules\YouTubeAutomation\Jobs\SyncChannelVideosJob::dispatch($channel->id);
     }
 })->purpose('Auto-sync and process YouTube channels that have Auto-Pilot enabled');
@@ -194,25 +213,79 @@ Artisan::command('news:clean-error-news', function () {
 
 // --- 💳 SUBSCRIPTION EXPIRY & STATUS CHECK COMMAND ---
 Artisan::command('subscription:check-expiry', function () {
-    $this->info("🔄 Checking expired user subscriptions...");
+    $this->info("🔄 Checking expired user subscriptions and dispatching alerts...");
     $today = now()->startOfDay();
+    $todayStr = now()->toDateString();
 
-    // Mark active users as expired whose expire_date has passed
-    $expiredUsers = User::where('role', '!=', 'super_admin')
-        ->where('subscription_status', 'active')
+    // Query active and trial users with expire_date set (excluding super_admin)
+    $users = User::where('role', '!=', 'super_admin')
+        ->whereIn('subscription_status', ['active', 'trial'])
         ->whereNotNull('expire_date')
-        ->where('expire_date', '<', $today)
         ->get();
 
-    $count = 0;
-    foreach ($expiredUsers as $user) {
-        $user->subscription_status = 'expired';
-        $user->save();
-        $count++;
-        $this->warn("⛔ User {$user->name} (ID: {$user->id}) marked as expired.");
+    $expiredCount = 0;
+    $alertCount = 0;
+
+    foreach ($users as $user) {
+        $expireDate = Carbon::parse($user->expire_date)->startOfDay();
+
+        // 1. Check if expire_date has passed (< $today)
+        if ($expireDate->lt($today)) {
+            $user->subscription_status = 'expired';
+            $user->save();
+            $expiredCount++;
+
+            $cacheKey = "sub_expired_notif_{$user->id}_{$todayStr}";
+            if (!Cache::has($cacheKey)) {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'title' => '⛔ আপনার সাবস্ক্রিপশনের মেয়াদ শেষ হয়েছে',
+                    'message' => 'আপনার প্যাকেজের মেয়াদ শেষ হয়ে গেছে। সেবা চালু রাখতে অনুগ্রহ করে প্যাকেজটি রিনিউ করুন।',
+                    'type' => 'subscription_expired',
+                    'is_read' => false,
+                ]);
+                Cache::put($cacheKey, true, now()->addDays(2));
+            }
+
+            $this->warn("⛔ User {$user->name} (ID: {$user->id}) marked as expired.");
+            continue;
+        }
+
+        // 2. Pre-Expiry In-App Alerts (3 Days & 1 Day remaining)
+        $daysLeft = (int) round($today->diffInDays($expireDate, false));
+
+        if ($user->isExpiringSoon(3) && $daysLeft === 3) {
+            $cacheKey = "sub_expiring_3days_notif_{$user->id}_{$todayStr}";
+            if (!Cache::has($cacheKey)) {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'title' => '⚠️ সাবস্ক্রিপশনের মেয়াদ ৩ দিন বাকি',
+                    'message' => '⚠️ সাবস্ক্রিপশনের মেয়াদ আর মাত্র ৩ দিন বাকি! নিরবচ্ছিন্ন কাজের সুবিধার্থে মেয়াদ শেষ হওয়ার আগেই প্যাকেজটি রিনিউ করে নিন।',
+                    'type' => 'subscription_expiring_soon',
+                    'is_read' => false,
+                ]);
+                Cache::put($cacheKey, true, now()->addDays(2));
+                $alertCount++;
+                $this->info("⚠️ 3-day pre-expiry alert sent to {$user->name} (ID: {$user->id}).");
+            }
+        } elseif ($daysLeft === 1) {
+            $cacheKey = "sub_expiring_1day_notif_{$user->id}_{$todayStr}";
+            if (!Cache::has($cacheKey)) {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'title' => '🚨 সাবস্ক্রিপশনের মেয়াদ আগামীকাল শেষ হবে',
+                    'message' => '🚨 আগামীকাল আপনার সাবস্ক্রিপশন শেষ হবে! জরুরি ভিত্তিতে প্যাকেজটি রিনিউ করে নিন।',
+                    'type' => 'subscription_expiring_critical',
+                    'is_read' => false,
+                ]);
+                Cache::put($cacheKey, true, now()->addDays(2));
+                $alertCount++;
+                $this->warn("🚨 1-day critical pre-expiry alert sent to {$user->name} (ID: {$user->id}).");
+            }
+        }
     }
 
-    $this->info("✅ Expiry check completed. {$count} subscriptions marked as expired.");
+    $this->info("✅ Expiry check completed. {$expiredCount} subscriptions marked as expired, {$alertCount} pre-expiry alerts dispatched.");
 })->purpose('Check and update expired user subscriptions');
 
 // শিডিউল সেটআপ

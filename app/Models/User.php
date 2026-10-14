@@ -150,9 +150,9 @@ class User extends Authenticatable
             return true;
         }
 
-        // If staff/reporter, check parent's limit
-        if (in_array($this->role, ['staff', 'reporter']) && $this->parent_id) {
-            $parent = $this->parent;
+        // If team member (staff, reporter, editor, etc.), check parent's limit
+        if ($this->parent_id) {
+            $parent = $this->parentUser ?? $this->parent;
             return $parent ? $parent->hasPostLimitRemaining() : false;
         }
 
@@ -362,9 +362,9 @@ class User extends Authenticatable
             return true;
         }
 
-        // 2. Staff/Reporter inherits status from parent
-        if (in_array($this->role, ['staff', 'reporter']) && $this->parent_id) {
-            $parent = $this->parent;
+        // 2. Team members (editor, sub_editor, staff, reporter, etc.) inherit status from parent
+        if ($this->parent_id) {
+            $parent = $this->parentUser ?? $this->parent;
             return $parent ? $parent->isSubscriptionActive() : false;
         }
 
@@ -488,6 +488,13 @@ class User extends Authenticatable
     {
         if ($this->role === 'super_admin' || $this->subscription_status === 'lifetime') {
             return false;
+        }
+
+        if ($this->expire_date) {
+            $daysLeft = (int) round(now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($this->expire_date)->startOfDay(), false));
+            if ($daysLeft > 0 && $daysLeft <= $days) {
+                return true;
+            }
         }
 
         $remaining = $this->days_remaining;

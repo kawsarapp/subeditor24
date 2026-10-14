@@ -27,13 +27,50 @@ class CheckSubscription
             return $next($request);
         }
 
-        // Whitelist essential account & billing management routes
+        // Always allow logout unconditionally
+        if ($request->routeIs('logout')) {
+            return $next($request);
+        }
+
+        // Effective user resolution: Team members (editor, sub_editor, staff, reporter) inherit tenant owner status
+        $effectiveUser = $user->parent_id ? ($user->parentUser ?? $user) : $user;
+
+        // Check if effective user's subscription is active
+        if ($effectiveUser->isSubscriptionActive()) {
+            return $next($request);
+        }
+
+        // 🛑 Subscription is Expired or Inactive
+
+        // 1. Team Members (staff, reporter, editor, sub_editor with parent_id):
+        // Cannot manage billing/renewals; block them and redirect to login with organization notice
+        if ($user->parent_id) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success'              => false,
+                    'subscription_expired' => true,
+                    'message'              => '⚠️ আপনার প্রতিষ্ঠানের সাবস্ক্রিপশনের মেয়াদ শেষ হয়ে গেছে! সেবা চালু রাখতে অনুগ্রহ করে কর্তৃপক্ষের সাথে যোগাযোগ করুন।',
+                    'redirect_url'         => route('login'),
+                ], 403);
+            }
+
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors([
+                'email' => '⚠️ আপনার প্রতিষ্ঠানের সাবস্ক্রিপশনের মেয়াদ শেষ হয়ে গেছে! সেবা চালু রাখতে অনুগ্রহ করে কর্তৃপক্ষের সাথে যোগাযোগ করুন।',
+            ]);
+        }
+
+        // 2. Tenant Owner: Whitelist essential renewal & account management routes
         $exemptRouteNames = [
             'login',
-            'logout',
             'register',
+            'pricing',
             'pricing.*',
             'billing.*',
+            'subscription.*',
             'profile.*',
             'password.*',
             'verification.*',
@@ -45,12 +82,7 @@ class CheckSubscription
             }
         }
 
-        // Check if user's subscription is active
-        if ($user->isSubscriptionActive()) {
-            return $next($request);
-        }
-
-        // 🛑 Subscription is Expired or Inactive
+        // Tenant owner attempting to access restricted operational routes
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success'              => false,
@@ -60,6 +92,8 @@ class CheckSubscription
             ], 403);
         }
 
-        return redirect()->route('billing.my-subscription')->with('subscription_warning', '⚠️ আপনার সাবস্ক্রিপশনের মেয়াদ শেষ হয়ে গেছে! নিউজ স্ক্র্যাপিং ও এআই সেবা চালু রাখতে অনুগ্রহ করে প্যাকেজটি রিনিউ করুন।');
+        return redirect()->route('billing.my-subscription')
+            ->with('warning', 'আপনার সাবস্ক্রিপশনের মেয়াদ শেষ হয়ে গেছে। সেবা চালু রাখতে অনুগ্রহ করে প্যাকেজটি রিনিউ করুন।')
+            ->with('subscription_warning', '⚠️ আপনার সাবস্ক্রিপশনের মেয়াদ শেষ হয়ে গেছে! নিউজ স্ক্র্যাপিং ও এআই সেবা চালু রাখতে অনুগ্রহ করে প্যাকেজটি রিনিউ করুন।');
     }
 }
