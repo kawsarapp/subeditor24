@@ -80,10 +80,6 @@
                             <i class="fa-brands fa-whatsapp text-sm"></i>
                             <span>WhatsApp এ চ্যাট করুন</span>
                         </a>
-                        <a href="{{ route('register') }}" class="w-full py-2.5 px-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-rocket text-xs"></i>
-                            <span>ফ্রি ট্রায়াল শুরু করুন</span>
-                        </a>
                     </div>
                 </div>
             </aside>

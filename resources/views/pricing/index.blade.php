@@ -81,10 +81,17 @@
                     </p>
                 </div>
             </div>
-            <a href="{{ route('register') }}" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition shrink-0 transform hover:-translate-y-0.5 flex items-center gap-1.5">
-                <span>{{ $config['free_trial_btn_text'] ?? 'ফ্রি সাইন-আপ করুন' }}</span>
+            @auth
+            <a href="{{ route('pricing.vip') }}" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition shrink-0 transform hover:-translate-y-0.5 flex items-center gap-1.5">
+                <span>ভিআইপি প্ল্যান দেখুন</span>
+                <i class="fa-solid fa-crown text-[11px]"></i>
+            </a>
+            @else
+            <a href="{{ route('login') }}" class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition shrink-0 transform hover:-translate-y-0.5 flex items-center gap-1.5">
+                <span>লগইন করুন</span>
                 <i class="fa-solid fa-arrow-right text-[11px]"></i>
             </a>
+            @endauth
         </div>
 
         {{-- Pricing Cards Grid (Regular Subscription Plans) --}}

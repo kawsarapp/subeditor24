@@ -66,6 +66,10 @@ class DynamicCronService
      */
     public function triggerDynamicCronIfDue(): bool
     {
+        if (app()->environment('testing')) {
+            return false;
+        }
+
         $lastHeartbeat = Cache::get(self::HEARTBEAT_KEY);
         $secondsAgo = $lastHeartbeat ? (now()->timestamp - $lastHeartbeat) : 999;
 

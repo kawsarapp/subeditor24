@@ -29,7 +29,6 @@
         </a>
         @endif
         <a href="{{ route('login') }}" class="text-xs font-bold text-slate-700 hover:text-indigo-600 bg-slate-100 px-3 py-1.5 rounded-xl transition">লগইন</a>
-        <a href="{{ route('register') }}" class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-xl shadow-sm transition">ফ্রি ট্রায়াল</a>
     </div>
     @endauth
 </div>

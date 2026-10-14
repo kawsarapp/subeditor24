@@ -42,9 +42,9 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth-login')->name('login.post');
 
-    // 📝 Registration (Sign Up)
-    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
-    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth-register')->name('register.post');
+    // 🚫 Registration Disabled (Redirect to login)
+    Route::get('/register', fn () => redirect()->route('login'))->name('register');
+    Route::post('/register', fn () => redirect()->route('login'))->name('register.post');
 
     // 🔐 Forgot & Reset Password
     Route::get('/forgot-password', [AuthController::class, 'showForgotForm'])->name('password.request');

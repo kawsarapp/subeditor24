@@ -30,156 +30,16 @@ class AuthController extends Controller
     // 📝 SELF REGISTRATION (SIGN UP)
     // ========================================================
 
-    // রেজিস্ট্রেশন পেজ দেখানো
+    // রেজিস্ট্রেশন পেজ দেখানো (রেজিস্ট্রেশন বন্ধ থাকায় লগইন পেজে রিডাইরেক্ট)
     public function showRegisterForm(Request $request)
     {
-        $selectedPlan = $request->query('plan', 'starter');
-        return view('auth.register', compact('selectedPlan'));
+        return redirect()->route('login');
     }
 
-    // রেজিস্ট্রেশন সাবমিট ও ভ্যালিডেশন
+    // রেজিস্ট্রেশন সাবমিট ও ভ্যালিডেশন (রেজিস্ট্রেশন বন্ধ থাকায় লগইন পেজে রিডাইরেক্ট)
     public function register(Request $request)
     {
-        // ১. অ্যান্টি-বট হানিপট (Honeypot Trap Check)
-        if (!empty($request->input('extra_website_trap')) || !empty($request->input('b_username_field'))) {
-            \Illuminate\Support\Facades\Log::warning('Registration honeypot triggered from IP: ' . $request->ip());
-            sleep(1);
-            return redirect()->route('login')->with('success', 'Registration submitted successfully.');
-        }
-
-        // ২. সাধারণ ফিল্ড ভ্যালিডেশন
-        $validated = $request->validate([
-            'name'                  => 'required|string|min:2|max:70',
-            'brand_name'            => 'required|string|min:2|max:100',
-            'website_url'           => 'required|string|max:190',
-            'email'                 => 'required|email:filter|max:190|unique:users,email',
-            'phone'                 => 'required|string|max:20',
-            'password'              => 'required|string|min:8|confirmed',
-            'password_confirmation' => 'required',
-            'terms'                 => 'accepted',
-        ], [
-            'name.required'                  => 'আপনার পুরো নাম আবশ্যক।',
-            'brand_name.required'            => 'আপনার নিউজ পোর্টাল/প্রতিষ্ঠানের নাম দিন।',
-            'website_url.required'           => 'আপনার নিউজ পোর্টালের ওয়েবসাইট লিঙ্ক দিন।',
-            'email.required'                 => 'একটি সক্রিয় ইমেইল এড্রেস আবশ্যক।',
-            'email.email'                    => 'সঠিক ইমেইল ফরম্যাট প্রদান করুন।',
-            'email.unique'                   => 'এই ইমেইলটি দিয়ে ইতিমধ্যে অ্যাকাউন্ট রয়েছে।',
-            'phone.required'                 => 'আপনার সচল বাংলাদেশি মোবাইল নম্বর দিন।',
-            'password.required'              => 'পাসওয়ার্ড প্রদান করুন।',
-            'password.min'                   => 'পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।',
-            'password.confirmed'             => 'পাসওয়ার্ড কনফার্মেশন মিলছে না।',
-            'terms.accepted'                 => 'ব্যবহারের নিয়ম ও শর্তাবলী মেনে নেওয়া আবশ্যক।',
-        ]);
-
-        // ৩. ডিসপোজেবল / ফেক ইমেইল ডোমেইন যাচাই
-        $emailParts = explode('@', strtolower(trim($request->email)));
-        $domain = end($emailParts);
-        if (in_array($domain, $this->disposableEmailDomains)) {
-            return back()->withInput()->withErrors([
-                'email' => '❌ ক্ষণস্থায়ী বা ফেক ইমেইল গ্রহণযোগ্য নয়। অনুগ্রহ করে অফিসিয়াল বা ব্যক্তিগত সঠিক ইমেইল ব্যবহার করুন।'
-            ]);
-        }
-
-        // ৪. বাংলাদেশি মোবাইল নম্বর ভ্যালিডেশন ও নরমালাইজেশন
-        $normalizedPhone = $this->normalizeBdPhone($request->phone);
-        if (!$normalizedPhone) {
-            return back()->withInput()->withErrors([
-                'phone' => '❌ সঠিক বাংলাদেশি ১১ ডিজিটের মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX বা +88017XXXXXXXX)।'
-            ]);
-        }
-
-        // মোবাইল নম্বরের ডুপ্লিকেট চেক
-        if (User::where('phone', $normalizedPhone)->exists()) {
-            return back()->withInput()->withErrors([
-                'phone' => '❌ এই মোবাইল নম্বরটি দিয়ে ইতিমধ্যে একটি অ্যাকাউন্ট রয়েছে।'
-            ]);
-        }
-
-        // ৫. ওয়েবসাইট লিঙ্ক নরমালাইজেশন
-        $normalizedUrl = $this->normalizeWebsiteUrl($request->website_url);
-
-        try {
-            DB::beginTransaction();
-
-            // ৬. ট্রায়াল প্ল্যান কনফিগারেশন ডায়নামিক লোড
-            $trialPlan = \App\Models\PricingPlan::where('slug', 'free-trial')->orWhere('standard_price', '<=', 0)->first();
-            $trialDays = (int) ($trialPlan?->custom_limits['trial_days'] ?? 7);
-            if ($trialDays <= 0) $trialDays = 7;
-            $trialCredits = (int) ($trialPlan?->custom_limits['welcome_credits'] ?? 20);
-            if ($trialCredits < 0) $trialCredits = 20;
-            $dailyPostLimit = (int) ($trialPlan?->daily_news_limit ?? 10);
-            $staffLimit = (int) ($trialPlan?->reporters_limit ?? 5);
-            $defaultLang = \App\Models\UserSetting::getSettingWithFallback(null, 'target_language') ?? 'bn';
-
-            // ইউজার তৈরি (Client SaaS Admin with Dynamic Free Trial & Credits)
-            $user = User::create([
-                'name'                  => trim($request->name),
-                'email'                 => strtolower(trim($request->email)),
-                'phone'                 => $normalizedPhone,
-                'password'              => Hash::make($request->password),
-                'role'                  => 'admin', // Client Newsroom Admin
-                'is_active'             => true,
-                'subscription_status'   => 'trial',
-                'subscription_cycle'    => 'trial',
-                'joining_date'          => Carbon::today(),
-                'credits'               => $trialCredits,
-                'total_credits_limit'   => $trialCredits,
-                'daily_post_limit'      => $dailyPostLimit,
-                'daily_bg_remove_limit' => 10,
-                'daily_crawl_limit'     => 20,
-                'daily_ai_limit'        => 20,
-                'staff_limit'           => $staffLimit,
-                'expire_date'           => Carbon::now()->addDays($trialDays),
-                'permissions'           => [
-                    'can_scrape', 'can_ai', 'can_studio', 'can_direct_publish', 
-                    'can_view_published', 'can_auto_post', 'can_central_feed', 
-                    'can_custom_photo_card', 'can_manage_staff', 'can_settings',
-                    'can_settings_branding', 'can_settings_target_language',
-                    'can_settings_wp_laravel', 'can_settings_social',
-                    'can_settings_category', 'can_settings_ai_prompt'
-                ],
-            ]);
-
-            // ৭. ইউজারের ডিফল্ট সেটিংস সেটআপ
-            UserSetting::create([
-                'user_id'            => $user->id,
-                'brand_name'         => trim($request->brand_name),
-                'wp_url'             => $normalizedUrl,
-                'allowed_templates'  => ['ntv', 'rtv', 'dhakapost', 'todayevents'],
-                'default_template'   => 'dhakapost',
-                'scraper_method'     => 'direct',
-                'target_language'    => $defaultLang,
-                'is_auto_posting'    => false,
-            ]);
-
-            // ৮. ওয়েলকাম ক্রেডিট হিস্ট্রি লগ
-            CreditHistory::create([
-                'user_id'        => $user->id,
-                'action_type'    => 'welcome_bonus',
-                'description'    => "🎉 ওয়েলকাম বোনাস: {$trialDays} দিনের ফ্রি ট্রায়াল ও {$trialCredits} ফ্রি ক্রেডিট",
-                'credits_change' => $trialCredits,
-                'balance_after'  => $trialCredits,
-            ]);
-
-            DB::commit();
-
-            // ৯. স্বয়ংক্রিয় লগইন
-            Auth::login($user);
-            $request->session()->regenerate();
-            $request->session()->flash('meta_registration_event', true);
-
-            return redirect()->route('news.index')->with(
-                'success',
-                '🎉 অভিনন্দন ' . $user->name . '! আপনার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে। আপনি ৭ দিনের ফ্রি ট্রায়াল এবং ২০ ক্রেডিট পেয়েছেন।'
-            );
-
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            \Illuminate\Support\Facades\Log::error('Registration Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return back()->withInput()->withErrors([
-                'email' => 'রেজিস্ট্রেশন করতে সমস্যা হয়েছে: ' . $e->getMessage()
-            ]);
-        }
+        return redirect()->route('login');
     }
 
     protected function normalizeBdPhone($phone): ?string
