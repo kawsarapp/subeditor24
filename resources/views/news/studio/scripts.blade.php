@@ -51,7 +51,7 @@
         image: "{{ $newsItem->thumbnail_url ? route('proxy.image', ['url' => $newsItem->thumbnail_url]) : '' }}"
     };
 
-    window.qrTargetUrl = "{{ !empty($newsItem->original_link) ? $newsItem->original_link : route('news.public-preview', $newsItem->id) }}";
+    window.qrTargetUrl = "{{ !empty($newsItem->target_post_url) ? $newsItem->target_post_url : (!empty($newsItem->live_url) ? $newsItem->live_url : route('news.public-preview', $newsItem->id)) }}";
 
     // ==========================================
     // 3. Canvas initialization & core functions

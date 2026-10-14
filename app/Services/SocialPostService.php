@@ -144,10 +144,16 @@ class SocialPostService
                 // অন্যথায় news link থাকলে স্বয়ংক্রিয়ভাবে 'বিস্তারিত পড়ুন: ...' দেওয়া হবে।
                 $resolvedNewsLink = $newsLink;
                 if ($newsLink instanceof \App\Models\NewsItem) {
-                    $resolvedNewsLink = $newsLink->live_url ?: $newsLink->original_link;
+                    $resolvedNewsLink = $newsLink->target_post_url ?: $newsLink->live_url;
                 }
 
                 $firstCommentTrimmed = trim((string)$firstComment);
+                if ($newsLink instanceof \App\Models\NewsItem && !empty($firstCommentTrimmed) && !empty($newsLink->original_link) && str_contains($firstCommentTrimmed, $newsLink->original_link)) {
+                    $firstCommentTrimmed = !empty($resolvedNewsLink)
+                        ? str_replace($newsLink->original_link, $resolvedNewsLink, $firstCommentTrimmed)
+                        : trim(str_replace(['বিস্তারিত পড়ুন: ' . $newsLink->original_link, $newsLink->original_link], '', $firstCommentTrimmed));
+                }
+
                 $commentMessage = !empty($firstCommentTrimmed) 
                     ? $firstCommentTrimmed 
                     : (!empty($resolvedNewsLink) ? 'বিস্তারিত পড়ুন: ' . $resolvedNewsLink : null);
@@ -192,14 +198,23 @@ class SocialPostService
             return ['success' => false, 'message' => 'Setup Missing'];
         }
 
+        if ($newsLink instanceof \App\Models\NewsItem) {
+            $newsLink = $newsLink->target_post_url ?: $newsLink->live_url;
+        }
+
         try {
             $botToken = $settings->telegram_bot_token;
             $chatId   = $settings->telegram_channel_id;
             $endpoint = "https://api.telegram.org/bot{$botToken}/sendPhoto";
 
+            $caption = "📢 <b>{$title}</b>";
+            if (!empty($newsLink)) {
+                $caption .= "\n\n👇 বিস্তারিত পড়তে লিংকে ক্লিক করুন:\n{$newsLink}";
+            }
+
             $payload = [
                 'chat_id'    => $chatId,
-                'caption'    => "📢 <b>{$title}</b>\n\n👇 বিস্তারিত পড়তে লিংকে ক্লিক করুন:\n{$newsLink}",
+                'caption'    => $caption,
                 'parse_mode' => 'HTML',
             ];
 
@@ -241,8 +256,14 @@ class SocialPostService
             return ['success' => false, 'message' => 'Twitter Setup Missing'];
         }
 
+        if ($newsLink instanceof \App\Models\NewsItem) {
+            $newsLink = $newsLink->target_post_url ?: $newsLink->live_url;
+        }
+
         try {
-            $tweetMessage = "📢 {$title}\n\n👇 বিস্তারিত পড়ুন:\n{$newsLink}";
+            $tweetMessage = !empty($newsLink) 
+                ? "📢 {$title}\n\n👇 বিস্তারিত পড়ুন:\n{$newsLink}" 
+                : "📢 {$title}";
 
             $connection = new \Abraham\TwitterOAuth\TwitterOAuth(
                 $settings->twitter_api_key,

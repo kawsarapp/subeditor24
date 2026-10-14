@@ -195,4 +195,106 @@ class StudioFirstCommentPublishTest extends TestCase
                    $request['message'] === 'Custom studio comment text';
         });
     }
+
+    /**
+     * Enforce target_post_url priority, staff parent inheritance, and zero original_link leak in NewsItem live_url.
+     */
+    public function test_news_item_live_url_prefers_target_post_url_and_inherits_parent_settings(): void
+    {
+        $admin = User::factory()->create(['role' => 'client']);
+        UserSetting::create([
+            'user_id' => $admin->id,
+            'wp_url'  => 'https://client-portal.com',
+        ]);
+
+        $reporter = User::factory()->create([
+            'role'      => 'reporter',
+            'parent_id' => $admin->id,
+        ]);
+
+        // 1. When target_post_url is present, it must be returned directly
+        $newsWithTarget = NewsItem::create([
+            'user_id'         => $reporter->id,
+            'title'           => 'Staff news story',
+            'original_link'   => 'https://source.com/leaked-source-news',
+            'target_post_url' => 'https://client-portal.com/news/target-story',
+            'wp_post_id'      => 456,
+        ]);
+
+        $this->assertEquals('https://client-portal.com/news/target-story', $newsWithTarget->live_url);
+
+        // 2. When target_post_url is empty, it calculates from parent admin settings
+        $newsWithoutTarget = NewsItem::create([
+            'user_id'       => $reporter->id,
+            'title'         => 'Staff news story 2',
+            'original_link' => 'https://source.com/leaked-source-news-2',
+            'wp_post_id'    => 789,
+        ]);
+
+        $this->assertEquals('https://client-portal.com/?p=789', $newsWithoutTarget->live_url);
+
+        // 3. When neither target_post_url nor wp_post_id is present, NEVER leak original_link
+        $draftNews = NewsItem::create([
+            'user_id'       => $reporter->id,
+            'title'         => 'Draft news story',
+            'original_link' => 'https://source.com/leaked-source-news-3',
+        ]);
+
+        $this->assertNull($draftNews->live_url);
+    }
+
+    /**
+     * SocialPostService uses target_post_url and purges original_link from comments.
+     */
+    public function test_social_post_service_never_leaks_original_link_and_resolves_target_post_url(): void
+    {
+        $user = User::factory()->create(['role' => 'super_admin']);
+        $settings = UserSetting::create([
+            'user_id' => $user->id,
+            'wp_url'  => 'https://mynews.com',
+        ]);
+
+        $page = FacebookPage::create([
+            'user_id'      => $user->id,
+            'page_name'    => 'Security Check Page',
+            'page_id'      => '888999000',
+            'access_token' => 'EAABtoken',
+            'is_active'    => true,
+        ]);
+
+        $newsItem = NewsItem::create([
+            'user_id'         => $user->id,
+            'title'           => 'Test Leaked Link Cleanup',
+            'original_link'   => 'https://source-leak.com/breaking/12345',
+            'target_post_url' => 'https://mynews.com/2026/purified-story',
+        ]);
+
+        Http::fake([
+            'https://graph.facebook.com/v19.0/888999000/feed' => Http::response([
+                'id' => '40004_feed_post',
+            ], 200),
+            'https://graph.facebook.com/v19.0/40004_feed_post/comments' => Http::response([
+                'id' => 'comment_9999',
+            ], 200),
+        ]);
+
+        $service = app(SocialPostService::class);
+        $results = $service->postToFacebook(
+            $settings,
+            'News caption',
+            null,
+            $newsItem, // passing NewsItem object
+            [$page->id],
+            'বিস্তারিত পড়ুন: https://source-leak.com/breaking/12345' // Contains original source link
+        );
+
+        $this->assertCount(1, $results);
+        $this->assertTrue($results[0]['success']);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/40004_feed_post/comments') &&
+                   $request['message'] === 'বিস্তারিত পড়ুন: https://mynews.com/2026/purified-story' &&
+                   !str_contains($request['message'], 'source-leak.com');
+        });
+    }
 }

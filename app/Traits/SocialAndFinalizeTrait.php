@@ -21,7 +21,8 @@ trait SocialAndFinalizeTrait
         DB::transaction(function () use ($news, $user, $remotePostId, $publishedUrl, $websiteImage, $socialOnly, $hashtags, $staffId) {
             $updateData = [
                 'is_posted' => true, 'posted_at' => now(), 'status' => 'published',
-                'live_url' => $publishedUrl, 'error_message' => null, 'hashtags' => $hashtags
+                'target_post_url' => $publishedUrl ?: $news->target_post_url,
+                'error_message' => null, 'hashtags' => $hashtags
             ];
 
             if ($remotePostId) $updateData['wp_post_id'] = $remotePostId;
@@ -67,7 +68,7 @@ trait SocialAndFinalizeTrait
                 }
             }
 
-            $newsLink      = $publishedUrl ?: $news->original_link;
+            $newsLink      = $publishedUrl ?: ($news->target_post_url ?: $news->live_url);
             $captionToPost = ($this->customData['social_caption'] ?? $finalTitle) . (!empty($hashtags) ? "\n\n" . $hashtags : "");
 
             // 🔥 Studio Publish Modal এ ইউজার যে specific page IDs সিলেক্ট করেছে
@@ -82,6 +83,13 @@ trait SocialAndFinalizeTrait
 
             if ($shouldPostFb) {
                 $customFirstComment = $this->customData['first_comment'] ?? null;
+                if (!empty($customFirstComment) && !empty($news->original_link) && str_contains($customFirstComment, $news->original_link)) {
+                    if (!empty($newsLink)) {
+                        $customFirstComment = str_replace($news->original_link, $newsLink, $customFirstComment);
+                    } else {
+                        $customFirstComment = trim(str_replace(['বিস্তারিত পড়ুন: ' . $news->original_link, $news->original_link], '', $customFirstComment));
+                    }
+                }
                 $fbResults = $socialPoster->postToFacebook($settings, $captionToPost, $imageToPost, $newsLink, $selectedPageIds, $customFirstComment);
 
                 // সব results loop করে যেকোনো ১টি success হলে 'success' রাখি

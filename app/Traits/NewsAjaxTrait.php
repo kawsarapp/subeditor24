@@ -144,7 +144,9 @@ trait NewsAjaxTrait
         $formattedNews = $relatedNews->map(function ($news) use ($settings) {
             // Smart URL construction for WordPress / Laravel / Custom PHP / Node.js
             $url = null;
-            if ($news->wp_post_id && optional($settings)->wp_url) {
+            if (!empty($news->target_post_url)) {
+                $url = $news->target_post_url;
+            } elseif ($news->wp_post_id && optional($settings)->wp_url) {
                 $url = rtrim($settings->wp_url, '/') . '/?p=' . $news->wp_post_id;
             } elseif (optional($settings)->post_to_laravel && optional($settings)->laravel_site_url) {
                 $prefix = trim($settings->laravel_route_prefix ?? 'news', '/');
@@ -152,8 +154,6 @@ trait NewsAjaxTrait
                 $url = rtrim($settings->laravel_site_url, '/') . '/' . $prefix . '/' . $id;
             } elseif (!empty($news->live_url)) {
                 $url = $news->live_url;
-            } elseif (!empty($news->original_link)) {
-                $url = $news->original_link;
             } else {
                 $url = url('/news/' . $news->id);
             }

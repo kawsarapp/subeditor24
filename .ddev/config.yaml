@@ -11,7 +11,7 @@ database:
     version: "11.8"
 use_dns_when_possible: true
 web_environment:
-  - DB_DATABASE=newsmanage24
+  - DB_DATABASE=subeditor24
 nodejs_version: "24"
 corepack_enable: false
 

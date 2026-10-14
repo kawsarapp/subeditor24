@@ -69,9 +69,9 @@
                     <span class="text-xs text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">ঐচ্ছিক (Auto-Comment)</span>
                 </div>
                 @php
-                    $newsAutoLink = $newsItem ? ($newsItem->live_url ?: $newsItem->original_link) : '';
+                    $newsAutoLink = $newsItem ? ($newsItem->target_post_url ?: $newsItem->live_url) : '';
                 @endphp
-                <textarea id="modalFirstComment" name="first_comment" rows="2" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 bg-white" placeholder="যেমন: বিস্তারিত খবরের লিংক বা সোর্স কমেন্টে দিন...">{{ !empty($newsAutoLink) ? 'বিস্তারিত পড়ুন: ' . $newsAutoLink : '' }}</textarea>
+                <textarea id="modalFirstComment" name="first_comment" rows="2" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 bg-white" placeholder="নিউজটি ওয়েবসাইটে পাবলিশ হওয়ার পর স্বয়ংক্রিয়ভাবে টার্গেট ওয়েবসাইটের লিংক প্রথম কমেন্টে যাবে...">{{ !empty($newsAutoLink) ? 'বিস্তারিত পড়ুন: ' . $newsAutoLink : '' }}</textarea>
                 <p class="text-[11px] text-gray-500 mt-1">পোস্ট হওয়ার পর ফেসবুক পেজে স্বয়ংক্রিয়ভাবে এই লেখাটি প্রথম কমেন্ট হিসেবে দেওয়া হবে।</p>
             </div>
         </div>
