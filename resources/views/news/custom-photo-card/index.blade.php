@@ -176,6 +176,13 @@
                     <option value="Hind Siliguri">Hind Siliguri</option>
                     <option value="Li Alinur Banglaborno">Li Alinur</option>
                     <option value="Noto Sans Bengali">Noto Sans</option>
+                    <optgroup label="🔤 English">
+                        <option value="Inter">Inter</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Oswald">Oswald</option>
+                        <option value="Poppins">Poppins</option>
+                    </optgroup>
                 </select>
 
                 <div class="w-[1px] h-4 bg-slate-200"></div>
@@ -370,6 +377,7 @@
             attachNewsUrl: "{{ route('custom-photo-card.attach-news') }}",
             csrfToken: "{{ csrf_token() }}",
             userId: {{ Auth::id() ?? 0 }},
+            userLanguage: "{{ auth()->user()?->getEffectiveLanguage() ?? 'bn' }}",
             userBrandLogo: "{{ $userBrandLogo ? asset($userBrandLogo) : '' }}",
             initialWidth: 1080,
             initialHeight: 1080,

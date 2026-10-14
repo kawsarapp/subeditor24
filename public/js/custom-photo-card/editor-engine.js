@@ -9,7 +9,7 @@
     'use strict';
 
     class CustomPhotoCardEngine {
-        constructor(config) {
+        constructor(config = {}) {
             this.config = Object.assign({
                 canvasId: 'customCardCanvas',
                 workspaceContainerId: 'workspace-container',
@@ -22,6 +22,18 @@
                 initialHeight: 1080,
                 newsData: null,
             }, config);
+
+            // Multilingual / Language Settings
+            this.language = config.userLanguage || config.language || 'bn';
+            this.isEnglish = (this.language === 'en');
+
+            // Supported / System Fonts (Bengali & Modern English Fonts)
+            this.supportedFonts = [
+                // Bengali Fonts
+                'SolaimanLipi', 'Hind Siliguri', 'Noto Sans Bengali', 'Noto Serif Bengali', 'Li Alinur Banglaborno', 'Baloo Da 2', 'Anek Bangla', 'Tiro Bangla', 'Galada', 'Kalpurush',
+                // Modern English Fonts
+                'Inter', 'Roboto', 'Montserrat', 'Oswald', 'Poppins', 'Playfair Display', 'Bebas Neue'
+            ];
 
             this.canvas = null;
             this.activeFrame = null;
@@ -41,13 +53,35 @@
          * Clean font family name from quotes, commas, or CSS fallback keywords
          */
         cleanFontFamily(font) {
-            if (!font) return 'SolaimanLipi';
+            const defaultFont = this.isEnglish ? 'Inter' : 'SolaimanLipi';
+            if (!font) return defaultFont;
             let cleaned = font.toString().trim();
             if (cleaned.includes(',')) {
                 cleaned = cleaned.split(',')[0].trim();
             }
             cleaned = cleaned.replace(/^['"]+|['"]+$/g, '').trim();
-            return cleaned || 'SolaimanLipi';
+            return cleaned || defaultFont;
+        }
+
+        /**
+         * Load Google Font dynamically into document if not present
+         */
+        loadGoogleFont(fontFamily) {
+            const cleanFont = this.cleanFontFamily(fontFamily);
+            const googleFonts = [
+                'Inter', 'Roboto', 'Montserrat', 'Oswald', 'Poppins', 'Playfair Display', 'Bebas Neue',
+                'Hind Siliguri', 'Noto Sans Bengali', 'Noto Serif Bengali', 'Anek Bangla', 'Galada', 'Tiro Bangla', 'Baloo Da 2'
+            ];
+            if (googleFonts.includes(cleanFont)) {
+                const id = `gfont-${cleanFont.replace(/\s+/g, '-').toLowerCase()}`;
+                if (typeof document !== 'undefined' && !document.getElementById(id)) {
+                    const link = document.createElement('link');
+                    link.id = id;
+                    link.rel = 'stylesheet';
+                    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(cleanFont).replace(/%20/g, '+')}:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,700&display=swap`;
+                    document.head.appendChild(link);
+                }
+            }
         }
 
         /**
@@ -55,7 +89,8 @@
          */
         async ensureFontLoaded(fontFamily, fontSize = 44) {
             const cleanFont = this.cleanFontFamily(fontFamily);
-            if (document.fonts && document.fonts.load) {
+            this.loadGoogleFont(cleanFont);
+            if (typeof document !== 'undefined' && document.fonts && document.fonts.load) {
                 try {
                     await document.fonts.load(`bold ${fontSize}px "${cleanFont}"`);
                     await document.fonts.load(`normal ${fontSize}px "${cleanFont}"`);
@@ -64,6 +99,35 @@
                     console.warn("Font loading fallback check:", cleanFont, e);
                 }
             }
+        }
+
+        /**
+         * Ensure font selectors in DOM include modern English fonts
+         */
+        initFontDropdowns() {
+            if (typeof document === 'undefined') return;
+            const selectIds = ['quote-card-font', 'studio-font-select', 'floating-font-select'];
+            const englishFonts = ['Inter', 'Roboto', 'Montserrat', 'Oswald', 'Poppins', 'Playfair Display', 'Bebas Neue'];
+
+            selectIds.forEach(id => {
+                const sel = document.getElementById(id);
+                if (sel && !sel.querySelector('optgroup[data-group="english"]')) {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = '🔤 Modern English';
+                    optgroup.setAttribute('data-group', 'english');
+                    englishFonts.forEach(font => {
+                        const opt = document.createElement('option');
+                        opt.value = font;
+                        opt.textContent = font;
+                        optgroup.appendChild(opt);
+                    });
+                    sel.appendChild(optgroup);
+
+                    if (this.isEnglish && (sel.value === 'SolaimanLipi' || sel.value === '')) {
+                        sel.value = 'Inter';
+                    }
+                }
+            });
         }
 
         /**
@@ -100,6 +164,7 @@
             this.setupDragAndDrop();
             this.setupContextMenu();
             this.setupFloatingToolbarDrag();
+            this.initFontDropdowns();
 
             // Initial fit
             this.fitToScreen();
@@ -1043,14 +1108,17 @@
          * 🅰️ TYPOGRAPHY & ELEMENTS ADDITION
          * ====================================================================
          */
-        addText(text = 'এখানে আপনার হেডলাইন লিখুন', options = {}) {
+        addText(text = null, options = {}) {
+            const defaultHeadline = this.isEnglish ? 'Type your headline here' : 'এখানে আপনার হেডলাইন লিখুন';
+            const finalText = (text !== null && text !== undefined) ? text : defaultHeadline;
             let defaultColor = '#1e293b';
             const bg = this.canvas.backgroundColor;
             if (bg === '#0f172a' || bg === '#7f1d1d' || bg === '#000000' || (typeof bg === 'string' && (bg.startsWith('#0') || bg.startsWith('#1')))) {
                 defaultColor = '#ffffff';
             }
 
-            const currentFont = this.cleanFontFamily(document.getElementById('studio-font-select')?.value || 'SolaimanLipi');
+            const defaultFont = this.isEnglish ? 'Inter' : 'Hind Siliguri';
+            const currentFont = this.cleanFontFamily(document.getElementById('studio-font-select')?.value || defaultFont);
 
             const defaultOptions = {
                 left: this.canvas.getWidth() / 2,
@@ -1066,10 +1134,10 @@
                 width: Math.min(800, this.canvas.getWidth() * 0.85),
                 breakWords: false,
                 splitByGrapheme: false,
-                customName: '💬 ' + (text.length > 15 ? text.substring(0, 15) + '...' : text),
+                customName: '💬 ' + (finalText.length > 15 ? finalText.substring(0, 15) + '...' : finalText),
             };
 
-            const textbox = new fabric.Textbox(text, Object.assign(defaultOptions, options));
+            const textbox = new fabric.Textbox(finalText, Object.assign(defaultOptions, options));
             this.canvas.add(textbox);
             this.canvas.bringToFront(textbox);
             this.canvas.setActiveObject(textbox);
@@ -1080,11 +1148,14 @@
             this.renderLayersList();
             this.syncSidebarWithActiveObject();
             this.updateFloatingToolbar();
-            this.showNotification("success", "টেক্সট যোগ করা হয়েছে!");
+            this.showNotification("success", this.isEnglish ? "Text added!" : "টেক্সট যোগ করা হয়েছে!");
         }
 
-        addBadge(badgeText = 'ব্রেকিং নিউজ', bgHex = '#dc2626', textHex = '#ffffff') {
-            const groupW = 220;
+        addBadge(badgeText = null, bgHex = '#dc2626', textHex = '#ffffff') {
+            const defaultBadge = this.isEnglish ? 'BREAKING NEWS' : 'ব্রেকিং নিউজ';
+            const finalBadge = badgeText || defaultBadge;
+            const badgeFont = this.isEnglish ? 'Inter' : 'SolaimanLipi';
+            const groupW = this.isEnglish ? 230 : 220;
             const groupH = 46;
 
             const rect = new fabric.Rect({
@@ -1097,8 +1168,8 @@
                 originY: 'center',
             });
 
-            const text = new fabric.Text(badgeText, {
-                fontFamily: 'SolaimanLipi',
+            const text = new fabric.Text(finalBadge, {
+                fontFamily: badgeFont,
                 fontSize: 22,
                 fontWeight: 'bold',
                 fill: textHex,
@@ -1111,7 +1182,7 @@
                 top: this.canvas.getHeight() * 0.2,
                 originX: 'center',
                 originY: 'center',
-                customName: '🏷️ ' + badgeText,
+                customName: '🏷️ ' + finalBadge,
             });
 
             this.canvas.add(badgeGroup);
@@ -1119,6 +1190,7 @@
             this.canvas.renderAll();
             this.saveState();
             this.renderLayersList();
+            this.showNotification("success", this.isEnglish ? "Badge added!" : "ব্যাজ যুক্ত করা হয়েছে!");
         }
 
         addShape(type = 'rect', options = {}) {
@@ -1839,10 +1911,10 @@
             let portraitImg = this.canvas.getObjects().find(o => o.isQuotePortrait || (o.customName && o.customName.includes('👤')));
 
             if (!quoteBox && !nameObj) {
-                const quoteVal = document.getElementById('quote-card-text')?.value || 'এখানে আপনার উক্তি লিখুন...';
-                const nameVal = document.getElementById('quote-card-name')?.value || 'বক্তার নাম';
+                const quoteVal = document.getElementById('quote-card-text')?.value || (this.isEnglish ? 'Type your quote here...' : 'এখানে আপনার উক্তি লিখুন...');
+                const nameVal = document.getElementById('quote-card-name')?.value || (this.isEnglish ? 'Speaker Name' : 'বক্তার নাম');
                 const desigVal = document.getElementById('quote-card-desig')?.value || '';
-                const fontVal = this.cleanFontFamily(document.getElementById('quote-card-font')?.value || 'SolaimanLipi');
+                const fontVal = this.cleanFontFamily(document.getElementById('quote-card-font')?.value || (this.isEnglish ? 'Inter' : 'SolaimanLipi'));
                 const themeVal = document.getElementById('quote-card-theme')?.value || 'soft-sky';
                 const posVal = document.getElementById('quote-card-pos')?.value || 'left';
                 const flipVal = document.getElementById('quote-card-flip-check')?.checked === true;
@@ -1862,7 +1934,7 @@
             }
 
             if (field === 'text' && quoteBox) {
-                quoteBox.quoteRawText = value || 'এখানে আপনার উক্তি লিখুন...';
+                quoteBox.quoteRawText = value || (this.isEnglish ? 'Type your quote here...' : 'এখানে আপনার উক্তি লিখুন...');
             } else if (field === 'fontSize') {
                 this._quoteCustomFontSize = parseInt(value) || 44;
                 this.recalculateQuoteCardLayout();
@@ -1881,8 +1953,9 @@
                 this.recalculateQuoteCardLayout();
                 return;
             } else if (field === 'name' && nameObj) {
-                nameObj.set('text', value || 'বক্তার নাম');
-                nameObj.set('customName', '🏷️ ' + (value || 'বক্তার নাম'));
+                const defName = this.isEnglish ? 'Speaker Name' : 'বক্তার নাম';
+                nameObj.set('text', value || defName);
+                nameObj.set('customName', '🏷️ ' + (value || defName));
             } else if (field === 'designation') {
                 if (desigObj) {
                     desigObj.set('text', value || '');
@@ -1895,7 +1968,7 @@
                         top: (nameObj ? nameObj.top + 35 : 200),
                         width: quoteBox ? quoteBox.width - 25 : 300,
                         fontSize: 18,
-                        fontFamily: this.cleanFontFamily(document.getElementById('quote-card-font')?.value || 'SolaimanLipi'),
+                        fontFamily: this.cleanFontFamily(document.getElementById('quote-card-font')?.value || (this.isEnglish ? 'Inter' : 'SolaimanLipi')),
                         fontWeight: 'normal',
                         lineHeight: 1.35,
                         fill: '#64748b',
@@ -1907,10 +1980,12 @@
                 }
             } else if (field === 'font') {
                 const cleanFont = this.cleanFontFamily(value);
-                if (quoteBox) quoteBox.set('fontFamily', cleanFont);
-                if (nameObj) nameObj.set('fontFamily', cleanFont);
-                if (desigObj) desigObj.set('fontFamily', cleanFont);
-                this.canvas.renderAll();
+                this.ensureFontLoaded(cleanFont).then(() => {
+                    if (quoteBox) quoteBox.set('fontFamily', cleanFont);
+                    if (nameObj) nameObj.set('fontFamily', cleanFont);
+                    if (desigObj) desigObj.set('fontFamily', cleanFont);
+                    this.canvas.renderAll();
+                });
             } else if (field === 'flip' && portraitImg) {
                 portraitImg.set('flipX', value);
             } else if (field === 'position') {
@@ -2658,12 +2733,17 @@
                         fill: themeConfig.quoteMarkColor,
                         selectable: true,
                         isQuoteMark: true,
-                        customName: '❝ কোটেশন মার্ক',
+                        customName: this.isEnglish ? '❝ Quotation Mark' : '❝ কোটেশন মার্ক',
                     });
                     this.canvas.add(quoteMark);
 
                     // 6. Add Quote Textbox
-                    const quoteFont = this.cleanFontFamily(params.fontFamily || 'SolaimanLipi');
+                    const defaultQuoteFont = this.isEnglish ? 'Inter' : 'SolaimanLipi';
+                    const quoteFont = this.cleanFontFamily(
+                        (!params.fontFamily || (this.isEnglish && params.fontFamily === 'SolaimanLipi') || params.fontFamily === 'default')
+                            ? defaultQuoteFont
+                            : params.fontFamily
+                    );
                     const quoteTextbox = new fabric.Textbox(quote, {
                         left: textLeft,
                         top: quoteMarkTop + Math.round(canvasH * 0.065) + 14,
@@ -2678,7 +2758,7 @@
                         splitByGrapheme: false,
                         selectable: true,
                         isQuoteText: true,
-                        customName: '💬 মূল উক্তি',
+                        customName: this.isEnglish ? '💬 Main Quote' : '💬 মূল উক্তি',
                     });
                     this.canvas.add(quoteTextbox);
 
@@ -2693,7 +2773,7 @@
                         ry: 3,
                         selectable: true,
                         isQuoteBar: true,
-                        customName: '🔴 অ্যাকসেন্ট বার',
+                        customName: this.isEnglish ? '🔴 Accent Bar' : '🔴 অ্যাকসেন্ট বার',
                     });
                     this.canvas.add(barRect);
 
@@ -2739,18 +2819,21 @@
                     this.recalculateQuoteCardLayout();
 
                     // 8. Add Today's Date Stamp (Top Right)
-                    const todayDate = new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
+                    const locale = this.isEnglish ? 'en-US' : 'bn-BD';
+                    const todayDate = new Date().toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+                    const dateFont = this.isEnglish ? 'Inter' : 'SolaimanLipi';
+                    const customDateName = this.isEnglish ? '📅 Date' : '📅 তারিখ';
                     const dateText = new fabric.Text(todayDate, {
                         left: canvasW - margin,
                         top: 30,
                         originX: 'right',
                         fontSize: 18,
-                        fontFamily: 'SolaimanLipi',
+                        fontFamily: dateFont,
                         fontWeight: 'bold',
                         fill: themeConfig.dateTextColor,
                         selectable: true,
                         isDate: true,
-                        customName: '📅 তারিখ',
+                        customName: customDateName,
                     });
                     this.canvas.add(dateText);
 
@@ -3777,11 +3860,17 @@
             const canvasH = this.canvas.getHeight();
 
             if (type === 'breaking-ribbon') {
+                const ribbonTitle = this.isEnglish ? '🔴 BREAKING NEWS' : '🔴 ব্রেকিং নিউজ';
+                const ribbonFont = this.isEnglish ? 'Oswald' : 'Hind Siliguri';
+                this.loadGoogleFont(ribbonFont);
+                const bgWidth = this.isEnglish ? 280 : 260;
+                const slantOffset = this.isEnglish ? 240 : 220;
+
                 // Top-Left Diagonal Corner Banner
                 const ribbonBg = new fabric.Polygon([
                     { x: 0, y: 0 },
-                    { x: 260, y: 0 },
-                    { x: 220, y: 56 },
+                    { x: bgWidth, y: 0 },
+                    { x: slantOffset, y: 56 },
                     { x: 0, y: 56 }
                 ], {
                     fill: '#dc2626',
@@ -3789,19 +3878,19 @@
                     originY: 'top',
                 });
 
-                const ribbonText = new fabric.Text('🔴 ব্রেকিং নিউজ', {
+                const ribbonText = new fabric.Text(ribbonTitle, {
                     left: 24,
                     top: 14,
-                    fontSize: 22,
+                    fontSize: this.isEnglish ? 20 : 22,
                     fontWeight: '900',
-                    fontFamily: 'Hind Siliguri',
+                    fontFamily: ribbonFont,
                     fill: '#ffffff',
                 });
 
                 const ribbonGroup = new fabric.Group([ribbonBg, ribbonText], {
                     left: 0,
                     top: 40,
-                    customName: '🔴 ব্রেকিং নিউজ ফিতা',
+                    customName: this.isEnglish ? '🔴 Breaking News Ribbon' : '🔴 ব্রেকিং নিউজ ফিতা',
                     cornerColor: '#ffffff',
                     cornerStrokeColor: '#dc2626',
                     borderColor: '#ef4444',
@@ -3818,31 +3907,36 @@
                 this.canvas.renderAll();
                 this.saveState();
                 this.renderLayersList();
-                this.showNotification("success", "ব্রেকিং নিউজ ফিতা যুক্ত হয়েছে!");
+                this.showNotification("success", this.isEnglish ? "Breaking News ribbon added!" : "ব্রেকিং নিউজ ফিতা যুক্ত হয়েছে!");
             } else if (type === 'exclusive-gold') {
+                const ribbonTitle = this.isEnglish ? '⚡ SPECIAL REPORT' : '⚡ বিশেষ প্রতিবেদন';
+                const ribbonFont = this.isEnglish ? 'Inter' : 'Hind Siliguri';
+                this.loadGoogleFont(ribbonFont);
+                const bgWidth = this.isEnglish ? 230 : 220;
+
                 const ribbonBg = new fabric.Rect({
                     left: 0,
                     top: 0,
-                    width: 220,
+                    width: bgWidth,
                     height: 52,
                     rx: 14,
                     ry: 14,
                     fill: '#d97706',
                 });
 
-                const ribbonText = new fabric.Text('⚡ বিশেষ প্রতিবেদন', {
+                const ribbonText = new fabric.Text(ribbonTitle, {
                     left: 20,
                     top: 13,
-                    fontSize: 20,
+                    fontSize: this.isEnglish ? 18 : 20,
                     fontWeight: '900',
-                    fontFamily: 'Hind Siliguri',
+                    fontFamily: ribbonFont,
                     fill: '#ffffff',
                 });
 
                 const group = new fabric.Group([ribbonBg, ribbonText], {
                     left: 40,
                     top: 40,
-                    customName: '⚡ বিশেষ প্রতিবেদন ব্যাজ',
+                    customName: this.isEnglish ? '⚡ Special Report Badge' : '⚡ বিশেষ প্রতিবেদন ব্যাজ',
                     cornerColor: '#ffffff',
                     cornerStrokeColor: '#d97706',
                     borderColor: '#f59e0b',
@@ -3859,7 +3953,7 @@
                 this.canvas.renderAll();
                 this.saveState();
                 this.renderLayersList();
-                this.showNotification("success", "বিশেষ প্রতিবেদন ব্যাজ যুক্ত হয়েছে!");
+                this.showNotification("success", this.isEnglish ? "Special Report badge added!" : "বিশেষ প্রতিবেদন ব্যাজ যুক্ত হয়েছে!");
             }
         }
 
@@ -3883,7 +3977,7 @@
             const badge = new fabric.Group([circle, check], {
                 left: this.canvas.getWidth() / 2,
                 top: this.canvas.getHeight() / 2,
-                customName: '✅ ভেরিফাইড ব্যাজ',
+                customName: this.isEnglish ? '✅ Verified Badge' : '✅ ভেরিফাইড ব্যাজ',
                 cornerColor: '#ffffff',
                 cornerStrokeColor: '#2563eb',
                 borderColor: '#3b82f6',
@@ -3894,14 +3988,18 @@
             this.canvas.renderAll();
             this.saveState();
             this.renderLayersList();
-            this.showNotification("success", "ভেরিফাইড টিকমার্ক যুক্ত হয়েছে!");
+            this.showNotification("success", this.isEnglish ? "Verified badge added!" : "ভেরিফাইড টিকমার্ক যুক্ত হয়েছে!");
         }
 
-        addLocationBadge(locationText = 'ঢাকা') {
-            const locName = (locationText || 'ঢাকা').trim();
+        addLocationBadge(locationText = null) {
+            const defaultLoc = this.isEnglish ? 'Location' : 'ঢাকা';
+            const locName = (locationText || defaultLoc).trim();
+            const locFont = this.isEnglish ? 'Inter' : 'Hind Siliguri';
+            this.loadGoogleFont(locFont);
+            const badgeWidth = Math.max(140, (locName.length * 11) + 50);
 
             const bg = new fabric.Rect({
-                width: 140,
+                width: badgeWidth,
                 height: 42,
                 rx: 21,
                 ry: 21,
@@ -3913,7 +4011,7 @@
             const text = new fabric.Text('📍 ' + locName, {
                 fontSize: 16,
                 fontWeight: '700',
-                fontFamily: 'Hind Siliguri',
+                fontFamily: locFont,
                 fill: '#ffffff',
                 originX: 'center',
                 originY: 'center',
@@ -3922,7 +4020,7 @@
             const badge = new fabric.Group([bg, text], {
                 left: 60,
                 top: this.canvas.getHeight() - 100,
-                customName: '📍 স্পট লোকেশন ব্যাজ',
+                customName: this.isEnglish ? '📍 Spot Location Badge' : '📍 স্পট লোকেশন ব্যাজ',
                 cornerColor: '#ffffff',
                 cornerStrokeColor: '#4f46e5',
                 borderColor: '#6366f1',
@@ -3933,7 +4031,7 @@
             this.canvas.renderAll();
             this.saveState();
             this.renderLayersList();
-            this.showNotification("success", "লোকেশন ব্যাজ যুক্ত হয়েছে!");
+            this.showNotification("success", this.isEnglish ? "Location badge added!" : "লোকেশন ব্যাজ যুক্ত হয়েছে!");
         }
 
         /**
@@ -4849,7 +4947,7 @@
                     canvasJson: canvasJson,
                     quoteParams: quoteParams,
                     activeFrame: this.activeFrame,
-                    createdAt: new Date().toLocaleDateString('bn-BD', {
+                    createdAt: new Date().toLocaleDateString(this.isEnglish ? 'en-US' : 'bn-BD', {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',
@@ -4919,10 +5017,14 @@
                     clearTimeout(loaderTimeout);
                     try {
                         // Auto-update Date text to TODAY's date when reusing a template
-                        const todayDate = new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
-                        const dateObj = this.canvas.getObjects().find(o => o.isDate || (o.customName && (o.customName.includes('তারিখ') || o.customName.includes('📅'))));
+                        const locale = this.isEnglish ? 'en-US' : 'bn-BD';
+                        const todayDate = new Date().toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+                        const dateObj = this.canvas.getObjects().find(o => o.isDate || (o.customName && (o.customName.includes('তারিখ') || o.customName.includes('Date') || o.customName.includes('📅'))));
                         if (dateObj) {
                             dateObj.set('text', todayDate);
+                            if (this.isEnglish && (dateObj.fontFamily === 'SolaimanLipi' || dateObj.fontFamily === 'Hind Siliguri')) {
+                                dateObj.set('fontFamily', 'Inter');
+                            }
                             if (typeof dateObj.initDimensions === 'function') dateObj.initDimensions();
                             dateObj.setCoords();
                         }

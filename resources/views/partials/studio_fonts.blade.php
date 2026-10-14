@@ -26,7 +26,11 @@ const STUDIO_FONTS = {
         'Hind Siliguri:300,400,500,600,700', 'Noto Sans Bengali:400,700', 
         'Baloo Da 2:400,500,600,700', 'Galada', 'Anek Bangla:400,600,800', 
         'Tiro Bangla', 'Mina', 'Noto Serif Bengali:400,700', 
-        'Atma:300,400,500,600,700', 'Noto Serif Bengali Condensed'
+        'Atma:300,400,500,600,700', 'Noto Serif Bengali Condensed',
+        'Inter:300,400,500,600,700,800', 'Roboto:300,400,500,700', 
+        'Montserrat:400,500,600,700,800', 'Oswald:400,500,600,700', 
+        'Poppins:400,500,600,700', 'Playfair Display:400,600,700,900', 
+        'Bebas Neue'
     ],
     local: [
         'Noto Serif Cond Thin', 'Noto Serif Cond ExtraLight', 'Noto Serif Cond Light', 

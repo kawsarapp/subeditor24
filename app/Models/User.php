@@ -302,6 +302,17 @@ class User extends Authenticatable
 		return $this->role === 'staff';
 	}
 
+	public function getEffectiveLanguage(): string
+	{
+		$settings = $this->parent_id ? ($this->parentUser?->settings ?? $this->settings) : $this->settings;
+		return ($settings?->target_language === 'en') ? 'en' : 'bn';
+	}
+
+	public function isEnglish(): bool
+	{
+		return $this->getEffectiveLanguage() === 'en';
+	}
+
 	public function hasPermission($permission): bool
     {
         // 1. Super Admin has unrestricted access to all system features

@@ -1283,13 +1283,14 @@ class SettingsController extends Controller
     {
         $user = Auth::user();
         $request->validate([
-            'name'         => 'required|string|max:255',
-            'email'        => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'phone'        => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
-            'brand_name'   => 'nullable|string|max:255',
-            'website_url'  => 'nullable|url|max:255',
-            'district'     => 'nullable|string|max:100',
-            'password'     => 'nullable|string|min:6|confirmed',
+            'name'            => 'required|string|max:255',
+            'email'           => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'phone'           => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
+            'brand_name'      => 'nullable|string|max:255',
+            'website_url'     => 'nullable|url|max:255',
+            'district'        => 'nullable|string|max:100',
+            'password'        => 'nullable|string|min:6|confirmed',
+            'target_language' => 'nullable|in:bn,en',
         ]);
 
         // ১. ইউজার মডেল ফিল্ড আপডেট
@@ -1315,6 +1316,9 @@ class SettingsController extends Controller
         }
         if ($request->filled('website_url')) {
             $settings->wp_url = trim($request->website_url);
+        }
+        if ($request->has('target_language')) {
+            $settings->target_language = $request->target_language ?: 'bn';
         }
         $settings->save();
 

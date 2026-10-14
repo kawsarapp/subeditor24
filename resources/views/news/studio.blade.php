@@ -223,6 +223,16 @@
                                 <option value="'Galada', cursive">Galada</option>
                                 <option value="'Anek Bangla', sans-serif">Anek Bangla</option>
                             </optgroup>
+
+                            <optgroup label="🔤 Modern English">
+                                <option value="'Inter', sans-serif">Inter</option>
+                                <option value="'Roboto', sans-serif">Roboto</option>
+                                <option value="'Montserrat', sans-serif">Montserrat</option>
+                                <option value="'Oswald', sans-serif">Oswald</option>
+                                <option value="'Poppins', sans-serif">Poppins</option>
+                                <option value="'Playfair Display', serif">Playfair Display</option>
+                                <option value="'Bebas Neue', cursive">Bebas Neue</option>
+                            </optgroup>
                         </select>
                         
                         <label class="label-title mt-4">📝 Edit Text</label>

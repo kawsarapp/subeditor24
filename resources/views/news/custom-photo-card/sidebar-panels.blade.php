@@ -93,6 +93,15 @@
                             @endforeach
                         </optgroup>
                     @endif
+                    <optgroup label="🔤 Modern English">
+                        <option value="Inter">Inter</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Oswald">Oswald</option>
+                        <option value="Poppins">Poppins</option>
+                        <option value="Playfair Display">Playfair Display</option>
+                        <option value="Bebas Neue">Bebas Neue</option>
+                    </optgroup>
                 </select>
             </div>
 
@@ -562,6 +571,15 @@
                             @endforeach
                         </optgroup>
                     @endif
+                    <optgroup label="🔤 Modern English">
+                        <option value="Inter">Inter</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Oswald">Oswald</option>
+                        <option value="Poppins">Poppins</option>
+                        <option value="Playfair Display">Playfair Display</option>
+                        <option value="Bebas Neue">Bebas Neue</option>
+                    </optgroup>
                 </select>
             </div>
 

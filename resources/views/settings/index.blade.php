@@ -107,6 +107,13 @@
                                class="w-full bg-white border border-gray-300 text-gray-900 px-3.5 py-2.5 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
                     </div>
                     <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">পছন্দের ভাষা / Language Preference</label>
+                        <select name="target_language" class="w-full bg-white border border-gray-300 text-gray-900 px-3.5 py-2.5 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-semibold">
+                            <option value="bn" {{ ($settings->target_language ?? 'bn') == 'bn' ? 'selected' : '' }}>বাংলা (Bengali - Default)</option>
+                            <option value="en" {{ ($settings->target_language ?? '') == 'en' ? 'selected' : '' }}>English (ইংরেজি)</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">নতুন পাসওয়ার্ড (Optional)</label>
                         <input type="password" name="password" placeholder="পরিবর্তন না করতে চাইলে ফাঁকা রাখুন..." 
                                class="w-full bg-white border border-gray-300 text-gray-900 px-3.5 py-2.5 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm">

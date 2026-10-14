@@ -7,6 +7,11 @@
 
     function getBanglaDate() {
         const date = new Date();
+        const lang = window.userLanguage || (typeof userSettings !== 'undefined' ? userSettings.language : 'bn');
+        if (lang === 'en') {
+            const enMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            return `${date.getDate()} ${enMonths[date.getMonth()]}, ${date.getFullYear()}`;
+        }
         const months = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
         const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
         const convert = (num) => num.toString().split('').map(d => banglaDigits[d] || d).join('');
@@ -16,7 +21,9 @@
     function addDateText() {
         const oldDate = canvas.getObjects().find(o => o.isDate);
         if(oldDate) canvas.remove(oldDate);
-        const dateText = new fabric.Text(getBanglaDate(), { left: 50, top: 50, fontSize: 30, fill: '#fff', fontFamily: 'Hind Siliguri', backgroundColor: '#d90429', padding: 10, isDate: true });
+        const lang = window.userLanguage || (typeof userSettings !== 'undefined' ? userSettings.language : 'bn');
+        const dateFont = (lang === 'en') ? 'Inter' : 'Hind Siliguri';
+        const dateText = new fabric.Text(getBanglaDate(), { left: 50, top: 50, fontSize: 30, fill: '#fff', fontFamily: dateFont, backgroundColor: '#d90429', padding: 10, isDate: true });
         canvas.add(dateText); canvas.bringToFront(dateText);
     }
 

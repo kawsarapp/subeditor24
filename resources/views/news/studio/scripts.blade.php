@@ -35,7 +35,8 @@
     var userSettings = {
         logo: {!! json_encode($settings->logo_url ?? null) !!},
         template: 'custom_png',
-        font: savedPrefs.font || dbPrefs?.font || "'Hind Siliguri', sans-serif",
+        language: "{{ auth()->user()?->getEffectiveLanguage() ?? 'bn' }}",
+        font: savedPrefs.font || dbPrefs?.font || ("{{ auth()->user()?->getEffectiveLanguage() ?? 'bn' }}" === 'en' ? "'Inter', sans-serif" : "'Hind Siliguri', sans-serif"),
         color: savedPrefs.color || dbPrefs?.color || '#ffffff',
         bg: savedPrefs.bg || dbPrefs?.bg || '',
         size: savedPrefs.size || dbPrefs?.size || 60,
@@ -792,7 +793,27 @@
     function addImageOnCanvas(input) { if (input.files && input.files[0]) { const r = new FileReader(); r.onload = function (e) { fabric.Image.fromURL(e.target.result, function(img) { img.scaleToWidth(300); canvas.add(img); canvas.centerObject(img); canvas.setActiveObject(img); }); }; r.readAsDataURL(input.files[0]); } }
     function deleteActive() { const obj = canvas.getActiveObject(); if (obj) canvas.remove(obj); }
     function addProfileLogo(url) { fabric.Image.fromURL(url, function(img) { img.scaleToWidth(150); img.set({ left: 880, top: 50 }); canvas.add(img); canvas.bringToFront(img); }, { crossOrigin: "anonymous" }); }
-    function addDateText() { const oldDate = canvas.getObjects().find(o => o.isDate); if(oldDate) canvas.remove(oldDate); const date = new Date(); const months = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"]; const convert = (num) => num.toString().split('').map(d => ['০','১','২','৩','৪','৫','৬','৭','৮','৯'][d]||d).join(''); const dateStr = `${convert(date.getDate())} ${months[date.getMonth()]}, ${convert(date.getFullYear())}`; const dateText = new fabric.Text(dateStr, { left: 50, top: 50, fontSize: 24, fill: '#fff', fontFamily: 'Hind Siliguri', backgroundColor: '#d90429', padding: 8, isDate: true }); canvas.add(dateText); canvas.bringToFront(dateText); }
+    function addDateText() {
+        const oldDate = canvas.getObjects().find(o => o.isDate);
+        if(oldDate) canvas.remove(oldDate);
+        const date = new Date();
+        const isEn = (userSettings.language === 'en');
+        let dateStr = '';
+        let dateFont = 'Hind Siliguri';
+        if (isEn) {
+            const enMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            dateStr = `${date.getDate()} ${enMonths[date.getMonth()]}, ${date.getFullYear()}`;
+            dateFont = 'Inter';
+        } else {
+            const bnMonths = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+            const convert = (num) => num.toString().split('').map(d => ['০','১','২','৩','৪','৫','৬','৭','৮','৯'][d]||d).join('');
+            dateStr = `${convert(date.getDate())} ${bnMonths[date.getMonth()]}, ${convert(date.getFullYear())}`;
+            dateFont = 'Hind Siliguri';
+        }
+        const dateText = new fabric.Text(dateStr, { left: 50, top: 50, fontSize: 24, fill: '#fff', fontFamily: dateFont, backgroundColor: '#d90429', padding: 8, isDate: true });
+        canvas.add(dateText);
+        canvas.bringToFront(dateText);
+    }
     function setBackgroundImage(input) { if (input.files && input.files[0]) { const r = new FileReader(); r.onload = function (e) { fabric.Image.fromURL(e.target.result, function(img) { setupMainImage(img); saveHistory(); }); }; r.readAsDataURL(input.files[0]); } }
     function addCustomFrame(input) { if (input.files && input.files[0]) { const r = new FileReader(); r.onload = function (e) { applyAdminTemplate(e.target.result, 'bottom'); }; r.readAsDataURL(input.files[0]); } }
     function removeFrame() { if(frameObj) { canvas.remove(frameObj); frameObj = null; } userSettings.frameUrl = null; savePreference('frameUrl', null); saveHistory(); }
