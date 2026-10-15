@@ -180,7 +180,7 @@ class FacebookPageController extends Controller
             // ৩. ইউজারের সকল Facebook Pages ও পার্মানেন্ট Page Access Token সংগ্রহ
             $pagesRes = Http::withoutVerifying()->timeout(15)
                 ->get('https://graph.facebook.com/v19.0/me/accounts', [
-                    'fields'       => 'id,name,access_token,category,picture{url},tasks,is_published',
+                    'fields'       => 'id,name,access_token,picture{url},tasks,is_published',
                     'limit'        => 100,
                     'access_token' => $longLivedUserToken,
                 ]);
@@ -286,7 +286,7 @@ class FacebookPageController extends Controller
             // ১. চেষ্টা করি /me/accounts (User Access Token ধরে)
             $response = Http::withoutVerifying()->timeout(15)
                 ->get('https://graph.facebook.com/v19.0/me/accounts', [
-                    'fields'       => 'id,name,access_token,category,picture{url}',
+                    'fields'       => 'id,name,access_token,picture{url}',
                     'access_token' => $token,
                 ]);
 
@@ -296,13 +296,16 @@ class FacebookPageController extends Controller
             if (!$response->successful() || empty($data['data'])) {
                 $pageRes = Http::withoutVerifying()->timeout(15)
                     ->get('https://graph.facebook.com/v19.0/me', [
-                        'fields'       => 'id,name,picture{url},category',
+                        'fields'       => 'id,name,picture{url}',
+                        'metadata'     => 1,
                         'access_token' => $token,
                     ]);
 
                 $singleData = $pageRes->json();
+                $nodeType = $singleData['metadata']['type'] ?? null;
+                $isExplicitUser = ($nodeType === 'user');
 
-                if ($pageRes->successful() && isset($singleData['id'])) {
+                if ($pageRes->successful() && isset($singleData['id']) && !$isExplicitUser) {
                     return response()->json([
                         'success' => true,
                         'pages'   => [[
@@ -310,7 +313,6 @@ class FacebookPageController extends Controller
                             'name'         => $singleData['name'] ?? 'Facebook Page',
                             'access_token' => $token,
                             'picture'      => $singleData['picture']['data']['url'] ?? null,
-                            'category'     => $singleData['category'] ?? 'Page',
                         ]],
                     ]);
                 }
@@ -349,6 +351,15 @@ class FacebookPageController extends Controller
                     ]);
                 }
 
+                // ইউজার টোকেন কিন্তু পেজ পারমিশন না থাকলে স্পষ্ট বাংলা গাইডলাইন
+                if ($isExplicitUser || (isset($singleData['id']) && empty($data['data']))) {
+                    $userName = $singleData['name'] ?? 'Facebook User';
+                    return response()->json([
+                        'success' => false,
+                        'message' => "⚠️ আপনি \"{$userName}\" এর ব্যক্তিগত ইউজার টোকেন (User Token) পেস্ট করেছেন। পেজ কানেক্ট করতে হলে Graph API Explorer-এ 'User or Page' ড্রপডাউন থেকে আপনার পেজটি নির্বাচন করে Page Access Token কপি করুন, অথবা টোকেন তৈরির সময় 'pages_show_list', 'pages_read_engagement', 'pages_manage_posts' পারমিশন দিন।"
+                    ]);
+                }
+
                 $errMsg = $data['error']['message'] ?? $singleData['error']['message'] ?? 'কোনো পেজ পাওয়া যায়নি। টোকেনটি সঠিক কিনা এবং পেজ পারমিশন আছে কিনা যাচাই করুন।';
                 return response()->json(['success' => false, 'message' => '❌ ' . $errMsg]);
             }
@@ -360,7 +371,6 @@ class FacebookPageController extends Controller
                     'name'         => $p['name'],
                     'access_token' => $p['access_token'] ?? $token,
                     'picture'      => $p['picture']['data']['url'] ?? null,
-                    'category'     => $p['category'] ?? 'Page',
                 ];
             }
 
