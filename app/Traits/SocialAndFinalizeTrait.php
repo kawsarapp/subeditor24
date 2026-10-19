@@ -51,8 +51,18 @@ trait SocialAndFinalizeTrait
         // 🔥 চেক করা হচ্ছে পোস্টটি স্টুডিও (Design) থেকে এসেছে কি না
         $isFromStudio = isset($this->customData['social_image']);
 
+        // 🔥 Studio Publish Modal এ ইউজার যে specific page IDs সিলেক্ট করেছে
+        $selectedPageIds = isset($this->customData['selected_fb_page_ids'])
+            ? array_map('intval', (array) $this->customData['selected_fb_page_ids'])
+            : [];
+
+        // ফেসবুকে পোস্ট (selected pages অথবা সব active pages)
+        $skipFb = $this->customData['skip_fb'] ?? false;
+        $hasActiveFbPages = \App\Models\FacebookPage::where('user_id', $settings->user_id)->where('is_active', true)->exists();
+        $shouldPostFb = ($settings->post_to_fb || $hasActiveFbPages || !empty($selectedPageIds)) && !$skipFb;
+
         // 🟢 শুধুমাত্র স্টুডিও থেকে আসলে সোশ্যাল মিডিয়ায় পোস্ট হবে
-        if (!$skipSocial && $isFromStudio && ($settings->post_to_fb || $settings->post_to_telegram || $settings->post_to_twitter)) {
+        if (!$skipSocial && $isFromStudio && ($shouldPostFb || $settings->post_to_telegram || $settings->post_to_twitter)) {
 
             $imageToPost = $socialImage;
             Log::info("✨ Studio Post Detected. Sending Design to Social Media.");
@@ -70,16 +80,6 @@ trait SocialAndFinalizeTrait
 
             $newsLink      = $publishedUrl ?: ($news->target_post_url ?: ($news->live_url ?: $news->original_link));
             $captionToPost = ($this->customData['social_caption'] ?? $finalTitle) . (!empty($hashtags) ? "\n\n" . $hashtags : "");
-
-            // 🔥 Studio Publish Modal এ ইউজার যে specific page IDs সিলেক্ট করেছে
-            $selectedPageIds = isset($this->customData['selected_fb_page_ids'])
-                ? array_map('intval', (array) $this->customData['selected_fb_page_ids'])
-                : [];
-
-            // ফেসবুকে পোস্ট (selected pages অথবা সব active pages)
-            $skipFb = $this->customData['skip_fb'] ?? false;
-            $hasActiveFbPages = \App\Models\FacebookPage::where('user_id', $settings->user_id)->where('is_active', true)->exists();
-            $shouldPostFb = ($settings->post_to_fb || $hasActiveFbPages) && !$skipFb;
 
             if ($shouldPostFb) {
                 $customFirstComment = $this->customData['first_comment'] ?? null;
@@ -105,6 +105,21 @@ trait SocialAndFinalizeTrait
                     $status = $r['success'] ? '✅' : '❌';
                     Log::info("{$status} FB [{$r['page_name']}]: " . ($r['message'] ?? 'OK'));
                 }
+
+                // 🔥 Alert User & Admin if any Facebook Page failed
+                $failedPages = collect($fbResults)->where('success', false);
+                if ($failedPages->isNotEmpty()) {
+                    $failedSummary = $failedPages->map(fn($p) => ($p['page_name'] ?? 'Page') . ': ' . ($p['message'] ?? 'Failed'))->implode(' | ');
+                    \App\Services\SystemAlertService::notifyIssue(
+                        $user,
+                        "ফেসবুক পেজ পোস্ট ত্রুটি",
+                        "নিউজ '{$finalTitle}' এর ফেসবুক পোস্ট ব্যর্থ হয়েছে: {$failedSummary}",
+                        'social',
+                        $fbOverallSuccess ? 'warning' : 'error',
+                        route('news.studio', $news->id),
+                        ['news_id' => $news->id, 'failures' => $failedPages->values()->toArray()]
+                    );
+                }
             }
 
             // টেলিগ্রামে পোস্ট
@@ -114,6 +129,18 @@ trait SocialAndFinalizeTrait
                     'tg_status' => $tgResult['success'] ? 'success' : 'failed',
                     'tg_error'  => $tgResult['message'] ?? null,
                 ]);
+
+                if (!$tgResult['success']) {
+                    \App\Services\SystemAlertService::notifyIssue(
+                        $user,
+                        "টেলিগ্রাম পোস্ট ব্যর্থ",
+                        "নিউজ '{$finalTitle}' টেলিগ্রামে পোস্ট হতে পারেনি: " . ($tgResult['message'] ?? 'ত্রুটি'),
+                        'social',
+                        'error',
+                        route('news.studio', $news->id),
+                        ['news_id' => $news->id, 'error' => $tgResult['message'] ?? null]
+                    );
+                }
             }
 
             // টুইটারে পোস্ট
@@ -122,7 +149,17 @@ trait SocialAndFinalizeTrait
                 if ($twitterResult['success']) {
                     Log::info("✅ Twitter Post Success for News #{$news->id}");
                 } else {
-                    Log::error("❌ Twitter Post Failed for News #{$news->id}: " . ($twitterResult['message'] ?? 'Unknown Error'));
+                    $twError = $twitterResult['message'] ?? 'Unknown Error';
+                    Log::error("❌ Twitter Post Failed for News #{$news->id}: " . $twError);
+                    \App\Services\SystemAlertService::notifyIssue(
+                        $user,
+                        "টুইটার (X) পোস্ট ব্যর্থ",
+                        "নিউজ '{$finalTitle}' টুইটারে পোস্ট হতে পারেনি: {$twError}",
+                        'social',
+                        'error',
+                        route('news.studio', $news->id),
+                        ['news_id' => $news->id, 'error' => $twError]
+                    );
                 }
             }
 
@@ -137,11 +174,24 @@ trait SocialAndFinalizeTrait
                 }
             }
         } else {
+            if ($isFromStudio && !$skipFb && !$hasActiveFbPages && empty($selectedPageIds) && !$settings->post_to_fb) {
+                \App\Services\SystemAlertService::notifyIssue(
+                    $user,
+                    "ফেসবুক অটো-পোস্ট সক্রিয় নেই",
+                    "নিউজ '{$finalTitle}' স্টুডিও থেকে পাঠানো হয়েছে, কিন্তু কোনো সক্রিয় ফেসবুক পেজ না থাকায় সোশ্যাল মিডিয়াতে পোস্ট করা যায়নি। Settings থেকে ফেসবুক পেজ অন বা যুক্ত করুন।",
+                    'social',
+                    'warning',
+                    route('settings.index'),
+                    ['news_id' => $news->id]
+                );
+            }
             if (!$isFromStudio) {
                 Log::info("⏭️ Regular News Post. Skipping Social Media completely.");
             }
         }
 
-        try { $user->notify(new PostPublishedNotification($finalTitle)); } catch (\Exception $e) {}
+        try { $user->notify(new PostPublishedNotification($finalTitle)); } catch (\Exception $e) {
+            Log::warning("⚠️ PostPublishedNotification failed: " . $e->getMessage());
+        }
     }
 }

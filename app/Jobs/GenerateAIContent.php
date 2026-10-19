@@ -160,6 +160,16 @@ class GenerateAIContent implements ShouldQueue
                 'ai_content' => null
             ]);
             
+            \App\Services\SystemAlertService::notifyIssue(
+                $user,
+                "AI রিরাইট ব্যর্থ হয়েছে",
+                "নিউজ '{$news->title}' AI রিরাইট করা যায়নি। কারণ: {$userMessage}",
+                'ai',
+                'warning',
+                route('news.drafts'),
+                ['news_id' => $news->id, 'error' => $msg]
+            );
+
             $this->fail($e);
         }
     }

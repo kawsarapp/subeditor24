@@ -55,4 +55,32 @@
             <button onclick="document.getElementById('flash-validation').remove()" class="text-white/80 hover:text-white p-1 transition"><i class="fa-solid fa-xmark"></i></button>
         </div>
     @endif
+
+    @auth
+        @php
+            $recentUnreadCritical = auth()->user()->unreadNotifications()
+                ->where(function($q) {
+                    $q->where('data->severity', 'critical')
+                      ->orWhere('data->severity', 'error')
+                      ->orWhere('data->type', 'error')
+                      ->orWhere('data->type', 'danger');
+                })
+                ->where('created_at', '>=', now()->subHours(24))
+                ->latest()
+                ->first();
+        @endphp
+        @if($recentUnreadCritical && !session('error'))
+            <div id="flash-unread-critical" class="flash-message pointer-events-auto bg-rose-600 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 min-w-[320px] border border-rose-500 backdrop-blur-md">
+                <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-extrabold text-xs tracking-wide uppercase text-rose-200">{{ $recentUnreadCritical->data['title'] ?? 'সিস্টেম সতর্কতা' }}</h4>
+                    <p class="text-xs font-semibold text-white mt-0.5">{{ Str::limit($recentUnreadCritical->data['message'] ?? 'একটি সমস্যা দেখা দিয়েছে', 90) }}</p>
+                </div>
+                <a href="{{ $recentUnreadCritical->data['link'] ?? route('notifications.read') }}" class="text-[10px] bg-white/20 hover:bg-white text-white hover:text-rose-700 px-2.5 py-1 rounded-lg font-bold transition">ভিউ</a>
+                <button onclick="document.getElementById('flash-unread-critical').remove()" class="text-white/80 hover:text-white p-1 transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        @endif
+    @endauth
 </div>

@@ -125,20 +125,46 @@ class ProcessNewsPost implements ShouldQueue
             }
 
             // Update Database Immediately for Reporters & Staff
-            if ($wpSuccess || $laravelSuccess) {
-                $news->update([
-                    'is_posted'       => 1,
-                    'target_post_url' => $publishedUrl,
-                    'wp_post_id'      => $remotePostId,
-                    'status'          => 'published',
-                    'error_message'   => null,
-                ]);
+            if (!$socialOnly) {
+                if ($wpSuccess || $laravelSuccess) {
+                    $news->update([
+                        'is_posted'       => 1,
+                        'target_post_url' => $publishedUrl,
+                        'wp_post_id'      => $remotePostId,
+                        'status'          => 'published',
+                        'error_message'   => null,
+                    ]);
+                } else {
+                    $failReason = ($apiResult['error'] ?? null) ?: (($wpResult['error'] ?? null) ?: 'ওয়েবসাইটে পোস্ট করা সম্ভব হয়নি। সেটিংস ও কানেকশন চেক করুন।');
+                    $news->update([
+                        'status'        => 'failed',
+                        'error_message' => $failReason,
+                    ]);
+                    \App\Services\SystemAlertService::notifyIssue(
+                        $adminUser,
+                        "ওয়েবসাইটে নিউজ প্রকাশ ব্যর্থ",
+                        "নিউজ '{$finalTitle}' ওয়েবসাইটে প্রকাশ করা যায়নি: {$failReason}",
+                        'publishing',
+                        'error',
+                        route('news.drafts'),
+                        ['news_id' => $news->id, 'reason' => $failReason]
+                    );
+                }
             }
 
             // --- 3. Finalize & Social --- (এখানেও $adminUser পাস করা হয়েছে)
             try {
                 $this->executeFinalization($news, $adminUser, $settings, $wpSuccess, $laravelSuccess, $socialOnly, $skipSocial, $remotePostId, $publishedUrl, $websiteImage, $socialImage, $hashtags, $finalTitle, $socialPoster, $cardGenerator);
             } catch (\Throwable $finalizeException) {
+                \App\Services\SystemAlertService::notifyIssue(
+                    $adminUser,
+                    "সোশ্যাল মিডিয়া / ফাইনাল প্রসেসিং ত্রুটি",
+                    "নিউজ '{$finalTitle}' সোশ্যাল মিডিয়ায় পাঠানোর সময় সমস্যা হয়েছে: " . $finalizeException->getMessage(),
+                    'social',
+                    'error',
+                    route('news.studio', $news->id),
+                    ['news_id' => $news->id, 'error' => $finalizeException->getMessage()]
+                );
                 if ($wpSuccess || $laravelSuccess) {
                     Log::warning("⚠️ ProcessNewsPost Finalization/Cleanup Error for News #{$news->id} (Content already published): " . $finalizeException->getMessage());
                 } else {
@@ -150,10 +176,21 @@ class ProcessNewsPost implements ShouldQueue
             Log::error("ProcessNewsPost Job Exception: " . $e->getMessage());
 
             $news = NewsItem::withoutGlobalScopes()->find($this->newsId);
+            $user = User::find($this->userId);
             if ($news && ($news->is_posted || $news->status === 'published')) {
                 Log::warning("⚠️ News #{$news->id} is already published. Suppressing job failure state.");
                 return;
             }
+
+            \App\Services\SystemAlertService::notifyIssue(
+                $user,
+                "নিউজ পোস্ট ক্র্যাশ ত্রুটি",
+                "নিউজ #{$this->newsId} পাবলিশ করার সময় অপ্রত্যাশিত ক্র্যাশ ঘটেছে: " . $e->getMessage(),
+                'publishing',
+                'critical',
+                route('news.drafts'),
+                ['news_id' => $this->newsId, 'trace' => $e->getTraceAsString()]
+            );
 
             $this->fail($e);
         }
@@ -162,12 +199,23 @@ class ProcessNewsPost implements ShouldQueue
     public function failed(\Throwable $exception)
     {
         $news = NewsItem::withoutGlobalScopes()->find($this->newsId);
+        $user = User::find($this->userId);
         if ($news) {
             if ($news->is_posted || $news->status === 'published') {
                 Log::warning("⚠️ ProcessNewsPost failed hook called for already published News #{$this->newsId}: " . $exception->getMessage());
                 return;
             }
-            $news->update(['status' => 'failed', 'error_message' => 'Action Error: ' . $exception->getMessage()]);
+            $errMsg = 'Action Error: ' . $exception->getMessage();
+            $news->update(['status' => 'failed', 'error_message' => $errMsg]);
+            \App\Services\SystemAlertService::notifyIssue(
+                $user,
+                "নিউজ পাবলিশিং জব ব্যর্থ",
+                "নিউজ '{$news->title}' প্রসেস করার ব্যাকগ্রাউন্ড জবটি ব্যর্থ হয়েছে: {$errMsg}",
+                'publishing',
+                'critical',
+                route('news.drafts'),
+                ['news_id' => $news->id, 'trace' => $exception->getTraceAsString()]
+            );
         }
     }
 }

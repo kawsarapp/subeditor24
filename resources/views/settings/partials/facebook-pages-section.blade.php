@@ -77,7 +77,7 @@
             </div>
             <div class="shrink-0 self-start sm:self-auto">
                 <label class="inline-flex items-center gap-2 cursor-pointer bg-slate-50 hover:bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 transition">
-                    <input type="checkbox" id="masterFbCheckbox" {{ ($settings->post_to_fb ?? true) ? 'checked' : '' }} onchange="toggleMasterFbPosting(this.checked)" class="form-checkbox text-blue-600 rounded w-4 h-4 cursor-pointer">
+                    <input type="checkbox" name="post_to_fb" value="1" id="masterFbCheckbox" {{ ($settings->post_to_fb ?? true) ? 'checked' : '' }} onchange="toggleMasterFbPosting(this.checked)" class="form-checkbox text-blue-600 rounded w-4 h-4 cursor-pointer">
                     <span>অটো-পোস্ট সক্রিয় রাখুন</span>
                 </label>
             </div>

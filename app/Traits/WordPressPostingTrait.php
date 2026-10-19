@@ -33,11 +33,31 @@ trait WordPressPostingTrait
                 Log::info("✅ WP Action Success: ID {$result['remote_id']} | Link: {$result['published_url']}");
             } else {
                 $errorMsg = $postResult['message'] ?? 'Unknown WP Error';
+                $result['error'] = $errorMsg;
                 Log::error("❌ WP Action Failed: " . $errorMsg);
+                \App\Services\SystemAlertService::notifyIssue(
+                    $user,
+                    "WordPress পোস্টিং ব্যর্থ",
+                    "নিউজ '{$finalTitle}' WordPress সাইটে পোস্ট হতে পারেনি। কারণ: {$errorMsg}",
+                    'publishing',
+                    'error',
+                    route('news.drafts'),
+                    ['news_id' => $news->id, 'wp_url' => $settings->wp_url, 'error' => $errorMsg]
+                );
                 if (!$settings->post_to_laravel) throw new \Exception("WP Failed: " . $errorMsg);
             }
         } catch (\Exception $e) {
             Log::error("❌ WP Exception: " . $e->getMessage());
+            $result['error'] = $e->getMessage();
+            \App\Services\SystemAlertService::notifyIssue(
+                $user,
+                "WordPress কানেকশন ত্রুটি",
+                "নিউজ '{$finalTitle}' WordPress এ আপলোড করার সময় ত্রুটি ঘটেছে: {$e->getMessage()}",
+                'publishing',
+                'error',
+                route('news.drafts'),
+                ['news_id' => $news->id, 'wp_url' => $settings->wp_url, 'error' => $e->getMessage()]
+            );
             if (!$settings->post_to_laravel) throw $e;
         }
 

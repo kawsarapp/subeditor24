@@ -191,9 +191,19 @@
                     <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     <span>AI Writing...</span>
                 </div>
+            @elseif($item->status == 'failed')
+                <div class="bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm border border-rose-400" title="{{ $item->error_message }}">
+                    <span>❌ Failed</span>
+                </div>
             @else
                 <div class="bg-slate-900/80 dark:bg-slate-950/80 backdrop-blur-md text-white/90 text-[10px] font-bold px-2.5 py-0.5 rounded-md border border-white/15 shadow-sm">
                     RAW NEWS
+                </div>
+            @endif
+
+            @if($item->fb_status == 'failed')
+                <div class="bg-rose-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm border border-rose-400" title="{{ $item->fb_error }}">
+                    <i class="fa-brands fa-facebook"></i> <span>FB Failed</span>
                 </div>
             @endif
         </div>

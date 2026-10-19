@@ -41,6 +41,23 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // 🚨 Report Unhandled Critical Exceptions (Zero Silent Crashes)
+        $exceptions->report(function (Throwable $e) {
+            // Skip common benign user actions (404, validation errors, session timeout)
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException ||
+                $e instanceof \Illuminate\Auth\AuthenticationException ||
+                $e instanceof \Illuminate\Validation\ValidationException ||
+                $e instanceof \Illuminate\Session\TokenMismatchException) {
+                return;
+            }
+
+            try {
+                \App\Services\SystemAlertService::notifyGlobalException($e, request());
+            } catch (\Throwable $alertEx) {
+                // Fail-safe
+            }
+        });
+
         // 🔥 লাইভ সার্ভারে এরর হ্যান্ডলিং
         $exceptions->render(function (Throwable $e, Request $request) {
             // যদি APP_DEBUG=true থাকে, তবে ডিফল্ট এরর পেজ দেখাবে

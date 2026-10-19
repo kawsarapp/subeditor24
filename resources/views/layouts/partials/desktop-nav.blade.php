@@ -345,6 +345,79 @@
                         <i id="darkModeIcon" class="fa-solid fa-moon"></i>
                     </button>
 
+                    {{-- 🔔 Global Notification Bell & Alert Center --}}
+                    @php
+                        $userNotifications = auth()->user()->notifications()->take(10)->get();
+                        $unreadNotificationsCount = auth()->user()->unreadNotifications()->count();
+                        $hasCriticalAlert = auth()->user()->unreadNotifications()->where(function($q) {
+                            $q->where('data->severity', 'critical')
+                              ->orWhere('data->severity', 'error')
+                              ->orWhere('data->type', 'error')
+                              ->orWhere('data->type', 'danger');
+                        })->exists();
+                    @endphp
+                    <div class="relative shrink-0" id="notificationDropdownContainer">
+                        <button type="button" onclick="toggleNotificationDropdown(event)" id="notificationBellBtn" class="relative w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs transition border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm shrink-0" title="বিজ্ঞপ্তি ও সিস্টেম সতর্কতা">
+                            <i class="fa-solid fa-bell text-xs"></i>
+                            @if($unreadNotificationsCount > 0)
+                                <span class="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full text-[9px] font-black text-white {{ $hasCriticalAlert ? 'bg-rose-600 animate-pulse' : 'bg-indigo-600' }}">
+                                    {{ $unreadNotificationsCount > 9 ? '9+' : $unreadNotificationsCount }}
+                                </span>
+                            @endif
+                        </button>
+
+                        <div id="notificationDropdownMenu" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200/90 dark:border-slate-800 py-2.5 z-[110] overflow-hidden">
+                            <div class="px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-extrabold text-xs text-slate-800 dark:text-white">বিজ্ঞপ্তি ও সতর্কতা</span>
+                                    @if($unreadNotificationsCount > 0)
+                                        <span class="text-[10px] font-black px-2 py-0.5 rounded-full {{ $hasCriticalAlert ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400' }}">
+                                            {{ $unreadNotificationsCount }} টি নতুন
+                                        </span>
+                                    @endif
+                                </div>
+                                @if($unreadNotificationsCount > 0)
+                                    <button type="button" onclick="markAllNotificationsRead(event)" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 transition cursor-pointer">
+                                        সব পঠিত মার্ক করুন
+                                    </button>
+                                @endif
+                            </div>
+
+                            <div class="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+                                @forelse($userNotifications as $notif)
+                                    @php
+                                        $nData = $notif->data ?? [];
+                                        $nSeverity = $nData['severity'] ?? ($nData['type'] ?? 'info');
+                                        $isUnread = is_null($notif->read_at);
+                                        $nLink = $nData['link'] ?? ($nData['url'] ?? null);
+                                        $nTitle = $nData['title'] ?? ($nSeverity === 'error' ? 'সমস্যা সতর্কতা' : 'বিজ্ঞপ্তি');
+                                        $nMsg = $nData['message'] ?? '';
+                                        $nIcon = $nData['icon'] ?? ($nSeverity === 'error' || $nSeverity === 'critical' ? 'fa-solid fa-triangle-exclamation text-rose-500' : ($nSeverity === 'warning' ? 'fa-solid fa-circle-exclamation text-amber-500' : 'fa-solid fa-bell text-indigo-500'));
+                                    @endphp
+                                    <a href="{{ $nLink ?: 'javascript:void(0)' }}" class="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition {{ $isUnread ? ($nSeverity === 'error' || $nSeverity === 'critical' ? 'bg-rose-50/50 dark:bg-rose-950/20' : 'bg-indigo-50/30 dark:bg-indigo-950/20') : '' }}">
+                                        <div class="flex items-start gap-2.5">
+                                            <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 {{ $nSeverity === 'error' || $nSeverity === 'critical' ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400' : ($nSeverity === 'warning' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400' : 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400') }}">
+                                                <i class="{{ $nIcon }} text-xs"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center justify-between gap-1">
+                                                    <p class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ $nTitle }}</p>
+                                                    <span class="text-[9px] text-slate-400 whitespace-nowrap">{{ $notif->created_at->diffForHumans(null, true) }}</span>
+                                                </div>
+                                                <p class="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 line-clamp-2 leading-relaxed">{{ $nMsg }}</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="p-6 text-center text-slate-400 dark:text-slate-500">
+                                        <i class="fa-regular fa-bell-slash text-2xl mb-2 text-slate-300 dark:text-slate-600"></i>
+                                        <p class="text-xs font-medium">কোনো নতুন সতর্কতা বা বিজ্ঞপ্তি নেই।</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- PROFILE DROPDOWN WITH CREDITS INSIDE --}}
                     <div class="relative shrink-0">
                         <button id="userProfileBtn" onclick="toggleUserProfileDropdown(event)" class="relative flex items-center gap-1.5 p-1 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all cursor-pointer">
@@ -541,10 +614,41 @@ function toggleUserProfileDropdown(event) {
     }
     const toolsMenu = document.getElementById('toolsMenuDropdown');
     const profileMenu = document.getElementById('userProfileMenu');
+    const notifMenu = document.getElementById('notificationDropdownMenu');
     if (toolsMenu) toolsMenu.classList.add('hidden');
+    if (notifMenu) notifMenu.classList.add('hidden');
     if (profileMenu) {
         profileMenu.classList.toggle('hidden');
     }
+}
+
+function toggleNotificationDropdown(event) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    const toolsMenu = document.getElementById('toolsMenuDropdown');
+    const profileMenu = document.getElementById('userProfileMenu');
+    const notifMenu = document.getElementById('notificationDropdownMenu');
+    if (toolsMenu) toolsMenu.classList.add('hidden');
+    if (profileMenu) profileMenu.classList.add('hidden');
+    if (notifMenu) {
+        notifMenu.classList.toggle('hidden');
+    }
+}
+
+function markAllNotificationsRead(event) {
+    if (event) event.stopPropagation();
+    fetch('{{ route("notifications.read") }}', {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    }).then(() => {
+        window.location.reload();
+    }).catch(() => {
+        window.location.reload();
+    });
 }
 
 document.addEventListener('click', function(event) {
@@ -558,6 +662,12 @@ document.addEventListener('click', function(event) {
     const profileBtn = document.getElementById('userProfileBtn');
     if (profileMenu && profileBtn && !profileMenu.contains(event.target) && !profileBtn.contains(event.target)) {
         profileMenu.classList.add('hidden');
+    }
+
+    const notifMenu = document.getElementById('notificationDropdownMenu');
+    const notifBtn = document.getElementById('notificationBellBtn');
+    if (notifMenu && notifBtn && !notifMenu.contains(event.target) && !notifBtn.contains(event.target)) {
+        notifMenu.classList.add('hidden');
     }
 });
 </script>

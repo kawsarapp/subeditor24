@@ -5,30 +5,28 @@
 {{-- 1. Style file import --}}
 @include('partials.studio_styles')
 
-<div class="w-full bg-white rounded-3xl border border-slate-200 shadow-xl flex flex-col font-bangla h-auto md:h-[calc(100vh-7rem)] min-h-0 md:min-h-[650px] overflow-hidden">
+<div class="w-full bg-white rounded-2xl md:rounded-3xl border border-slate-200 shadow-xl flex flex-col font-bangla h-[calc(100dvh-11.5rem)] md:h-[calc(100vh-7rem)] min-h-[560px] md:min-h-[650px] overflow-hidden">
     
     {{-- Header Section --}}
-    <div class="bg-white border-b border-gray-200 px-4 py-2 md:px-6 md:py-3 flex flex-col md:flex-row justify-between items-center shadow-sm z-30 shrink-0 gap-3 md:gap-0">
-        <div class="flex items-center justify-between w-full md:w-auto gap-3">
-            <div class="flex items-center gap-3">
-                <a href="{{ route('news.index') }}" class="flex items-center gap-1 text-gray-500 hover:text-gray-800 transition font-bold text-sm bg-gray-100 px-2 py-1 rounded-lg">←</a>
-                <h1 class="text-lg md:text-xl font-bold text-gray-800 flex items-center gap-2 truncate">
-                    Studio
-                </h1>
-            </div>
+    <div class="bg-white border-b border-gray-200 px-3 py-2 md:px-6 md:py-3 flex items-center justify-between shadow-xs z-30 shrink-0 gap-2">
+        <div class="flex items-center gap-2 shrink-0">
+            <a href="{{ route('news.index') }}" class="flex items-center gap-1 text-gray-500 hover:text-gray-800 transition font-bold text-xs md:text-sm bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg" title="Back to news">←</a>
+            <h1 class="text-base md:text-xl font-bold text-gray-800 flex items-center gap-1.5">
+                <span>Studio</span>
+            </h1>
         </div>
        
-       <div class="flex flex-wrap justify-center md:justify-end gap-2 items-center w-full md:w-auto">
-            <button type="button" onclick="restoreSavedDesign()" class="btn btn-warning text-white px-2 py-1.5 rounded-lg text-xs" title="Restore"><i class="fas fa-undo"></i></button>
-            <button onclick="resetCanvas()" class="text-gray-500 hover:text-red-500 font-bold text-xs px-2 py-1.5 border border-gray-300 rounded-lg transition" title="Reset">↻</button>
-            <button onclick="saveCurrentDesign()" class="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-indigo-100 transition border border-indigo-200 shadow-sm" title="Save as default settings">💾 Default Save</button>
-            <button onclick="openSaveTemplateModal()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md transition flex items-center gap-1 cursor-pointer" title="Save as new custom template">
-                <i class="fa-solid fa-cloud-arrow-up text-xs"></i> <span>+ Save Template</span>
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 max-w-full justify-end">
+            <button type="button" onclick="restoreSavedDesign()" class="text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-1.5 rounded-lg text-xs font-bold transition shrink-0" title="Restore Saved Design"><i class="fas fa-undo"></i></button>
+            <button type="button" onclick="resetCanvas()" class="text-gray-500 hover:text-red-500 hover:bg-gray-100 font-bold text-xs px-2.5 py-1.5 border border-gray-300 rounded-lg transition shrink-0" title="Reset to Defaults">↻</button>
+            <button type="button" onclick="saveCurrentDesign()" class="bg-indigo-50 text-indigo-700 px-2.5 sm:px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-indigo-100 transition border border-indigo-200 shadow-xs shrink-0" title="Save as default settings">💾 <span class="hidden sm:inline">Default</span> Save</button>
+            <button type="button" onclick="openSaveTemplateModal()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-2.5 sm:px-3 py-1.5 rounded-lg font-bold text-xs shadow-xs transition flex items-center gap-1 cursor-pointer shrink-0" title="Save as new custom template">
+                <i class="fa-solid fa-cloud-arrow-up text-xs"></i> <span>+ Template</span>
             </button>
-            <button id="downloadBtn" onclick="downloadCard()" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow-md transition transform hover:-translate-y-0.5">📥 Down</button>
+            <button type="button" id="downloadBtn" onclick="downloadCard()" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2.5 sm:px-3 py-1.5 rounded-lg font-bold text-xs shadow-xs transition transform hover:-translate-y-0.5 shrink-0">📥 Down</button>
             
             {{-- 🔥 POST BUTTON calls the optimized modal opener --}}
-            <button onclick="openPublishModal()" class="bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-red-700 transition shadow-md border border-red-500">
+            <button type="button" onclick="openPublishModal()" class="bg-red-600 text-white px-3 sm:px-3.5 py-1.5 rounded-lg font-bold text-xs hover:bg-red-700 transition shadow-xs border border-red-500 shrink-0">
                 🚀 Post
             </button>
         </div>
@@ -37,12 +35,12 @@
     {{-- Main Workspace --}}
     <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
         {{-- Canvas Area --}}
-        <div id="workspace-container" class="order-1 md:order-2 w-full md:flex-1 h-[45vh] md:h-auto bg-gray-200 flex items-center justify-center overflow-hidden relative p-2 md:p-4 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] border-b md:border-b-0 md:border-l border-gray-300">
-            <div class="absolute bottom-2 right-2 md:bottom-6 md:right-6 flex bg-white/90 shadow-lg rounded-full px-3 py-1 gap-3 z-40 border border-gray-200 scale-90 md:scale-100 origin-bottom-right">
-               <button onclick="changeZoom(-0.1)" class="font-bold text-gray-600 hover:text-indigo-600 text-lg focus:outline-none">➖</button>
-               <span class="text-xs font-bold text-gray-400 pt-1 select-none" id="zoom-level">FIT</span>
-               <button onclick="changeZoom(0.1)" class="font-bold text-gray-600 hover:text-indigo-600 text-lg focus:outline-none">➕</button>
-               <button onclick="fitToScreen()" class="text-[10px] font-bold text-blue-500 hover:underline border-l pl-2 ml-1">⟲ Fit</button>
+        <div id="workspace-container" class="order-1 md:order-2 w-full md:flex-1 h-[38vh] sm:h-[42vh] md:h-auto min-h-[220px] bg-gray-200 flex items-center justify-center overflow-hidden relative p-2 md:p-4 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] border-b md:border-b-0 md:border-l border-gray-300 shrink-0 md:shrink">
+            <div class="absolute bottom-2 right-2 md:bottom-4 md:right-4 flex bg-white/95 shadow-md rounded-full px-2.5 py-0.5 md:px-3 md:py-1 gap-2 md:gap-3 z-30 border border-gray-200 scale-90 md:scale-100 origin-bottom-right">
+               <button type="button" onclick="changeZoom(-0.1)" class="font-bold text-gray-600 hover:text-indigo-600 text-base md:text-lg focus:outline-none">➖</button>
+               <span class="text-[11px] md:text-xs font-bold text-gray-500 pt-1 select-none" id="zoom-level">FIT</span>
+               <button type="button" onclick="changeZoom(0.1)" class="font-bold text-gray-600 hover:text-indigo-600 text-base md:text-lg focus:outline-none">➕</button>
+               <button type="button" onclick="fitToScreen()" class="text-[10px] font-bold text-blue-500 hover:underline border-l pl-2 ml-1">⟲ Fit</button>
            </div>
            
            {{-- 🔥 Preloader for Canvas --}}
@@ -50,21 +48,21 @@
                 <span class="text-indigo-600 font-bold animate-pulse">🖼️ Loading...</span>
            </div>
 
-           <div id="canvas-wrapper" class="shadow-2xl transition-transform duration-200 ease-out origin-center ring-4 md:ring-8 ring-white">
+           <div id="canvas-wrapper" class="shadow-2xl transition-transform duration-200 ease-out origin-center ring-4 md:ring-8 ring-white shrink-0">
                <canvas id="newsCanvas" width="1080" height="1080"></canvas>
            </div>
         </div>
 
         {{-- Sidebar --}}
-        <div class="order-2 md:order-1 w-full md:w-[400px] bg-white border-r border-gray-200 flex flex-col h-auto md:h-full z-20 shadow-xl font-bangla flex-1 md:flex-none overflow-hidden">
+        <div class="order-2 md:order-1 w-full md:w-[400px] bg-white border-r border-gray-200 flex flex-col h-full z-20 shadow-xl font-bangla flex-1 md:flex-none overflow-hidden min-h-0">
             <div class="flex border-b border-gray-200 bg-gray-50 shrink-0">
-                <button onclick="switchTab('design')" class="tab-btn active flex-1 py-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">Design</button>
-                <button onclick="switchTab('text')" class="tab-btn flex-1 py-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">Text</button>
-                <button onclick="switchTab('image')" class="tab-btn flex-1 py-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">Image</button>
-                <button onclick="switchTab('layers')" class="tab-btn flex-1 py-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">Layers</button>
+                <button type="button" data-tab="design" onclick="switchTab('design')" class="tab-btn active flex-1 py-2.5 md:py-3 text-[11px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">Design</button>
+                <button type="button" data-tab="text" onclick="switchTab('text')" class="tab-btn flex-1 py-2.5 md:py-3 text-[11px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">Text</button>
+                <button type="button" data-tab="image" onclick="switchTab('image')" class="tab-btn flex-1 py-2.5 md:py-3 text-[11px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">Image</button>
+                <button type="button" data-tab="layers" onclick="switchTab('layers')" class="tab-btn flex-1 py-2.5 md:py-3 text-[11px] md:text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-100 transition">Layers</button>
             </div>
 
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-4 pb-20 md:pb-5 bg-white">
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-3 md:p-4 pb-16 md:pb-5 bg-white min-h-0">
                 {{-- Design Tab --}}
                 <div id="tab-design" class="space-y-6">
                     

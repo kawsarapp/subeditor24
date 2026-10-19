@@ -123,4 +123,31 @@
     .label-title { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px; letter-spacing: 0.05em; }
     .layer-btn { background: white; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; font-size: 11px; transition: all 0.2s; }
     .layer-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+    /* =========================================================
+       Fabric.js Hidden Textarea Fix (Prevents Auto-Scroll Jump)
+       ========================================================= */
+    .canvas-container textarea,
+    .canvas-container textarea.fabric-textarea,
+    .fabric-textarea,
+    textarea[data-fabric-hiddentextarea] {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        outline: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        z-index: -9999 !important;
+        contain: strict !important;
+    }
+
+    #workspace-container {
+        touch-action: pan-x pan-y;
+        overscroll-behavior: contain;
+    }
 </style>

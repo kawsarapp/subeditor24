@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Support\Str;
+use App\Services\SystemAlertService;
 use App\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
@@ -93,6 +97,35 @@ class AppServiceProvider extends ServiceProvider
                     'message' => '⚠️ খুব দ্রুত লিঙ্ক ফেচ রিকোয়েস্ট পাঠানো হচ্ছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।'
                 ], 429);
             });
+        });
+
+        // 🚨 Global Queue Job Failure Listener (Zero Silent Failures)
+        Queue::failing(function (JobFailed $event) {
+            try {
+                $jobName = $event->job->resolveName();
+                $exception = $event->exception;
+                \Illuminate\Support\Facades\Log::critical("🚨 QUEUE JOB FAILED: {$jobName} - " . $exception->getMessage());
+
+                SystemAlertService::notifyIssue(
+                    null,
+                    "ব্যাকগ্রাউন্ড কিউ জব ব্যর্থ ({$jobName})",
+                    "একটি ব্যাকগ্রাউন্ড টাস্ক ({$jobName}) ব্যর্থ হয়েছে: " . $exception->getMessage(),
+                    'system',
+                    'critical',
+                    null,
+                    [
+                        'job'        => $jobName,
+                        'connection' => $event->connectionName,
+                        'queue'      => $event->job->getQueue(),
+                        'error'      => $exception->getMessage(),
+                        'trace'      => Str::limit($exception->getTraceAsString(), 600)
+                    ],
+                    true,
+                    true
+                );
+            } catch (\Throwable $queueFailEx) {
+                // Fail-safe
+            }
         });
     }
 }

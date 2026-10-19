@@ -57,10 +57,78 @@
     // ==========================================
     // 3. Canvas initialization & core functions
     // ==========================================
+
+    // Monkey-patch Fabric.js hidden textarea to prevent page auto-scroll on text click
+    if (typeof fabric !== 'undefined' && fabric.IText) {
+        const origInitHiddenTextarea = fabric.IText.prototype.initHiddenTextarea;
+        fabric.IText.prototype.initHiddenTextarea = function() {
+            origInitHiddenTextarea.call(this);
+            if (this.hiddenTextarea) {
+                this.hiddenTextarea.style.position = 'fixed';
+                this.hiddenTextarea.style.top = '0px';
+                this.hiddenTextarea.style.left = '0px';
+                this.hiddenTextarea.style.opacity = '0';
+                this.hiddenTextarea.style.pointerEvents = 'none';
+                this.hiddenTextarea.style.zIndex = '-9999';
+                this.hiddenTextarea.setAttribute('tabindex', '-1');
+
+                const origFocus = this.hiddenTextarea.focus;
+                this.hiddenTextarea.focus = function(options) {
+                    try {
+                        origFocus.call(this, { preventScroll: true });
+                    } catch (e) {
+                        origFocus.call(this);
+                    }
+                };
+            }
+        };
+
+        const origUpdateTextarea = fabric.IText.prototype._updateTextarea;
+        if (origUpdateTextarea) {
+            fabric.IText.prototype._updateTextarea = function() {
+                origUpdateTextarea.call(this);
+                if (this.hiddenTextarea) {
+                    this.hiddenTextarea.style.position = 'fixed';
+                    this.hiddenTextarea.style.top = '0px';
+                    this.hiddenTextarea.style.left = '0px';
+                }
+            };
+        }
+    }
+
+    // 🎨 Setup Global Fabric Object Selection Controls & High-Visibility Border
+    function setupFabricSelectionStyles() {
+        if (typeof fabric === 'undefined' || !fabric.Object) return;
+
+        fabric.Object.prototype.transparentCorners = false;
+        fabric.Object.prototype.cornerColor = '#ffffff';
+        fabric.Object.prototype.cornerStrokeColor = '#4f46e5';
+        fabric.Object.prototype.cornerStrokeWidth = 2.5;
+        fabric.Object.prototype.borderColor = '#4f46e5';
+        fabric.Object.prototype.borderScaleFactor = 2.5;
+        fabric.Object.prototype.cornerSize = 13;
+        fabric.Object.prototype.cornerStyle = 'circle';
+        fabric.Object.prototype.padding = 8;
+        fabric.Object.prototype.touchCornerSize = 32;
+        fabric.Object.prototype.borderOpacityWhenMoving = 0.9;
+        fabric.Object.prototype.rotatingPointOffset = 28;
+    }
+    setupFabricSelectionStyles();
+
     document.addEventListener("DOMContentLoaded", function() { initCanvas(); });
 
     function initCanvas() {
-        canvas = new fabric.Canvas('newsCanvas', { backgroundColor: '#fff', preserveObjectStacking: true, selection: true, renderOnAddRemove: false });
+        setupFabricSelectionStyles();
+
+        canvas = new fabric.Canvas('newsCanvas', { 
+            backgroundColor: '#fff', 
+            preserveObjectStacking: true, 
+            selection: true, 
+            renderOnAddRemove: false,
+            selectionBorderColor: '#4f46e5',
+            selectionLineWidth: 2,
+            selectionColor: 'rgba(79, 70, 229, 0.15)'
+        });
 
         setTimeout(() => { loadStoredCustomFont(); loadFonts(); }, 10);
 
@@ -78,16 +146,66 @@
             setTimeout(regenerateQrCode, 400);
         }
 
-        canvas.on('selection:created', updateSidebarValues);
-        canvas.on('selection:updated', updateSidebarValues);
-        canvas.on('object:added', () => { saveHistory(); renderLayerList(); });
+        function applySelectionControls(e) {
+            if (e && e.target) {
+                e.target.set({
+                    transparentCorners: false,
+                    cornerColor: '#ffffff',
+                    cornerStrokeColor: '#4f46e5',
+                    cornerStrokeWidth: 2.5,
+                    borderColor: '#4f46e5',
+                    borderScaleFactor: 2.5,
+                    cornerSize: 13,
+                    cornerStyle: 'circle',
+                    padding: 8,
+                    touchCornerSize: 32,
+                    borderOpacityWhenMoving: 0.9,
+                    rotatingPointOffset: 28
+                });
+                canvas.requestRenderAll();
+            }
+            updateSidebarValues();
+            if (typeof renderLayerList === 'function') renderLayerList();
+        }
+
+        canvas.on('selection:created', applySelectionControls);
+        canvas.on('selection:updated', applySelectionControls);
+        canvas.on('object:added', (e) => { 
+            if (e && e.target) {
+                e.target.set({
+                    transparentCorners: false,
+                    cornerColor: '#ffffff',
+                    cornerStrokeColor: '#4f46e5',
+                    cornerStrokeWidth: 2.5,
+                    borderColor: '#4f46e5',
+                    borderScaleFactor: 2.5,
+                    cornerSize: 13,
+                    cornerStyle: 'circle',
+                    padding: 8,
+                    touchCornerSize: 32,
+                    borderOpacityWhenMoving: 0.9,
+                    rotatingPointOffset: 28
+                });
+            }
+            saveHistory(); 
+            renderLayerList(); 
+        });
         canvas.on('object:removed', () => { saveHistory(); renderLayerList(); });
         canvas.on('object:modified', () => { saveHistory(); }); 
         
         initKeyboardEvents();
         activateDebugTools();
         setTimeout(fitToScreen, 50); 
+        setTimeout(fitToScreen, 250);
         window.addEventListener('resize', fitToScreen);
+
+        if (window.ResizeObserver) {
+            const container = document.getElementById('workspace-container');
+            if (container) {
+                const ro = new ResizeObserver(() => fitToScreen());
+                ro.observe(container);
+            }
+        }
     }
 
     // ==========================================
@@ -152,9 +270,15 @@
                         selectable: true,
                         isQrCode: true,
                         hasBorders: true,
-                        padding: 4,
-                        cornerColor: '#4f46e5',
-                        cornerSize: 8
+                        padding: 8,
+                        borderColor: '#4f46e5',
+                        borderScaleFactor: 2.5,
+                        cornerColor: '#ffffff',
+                        cornerStrokeColor: '#4f46e5',
+                        cornerStrokeWidth: 2.5,
+                        cornerSize: 13,
+                        cornerStyle: 'circle',
+                        touchCornerSize: 32
                     });
 
                     canvas.add(qrImg);
@@ -197,8 +321,11 @@
         if (!container || !wrapper || !canvas) return;
         const canvasW = canvas.getWidth() || 1080;
         const canvasH = canvas.getHeight() || 1080;
-        const scale = Math.min((container.clientWidth - 40) / canvasW, (container.clientHeight - 40) / canvasH);
-        currentZoom = Math.min(scale, 1); 
+        const pad = window.innerWidth < 768 ? 20 : 40;
+        const availW = Math.max(container.clientWidth - pad, 60);
+        const availH = Math.max(container.clientHeight - pad, 60);
+        const scale = Math.min(availW / canvasW, availH / canvasH);
+        currentZoom = Math.min(Math.max(scale, 0.05), 2.0); 
         updateZoomDisplay();
     }
 	
@@ -761,7 +888,18 @@
     function closePublishModal() { document.getElementById('studioPublishModal').classList.add('hidden'); document.getElementById('studioPublishModal').classList.remove('flex'); }
     function toggleCategoryField(isChecked) { const w = document.getElementById('categoryFieldWrapper'); isChecked ? w.classList.add('opacity-50', 'pointer-events-none') : w.classList.remove('opacity-50', 'pointer-events-none'); }
     function updateUI(size, color, font) { if(document.getElementById('val-size')) document.getElementById('val-size').innerText = size; if(document.getElementById('text-size')) document.getElementById('text-size').value = size; if(document.getElementById('text-color')) document.getElementById('text-color').value = color; if(document.getElementById('font-family')) document.getElementById('font-family').value = font; }
-    function switchTab(tabName) { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); ['design', 'text', 'image', 'layers'].forEach(t => document.getElementById('tab-' + t).classList.add('hidden')); document.getElementById('tab-' + tabName).classList.remove('hidden'); }
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('active');
+            if (b.getAttribute('data-tab') === tabName || b.getAttribute('onclick')?.includes(`'${tabName}'`)) {
+                b.classList.add('active');
+            }
+        });
+        ['design', 'text', 'image', 'layers'].forEach(t => {
+            const el = document.getElementById('tab-' + t);
+            if (el) el.classList.toggle('hidden', t !== tabName);
+        });
+    }
     function updateActiveProp(prop, value) { const obj = canvas.getActiveObject(); if (obj) { obj.set(prop, value); if(prop === 'backgroundColor') document.getElementById('transparent-bg-check').checked = false; canvas.renderAll(); if(obj.isHeadline) { if(prop === 'fill') savePreference('color', value); if(prop === 'backgroundColor') savePreference('bg', value); if(prop === 'fontSize') savePreference('size', value); } saveHistory(); } if(prop==='fontSize') document.getElementById('val-size').innerText = value; }
     function toggleTransparentBg(checked) { const obj = canvas.getActiveObject(); if (obj) { const color = checked ? '' : (document.getElementById('text-bg').value || '#000'); obj.set('backgroundColor', color); canvas.renderAll(); if(obj.isHeadline) savePreference('bg', color); } }
     function toggleStyle(style) { const obj = canvas.getActiveObject(); if (!obj) return; if (style === 'bold') obj.set('fontWeight', obj.fontWeight === 'bold' ? 'normal' : 'bold'); if (style === 'italic') obj.set('fontStyle', obj.fontStyle === 'italic' ? 'normal' : 'italic'); if (style === 'underline') obj.set('underline', !obj.underline); canvas.renderAll(); }
@@ -789,7 +927,18 @@
     function undo() { if (historyStep > 0) { isHistoryProcessing = true; historyStep--; canvas.loadFromJSON(history[historyStep], function () { canvas.renderAll(); isHistoryProcessing = false; }); } }
     function redo() { if (historyStep < history.length - 1) { isHistoryProcessing = true; historyStep++; canvas.loadFromJSON(history[historyStep], function () { canvas.renderAll(); isHistoryProcessing = false; }); } }
     function initKeyboardEvents() { document.addEventListener('keydown', function(e) { if ((e.key === 'Delete' || e.key === 'Backspace') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') { const obj = canvas.getActiveObject(); if (obj) canvas.remove(obj); } if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); } if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo(); } }); }
-    function updateSidebarValues() { const obj = canvas.getActiveObject(); if (!obj) return; if (obj.type === 'textbox' || obj.type === 'text') { switchTab('text'); if(document.getElementById('text-content')) document.getElementById('text-content').value = obj.text; if(document.getElementById('text-color')) document.getElementById('text-color').value = obj.fill; } }
+    function updateSidebarValues() {
+        const obj = canvas.getActiveObject();
+        if (!obj) return;
+        if (obj.type === 'textbox' || obj.type === 'text' || obj.type === 'i-text') {
+            switchTab('text');
+            if (document.getElementById('text-content')) document.getElementById('text-content').value = obj.text || '';
+            if (document.getElementById('text-color')) document.getElementById('text-color').value = obj.fill || '#ffffff';
+            if (document.getElementById('val-size')) document.getElementById('val-size').innerText = obj.fontSize || 60;
+            if (document.getElementById('text-size')) document.getElementById('text-size').value = obj.fontSize || 60;
+            if (document.getElementById('font-family') && obj.fontFamily) document.getElementById('font-family').value = obj.fontFamily;
+        }
+    }
     function uploadLogo(input) { if (input.files && input.files[0]) { const r = new FileReader(); r.onload = function (e) { addProfileLogo(e.target.result); }; r.readAsDataURL(input.files[0]); } }
     function addImageOnCanvas(input) { if (input.files && input.files[0]) { const r = new FileReader(); r.onload = function (e) { fabric.Image.fromURL(e.target.result, function(img) { img.scaleToWidth(300); canvas.add(img); canvas.centerObject(img); canvas.setActiveObject(img); }); }; r.readAsDataURL(input.files[0]); } }
     function deleteActive() { const obj = canvas.getActiveObject(); if (obj) canvas.remove(obj); }

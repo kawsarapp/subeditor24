@@ -31,7 +31,7 @@
     @foreach($drafts as $item)
         <div data-news-id="{{ $item->id }}" data-status="{{ $item->status }}" data-status-msg="{{ $item->error_message }}" class="group relative flex flex-col h-full bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
             
-            <div class="absolute top-3 right-3 z-20">
+            <div class="absolute top-3 right-3 z-20 flex flex-col items-end gap-1">
                 @if($item->status == 'published')
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm backdrop-blur-md">Published</span>
                 @elseif($item->status == 'publishing')
@@ -42,6 +42,16 @@
                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-red-100 text-red-700 border border-red-200 shadow-sm" title="{{ $item->error_message }}">❌ Failed</span>
                 @else
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-600 border border-gray-200 shadow-sm">📝 Draft</span>
+                @endif
+
+                @if($item->fb_status == 'failed')
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black bg-rose-600 text-white shadow-sm border border-rose-400" title="{{ $item->fb_error ?? 'Facebook post failed' }}">
+                        <i class="fa-brands fa-facebook"></i> ❌ FB Error
+                    </span>
+                @elseif($item->fb_status == 'success')
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold bg-blue-600 text-white shadow-sm border border-blue-400" title="Facebook-এ পোস্ট করা হয়েছে">
+                        <i class="fa-brands fa-facebook"></i> ✅ FB
+                    </span>
                 @endif
             </div>
 
@@ -75,9 +85,9 @@
                     @endif
 
                     <div class="space-y-2">
-                        @if($item->error_message)
-                            <div class="{{ $item->status == 'failed' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100' }} text-[10px] p-2 rounded border mb-2 font-bold text-center leading-tight" title="{{ $item->error_message }}">
-                                {{ $item->status == 'failed' ? '⚠️ ' : '✅ ' }} {{ Str::limit($item->error_message, 50) }}
+                        @if($item->error_message || $item->fb_error)
+                            <div class="bg-red-50 text-red-600 border-red-200 text-[10px] p-2 rounded-xl border mb-2 font-bold leading-tight" title="{{ $item->error_message ?: $item->fb_error }}">
+                                ⚠️ {{ Str::limit($item->error_message ?: ('FB Error: ' . $item->fb_error), 75) }}
                             </div>
                         @endif
 

@@ -70,8 +70,13 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::post('/ai-assistant/chat', [\App\Http\Controllers\AiAssistantController::class, 'chat'])->name('ai-assistant.chat');
 
     // নোটিফিকেশন রিড
-    Route::get('/notifications/read', function () {
-        auth()->user()->unreadNotifications->markAsRead();
+    Route::match(['get', 'post'], '/notifications/read', function (\Illuminate\Http\Request $request) {
+        if (auth()->check()) {
+            auth()->user()->unreadNotifications->markAsRead();
+        }
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
         return back();
     })->name('notifications.read');
 

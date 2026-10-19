@@ -5,17 +5,37 @@
         <span class="font-extrabold text-lg text-slate-900 tracking-tight">Subeditor<span class="text-indigo-600">24</span></span>
     </a>
     @auth
-    <div class="flex items-center gap-2">
+    @php
+        $mUnreadCount = auth()->user()->unreadNotifications()->count();
+        $mHasCritical = auth()->user()->unreadNotifications()->where(function($q) {
+            $q->where('data->severity', 'critical')
+              ->orWhere('data->severity', 'error')
+              ->orWhere('data->type', 'error')
+              ->orWhere('data->type', 'danger');
+        })->exists();
+    @endphp
+    <div class="flex items-center gap-1.5">
+        <a href="{{ route('notifications.read') }}" onclick="if(!confirm('সব বিজ্ঞপ্তি পঠিত হিসেবে মার্ক করবেন?')) return false;" class="relative w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer" title="বিজ্ঞপ্তি ও সতর্কতা">
+            <i class="fa-solid fa-bell"></i>
+            @if($mUnreadCount > 0)
+                <span class="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full text-[9px] font-black text-white {{ $mHasCritical ? 'bg-rose-600 animate-pulse' : 'bg-indigo-600' }}">
+                    {{ $mUnreadCount > 9 ? '9+' : $mUnreadCount }}
+                </span>
+            @endif
+        </a>
         <button type="button" onclick="toggleDarkMode()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-amber-400 flex items-center justify-center text-xs border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer" title="Dark Mode">
             <i class="fa-solid fa-moon"></i>
         </button>
         @if(auth()->user()->role !== 'reporter')
-            <div class="bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full text-xs font-bold border border-amber-200 dark:border-amber-800/60 shadow-sm">
+            <div class="bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full text-[11px] font-bold border border-amber-200 dark:border-amber-800/60 shadow-sm">
                 🪙 {{ auth()->user()->credits ?? 0 }}
             </div>
         @endif
-        <button onclick="toggleMobileDrawer(event)" class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-extrabold text-xs border border-indigo-200 uppercase shadow-sm cursor-pointer">
+        <button onclick="toggleMobileDrawer(event)" class="relative w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-extrabold text-xs border border-indigo-200 uppercase shadow-sm cursor-pointer">
             {{ substr(auth()->user()->name, 0, 1) }}
+            @if($mUnreadCount > 0 && $mHasCritical)
+                <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping"></span>
+            @endif
         </button>
     </div>
     @else
