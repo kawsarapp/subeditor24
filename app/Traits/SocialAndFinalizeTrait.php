@@ -68,7 +68,7 @@ trait SocialAndFinalizeTrait
                 }
             }
 
-            $newsLink      = $publishedUrl ?: ($news->target_post_url ?: $news->live_url);
+            $newsLink      = $publishedUrl ?: ($news->target_post_url ?: ($news->live_url ?: $news->original_link));
             $captionToPost = ($this->customData['social_caption'] ?? $finalTitle) . (!empty($hashtags) ? "\n\n" . $hashtags : "");
 
             // 🔥 Studio Publish Modal এ ইউজার যে specific page IDs সিলেক্ট করেছে
@@ -90,7 +90,7 @@ trait SocialAndFinalizeTrait
                         $customFirstComment = trim(str_replace(['বিস্তারিত পড়ুন: ' . $news->original_link, $news->original_link], '', $customFirstComment));
                     }
                 }
-                $fbResults = $socialPoster->postToFacebook($settings, $captionToPost, $imageToPost, $newsLink, $selectedPageIds, $customFirstComment);
+                $fbResults = $socialPoster->postToFacebook($settings, $captionToPost, $imageToPost, $newsLink ?: $news, $selectedPageIds, $customFirstComment);
 
                 // সব results loop করে যেকোনো ১টি success হলে 'success' রাখি
                 $fbOverallSuccess = collect($fbResults)->contains('success', true);

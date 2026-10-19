@@ -60,14 +60,14 @@ Artisan::command('news:autopost', function () {
 
         // ২. সময় চেক করা (Interval Check)
         $lastPostTime = $settings->last_auto_post_at ? Carbon::parse($settings->last_auto_post_at) : null;
-        $intervalMinutes = $settings->auto_post_interval ?? 10;
+        $intervalMinutes = (int) ($settings->auto_post_interval ?? 10);
+        if ($intervalMinutes < 1) $intervalMinutes = 10;
 
         if ($lastPostTime) {
-            $diff = abs(now()->diffInMinutes($lastPostTime));
-            
-            if ($diff < $intervalMinutes) {
-                $wait = $intervalMinutes - $diff;
-                $this->info("⏳ সময় হয়নি। আরও {$wait} মিনিট অপেক্ষা করতে হবে।");
+            $nextAllowedTime = $lastPostTime->copy()->addMinutes($intervalMinutes);
+            if (now()->lessThan($nextAllowedTime)) {
+                $wait = now()->diffInMinutes($nextAllowedTime, false) + 1;
+                $this->info("⏳ সময় হয়নি। আরও প্রায় {$wait} মিনিট অপেক্ষা করতে হবে।");
                 continue; 
             }
         }
@@ -77,6 +77,7 @@ Artisan::command('news:autopost', function () {
             ->where('user_id', $user->id)
             ->where('is_posted', false)
             ->where('is_queued', true)
+            ->whereNotIn('status', ['published', 'publishing'])
             ->oldest()
             ->first();
 
@@ -85,6 +86,7 @@ Artisan::command('news:autopost', function () {
             $newsToPost = NewsItem::withoutGlobalScopes()
                 ->where('user_id', $user->id)
                 ->where('is_posted', false)
+                ->whereNotIn('status', ['published', 'publishing'])
                 ->oldest() 
                 ->first();
         }
@@ -97,12 +99,13 @@ Artisan::command('news:autopost', function () {
         $this->info("✅ নিউজ পাওয়া গেছে: {$newsToPost->title}");
 
         try {
-            // জব ডিসপ্যাচ করা
-            ProcessNewsPost::dispatch($newsToPost->id, $user->id);
-            
-            // সময় আপডেট করা
+            // তাৎক্ষণিক স্ট্যাটাস ও টাইম আপডেট যাতে অন্য ক্রন বা থ্রেড একই নিউজ পুনরায় পিক না করে
+            $newsToPost->update(['status' => 'publishing']);
             $settings->last_auto_post_at = now();
             $settings->save();
+
+            // জব ডিসপ্যাচ করা
+            ProcessNewsPost::dispatch($newsToPost->id, $user->id);
 
             $this->info("🚀 Job Dispatched successfully!");
         } catch (\Exception $e) {
@@ -125,6 +128,8 @@ Artisan::command('news:process-scheduled', function () {
         ->limit(20)
         ->get();
 
+    $userDispatchedCount = [];
+
     foreach ($scheduledNews as $news) {
         $user = User::find($news->user_id);
         if (!$user) continue;
@@ -134,9 +139,19 @@ Artisan::command('news:process-scheduled', function () {
             continue;
         }
 
-        Log::info("⏰ Processing Scheduled News [ID: {$news->id}] for User: {$user->name}");
+        // Stagger posts for the same user by 2 minutes to prevent bursts
+        $userDispatchedCount[$user->id] = ($userDispatchedCount[$user->id] ?? 0);
+        $staggerMinutes = $userDispatchedCount[$user->id] * 2;
+        $userDispatchedCount[$user->id]++;
+
+        Log::info("⏰ Processing Scheduled News [ID: {$news->id}] for User: {$user->name}" . ($staggerMinutes > 0 ? " (staggered by {$staggerMinutes}m)" : ""));
         $news->update(['status' => 'publishing']);
-        ProcessNewsPost::dispatch($news->id, $user->id, [], true);
+
+        if ($staggerMinutes > 0) {
+            ProcessNewsPost::dispatch($news->id, $user->id, [], true)->delay(now()->addMinutes($staggerMinutes));
+        } else {
+            ProcessNewsPost::dispatch($news->id, $user->id, [], true);
+        }
     }
 })->purpose('Publish scheduled news when due time arrives');
 

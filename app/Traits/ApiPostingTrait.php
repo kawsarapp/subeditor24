@@ -215,18 +215,37 @@ trait ApiPostingTrait
                     $result['remote_id'] = $extractedId;
 
                     $siteBase = rtrim($settings->laravel_site_url ?? '', '/');
+                    if (empty($siteBase) && !empty($apiUrl)) {
+                        $parsed = parse_url($apiUrl);
+                        $siteBase = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
+                    }
+                    $siteBase = preg_replace('#/api(/.*)?$#i', '', $siteBase);
                     $prefix   = trim($settings->laravel_route_prefix ?? 'news', '/');
 
-                    $urlKey = $mapping['response_url_key'] ?? 'live_url';
-                    $liveUrl = $respData[$urlKey] ?? ($respData['data'][$urlKey] ?? ($respData['url'] ?? ($respData['link'] ?? ($respData['data']['URLAlies'] ?? null))));
+                    $urlKey  = $mapping['response_url_key'] ?? 'live_url';
+                    $liveUrl = $respData[$urlKey] 
+                        ?? ($respData['data'][$urlKey] 
+                        ?? ($respData['url'] 
+                        ?? ($respData['link'] 
+                        ?? ($respData['live_url'] 
+                        ?? ($respData['post_url'] 
+                        ?? ($respData['data']['url'] 
+                        ?? ($respData['data']['link'] 
+                        ?? ($respData['data']['live_url'] 
+                        ?? ($respData['data']['post_url'] 
+                        ?? ($respData['data']['URLAlies'] ?? null))))))))));
 
                     if ($liveUrl) {
                         $result['published_url'] = filter_var($liveUrl, FILTER_VALIDATE_URL) ? $liveUrl : ($siteBase . '/' . ltrim($liveUrl, '/'));
                     } elseif (!empty($siteBase) && !empty($result['remote_id'])) {
-                        $result['published_url'] = $siteBase . '/' . $prefix . '/' . $result['remote_id'];
+                        $result['published_url'] = $siteBase . '/' . ($prefix ? $prefix . '/' : '') . $result['remote_id'];
                     }
 
-                    Log::info("✅ Custom API Success. ID: {$result['remote_id']}");
+                    if (!empty($result['published_url'])) {
+                        $news->update(['target_post_url' => $result['published_url']]);
+                    }
+
+                    Log::info("✅ Custom API Success. ID: {$result['remote_id']} | URL: {$result['published_url']}");
                 } else {
                     $result['error'] = "HTTP {$statusCode}: " . Str::limit($responseBody, 200);
                     Log::error("❌ Custom API Failed: HTTP {$statusCode} - {$responseBody}");
@@ -292,13 +311,32 @@ trait ApiPostingTrait
                 if ($response && $response->successful()) {
                     $result['success'] = true;
                     $respData = $response->json();
-                    $result['remote_id'] = $respData['post_id'] ?? ($respData['id'] ?? $remotePostId);
+                    $result['remote_id'] = $respData['post_id'] ?? ($respData['id'] ?? ($respData['data']['id'] ?? ($respData['data']['post_id'] ?? $remotePostId)));
                     
-                    $siteBase = rtrim($settings->laravel_site_url, '/');
+                    $siteBase = rtrim($settings->laravel_site_url ?? '', '/');
+                    $siteBase = preg_replace('#/api(/.*)?$#i', '', $siteBase);
                     $prefix   = trim($settings->laravel_route_prefix ?? 'news', '/');
                     
-                    $result['published_url'] = $respData['live_url'] ?? ($respData['link'] ?? ($respData['url'] ?? ($siteBase . '/' . $prefix . '/' . $result['remote_id'])));
-                    Log::info("✅ Default API Success. ID: {$result['remote_id']}");
+                    $liveUrl = $respData['live_url'] 
+                        ?? ($respData['link'] 
+                        ?? ($respData['url'] 
+                        ?? ($respData['post_url'] 
+                        ?? ($respData['data']['live_url'] 
+                        ?? ($respData['data']['link'] 
+                        ?? ($respData['data']['url'] 
+                        ?? ($respData['data']['post_url'] ?? null)))))));
+
+                    if (!empty($liveUrl)) {
+                        $result['published_url'] = filter_var($liveUrl, FILTER_VALIDATE_URL) ? $liveUrl : ($siteBase . '/' . ltrim($liveUrl, '/'));
+                    } elseif (!empty($siteBase) && !empty($result['remote_id'])) {
+                        $result['published_url'] = $siteBase . '/' . ($prefix ? $prefix . '/' : '') . $result['remote_id'];
+                    }
+
+                    if (!empty($result['published_url'])) {
+                        $news->update(['target_post_url' => $result['published_url']]);
+                    }
+
+                    Log::info("✅ Default API Success. ID: {$result['remote_id']} | URL: {$result['published_url']}");
                 } else {
                     $status = $response ? $response->status() : '0';
                     $body   = $response ? $response->body() : 'No Response';

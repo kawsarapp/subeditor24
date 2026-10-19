@@ -342,7 +342,10 @@
                     </span>
                     <span class="text-[10px] text-slate-400 font-normal">ঐচ্ছিক</span>
                 </label>
-                <textarea id="direct-publish-comment-input" rows="2" placeholder="যেমন: বিস্তারিত খবরের লিংক বা সোর্স কমেন্টে দিন..." class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 outline-none focus:border-blue-500 bg-slate-50"></textarea>
+                @php
+                    $customNewsAutoLink = isset($newsItem) && $newsItem ? ($newsItem->target_post_url ?: ($newsItem->live_url ?: $newsItem->original_link)) : '';
+                @endphp
+                <textarea id="direct-publish-comment-input" rows="2" placeholder="যেমন: বিস্তারিত খবরের লিংক বা সোর্স কমেন্টে দিন..." class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 outline-none focus:border-blue-500 bg-slate-50">{{ !empty($customNewsAutoLink) ? 'বিস্তারিত পড়ুন: ' . $customNewsAutoLink : '' }}</textarea>
                 <p class="text-[10px] text-slate-400 mt-1">ছবি পাবলিশ হওয়ার সাথে সাথে এই লেখাটি পেজে ১ম কমেন্ট হিসেবে যুক্ত হবে।</p>
             </div>
 

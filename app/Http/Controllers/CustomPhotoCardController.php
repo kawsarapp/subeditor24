@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class CustomPhotoCardController extends Controller
@@ -491,15 +492,60 @@ class CustomPhotoCardController extends Controller
             if ($postId) {
                 $firstComment = trim($request->input('first_comment', ''));
                 if (!empty($firstComment)) {
-                    try {
-                        \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(15)->post("https://graph.facebook.com/v19.0/{$postId}/comments", [
-                            'message'      => $firstComment,
-                            'access_token' => $tokenToUse,
-                        ]);
-                    } catch (\Exception $commentEx) {
-                        Log::error("CustomPhotoCard FB First Comment Error: " . $commentEx->getMessage());
+                    $commentTargets = array_values(array_unique(array_filter([
+                        $postId,
+                        $photoData['id'] ?? null,
+                        $data['id'] ?? null,
+                        $data['post_id'] ?? null,
+                    ])));
+
+                    if (!app()->environment('testing')) {
+                        sleep(1);
+                    }
+
+                    $commentSuccess = false;
+
+                    foreach ($commentTargets as $targetId) {
+                        try {
+                            $commentRes = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(15)->post("https://graph.facebook.com/v19.0/{$targetId}/comments", [
+                                'message'      => $firstComment,
+                                'access_token' => $tokenToUse,
+                            ]);
+                            $commentJson = $commentRes->json() ?? [];
+                            if ($commentRes->successful() && !empty($commentJson['id'])) {
+                                $commentSuccess = true;
+                                Log::info("✅ CustomPhotoCard FB First Comment Success on Target [{$targetId}]: Comment ID {$commentJson['id']}");
+                                break;
+                            } else {
+                                $errMsg = $commentJson['error']['message'] ?? $commentRes->body();
+                                Log::warning("⚠️ CustomPhotoCard FB Comment attempt failed on Target [{$targetId}]: {$errMsg}");
+                            }
+                        } catch (\Throwable $commentEx) {
+                            Log::warning("⚠️ CustomPhotoCard FB First Comment Error on Target [{$targetId}]: " . $commentEx->getMessage());
+                        }
+                    }
+
+                    // Retry once after 2s if needed
+                    if (!$commentSuccess && !app()->environment('testing') && !empty($commentTargets)) {
+                        sleep(2);
+                        foreach ($commentTargets as $targetId) {
+                            try {
+                                $commentRes = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(15)->post("https://graph.facebook.com/v19.0/{$targetId}/comments", [
+                                    'message'      => $firstComment,
+                                    'access_token' => $tokenToUse,
+                                ]);
+                                $commentJson = $commentRes->json() ?? [];
+                                if ($commentRes->successful() && !empty($commentJson['id'])) {
+                                    $commentSuccess = true;
+                                    Log::info("✅ CustomPhotoCard FB First Comment Retry Success on Target [{$targetId}]: Comment ID {$commentJson['id']}");
+                                    break;
+                                }
+                            } catch (\Throwable $e) {}
+                        }
                     }
                 }
+
+                Cache::put("fb_last_published_time_{$fbPage->page_id}", now()->timestamp, now()->addMinutes(30));
 
                 return response()->json([
                     'success' => true,

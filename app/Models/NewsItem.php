@@ -108,12 +108,20 @@ class NewsItem extends Model
             return rtrim($settings->wp_url, '/') . '/?p=' . $this->wp_post_id;
         }
 
-        if ($settings->post_to_laravel && $settings->laravel_site_url) {
-            $id = $this->wp_post_id ?? $this->id; 
-            $prefix = $settings->laravel_route_prefix ?? 'news';
-            $prefix = trim($prefix, '/');
+        $siteUrl = $settings->laravel_site_url;
+        if (empty($siteUrl) && !empty($settings->custom_api_url)) {
+            $parsed = parse_url($settings->custom_api_url);
+            if (!empty($parsed['host'])) {
+                $siteUrl = ($parsed['scheme'] ?? 'https') . '://' . $parsed['host'];
+            }
+        }
 
-            return rtrim($settings->laravel_site_url, '/') . '/' . $prefix . '/' . $id;
+        if (($settings->post_to_laravel || !empty($settings->custom_api_url)) && !empty($siteUrl)) {
+            $id = $this->wp_post_id ?? $this->id; 
+            $prefix = trim($settings->laravel_route_prefix ?? 'news', '/');
+            $cleanBase = preg_replace('#/api(/.*)?$#i', '', rtrim($siteUrl, '/'));
+
+            return $cleanBase . '/' . ($prefix ? $prefix . '/' : '') . $id;
         }
 
         return null;

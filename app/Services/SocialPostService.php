@@ -8,6 +8,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Cache;
 
 class SocialPostService
 {
@@ -51,7 +52,10 @@ class SocialPostService
         $results = [];
 
         // ৪. প্রতিটি page-এ আলাদাভাবে পোস্ট করি
-        foreach ($pages as $page) {
+        foreach ($pages as $index => $page) {
+            if ($index > 0) {
+                sleep(2);
+            }
             $result                = $this->sendToOnePage($page, $title, $imagePathOrUrl, $newsLink, $firstComment);
             $result['page_name']   = $page->page_name ?? 'Unknown Page';
             $results[]             = $result;
@@ -61,11 +65,51 @@ class SocialPostService
     }
 
     /**
+     * Anti-flood throttle to ensure a Facebook page is not spammed with multiple posts simultaneously.
+     * Prevents queue bursts or cron drifts from dumping multiple posts into Facebook at the same time.
+     */
+    protected function throttleFacebookPage($pageId, $pageName = 'Facebook Page', int $minIntervalSeconds = 45): void
+    {
+        if (empty($pageId)) return;
+
+        // Skip sleep during automated unit/feature tests
+        if (app()->environment('testing')) {
+            Cache::put("fb_last_published_time_{$pageId}", now()->timestamp, now()->addMinutes(30));
+            return;
+        }
+
+        $cacheKey = "fb_last_published_time_{$pageId}";
+        $lastPostTime = Cache::get($cacheKey);
+
+        if ($lastPostTime) {
+            $elapsed = now()->timestamp - (int) $lastPostTime;
+            if ($elapsed < $minIntervalSeconds) {
+                $wait = $minIntervalSeconds - $elapsed;
+
+                // In CLI queue worker or background job, sleep so posts are smoothly spaced out
+                if (app()->runningInConsole()) {
+                    Log::info("⏳ Anti-flood delay: waiting {$wait}s before posting to Facebook Page '{$pageName}' [ID: {$pageId}] to prevent burst spam.");
+                    sleep($wait);
+                } else {
+                    // For interactive web requests, apply a small safe throttle if within 3 seconds
+                    if ($elapsed < 3) {
+                        sleep(2);
+                    }
+                }
+            }
+        }
+
+        // Record the post timestamp (valid for 30 minutes)
+        Cache::put($cacheKey, now()->timestamp, now()->addMinutes(30));
+    }
+
+    /**
      * একটি নির্দিষ্ট page-এ পোস্ট পাঠানো (internal helper)
      */
     private function sendToOnePage($page, $title, $imagePathOrUrl, $newsLink, ?string $firstComment = null)
     {
         try {
+            $this->throttleFacebookPage($page->page_id ?? null, $page->page_name ?? 'Facebook Page');
             $postId = null;
             $data   = [];
 
@@ -122,6 +166,9 @@ class SocialPostService
                     $fallbackResponse = $this->sendPhotoRequest($photoUploadEndpoint, $fallbackPayload, $imagePathOrUrl);
                     $data             = $fallbackResponse->json() ?? [];
                     $postId           = $data['post_id'] ?? $data['id'] ?? null;
+                    if (empty($photoId) && !empty($data['id'])) {
+                        $photoId = $data['id'];
+                    }
                 }
             } else {
                 // Text Only: POST /{page_id}/feed with message
@@ -144,7 +191,7 @@ class SocialPostService
                 // অন্যথায় news link থাকলে স্বয়ংক্রিয়ভাবে 'বিস্তারিত পড়ুন: ...' দেওয়া হবে।
                 $resolvedNewsLink = $newsLink;
                 if ($newsLink instanceof \App\Models\NewsItem) {
-                    $resolvedNewsLink = $newsLink->target_post_url ?: $newsLink->live_url;
+                    $resolvedNewsLink = $newsLink->target_post_url ?: ($newsLink->live_url ?: $newsLink->original_link);
                 }
 
                 $firstCommentTrimmed = trim((string)$firstComment);
@@ -159,13 +206,65 @@ class SocialPostService
                     : (!empty($resolvedNewsLink) ? 'বিস্তারিত পড়ুন: ' . $resolvedNewsLink : null);
 
                 if (!empty($commentMessage)) {
-                    try {
-                        Http::withoutVerifying()->timeout(15)->post("https://graph.facebook.com/v19.0/{$postId}/comments", [
-                            'message'      => $commentMessage,
-                            'access_token' => $page->access_token,
-                        ]);
-                    } catch (\Exception $e) {
-                        Log::error("❌ FB Comment Error [{$page->page_name}]: " . $e->getMessage());
+                    $commentTargets = array_values(array_unique(array_filter([
+                        $postId,
+                        $photoId ?? null,
+                        $data['id'] ?? null,
+                        $data['post_id'] ?? null,
+                    ])));
+
+                    if (!app()->environment('testing')) {
+                        sleep(1);
+                    }
+
+                    $commentSuccess   = false;
+                    $lastCommentError = null;
+
+                    foreach ($commentTargets as $targetId) {
+                        try {
+                            $commentRes = Http::withoutVerifying()->timeout(15)->post("https://graph.facebook.com/v19.0/{$targetId}/comments", [
+                                'message'      => $commentMessage,
+                                'access_token' => $page->access_token,
+                            ]);
+
+                            $commentData = $commentRes->json() ?? [];
+                            if ($commentRes->successful() && !empty($commentData['id'])) {
+                                $commentSuccess = true;
+                                Log::info("✅ FB First Comment Success [{$page->page_name}] on Target [{$targetId}]: Comment ID {$commentData['id']}");
+                                break;
+                            } else {
+                                $lastCommentError = $commentData['error']['message'] ?? $commentRes->body();
+                                Log::warning("⚠️ FB Comment attempt failed [{$page->page_name}] on Target [{$targetId}]: {$lastCommentError}");
+                            }
+                        } catch (\Throwable $e) {
+                            $lastCommentError = $e->getMessage();
+                            Log::warning("⚠️ FB Comment exception [{$page->page_name}] on Target [{$targetId}]: " . $e->getMessage());
+                        }
+                    }
+
+                    // If initial targets failed, wait 2s and retry once (propagation delay)
+                    if (!$commentSuccess && !app()->environment('testing') && !empty($commentTargets)) {
+                        sleep(2);
+                        foreach ($commentTargets as $targetId) {
+                            try {
+                                $commentRes = Http::withoutVerifying()->timeout(15)->post("https://graph.facebook.com/v19.0/{$targetId}/comments", [
+                                    'message'      => $commentMessage,
+                                    'access_token' => $page->access_token,
+                                ]);
+                                $commentData = $commentRes->json() ?? [];
+                                if ($commentRes->successful() && !empty($commentData['id'])) {
+                                    $commentSuccess = true;
+                                    Log::info("✅ FB First Comment Retry Success [{$page->page_name}] on Target [{$targetId}]: Comment ID {$commentData['id']}");
+                                    break;
+                                }
+                            } catch (\Throwable $e) {
+                                // ignore retry exception
+                            }
+                        }
+                    }
+
+                    if (!$commentSuccess) {
+                        Log::error("❌ FB Comment Failed completely [{$page->page_name}] on Post [{$postId}]: {$lastCommentError}");
                     }
                 }
 
@@ -352,8 +451,13 @@ class SocialPostService
     public function publishDirectToPages(iterable $pages, ?string $message = null, $image = null, ?string $firstComment = null): array
     {
         $summaries = [];
+        $index = 0;
         foreach ($pages as $page) {
+            if ($index > 0) {
+                sleep(2);
+            }
             $summaries[] = $this->publishDirectToOnePage($page, $message, $image, $firstComment);
+            $index++;
         }
         return $summaries;
     }
@@ -406,6 +510,7 @@ class SocialPostService
         }
 
         try {
+            $this->throttleFacebookPage($fbPageId, $pageName);
             $hasImage = !empty($image);
             $postId = null;
             $data = [];
@@ -489,28 +594,68 @@ class SocialPostService
                 $commentId = null;
 
                 if (!empty(trim((string)$firstComment))) {
-                    try {
-                        $commentRes = Http::withoutVerifying()->timeout(20)
-                            ->post("https://graph.facebook.com/v19.0/{$postId}/comments", [
-                                'message'      => trim((string)$firstComment),
-                                'access_token' => $accessToken,
-                            ]);
+                    $commentTargets = array_values(array_unique(array_filter([
+                        $postId,
+                        $mediaFbid ?? null,
+                        $data['id'] ?? null,
+                        $data['post_id'] ?? null,
+                    ])));
 
-                        $commentData = $commentRes->json() ?? [];
-
-                        if ($commentRes->successful() && !empty($commentData['id'])) {
-                            $commentId = $commentData['id'];
-                            $commentStatus = 'published';
-                            Log::info("✅ FB First Comment Success [{$pageName}] on Post [{$postId}]: Comment ID {$commentId}");
-                        } else {
-                            $commentStatus = 'failed';
-                            $errDetail = $commentData['error']['message'] ?? 'Unknown error';
-                            Log::warning("⚠️ FB First Comment Failed [{$pageName}] on Post [{$postId}]: {$errDetail}");
-                        }
-                    } catch (\Throwable $ce) {
-                        $commentStatus = 'failed';
-                        Log::warning("⚠️ FB First Comment Exception [{$pageName}] on Post [{$postId}]: " . $ce->getMessage());
+                    if (!app()->environment('testing')) {
+                        sleep(1);
                     }
+
+                    $commentSuccess = false;
+                    $commentId      = null;
+                    $errDetail      = null;
+
+                    foreach ($commentTargets as $targetId) {
+                        try {
+                            $commentRes = Http::withoutVerifying()->timeout(20)
+                                ->post("https://graph.facebook.com/v19.0/{$targetId}/comments", [
+                                    'message'      => trim((string)$firstComment),
+                                    'access_token' => $accessToken,
+                                ]);
+
+                            $commentData = $commentRes->json() ?? [];
+
+                            if ($commentRes->successful() && !empty($commentData['id'])) {
+                                $commentId      = $commentData['id'];
+                                $commentSuccess = true;
+                                Log::info("✅ FB First Comment Success [{$pageName}] on Target [{$targetId}]: Comment ID {$commentId}");
+                                break;
+                            } else {
+                                $errDetail = $commentData['error']['message'] ?? $commentRes->body();
+                                Log::warning("⚠️ FB First Comment Failed [{$pageName}] on Target [{$targetId}]: {$errDetail}");
+                            }
+                        } catch (\Throwable $ce) {
+                            $errDetail = $ce->getMessage();
+                            Log::warning("⚠️ FB First Comment Exception [{$pageName}] on Target [{$targetId}]: " . $ce->getMessage());
+                        }
+                    }
+
+                    // Retry once after 2s if needed
+                    if (!$commentSuccess && !app()->environment('testing') && !empty($commentTargets)) {
+                        sleep(2);
+                        foreach ($commentTargets as $targetId) {
+                            try {
+                                $commentRes = Http::withoutVerifying()->timeout(20)
+                                    ->post("https://graph.facebook.com/v19.0/{$targetId}/comments", [
+                                        'message'      => trim((string)$firstComment),
+                                        'access_token' => $accessToken,
+                                    ]);
+                                $commentData = $commentRes->json() ?? [];
+                                if ($commentRes->successful() && !empty($commentData['id'])) {
+                                    $commentId      = $commentData['id'];
+                                    $commentSuccess = true;
+                                    Log::info("✅ FB First Comment Retry Success [{$pageName}] on Target [{$targetId}]: Comment ID {$commentId}");
+                                    break;
+                                }
+                            } catch (\Throwable $e) {}
+                        }
+                    }
+
+                    $commentStatus = $commentSuccess ? 'published' : 'failed';
                 }
 
                 return [

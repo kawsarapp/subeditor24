@@ -297,4 +297,62 @@ class StudioFirstCommentPublishTest extends TestCase
                    !str_contains($request['message'], 'source-leak.com');
         });
     }
+
+    /**
+     * Photo Card Posting: Comments on photo card automatically with fallback to photo ID if feed fails.
+     */
+    public function test_photo_card_auto_first_comment_with_fallback_to_photo_id(): void
+    {
+        $user = User::factory()->create(['role' => 'super_admin']);
+        $settings = UserSetting::create([
+            'user_id' => $user->id,
+            'wp_url'  => 'https://mynews.com',
+        ]);
+
+        $page = FacebookPage::create([
+            'user_id'      => $user->id,
+            'page_name'    => 'Photo Card Page',
+            'page_id'      => '111222333',
+            'access_token' => 'EAABtokenPhotoCard',
+            'is_active'    => true,
+        ]);
+
+        $dummyBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+        Http::fake([
+            'https://graph.facebook.com/v19.0/111222333/photos' => Http::response([
+                'id' => 'photo_node_999',
+            ], 200),
+            'https://graph.facebook.com/v19.0/111222333/feed' => Http::response([
+                'id' => 'feed_post_888',
+            ], 200),
+            // When comment on feed_post fails (e.g. #100 object does not support comments):
+            'https://graph.facebook.com/v19.0/feed_post_888/comments' => Http::response([
+                'error' => ['message' => 'Comments can not be attached to this post', 'code' => 100],
+            ], 400),
+            // Fallback comment on photo_node succeeds:
+            'https://graph.facebook.com/v19.0/photo_node_999/comments' => Http::response([
+                'id' => 'comment_success_123',
+            ], 200),
+        ]);
+
+        $service = app(SocialPostService::class);
+        $results = $service->postToFacebook(
+            $settings,
+            'Breaking News Photo Card Caption',
+            $dummyBase64, // Providing the photo card!
+            'https://estatenews.net/news/breaking-story-100',
+            [$page->id],
+            null // Empty -> should auto-generate 'বিস্তারিত পড়ুন: ...'
+        );
+
+        $this->assertCount(1, $results);
+        $this->assertTrue($results[0]['success']);
+
+        // Verify fallback comment on photo_node was called and succeeded
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/photo_node_999/comments') &&
+                   $request['message'] === 'বিস্তারিত পড়ুন: https://estatenews.net/news/breaking-story-100';
+        });
+    }
 }
