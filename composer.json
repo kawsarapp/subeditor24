@@ -6,7 +6,7 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.2|^8.3|^8.4|^8.5",
         "abraham/twitteroauth": "^8.1",
         "intervention/image": "^3.11",
         "laravel/framework": "^12.0",
@@ -81,10 +81,10 @@
         }
     },
     "config": {
-				"platform": {
-				"ext-pcntl": "8.0",
-				"ext-posix": "8.0"
-			},
+        "platform": {
+            "ext-pcntl": "8.5",
+            "ext-posix": "8.5"
+        },
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
