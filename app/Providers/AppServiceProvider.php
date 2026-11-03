@@ -106,12 +106,18 @@ class AppServiceProvider extends ServiceProvider
                 $exception = $event->exception;
                 \Illuminate\Support\Facades\Log::critical("🚨 QUEUE JOB FAILED: {$jobName} - " . $exception->getMessage());
 
+                // Single news scraping errors (ProcessSingleNews) are routine crawler failures (dead links, 404, 403, timeouts)
+                // They should be logged as 'warning' in DB notifications, NOT spamming super admin email as CRITICAL emergency.
+                $isScraperArticle = ($jobName === 'App\Jobs\ProcessSingleNews' || $jobName === 'App\Jobs\ProcessCentralNewsItem');
+                $severity = $isScraperArticle ? 'warning' : 'critical';
+                $sendEmail = !$isScraperArticle;
+
                 SystemAlertService::notifyIssue(
                     null,
                     "ব্যাকগ্রাউন্ড কিউ জব ব্যর্থ ({$jobName})",
                     "একটি ব্যাকগ্রাউন্ড টাস্ক ({$jobName}) ব্যর্থ হয়েছে: " . $exception->getMessage(),
                     'system',
-                    'critical',
+                    $severity,
                     null,
                     [
                         'job'        => $jobName,
@@ -120,7 +126,7 @@ class AppServiceProvider extends ServiceProvider
                         'error'      => $exception->getMessage(),
                         'trace'      => Str::limit($exception->getTraceAsString(), 600)
                     ],
-                    true,
+                    $sendEmail,
                     true
                 );
             } catch (\Throwable $queueFailEx) {

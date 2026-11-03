@@ -99,4 +99,46 @@ class SystemAlertServiceTest extends TestCase
 
         $this->assertEquals(0, $user->fresh()->unreadNotifications()->count());
     }
+
+    public function test_notify_global_exception_ignores_max_attempts_exceeded_exception()
+    {
+        Mail::fake();
+        Notification::fake();
+
+        $exception = new \Illuminate\Queue\MaxAttemptsExceededException('App\Jobs\ProcessSingleNews has been attempted too many times.');
+
+        SystemAlertService::notifyGlobalException($exception);
+
+        Mail::assertNothingSent();
+        Notification::assertNothingSent();
+    }
+
+    public function test_process_single_news_job_catches_fatal_errors_gracefully()
+    {
+        $user = User::factory()->create();
+        $website = \App\Models\Website::create([
+            'user_id' => $user->id,
+            'name' => 'Test News',
+            'url' => 'https://example.com',
+            'selector_container' => '.news-item',
+            'selector_title' => 'h2.title',
+            'selector_content' => '.content',
+            'status' => 'active'
+        ]);
+
+        $mockScraper = \Mockery::mock(\App\Services\NewsScraperService::class);
+        $mockScraper->shouldReceive('scrape')
+            ->andThrow(new \Error('Simulated fatal engine error in scraper'));
+
+        $job = new \App\Jobs\ProcessSingleNews('https://example.com/article-1', 'Article Title', $user->id, $website->id);
+
+        // Should NOT throw an uncaught exception
+        $job->handle($mockScraper);
+
+        $this->assertDatabaseHas('scraper_logs', [
+            'website_id' => $website->id,
+            'url' => 'https://example.com/article-1',
+            'status' => 'failed',
+        ]);
+    }
 }

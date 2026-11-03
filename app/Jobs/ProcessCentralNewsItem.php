@@ -23,9 +23,9 @@ class ProcessCentralNewsItem implements ShouldQueue
     protected $sourceName;
     protected $sourceDomain;
 
-    public $timeout = 180;
-    public $tries = 2;
-    public $backoff = [3, 10];
+    public $timeout = 120;
+    public $tries = 1;
+    public $maxExceptions = 1;
 
     public function __construct($link, $title, $websiteId, $listImage = null, $sourceName = null, $sourceDomain = null)
     {
@@ -92,7 +92,7 @@ class ProcessCentralNewsItem implements ShouldQueue
 
             Log::info("⚡ [Central Pool] News Captured: {$finalTitle} from {$this->sourceName}");
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::warning("⚠️ [Central Pool Job Error] {$this->link}: " . $e->getMessage());
         }
     }

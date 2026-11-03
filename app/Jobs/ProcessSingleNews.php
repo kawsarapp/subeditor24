@@ -29,9 +29,9 @@ class ProcessSingleNews implements ShouldQueue
     protected $listImage;
 
     // 🔥 ULTRA SETTINGS
-    public $timeout = 180; // ৩ মিনিট ম্যাক্সিমাম
-    public $tries = 2;     // ২ বার রিট্রাই করবে
-    public $backoff = [3, 10]; // ৩ সেকেন্ড এবং ১০ সেকেন্ড পর রিট্রাই
+    public $timeout = 120; // ২ মিনিট ম্যাক্সিমাম
+    public $tries = 1;     // ১ বার চেষ্টা করবে (ব্যর্থ হলে রিট্রাই লুপ বা MaxAttempts এরর হবে না)
+    public $maxExceptions = 1;
 
     public function __construct($link, $title, $userId, $websiteId, $listImage = null)
     {
@@ -91,9 +91,9 @@ class ProcessSingleNews implements ShouldQueue
             // ৬. 💾 SAVE TO DATABASE
             $this->saveNews($finalTitle, $scrapedData['body'], $finalImage);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error("🔥 Job Error ({$this->link}): " . $e->getMessage());
-            $this->logScraperRun($this->websiteId, $this->link, 'article', 'failed', null, null, 'Exception during article process: ' . $e->getMessage());
+            $this->logScraperRun($this->websiteId, $this->link, 'article', 'failed', null, null, 'Error during article process: ' . $e->getMessage());
         }
     }
 
@@ -252,7 +252,7 @@ class ProcessSingleNews implements ShouldQueue
 
             return asset('storage/' . $savePath);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::warning("⚠️ Image Crop Failed (Using Original): " . $e->getMessage());
             return $url; // ফেইল করলে অরিজিনাল ইমেজ ফেরত যাবে, নিউজ আটকাবে না
         }
@@ -282,11 +282,13 @@ class ProcessSingleNews implements ShouldQueue
 
         } catch (QueryException $e) {
             // Duplicate Entry Error Code: 1062
-            if ($e->errorInfo[1] == 1062) {
+            if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) {
                 // সাইলেন্টলি ইগনোর করুন (লগ ফ্লাড না করার জন্য)
                 return;
             }
             Log::error("🔥 DB Error: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error("🔥 Save News Unexpected Error: " . $e->getMessage());
         }
     }
 
@@ -304,8 +306,26 @@ class ProcessSingleNews implements ShouldQueue
                 'retry_count'   => $retryCount,
                 'created_at'    => now(),
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::warning("⚠️ Failed to write scraper log to DB: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Handle permanent job failure (e.g. timeout or fatal worker death)
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        $errorMsg = $exception ? $exception->getMessage() : 'Timeout or max attempts reached';
+        Log::warning("⚠️ ProcessSingleNews job failed permanently ({$this->link}): {$errorMsg}");
+        $this->logScraperRun(
+            $this->websiteId,
+            $this->link,
+            'article',
+            'failed',
+            null,
+            null,
+            'Job execution failed: ' . Str::limit($errorMsg, 200)
+        );
     }
 }

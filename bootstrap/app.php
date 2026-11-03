@@ -44,10 +44,20 @@ return Application::configure(basePath: dirname(__DIR__))
         // 🚨 Report Unhandled Critical Exceptions (Zero Silent Crashes)
         $exceptions->report(function (Throwable $e) {
             // Skip common benign user actions (404, validation errors, session timeout)
+            // and queue worker max-attempts/timeout exceptions (already handled by Queue::failing)
             if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException ||
                 $e instanceof \Illuminate\Auth\AuthenticationException ||
                 $e instanceof \Illuminate\Validation\ValidationException ||
-                $e instanceof \Illuminate\Session\TokenMismatchException) {
+                $e instanceof \Illuminate\Session\TokenMismatchException ||
+                $e instanceof \Illuminate\Queue\MaxAttemptsExceededException ||
+                $e instanceof \Illuminate\Queue\TimeoutExceededException) {
+                return;
+            }
+
+            // In console / CLI (e.g. queue workers), Queue::failing in AppServiceProvider
+            // already monitors and alerts queue failures with rich context.
+            // Avoid fabricating misleading web "500 Internal Server Error" requests for background tasks.
+            if (app()->runningInConsole()) {
                 return;
             }
 

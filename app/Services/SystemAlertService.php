@@ -168,23 +168,36 @@ class SystemAlertService
      */
     public static function notifyGlobalException(\Throwable $e, ?Request $request = null): void
     {
+        // Don't report queue worker exceptions here (Queue::failing in AppServiceProvider handles them)
+        if ($e instanceof \Illuminate\Queue\MaxAttemptsExceededException ||
+            $e instanceof \Illuminate\Queue\TimeoutExceededException) {
+            return;
+        }
+
+        $isCli = app()->runningInConsole();
         $message = $e->getMessage() ?: get_class($e);
         $file = $e->getFile() . ':' . $e->getLine();
-        
+
+        $title = $isCli
+            ? "কমান্ড এরর (CLI / Console Error)"
+            : "সার্ভার এরর (500 Internal Server Error)";
+
         $context = [
             'exception' => get_class($e),
             'location'  => $file,
-            'url'       => $request ? $request->fullUrl() : 'CLI / Background',
-            'method'    => $request ? $request->method() : 'N/A',
-            'ip'        => $request ? $request->ip() : 'N/A',
-            'user_id'   => $request && $request->user() ? $request->user()->id : 'Guest',
-            'trace'     => $e->getTraceAsString(),
+            'url'       => (!$isCli && $request) ? $request->fullUrl() : 'CLI / Background Task',
+            'method'    => (!$isCli && $request) ? $request->method() : 'CLI',
+            'ip'        => (!$isCli && $request) ? $request->ip() : '127.0.0.1',
+            'user_id'   => (!$isCli && $request && $request->user()) ? $request->user()->id : 'System / Background',
+            'trace'     => \Illuminate\Support\Str::limit($e->getTraceAsString(), 1000),
         ];
 
         self::notifyIssue(
-            $request?->user(),
-            "সার্ভার এরর (500 Internal Server Error)",
-            "অ্যাপ্লিকেশনে একটি অপ্রত্যাশিত সার্ভার এরর ঘটেছে: {$message}",
+            (!$isCli && $request) ? $request->user() : null,
+            $title,
+            $isCli
+                ? "ব্যাকগ্রাউন্ড বা কনসোল টাস্কে একটি অপ্রত্যাশিত ত্রুটি ঘটেছে: {$message}"
+                : "অ্যাপ্লিকেশনে একটি অপ্রত্যাশিত সার্ভার এরর ঘটেছে: {$message}",
             'exception',
             'critical',
             $context['url'],
