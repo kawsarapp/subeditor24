@@ -460,7 +460,7 @@
                                         🚀 Scrape.do (Recommended - Cloudflare, Turnstile, DataDome bypass)
                                     </option>
                                     <option value="decodo" {{ old('scraping_api_provider', $settings->scraping_api_provider ?? '') === 'decodo' ? 'selected' : '' }}>
-                                        🌐 Decodo / SmartProxy Universal API
+                                        🌐 Smartproxy / Decodo Web Scraper API
                                     </option>
                                 </select>
                             </div>
@@ -475,14 +475,14 @@
                                 <p class="text-[10px] text-gray-400 mt-1">High-speed residential proxies with JS render & BD geo-targeting.</p>
                             </div>
 
-                            <!-- Decodo Token -->
+                            <!-- Decodo / Smartproxy Token -->
                             <div id="decodo_field" class="mb-3">
                                 <div class="flex items-center justify-between mb-1">
-                                    <label class="block text-xs font-bold text-gray-600">Decodo API Token (Basic Auth Token)</label>
-                                    <a href="https://decodo.com" target="_blank" class="text-[11px] text-blue-600 hover:underline flex items-center gap-1"><i class="fas fa-external-link-alt text-[10px]"></i> Get Token</a>
+                                    <label class="block text-xs font-bold text-gray-600">Smartproxy / Decodo API Token</label>
+                                    <a href="https://www.smartproxy.ai" target="_blank" class="text-[11px] text-blue-600 hover:underline flex items-center gap-1"><i class="fas fa-external-link-alt text-[10px]"></i> Smartproxy Dashboard</a>
                                 </div>
-                                <input type="password" id="smartproxy_api_token" name="smartproxy_api_token" value="{{ old('smartproxy_api_token', $settings->smartproxy_api_token ?? '') }}" placeholder="Basic VTAwM..." class="w-full border-gray-300 rounded shadow-sm focus:border-blue-500 focus:ring-blue-500 font-mono text-xs">
-                                <p class="text-[10px] text-gray-400 mt-1">Enter <code>Basic Auth Token</code> obtained from your Decodo / SmartProxy dashboard.</p>
+                                <input type="password" id="smartproxy_api_token" name="smartproxy_api_token" value="{{ old('smartproxy_api_token', $settings->smartproxy_api_token ?? '') }}" placeholder="smart-xxxx:password অথবা Basic VTAwM..." class="w-full border-gray-300 rounded shadow-sm focus:border-blue-500 focus:ring-blue-500 font-mono text-xs">
+                                <p class="text-[10px] text-gray-500 mt-1">Smartproxy Sub-account এর <code>username:password</code> অথবা ড্যাশবোর্ডের <code>Basic Auth Token</code> দিন।</p>
                             </div>
                         </div>
                     </div>

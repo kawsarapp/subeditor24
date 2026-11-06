@@ -714,8 +714,8 @@ trait ScraperEnginesTrait
     }
 
     /**
-     * 🌐 Decodo / SmartProxy Web Scraping API
-     * Handles SmartProxy.org (/v1/scrape) and Decodo (/v2/scrape).
+     * 🌐 Smartproxy / Decodo Web Scraping API
+     * Handles Smartproxy / Decodo (https://scraper-api.smartproxy.com/v2/scrape).
      * Enforces 15s max timeout per request and automatic cooldown caching on quota exhaustion.
      */
     public function fetchWithDecodoApi($url, $token)
@@ -730,159 +730,100 @@ trait ScraperEnginesTrait
 
             // Clean up Basic auth token header prefix if user included it in settings/input
             if (preg_match('/^Basic\s+(.*)$/i', trim($token ?? ''), $matches)) {
-                $tokenValue = $matches[1];
+                $tokenValue = trim($matches[1]);
             } else {
                 $tokenValue = trim($token ?? '');
             }
 
-            if (empty($tokenValue)) return null;
-
-            // Detect if this is a SmartProxy.org token or a Decodo token
-            $decoded = base64_decode($tokenValue);
-            $isSmartProxyOrg = false;
-            if ($decoded) {
-                $parts = explode(':', $decoded, 2);
-                $username = $parts[0] ?? '';
-                if (str_starts_with($username, 'smart-')) {
-                    $isSmartProxyOrg = true;
-                }
+            // If user passed username:password directly, convert to base64
+            if (str_contains($tokenValue, ':')) {
+                $tokenValue = base64_encode($tokenValue);
             }
 
-            if ($isSmartProxyOrg) {
-                Log::info("🌐 Calling SmartProxy.org Web Scraper API (/v1/scrape) for: {$cleanUrl}");
-                
-                $payload = [
-                    'js_render' => ['enabled' => true],
-                    'request'   => ['only_main_content' => false, 'device' => 'desktop'],
-                    'output'    => ['formats' => ['html']],
-                    'proxy'     => ['location' => 'BD'],
-                    'url'       => $cleanUrl
-                ];
+            if (empty($tokenValue)) return null;
 
+            Log::info("🌐 Calling Smartproxy Web Scraping API (render.smartproxy.ai) for: {$cleanUrl}");
+
+            $payloadData = [
+                'js_render' => ['enabled' => true],
+                'request'   => [
+                    'only_main_content' => false,
+                    'locale'            => 'bn',
+                    'device'            => 'desktop'
+                ],
+                'output'    => [
+                    'formats' => ['html']
+                ],
+                'proxy'     => [
+                    'location' => 'BD'
+                ],
+                'url'       => $cleanUrl
+            ];
+
+            try {
                 $response = Http::withHeaders([
                     'Authorization' => 'Basic ' . $tokenValue,
                     'Content-Type'  => 'application/json',
                     'Accept'        => 'application/json'
-                ])->timeout(15)
+                ])->timeout(30)
                   ->connectTimeout(5)
-                  ->withOptions(['verify' => false])
-                  ->post('https://scraper.smartproxy.org/v1/scrape', $payload);
+                  ->withOptions([
+                      'verify'  => false,
+                  ])
+                  ->post('https://render.smartproxy.ai/v1/scrape', $payloadData);
 
                 $status = $response->status();
                 $body = $response->body();
+            } catch (\Throwable $e) {
+                Log::warning("⚠️ Smartproxy Http client exception: " . $e->getMessage());
+                $status = 0;
+                $body = '';
+            }
 
-                // Rate limit backoff retry (1s max)
-                if ($status === 429) {
-                    Log::warning("⚠️ SmartProxy 429 Rate Limit. Backing off 1s and retrying once for: {$cleanUrl}");
-                    usleep(1000000);
-                    $response = Http::withHeaders([
-                        'Authorization' => 'Basic ' . $tokenValue,
-                        'Content-Type'  => 'application/json',
-                        'Accept'        => 'application/json'
-                    ])->timeout(15)
-                      ->connectTimeout(5)
-                      ->withOptions(['verify' => false])
-                      ->post('https://scraper.smartproxy.org/v1/scrape', $payload);
-
-                    $status = $response->status();
-                    $body = $response->body();
-                }
-
-                if (self::isQuotaOrRateLimitError($status, $body)) {
-                    self::markProviderCooldown('smartproxy', 5, "SmartProxy.org HTTP {$status} Quota/Rate-limit");
-                    self::markProviderCooldown('decodo', 5, "HTTP {$status}");
-                    return null;
-                }
-
-                if ($response->successful()) {
-                    $html = $response->json('data.html');
-                    if ($html && strlen($html) > 500 && !self::isErrorHtml($html)) {
-                        Log::info("✅ SmartProxy.org Universal Scraping API Success. HTML length: " . strlen($html));
-                        return $html;
-                    }
-                } else {
-                    Log::warning("⚠️ SmartProxy.org HTTP {$status}: " . substr($body, 0, 300));
-                }
-            } else {
-                Log::info("🌐 Calling Decodo (SmartProxy) Web Scraping API v2 for: {$cleanUrl}");
-
-                $payloadData = [
-                    'url'      => $cleanUrl,
-                    'target'   => 'universal',
-                    'headless' => 'html'
-                ];
-                if (str_contains($cleanUrl, '.bd') || str_contains($cleanUrl, 'prothomalo.com') || str_contains($cleanUrl, 'jamuna.tv') || str_contains($cleanUrl, 'kalerkantho.com') || str_contains($cleanUrl, 'somoynews.tv') || str_contains($cleanUrl, 'samakal.com') || str_contains($cleanUrl, 'dailyamardesh.com')) {
-                    $payloadData['geo'] = 'Bangladesh';
-                }
-
+            // Rate limit backoff retry (1s max)
+            if ($status === 429) {
+                Log::warning("⚠️ Smartproxy 429 Rate Limit. Backing off 1s and retrying once for: {$cleanUrl}");
+                usleep(1000000);
                 try {
                     $response = Http::withHeaders([
                         'Authorization' => 'Basic ' . $tokenValue,
                         'Content-Type'  => 'application/json',
                         'Accept'        => 'application/json'
-                    ])->timeout(15)
+                    ])->timeout(30)
                       ->connectTimeout(5)
-                      ->withOptions([
-                          'verify'  => false,
-                          'version' => 1.1,
-                      ])
-                      ->post('https://scraper-api.smartproxy.com/v2/scrape', $payloadData);
-
+                      ->withOptions(['verify' => false])
+                      ->post('https://render.smartproxy.ai/v1/scrape', $payloadData);
                     $status = $response->status();
                     $body = $response->body();
                 } catch (\Throwable $e) {
-                    Log::warning("⚠️ Decodo Http client exception, trying stream context fallback: " . $e->getMessage());
-                    $payloadJson = json_encode($payloadData);
-                    $streamOptions = [
-                        'http' => [
-                            'method'        => 'POST',
-                            'header'        => "Authorization: Basic " . $tokenValue . "\r\n" .
-                                               "Content-Type: application/json\r\n" .
-                                               "Accept: application/json\r\n",
-                            'content'       => $payloadJson,
-                            'timeout'       => 15,
-                            'ignore_errors' => true
-                        ],
-                        'ssl' => [
-                            'verify_peer'      => false,
-                            'verify_peer_name' => false,
-                            'verify_host'      => false,
-                        ]
-                    ];
-                    $context = stream_context_create($streamOptions);
-                    $rawBody = @file_get_contents('https://scraper-api.smartproxy.com/v2/scrape', false, $context);
-                    $status = 0;
-                    if (isset($http_response_header[0]) && preg_match('/HTTP\/\S+\s+(\d+)/', $http_response_header[0], $m)) {
-                        $status = (int) $m[1];
-                    }
-                    $body = $rawBody ?: '';
+                    // Retry failed
                 }
+            }
 
-                if (self::isQuotaOrRateLimitError($status, $body)) {
-                    self::markProviderCooldown('smartproxy', 5, "Decodo HTTP {$status} Quota/Rate-limit: " . substr(strip_tags($body), 0, 150));
-                    self::markProviderCooldown('decodo', 5, "HTTP {$status}");
-                    return null;
+            if (self::isQuotaOrRateLimitError($status, $body)) {
+                self::markProviderCooldown('smartproxy', 5, "Smartproxy HTTP {$status} Quota/Rate-limit: " . substr(strip_tags($body), 0, 150));
+                self::markProviderCooldown('decodo', 5, "HTTP {$status}");
+                return null;
+            }
+
+            if ($status >= 200 && $status < 300) {
+                $json = json_decode($body, true);
+                $html = $json['data']['html'] ?? $json['results'][0]['content'] ?? $json['results'][0]['html'] ?? null;
+                if ($html && strlen($html) > 500 && !self::isErrorHtml($html)) {
+                    Log::info("✅ Smartproxy Web Scraping API Success. HTML length: " . strlen($html));
+                    return $html;
                 }
-
-                if ($status >= 200 && $status < 300) {
-                    $json = json_decode($body, true);
-                    $html = $json['results'][0]['content'] ?? $json['results'][0]['html'] ?? $json['data']['html'] ?? null;
-                    if ($html && strlen($html) > 500 && !self::isErrorHtml($html)) {
-                        Log::info("✅ Decodo Universal Scraping API Success. HTML length: " . strlen($html));
-                        return $html;
-                    }
-                } else {
-                    Log::warning("⚠️ Decodo HTTP {$status}: " . substr($body, 0, 300));
-                    if ($status === 503 || $status === 502) {
-                        self::markProviderCooldown('smartproxy', 2, "Decodo HTTP {$status} Service Unavailable");
-                        self::markProviderCooldown('decodo', 2, "Decodo HTTP {$status}");
-                    }
+            } else {
+                Log::warning("⚠️ Smartproxy HTTP {$status}: " . substr($body, 0, 300));
+                if ($status === 503 || $status === 502) {
+                    self::markProviderCooldown('smartproxy', 2, "Smartproxy HTTP {$status} Service Unavailable");
+                    self::markProviderCooldown('decodo', 2, "Smartproxy HTTP {$status}");
                 }
             }
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::warning("⚠️ Decodo/SmartProxy Connection Timeout (15s limit reached): " . $e->getMessage());
+            Log::warning("⚠️ Smartproxy Connection Timeout (15s limit reached): " . $e->getMessage());
         } catch (\Throwable $e) {
-            Log::warning("⚠️ Decodo Scraping API exception: " . $e->getMessage());
+            Log::warning("⚠️ Smartproxy Scraping API exception: " . $e->getMessage());
         }
 
         return null;

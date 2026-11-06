@@ -689,31 +689,26 @@ class SettingsController extends Controller
 
         // 1. Test Decodo / Smartproxy Universal API
         if (!empty($token)) {
-            $tokenValue = preg_replace('/^Basic\s+/i', '', trim($token));
-            $decoded = base64_decode($tokenValue);
-            $isSmartProxyOrg = ($decoded && str_starts_with(explode(':', $decoded, 2)[0] ?? '', 'smart-'));
+            $tokenValue = trim($token);
+            if (preg_match('/^Basic\s+(.*)$/i', $tokenValue, $m)) {
+                $tokenValue = trim($m[1]);
+            }
+            // If user typed username:password directly, convert to base64
+            if (str_contains($tokenValue, ':')) {
+                $tokenValue = base64_encode($tokenValue);
+            }
 
             $startTime = microtime(true);
 
             try {
-                if ($isSmartProxyOrg) {
-                    $endpoint = 'https://scraper.smartproxy.org/v1/scrape';
-                    $payload = [
-                        'js_render' => ['enabled' => true],
-                        'request'   => ['device' => 'desktop'],
-                        'output'    => ['formats' => ['html']],
-                        'proxy'     => ['location' => 'BD'],
-                        'url'       => 'https://httpbin.org/ip'
-                    ];
-                } else {
-                    $endpoint = 'https://scraper-api.decodo.com/v2/scrape';
-                    $payload = [
-                        'url'        => 'https://httpbin.org/ip',
-                        'target'     => 'universal',
-                        'headless'   => 'html',
-                        'geo'        => 'Bangladesh'
-                    ];
-                }
+                $endpoint = 'https://render.smartproxy.ai/v1/scrape';
+                $payload = [
+                    'js_render' => ['enabled' => true],
+                    'request'   => ['only_main_content' => false, 'device' => 'desktop'],
+                    'output'    => ['formats' => ['html']],
+                    'proxy'     => ['location' => 'BD'],
+                    'url'       => 'https://httpbin.org/ip'
+                ];
 
                 $response = Http::withHeaders([
                     'Authorization' => 'Basic ' . $tokenValue,
@@ -725,6 +720,7 @@ class SettingsController extends Controller
 
                 if ($response->successful()) {
                     $body = $response->body();
+                    $ip = 'Verified (BD)';
                     // Parse IP from response
                     if (preg_match('/origin[\\\"\\\'\s:]+([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/', $body, $m)) {
                         $ip = $m[1];
@@ -734,33 +730,33 @@ class SettingsController extends Controller
 
                     return response()->json([
                         'success' => true,
-                        'message' => "✅ Decodo Universal API ১০০% সফল ও সক্রিয়!\n🌍 রেসিডেন্সিয়াল এক্সিট আইপি: {$ip} (Bangladesh Geo)\n⚡ রেসপন্স টাইম: {$elapsed} সেকেন্ড\n🔒 Cloudflare ও Anti-Bot Bypass: সম্পূর্ণ কার্যকর।"
+                        'message' => "✅ Smartproxy Web Scraper API ১০০% সফল ও সক্রিয়!\n🌍 রেসিডেন্সিয়াল এক্সিট আইপি: {$ip} (Bangladesh Geo)\n⚡ রেসপন্স টাইম: {$elapsed} সেকেন্ড\n🔒 Cloudflare ও Anti-Bot Bypass: সম্পূর্ণ কার্যকর।"
                     ]);
                 }
 
                 if ($response->status() === 401 || $response->status() === 403) {
                     return response()->json([
                         'success' => false,
-                        'message' => "❌ Decodo অথেনটিকেশন ফেইল্ড (HTTP {$response->status()})! আপনার API Token টি সঠিক নয় বা মেয়াদোত্তীর্ণ।"
+                        'message' => "❌ Smartproxy অথেনটিকেশন ফেইল্ড (HTTP {$response->status()})! আপনার Sub-Account Username অথবা Password সঠিক নয়।"
                     ]);
                 }
 
                 if ($response->status() === 429) {
                     return response()->json([
                         'success' => false,
-                        'message' => "⚠️ Decodo Rate Limit (HTTP 429): কনকারেন্ট রিকোয়েস্ট সীমা পার হয়েছে।"
+                        'message' => "⚠️ Smartproxy Rate Limit (HTTP 429): কনকারেন্ট রিকোয়েস্ট সীমা পার হয়েছে।"
                     ]);
                 }
 
                 return response()->json([
                     'success' => false,
-                    'message' => "❌ Decodo API এরর (HTTP {$response->status()}): " . Str::limit($response->body(), 120)
+                    'message' => "❌ Smartproxy API এরর (HTTP {$response->status()}): " . Str::limit($response->body(), 120)
                 ]);
 
             } catch (\Exception $e) {
                 return response()->json([
                     'success' => false,
-                    'message' => '❌ Decodo কানেকশন এরর: ' . $e->getMessage()
+                    'message' => '❌ Smartproxy কানেকশন এরর: ' . $e->getMessage()
                 ]);
             }
         }
