@@ -402,7 +402,7 @@
                 <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
                     <p class="text-xs text-gray-600 font-medium">Configure custom proxies and Web Scraping APIs (Scrape.do / Decodo) for anti-bot bypass. Leave empty to use system defaults.</p>
                     <div class="flex items-center gap-2">
-                        <button type="button" onclick="testDecodoProxy()" class="text-xs bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg transition font-bold shadow-sm flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                        <button type="button" onclick="testDecodoProxy('proxy')" class="text-xs bg-gray-700 hover:bg-gray-800 text-white px-3 py-1.5 rounded-lg transition font-bold shadow-sm flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
                             <i class="fas fa-network-wired"></i> <span>Test Standard Proxy</span>
                         </button>
                         <button type="button" onclick="testActiveScrapingApi()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition font-bold shadow-sm flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
@@ -2363,7 +2363,7 @@
         });
     }
 
-    function testDecodoProxy() {
+    function testDecodoProxy(type = 'proxy') {
         const tokenInput = document.getElementById('smartproxy_api_token');
         const hostInput = document.getElementById('proxy_host');
         const portInput = document.getElementById('proxy_port');
@@ -2373,12 +2373,15 @@
         const btn = event.currentTarget || document.activeElement;
         const originalText = btn.innerHTML;
 
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing Proxy...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (type === 'proxy' ? 'Testing Proxy...' : 'Testing API...');
         btn.disabled = true;
-        statusMsg.innerHTML = "⏳ Testing Decodo Universal API & Proxy handshake...";
+        statusMsg.innerHTML = type === 'proxy' 
+            ? "⏳ Testing Residential Proxy handshake via " + (hostInput ? hostInput.value : 'server') + "..."
+            : "⏳ Testing Smartproxy Web Scraper API...";
         statusMsg.className = "text-xs font-bold mb-4 text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200 block";
 
         const payload = {
+            test_type: type,
             smartproxy_api_token: tokenInput ? tokenInput.value.trim() : '',
             proxy_host: hostInput ? hostInput.value.trim() : '',
             proxy_port: portInput ? portInput.value.trim() : '',
@@ -2432,7 +2435,7 @@
         if (provider === 'scrape_do') {
             testScrapeDo();
         } else {
-            testDecodoProxy();
+            testDecodoProxy('api');
         }
     }
 

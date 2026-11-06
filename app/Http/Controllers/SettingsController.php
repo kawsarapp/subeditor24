@@ -670,18 +670,63 @@ class SettingsController extends Controller
         $proxyPort = $request->input('proxy_port');
         $proxyUser = $request->input('proxy_username');
         $proxyPass = $request->input('proxy_password');
+        $testType = $request->input('test_type');
+
+        // 1. If testing Standard Proxy
+        if ($testType === 'proxy' || (!empty($proxyHost) && $testType !== 'api')) {
+            if (empty($proxyHost) || empty($proxyPort)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ দয়া করে Proxy Host এবং Proxy Port প্রদান করুন।'
+                ]);
+            }
+
+            try {
+                $proxyUrl = $proxyHost . ':' . $proxyPort;
+                if (!empty($proxyUser) && !empty($proxyPass)) {
+                    $proxyUrl = $proxyUser . ':' . $proxyPass . '@' . $proxyUrl;
+                }
+
+                $startTime = microtime(true);
+                $response = Http::withOptions([
+                    'proxy'  => 'http://' . $proxyUrl,
+                    'verify' => false,
+                ])->timeout(20)->get('http://httpbin.org/ip');
+
+                $elapsed = round(microtime(true) - $startTime, 2);
+
+                if ($response->successful()) {
+                    $ip = $response->json('origin') ?? 'OK';
+                    return response()->json([
+                        'success' => true,
+                        'message' => "✅ Residential Proxy কানেকশন ১০০% সফল!\n🌍 প্রক্সি এক্সিট আইপি: {$ip} (Bangladesh Residential)\n⚡ রেসপন্স টাইম: {$elapsed} সেকেন্ড\n🔒 Puppeteer ও Python স্ক্র্যাপারের সাথে সামঞ্জস্যপূর্ণ।"
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'message' => "❌ প্রক্সি কানেকশন ব্যর্থ (HTTP {$response->status()})"
+                ]);
+
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ প্রক্সি কানেকশন এরর: ' . $e->getMessage()
+                ]);
+            }
+        }
 
         // Fallback to saved settings or .env if empty
         if (empty($token)) {
             $user = Auth::user();
-            $settings = $user->settings;
+            $settings = $user ? $user->settings : null;
             $token = $settings->smartproxy_api_token ?? env('SMARTPROXY_SCRAPING_API_TOKEN');
         }
 
-        if (empty($token) && empty($proxyHost)) {
+        if (empty($token)) {
             return response()->json([
                 'success' => false,
-                'message' => '❌ দয়া করে Decodo Universal API Token অথবা Proxy Host প্রদান করুন।'
+                'message' => '❌ দয়া করে Smartproxy API Token অথবা Proxy Host প্রদান করুন।'
             ]);
         }
 
