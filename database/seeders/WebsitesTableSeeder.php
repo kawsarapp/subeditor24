@@ -441,6 +441,16 @@ class WebsitesTableSeeder extends Seeder
                 'use_scraping_api' => 1,
                 'target_language' => 'en',
             ],
+            [
+                'name' => 'Toronto Today',
+                'url' => 'https://www.torontotoday.ca',
+                'selector_container' => 'article a, .news-card a, a[href*="/local/"], a[href*="/national-news/"], a[href*="/world-news/"], a[href*="/columns/"]',
+                'selector_title' => 'h1, h2, h3, .title, span',
+                'selector_image' => 'img',
+                'selector_content' => '.article-body, .body, .story-content, .article-content, [itemprop="articleBody"], article, p',
+                'use_scraping_api' => 0,
+                'target_language' => 'en',
+            ],
         ];
 
         foreach ($websites as $site) {

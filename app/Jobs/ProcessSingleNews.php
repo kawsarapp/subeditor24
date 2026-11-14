@@ -27,19 +27,21 @@ class ProcessSingleNews implements ShouldQueue
     protected $userId;
     protected $websiteId;
     protected $listImage;
+    protected $description;
 
     // 🔥 ULTRA SETTINGS
     public $timeout = 120; // ২ মিনিট ম্যাক্সিমাম
     public $tries = 1;     // ১ বার চেষ্টা করবে (ব্যর্থ হলে রিট্রাই লুপ বা MaxAttempts এরর হবে না)
     public $maxExceptions = 1;
 
-    public function __construct($link, $title, $userId, $websiteId, $listImage = null)
+    public function __construct($link, $title, $userId, $websiteId, $listImage = null, $description = null)
     {
         $this->link = $link;
         $this->title = $title;
         $this->userId = $userId;
         $this->websiteId = $websiteId;
         $this->listImage = $listImage;
+        $this->description = $description;
     }
 
     public function handle(NewsScraperService $scraper)
@@ -65,9 +67,19 @@ class ProcessSingleNews implements ShouldQueue
             $scrapedData = $scraper->scrape($this->link, $customSelectors, $this->userId);
 
             if (!$scrapedData || empty($scrapedData['body'])) {
-                Log::warning("⚠️ Skipped (Empty Content): {$this->link}");
-                $this->logScraperRun($this->websiteId, $this->link, 'article', 'failed', null, null, 'Empty content returned after attempting all scraper engines.');
-                return;
+                // If article body scrape failed (e.g. Cloudflare protected article), but feed description exists
+                if (!empty($this->description) && strlen(trim($this->description)) > 15) {
+                    Log::info("ℹ️ Using feed description as content fallback for: {$this->link}");
+                    $scrapedData = [
+                        'title' => $this->title,
+                        'body' => '<p>' . nl2br(e($this->description)) . '</p>',
+                        'image' => $this->listImage
+                    ];
+                } else {
+                    Log::warning("⚠️ Skipped (Empty Content): {$this->link}");
+                    $this->logScraperRun($this->websiteId, $this->link, 'article', 'failed', null, null, 'Empty content returned after attempting all scraper engines.');
+                    return;
+                }
             }
 
             // ৪. 🖼️ IMAGE PROCESSING (SMART HANDLING)

@@ -212,9 +212,68 @@ class ScrapeWebsite implements ShouldQueue
             }
 
             if (!$listPageHtml || strlen($listPageHtml) < 500 || self::isErrorHtml($listPageHtml)) {
+                // 📡 Auto-fallback to RSS feed discovery
+                $rssCandidates = [
+                    rtrim($website->url, '/') . '/rss',
+                    rtrim($website->url, '/') . '/rss/local',
+                    rtrim($website->url, '/') . '/feed',
+                    rtrim($website->url, '/') . '/rss.xml',
+                ];
+                foreach ($rssCandidates as $candidateRss) {
+                    try {
+                        $rssRes = \Illuminate\Support\Facades\Http::timeout(15)->withoutVerifying()->get($candidateRss);
+                        if ($rssRes->successful() && (str_contains($rssRes->body(), '<rss') || str_contains($rssRes->body(), '<feed') || str_contains($rssRes->body(), '<channel'))) {
+                            Log::info("📡 Successfully recovered list content via RSS feed: {$candidateRss}");
+                            $listPageHtml = $rssRes->body();
+                            break;
+                        }
+                    } catch (\Throwable $rssEx) {}
+                }
+            }
+
+            if (!$listPageHtml || strlen($listPageHtml) < 100 || (self::isErrorHtml($listPageHtml) && !str_contains($listPageHtml, '<rss') && !str_contains($listPageHtml, '<channel'))) {
                 Log::error("❌ Failed to load list page content (empty or error page received).");
                 $this->logScraperRun($website->id, $website->url, 'list', 'failed', null, null, 'Failed to load list page content (empty or error page detected)');
                 return;
+            }
+
+            // ==========================================
+            // 📡 SPECIAL: Universal RSS / Atom XML Feed Parser
+            // ==========================================
+            $isRssOrAtom = str_contains($listPageHtml, '<rss') || 
+                           str_contains($listPageHtml, '<feed') || 
+                           (str_contains($listPageHtml, '<channel') && str_contains($listPageHtml, '<item'));
+
+            if ($isRssOrAtom) {
+                Log::info("📡 Universal RSS / Atom Parser detected for: {$website->url}");
+                $rssItems = $this->extractRssFeedItems($listPageHtml, $website->url);
+                if (!empty($rssItems)) {
+                    Log::info("✅ RSS Parser: Found " . count($rssItems) . " items.");
+                    $count = 0;
+                    foreach (array_slice($rssItems, 0, $limit ?? 5) as $item) {
+                        if (!empty($item['link']) && !empty($item['title']) && strlen($item['title']) > 5 && !self::isErrorTitleOrText($item['title'])) {
+                            if (!NewsItem::where('original_link', $item['link'])->where('user_id', $this->userId)->exists()) {
+                                Log::info("⚡ Dispatching Job for: " . \Illuminate\Support\Str::limit($item['title'], 30));
+                                \App\Jobs\ProcessSingleNews::dispatch(
+                                    $item['link'],
+                                    $item['title'],
+                                    $this->userId,
+                                    $website->id,
+                                    $item['image'] ?? null,
+                                    $item['description'] ?? null
+                                )->delay(now()->addSeconds($count * 2));
+                                $count++;
+                            }
+                        }
+                    }
+                    if ($count > 0) {
+                        Log::info("🏁 MAIN JOB FINISHED. Queued: {$count} jobs via RSS Parser.");
+                        \Illuminate\Support\Facades\Cache::forget('scraping_user_' . $this->userId);
+                        $website->update(['last_scraped_at' => now()]);
+                        $this->logScraperRun($website->id, $website->url, 'list', 'success', 'RSS Parser', 200, "Successfully scanned list page and queued {$count} news items via RSS Parser.");
+                        return;
+                    }
+                }
             }
 
             $crawler = new Crawler($listPageHtml);
@@ -591,6 +650,12 @@ class ScrapeWebsite implements ShouldQueue
      */
     private function getDomainConfig($url)
     {
+        if (str_contains($url, 'torontotoday.ca')) {
+            return [
+                'container' => 'article a, .news-card a, a[href*="/local/"], a[href*="/national-news/"], a[href*="/world-news/"], a[href*="/columns/"]',
+                'title'     => 'h1, h2, h3, .title, span'
+            ];
+        }
         if (str_contains($url, 'ntvbd.com')) {
             return [
                 'container' => 'a[href*="/news-"], a[href*="/bangladesh/"], a[href*="/sports/"], a[href*="/entertainment/"], a[href*="/economy/"], a[href*="/international/"], a[href*="/politics/"], .card a, .media a, article a',
@@ -869,6 +934,100 @@ class ScrapeWebsite implements ShouldQueue
         }
 
         return $links;
+    }
+
+    /**
+     * 📡 Universal RSS 2.0 and Atom XML Feed Parser
+     */
+    private function extractRssFeedItems(string $xmlContent, string $baseUrl): array
+    {
+        $items = [];
+        try {
+            libxml_use_internal_errors(true);
+            $xml = simplexml_load_string($xmlContent, 'SimpleXMLElement', LIBXML_NOCDATA);
+            if (!$xml) {
+                libxml_clear_errors();
+                return [];
+            }
+
+            // 1. Standard RSS 2.0 (<channel><item>)
+            if (isset($xml->channel->item)) {
+                foreach ($xml->channel->item as $entry) {
+                    $title = trim((string) $entry->title);
+                    $link = trim((string) $entry->link);
+                    if (empty($link) && isset($entry->guid)) {
+                        $link = trim((string) $entry->guid);
+                    }
+                    $description = trim((string) $entry->description);
+
+                    // Image from enclosure
+                    $image = null;
+                    if (isset($entry->enclosure) && !empty($entry->enclosure['url'])) {
+                        $image = (string) $entry->enclosure['url'];
+                    }
+
+                    // Image from media:content or media:thumbnail
+                    if (!$image) {
+                        $namespaces = $entry->getNamespaces(true);
+                        if (isset($namespaces['media'])) {
+                            $media = $entry->children($namespaces['media']);
+                            if (isset($media->content) && !empty($media->content->attributes()['url'])) {
+                                $image = (string) $media->content->attributes()['url'];
+                            } elseif (isset($media->thumbnail) && !empty($media->thumbnail->attributes()['url'])) {
+                                $image = (string) $media->thumbnail->attributes()['url'];
+                            }
+                        }
+                    }
+
+                    // Fallback: <img> tag in description
+                    if (!$image && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $description, $m)) {
+                        $image = $m[1];
+                    }
+
+                    if (!empty($link) && !empty($title)) {
+                        $items[] = [
+                            'link'        => $link,
+                            'title'       => html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+                            'image'       => $image,
+                            'description' => html_entity_decode(strip_tags($description), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+                        ];
+                    }
+                }
+            }
+
+            // 2. Atom Feed (<feed><entry>)
+            if (empty($items) && isset($xml->entry)) {
+                foreach ($xml->entry as $entry) {
+                    $title = trim((string) $entry->title);
+                    $link = '';
+                    if (isset($entry->link)) {
+                        $linkAttr = $entry->link->attributes();
+                        $link = (string) ($linkAttr['href'] ?? '');
+                    }
+                    $summary = isset($entry->summary) ? trim((string) $entry->summary) : (isset($entry->content) ? trim((string) $entry->content) : '');
+
+                    $image = null;
+                    if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $summary, $m)) {
+                        $image = $m[1];
+                    }
+
+                    if (!empty($link) && !empty($title)) {
+                        $items[] = [
+                            'link'        => $link,
+                            'title'       => html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+                            'image'       => $image,
+                            'description' => html_entity_decode(strip_tags($summary), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+                        ];
+                    }
+                }
+            }
+
+            libxml_clear_errors();
+        } catch (\Throwable $e) {
+            Log::warning("⚠️ Failed to parse RSS feed: " . $e->getMessage());
+        }
+
+        return $items;
     }
 
     private function logScraperRun($websiteId, $url, $jobType, $status, $strategy = null, $httpStatus = null, $errorMessage = null, $retryCount = 0)
