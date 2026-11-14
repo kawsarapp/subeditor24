@@ -62,7 +62,8 @@ class WebsiteController extends Controller
     // ==========================================
     public function store(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') {
+        $user = Auth::user();
+        if ($user->role !== 'super_admin') {
             return back()->with('error', 'অনুমতি নেই। শুধুমাত্র সুপার অ্যাডমিন নতুন সোর্স যোগ করতে পারবেন।');
         }
 
@@ -77,7 +78,7 @@ class WebsiteController extends Controller
         ]);
 
         $data = $request->all();
-        $data['user_id'] = Auth::id();
+        $data['user_id'] = $user->id;
         $data['selector_container'] = $request->input('selector_container') ?: '.desktopSectionLead, .news-item, .post-item, article, .story-element, .news-card';
         $data['selector_title'] = $request->input('selector_title') ?: 'h1, h2, h3, .title, .heading';
         $data['scraper_method'] = ($request->input('scraper_method') === 'auto' || empty($request->input('scraper_method'))) ? null : $request->input('scraper_method');
